@@ -77,7 +77,9 @@ const ProgressIndicator = ({ currentStep, totalSteps, currentTheme }) => {
     <div>
       {/* Desktop */}
       <div className="hidden md:flex items-center justify-between relative">
-        <div className="absolute top-5 left-0 right-0 h-1 bg-slate-200 -z-10">
+        <div
+          className={`absolute top-5 left-0 right-0 h-1 ${t.progressTrackBg} -z-10`}
+        >
           <div
             className={`h-full bg-gradient-to-r ${t.progressGrad} transition-all duration-500 ease-out`}
             style={{ width: `${progress}%` }}
@@ -129,14 +131,16 @@ const ProgressIndicator = ({ currentStep, totalSteps, currentTheme }) => {
       {/* Mobile */}
       <div className="md:hidden">
         <div className="flex items-center justify-between mb-3">
-          <span className={`text-sm font-semibold ${t.mobileStepText}`}>
+          <span className={`text-sm font-semibold ${t.stepLabelActive}`}>
             Step {currentStep} of {totalSteps}
           </span>
-          <span className={`text-xs ${t.mobileStepSubtext}`}>
+          <span className={`text-xs ${t.stepLabelInactive}`}>
             {steps[currentStep - 1].title}
           </span>
         </div>
-        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+        <div
+          className={`h-2 ${t.progressTrackBg} rounded-full overflow-hidden`}
+        >
           <div
             className={`h-full bg-gradient-to-r ${t.progressGrad} transition-all duration-500 ease-out rounded-full`}
             style={{ width: `${(currentStep / totalSteps) * 100}%` }}

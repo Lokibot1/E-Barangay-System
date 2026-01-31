@@ -40,7 +40,7 @@ const IncidentForm = ({
                 </svg>
               </div>
               <h3
-                className={`text-2xl font-bold ${t.stepHeading} font-spartan`}
+                className={`text-2xl font-bold ${t.sectionTitle} font-spartan`}
               >
                 Basic Information
               </h3>
@@ -103,7 +103,7 @@ const IncidentForm = ({
                 </svg>
               </div>
               <h3
-                className={`text-2xl font-bold ${t.stepHeading} font-spartan`}
+                className={`text-2xl font-bold ${t.sectionTitle} font-spartan`}
               >
                 Incident Details
               </h3>
@@ -199,7 +199,7 @@ const IncidentForm = ({
                 </svg>
               </div>
               <h3
-                className={`text-2xl font-bold ${t.stepHeading} font-spartan`}
+                className={`text-2xl font-bold ${t.sectionTitle} font-spartan`}
               >
                 People Involved
               </h3>
@@ -227,10 +227,10 @@ const IncidentForm = ({
                         updated[index] = e.target.value;
                         onInputChange("personsInvolved", updated);
                       }}
-                      className={`flex-1 px-4 py-3 border rounded-lg transition-all duration-200 ${t.formInputBg} ${t.formInputText} ${t.formInputPlaceholder} ${
+                      className={`flex-1 px-4 py-3 border rounded-lg transition-all duration-200 ${t.inputBg} ${t.inputText} ${t.inputPlaceholder} ${
                         errors.personsInvolved
                           ? "border-red-400 focus:ring-2 focus:ring-red-300 focus:border-red-400 hover:border-red-400"
-                          : `${t.formInputBorder} focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
+                          : `${t.inputBorder} focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
                       }`}
                     />
                     {formData.personsInvolved.length > 1 && (
@@ -244,7 +244,7 @@ const IncidentForm = ({
                             ),
                           )
                         }
-                        className={`p-2.5 ${t.removeBtn} ${t.removeBtnHoverText} ${t.removeBtnHoverBg} rounded-lg transition-all`}
+                        className={`p-2.5 ${t.removeBtn} rounded-lg transition-all`}
                       >
                         <svg
                           className="w-5 h-5"
@@ -329,10 +329,10 @@ const IncidentForm = ({
                         updated[index] = e.target.value;
                         onInputChange("witnesses", updated);
                       }}
-                      className={`flex-1 px-4 py-3 border rounded-lg transition-all duration-200 ${t.formInputBg} ${t.formInputText} ${t.formInputPlaceholder} ${
+                      className={`flex-1 px-4 py-3 border rounded-lg transition-all duration-200 ${t.inputBg} ${t.inputText} ${t.inputPlaceholder} ${
                         errors.witnesses
                           ? "border-red-400 focus:ring-2 focus:ring-red-300 focus:border-red-400 hover:border-red-400"
-                          : `${t.formInputBorder} focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
+                          : `${t.inputBorder} focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
                       }`}
                     />
                     {formData.witnesses.length > 1 && (
@@ -344,7 +344,7 @@ const IncidentForm = ({
                             formData.witnesses.filter((_, i) => i !== index),
                           )
                         }
-                        className={`p-2.5 ${t.removeBtn} ${t.removeBtnHoverText} ${t.removeBtnHoverBg} rounded-lg transition-all`}
+                        className={`p-2.5 ${t.removeBtn} rounded-lg transition-all`}
                       >
                         <svg
                           className="w-5 h-5"
@@ -405,9 +405,9 @@ const IncidentForm = ({
             </div>
 
             {/* Impact Assessment */}
-            <div className={`pt-6 border-t ${t.impactSectionBorder}`}>
+            <div className={`pt-6 border-t ${t.dividerBorder}`}>
               <h4
-                className={`text-lg font-semibold ${t.impactSectionTitle} mb-4 flex items-center font-kumbh`}
+                className={`text-lg font-semibold ${t.sectionSubtitle} mb-4 flex items-center font-kumbh`}
               >
                 <svg
                   className={`w-5 h-5 mr-2 ${t.step3Icon}`}
@@ -425,7 +425,7 @@ const IncidentForm = ({
                 Impact Assessment
               </h4>
               <div
-                className={`space-y-4 ${t.impactCheckboxBg} p-4 rounded-lg font-kumbh`}
+                className={`space-y-4 ${t.inlineBg} p-4 rounded-lg font-kumbh`}
               >
                 <CheckboxField
                   label="Were there any injuries?"
@@ -477,7 +477,7 @@ const IncidentForm = ({
                 </svg>
               </div>
               <h3
-                className={`text-2xl font-bold ${t.stepHeading} font-spartan`}
+                className={`text-2xl font-bold ${t.sectionTitle} font-spartan`}
               >
                 Additional Information
               </h3>

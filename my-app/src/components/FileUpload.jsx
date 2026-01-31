@@ -9,6 +9,7 @@ const FileUpload = ({
   currentTheme,
 }) => {
   const t = themeTokens[currentTheme] || themeTokens.blue;
+  const isDark = currentTheme === "dark";
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -56,12 +57,12 @@ const FileUpload = ({
   return (
     <div className="form-group">
       <label
-        className={`block text-sm font-semibold ${t.fileUploadLabelText} mb-2 font-kumbh`}
+        className={`block text-sm font-semibold ${t.labelText} mb-2 font-kumbh`}
       >
         {label}
       </label>
       {description && (
-        <p className={`text-sm ${t.fileUploadDescText} mb-3`}>{description}</p>
+        <p className={`text-sm ${t.subtleText} mb-3`}>{description}</p>
       )}
 
       <div
@@ -73,7 +74,7 @@ const FileUpload = ({
         className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${
           isDragging
             ? `${t.dragBorder} ${t.dragBg} scale-105`
-            : `${t.dragDefaultBorder} ${t.dragHoverBorder} ${t.dragDefaultHoverBg}`
+            : `${t.inputBorder} ${t.dragHoverBorder}`
         }`}
       >
         <input
@@ -89,7 +90,7 @@ const FileUpload = ({
           className={`transition-transform duration-200 ${isDragging ? "scale-110" : ""}`}
         >
           <svg
-            className={`w-12 h-12 ${t.fileUploadIconColor} mx-auto mb-4`}
+            className={`w-12 h-12 ${t.subtleText} mx-auto mb-4`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -103,12 +104,12 @@ const FileUpload = ({
           </svg>
         </div>
 
-        <p className={`${t.fileUploadTextPrimary} font-medium mb-1`}>
+        <p className={`${t.sectionSubtitle} font-medium mb-1`}>
           {isDragging
             ? "Drop files here!"
             : "Drop files here or click to browse"}
         </p>
-        <p className={`text-sm ${t.fileUploadTextSecondary}`}>
+        <p className={`text-sm ${t.subtleText}`}>
           Images, Videos, PDF, Word documents
         </p>
       </div>
@@ -119,7 +120,7 @@ const FileUpload = ({
           {files.map((file, index) => (
             <div
               key={index}
-              className={`flex items-center justify-between p-3 ${t.fileListItemBg} rounded-lg border ${t.fileListItemBorder} ${t.fileListItemHoverBg} transition-colors group`}
+              className={`flex items-center justify-between p-3 ${t.inlineBg} rounded-lg border ${t.dividerBorder} ${isDark ? "hover:bg-slate-600" : "hover:bg-slate-100"} transition-colors group`}
             >
               <div className="flex items-center space-x-3 flex-1 min-w-0">
                 <span className="text-2xl flex-shrink-0">
@@ -127,11 +128,11 @@ const FileUpload = ({
                 </span>
                 <div className="flex-1 min-w-0">
                   <p
-                    className={`text-sm font-medium ${t.fileListItemNameText} truncate`}
+                    className={`text-sm font-medium ${t.sectionSubtitle} truncate`}
                   >
                     {file.name}
                   </p>
-                  <p className={`text-xs ${t.fileListItemSizeText}`}>
+                  <p className={`text-xs ${t.subtleText}`}>
                     {formatFileSize(file.size)}
                   </p>
                 </div>
@@ -142,7 +143,7 @@ const FileUpload = ({
                   e.stopPropagation();
                   removeFile(index);
                 }}
-                className={`ml-3 ${t.fileListRemoveBtn} hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100`}
+                className={`ml-3 ${t.removeBtn} transition-colors p-1 opacity-0 group-hover:opacity-100`}
               >
                 <svg
                   className="w-5 h-5"

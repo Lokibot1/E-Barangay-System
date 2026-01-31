@@ -28,10 +28,10 @@ const InputField = ({
         onChange={onChange}
         placeholder={placeholder}
         required={required}
-        className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 ${t.formInputBg} ${t.formInputText} ${t.formInputPlaceholder} font-kumbh ${
+        className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 ${t.inputBg} ${t.inputText} ${t.inputPlaceholder} font-kumbh ${
           error
             ? "border-red-400 focus:ring-2 focus:ring-red-300 focus:border-red-400 hover:border-red-400"
-            : `${t.formInputBorder} focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
+            : `${t.inputBorder} focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
         }`}
         {...props}
       />
