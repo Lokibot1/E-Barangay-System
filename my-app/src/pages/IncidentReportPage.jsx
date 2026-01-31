@@ -20,6 +20,7 @@ const IncidentReportPage = () => {
   });
 
   const t = themeTokens[currentTheme]; // shorthand used everywhere below
+  const isDark = currentTheme === "dark";
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -152,7 +153,7 @@ const IncidentReportPage = () => {
                 <div className="relative">
                   <button
                     onClick={toggleNotifications}
-                    className={`p-2.5 ${t.subtleText} hover:text-slate-800 hover:bg-slate-100 rounded-full transition-all relative`}
+                    className={`p-2.5 ${t.subtleText} ${isDark ? "hover:text-slate-200 hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} rounded-full transition-all relative`}
                     title="Notifications"
                   >
                     <svg
@@ -177,7 +178,9 @@ const IncidentReportPage = () => {
 
                   {/* Notification Dropdown */}
                   {isNotificationOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-96 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden animate-slideDown">
+                    <div
+                      className={`absolute right-0 top-full mt-2 w-96 ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} rounded-xl shadow-2xl border z-50 overflow-hidden animate-slideDown`}
+                    >
                       <div
                         className={`bg-gradient-to-r ${t.primaryGrad} px-5 py-4`}
                       >
@@ -195,12 +198,14 @@ const IncidentReportPage = () => {
                         {notifications.map((notification) => (
                           <div
                             key={notification.id}
-                            className="p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer group"
+                            className={`p-4 border-b ${isDark ? "border-slate-700 hover:bg-slate-700/40" : "border-slate-100 hover:bg-slate-50"} transition-colors cursor-pointer group`}
                           >
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex-1">
                                 <div className="flex items-center space-x-2 mb-1">
-                                  <span className="font-bold text-slate-800 text-sm font-spartan">
+                                  <span
+                                    className={`font-bold ${isDark ? "text-slate-100" : "text-slate-800"} text-sm font-spartan`}
+                                  >
                                     {notification.reportId}
                                   </span>
                                   <span
@@ -209,10 +214,14 @@ const IncidentReportPage = () => {
                                     {notification.status}
                                   </span>
                                 </div>
-                                <p className="text-xs text-slate-600 font-kumbh mb-1">
+                                <p
+                                  className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"} font-kumbh mb-1`}
+                                >
                                   {notification.type}
                                 </p>
-                                <p className="text-xs text-slate-500 font-kumbh">
+                                <p
+                                  className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"} font-kumbh`}
+                                >
                                   {notification.description}
                                 </p>
                               </div>
@@ -221,7 +230,9 @@ const IncidentReportPage = () => {
                             {/* Progress Steps */}
                             <div className="mt-3">
                               <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs text-slate-600 font-semibold font-kumbh">
+                                <span
+                                  className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"} font-semibold font-kumbh`}
+                                >
                                   Status Progress
                                 </span>
                               </div>
@@ -234,7 +245,9 @@ const IncidentReportPage = () => {
                                           notification.progressSteps >= step
                                             ? notification.statusColor +
                                               " text-white"
-                                            : "bg-slate-200 text-slate-400"
+                                            : isDark
+                                              ? "bg-slate-600 text-slate-400"
+                                              : "bg-slate-200 text-slate-400"
                                         } transition-all duration-300`}
                                       >
                                         {notification.progressSteps >= step ? (
@@ -257,7 +270,9 @@ const IncidentReportPage = () => {
                                           </span>
                                         )}
                                       </div>
-                                      <span className="text-[10px] text-slate-600 mt-1 font-kumbh text-center">
+                                      <span
+                                        className={`text-[10px] ${isDark ? "text-slate-500" : "text-slate-600"} mt-1 font-kumbh text-center`}
+                                      >
                                         {
                                           ["Pending", "On Going", "Resolved"][
                                             idx
@@ -270,7 +285,9 @@ const IncidentReportPage = () => {
                                         className={`flex-1 h-1 rounded-full ${
                                           notification.progressSteps >= step + 1
                                             ? notification.progressColor
-                                            : "bg-slate-200"
+                                            : isDark
+                                              ? "bg-slate-600"
+                                              : "bg-slate-200"
                                         } transition-all duration-300`}
                                       />
                                     )}
@@ -280,7 +297,9 @@ const IncidentReportPage = () => {
                             </div>
 
                             <div className="flex items-center justify-between mt-3">
-                              <span className="text-xs text-slate-400 font-kumbh">
+                              <span
+                                className={`text-xs ${isDark ? "text-slate-600" : "text-slate-400"} font-kumbh`}
+                              >
                                 {notification.timestamp}
                               </span>
                               <button
@@ -293,7 +312,9 @@ const IncidentReportPage = () => {
                         ))}
                       </div>
 
-                      <div className="bg-slate-50 px-5 py-3 text-center border-t border-slate-200">
+                      <div
+                        className={`${isDark ? "bg-slate-900 border-slate-700" : "bg-slate-50 border-slate-200"} px-5 py-3 text-center border-t`}
+                      >
                         <button
                           className={`text-sm ${t.primaryText} hover:opacity-80 font-semibold font-kumbh transition-colors`}
                         >
@@ -306,7 +327,7 @@ const IncidentReportPage = () => {
 
                 {/* Settings */}
                 <button
-                  className={`p-2.5 ${t.subtleText} hover:text-slate-800 hover:bg-slate-100 rounded-full transition-all`}
+                  className={`p-2.5 ${t.subtleText} ${isDark ? "hover:text-slate-200 hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} rounded-full transition-all`}
                   title="Settings"
                   onClick={toggleSettings}
                 >
@@ -333,7 +354,9 @@ const IncidentReportPage = () => {
 
                 {/* Settings Dropdown */}
                 {isSettingsOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden animate-slideDown">
+                  <div
+                    className={`absolute right-0 top-full mt-2 w-72 ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} rounded-xl shadow-2xl border z-50 overflow-hidden animate-slideDown`}
+                  >
                     <div className="bg-gradient-to-r from-slate-700 to-slate-800 px-5 py-4">
                       <h3 className="text-white font-bold text-lg font-spartan">
                         Settings
@@ -345,30 +368,39 @@ const IncidentReportPage = () => {
                           icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
                           label: "Account Settings",
                           sub: "Manage your account",
-                          color: "blue",
+                          badgeBg: "bg-blue-100",
+                          badgeBgDark: "bg-blue-900/40",
+                          badgeIcon: "text-blue-600",
+                          badgeIconDark: "text-blue-400",
                         },
                         {
                           icon: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9",
                           label: "Notifications",
                           sub: "Configure alerts",
-                          color: "indigo",
+                          badgeBg: "bg-indigo-100",
+                          badgeBgDark: "bg-indigo-900/40",
+                          badgeIcon: "text-indigo-600",
+                          badgeIconDark: "text-indigo-400",
                         },
                         {
                           icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z",
                           label: "Privacy & Security",
                           sub: "Control your data",
-                          color: "green",
+                          badgeBg: "bg-green-100",
+                          badgeBgDark: "bg-green-900/40",
+                          badgeIcon: "text-green-600",
+                          badgeIconDark: "text-green-400",
                         },
                       ].map((item) => (
                         <button
                           key={item.label}
-                          className="w-full px-5 py-3 flex items-center space-x-3 hover:bg-slate-50 transition-colors group"
+                          className={`w-full px-5 py-3 flex items-center space-x-3 ${isDark ? "hover:bg-slate-700/40" : "hover:bg-slate-50"} transition-colors group`}
                         >
                           <div
-                            className={`w-8 h-8 bg-${item.color}-100 rounded-lg flex items-center justify-center group-hover:bg-${item.color}-200 transition-colors`}
+                            className={`w-8 h-8 ${isDark ? item.badgeBgDark : item.badgeBg} rounded-lg flex items-center justify-center transition-colors`}
                           >
                             <svg
-                              className={`w-4 h-4 text-${item.color}-600`}
+                              className={`w-4 h-4 ${isDark ? item.badgeIconDark : item.badgeIcon}`}
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -382,10 +414,14 @@ const IncidentReportPage = () => {
                             </svg>
                           </div>
                           <div className="flex-1 text-left">
-                            <p className="text-sm font-semibold text-slate-800 font-kumbh">
+                            <p
+                              className={`text-sm font-semibold ${isDark ? "text-slate-100" : "text-slate-800"} font-kumbh`}
+                            >
                               {item.label}
                             </p>
-                            <p className="text-xs text-slate-500 font-kumbh">
+                            <p
+                              className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"} font-kumbh`}
+                            >
                               {item.sub}
                             </p>
                           </div>
@@ -395,11 +431,13 @@ const IncidentReportPage = () => {
                       {/* Appearance — themed */}
                       <button
                         onClick={openThemeModal}
-                        className="w-full px-5 py-3 flex items-center space-x-3 hover:bg-slate-50 transition-colors group"
+                        className={`w-full px-5 py-3 flex items-center space-x-3 ${isDark ? "hover:bg-slate-700/40" : "hover:bg-slate-50"} transition-colors group`}
                       >
-                        <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                        <div
+                          className={`w-8 h-8 ${isDark ? "bg-amber-900/40" : "bg-amber-100"} rounded-lg flex items-center justify-center transition-colors`}
+                        >
                           <svg
-                            className="w-4 h-4 text-amber-600"
+                            className={`w-4 h-4 ${isDark ? "text-amber-400" : "text-amber-600"}`}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -413,21 +451,31 @@ const IncidentReportPage = () => {
                           </svg>
                         </div>
                         <div className="flex-1 text-left">
-                          <p className="text-sm font-semibold text-slate-800 font-kumbh">
+                          <p
+                            className={`text-sm font-semibold ${isDark ? "text-slate-100" : "text-slate-800"} font-kumbh`}
+                          >
                             Appearance
                           </p>
-                          <p className="text-xs text-slate-500 font-kumbh">
+                          <p
+                            className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"} font-kumbh`}
+                          >
                             Theme and display
                           </p>
                         </div>
                       </button>
 
-                      <div className="border-t border-slate-200 my-2" />
+                      <div
+                        className={`border-t ${isDark ? "border-slate-700" : "border-slate-200"} my-2`}
+                      />
 
-                      <button className="w-full px-5 py-3 flex items-center space-x-3 hover:bg-slate-50 transition-colors group">
-                        <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                      <button
+                        className={`w-full px-5 py-3 flex items-center space-x-3 ${isDark ? "hover:bg-slate-700/40" : "hover:bg-slate-50"} transition-colors group`}
+                      >
+                        <div
+                          className={`w-8 h-8 ${isDark ? "bg-slate-700" : "bg-slate-100"} rounded-lg flex items-center justify-center transition-colors`}
+                        >
                           <svg
-                            className="w-4 h-4 text-slate-600"
+                            className={`w-4 h-4 ${isDark ? "text-slate-400" : "text-slate-600"}`}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -441,10 +489,14 @@ const IncidentReportPage = () => {
                           </svg>
                         </div>
                         <div className="flex-1 text-left">
-                          <p className="text-sm font-semibold text-slate-800 font-kumbh">
+                          <p
+                            className={`text-sm font-semibold ${isDark ? "text-slate-100" : "text-slate-800"} font-kumbh`}
+                          >
                             Help & Support
                           </p>
-                          <p className="text-xs text-slate-500 font-kumbh">
+                          <p
+                            className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"} font-kumbh`}
+                          >
                             Get assistance
                           </p>
                         </div>
@@ -456,7 +508,7 @@ const IncidentReportPage = () => {
                 {/* Profile */}
                 <div className="relative">
                   <button
-                    className={`p-2.5 ${t.subtleText} hover:text-slate-800 hover:bg-slate-100 rounded-full transition-all`}
+                    className={`p-2.5 ${t.subtleText} ${isDark ? "hover:text-slate-200 hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} rounded-full transition-all`}
                     title="Profile"
                     onClick={toggleProfile}
                   >
@@ -476,7 +528,9 @@ const IncidentReportPage = () => {
                   </button>
 
                   {isProfileOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden animate-slideDown">
+                    <div
+                      className={`absolute right-0 top-full mt-2 w-80 ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} rounded-xl shadow-2xl border z-50 overflow-hidden animate-slideDown`}
+                    >
                       <div
                         className={`bg-gradient-to-r ${t.primaryGrad} px-5 py-6`}
                       >
@@ -502,31 +556,38 @@ const IncidentReportPage = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-3 p-4 bg-slate-50 border-b border-slate-200">
+                      <div
+                        className={`grid grid-cols-3 gap-3 p-4 ${isDark ? "bg-slate-900 border-slate-700" : "bg-slate-50 border-slate-200"} border-b`}
+                      >
                         {[
                           {
                             val: "12",
                             label: "Reports",
                             color: "text-blue-600",
+                            colorDark: "text-blue-400",
                           },
                           {
                             val: "8",
                             label: "Resolved",
                             color: "text-green-600",
+                            colorDark: "text-green-400",
                           },
                           {
                             val: "4",
                             label: "Pending",
                             color: "text-amber-600",
+                            colorDark: "text-amber-400",
                           },
                         ].map((s) => (
                           <div key={s.label} className="text-center">
                             <div
-                              className={`text-xl font-bold ${s.color} font-spartan`}
+                              className={`text-xl font-bold ${isDark ? s.colorDark : s.color} font-spartan`}
                             >
                               {s.val}
                             </div>
-                            <div className="text-xs text-slate-600 font-kumbh">
+                            <div
+                              className={`text-xs ${isDark ? "text-slate-500" : "text-slate-600"} font-kumbh`}
+                            >
                               {s.label}
                             </div>
                           </div>
@@ -538,28 +599,37 @@ const IncidentReportPage = () => {
                           {
                             icon: "M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z",
                             label: "View Profile",
-                            color: "blue",
+                            badgeBg: "bg-blue-100",
+                            badgeBgDark: "bg-blue-900/40",
+                            badgeIcon: "text-blue-600",
+                            badgeIconDark: "text-blue-400",
                           },
                           {
                             icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
                             label: "My Reports",
-                            color: "indigo",
+                            badgeBg: "bg-indigo-100",
+                            badgeBgDark: "bg-indigo-900/40",
+                            badgeIcon: "text-indigo-600",
+                            badgeIconDark: "text-indigo-400",
                           },
                           {
                             icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
                             label: "Dashboard",
-                            color: "green",
+                            badgeBg: "bg-green-100",
+                            badgeBgDark: "bg-green-900/40",
+                            badgeIcon: "text-green-600",
+                            badgeIconDark: "text-green-400",
                           },
                         ].map((item) => (
                           <button
                             key={item.label}
-                            className="w-full px-5 py-3 flex items-center space-x-3 hover:bg-slate-50 transition-colors group"
+                            className={`w-full px-5 py-3 flex items-center space-x-3 ${isDark ? "hover:bg-slate-700/40" : "hover:bg-slate-50"} transition-colors group`}
                           >
                             <div
-                              className={`w-8 h-8 bg-${item.color}-100 rounded-lg flex items-center justify-center group-hover:bg-${item.color}-200 transition-colors`}
+                              className={`w-8 h-8 ${isDark ? item.badgeBgDark : item.badgeBg} rounded-lg flex items-center justify-center transition-colors`}
                             >
                               <svg
-                                className={`w-4 h-4 text-${item.color}-600`}
+                                className={`w-4 h-4 ${isDark ? item.badgeIconDark : item.badgeIcon}`}
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -573,12 +643,14 @@ const IncidentReportPage = () => {
                               </svg>
                             </div>
                             <div className="flex-1 text-left">
-                              <p className="text-sm font-semibold text-slate-800 font-kumbh">
+                              <p
+                                className={`text-sm font-semibold ${isDark ? "text-slate-100" : "text-slate-800"} font-kumbh`}
+                              >
                                 {item.label}
                               </p>
                             </div>
                             <svg
-                              className="w-4 h-4 text-slate-400"
+                              className={`w-4 h-4 ${isDark ? "text-slate-600" : "text-slate-400"}`}
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -593,12 +665,18 @@ const IncidentReportPage = () => {
                           </button>
                         ))}
 
-                        <div className="border-t border-slate-200 my-2" />
+                        <div
+                          className={`border-t ${isDark ? "border-slate-700" : "border-slate-200"} my-2`}
+                        />
 
-                        <button className="w-full px-5 py-3 flex items-center space-x-3 hover:bg-red-50 transition-colors group">
-                          <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                        <button
+                          className={`w-full px-5 py-3 flex items-center space-x-3 ${isDark ? "hover:bg-red-900/20" : "hover:bg-red-50"} transition-colors group`}
+                        >
+                          <div
+                            className={`w-8 h-8 ${isDark ? "bg-red-900/40" : "bg-red-100"} rounded-lg flex items-center justify-center transition-colors`}
+                          >
                             <svg
-                              className="w-4 h-4 text-red-600"
+                              className={`w-4 h-4 ${isDark ? "text-red-400" : "text-red-600"}`}
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -612,7 +690,9 @@ const IncidentReportPage = () => {
                             </svg>
                           </div>
                           <div className="flex-1 text-left">
-                            <p className="text-sm font-semibold text-red-600 font-kumbh">
+                            <p
+                              className={`text-sm font-semibold ${isDark ? "text-red-400" : "text-red-600"} font-kumbh`}
+                            >
                               Sign Out
                             </p>
                           </div>
@@ -624,7 +704,7 @@ const IncidentReportPage = () => {
 
                 {/* Help */}
                 <button
-                  className={`p-2.5 ${t.subtleText} hover:text-slate-800 hover:bg-slate-100 rounded-full transition-all`}
+                  className={`p-2.5 ${t.subtleText} ${isDark ? "hover:text-slate-200 hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} rounded-full transition-all`}
                   title="Help"
                 >
                   <svg

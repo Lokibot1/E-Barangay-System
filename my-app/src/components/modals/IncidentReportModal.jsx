@@ -32,7 +32,7 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
 
   const totalSteps = 4;
 
-  // ─── Toast helpers ──────────────────────────────────────────
+  // ─── Toast helpers ──────────────────────────────────────────────────────
   const addToast = useCallback((toast) => {
     setToasts((prev) => [...prev, { id: Date.now(), ...toast }]);
   }, []);
@@ -41,7 +41,7 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     setToasts((prev) => prev.filter((x) => x.id !== id));
   }, []);
 
-  // ─── Reset on close ─────────────────────────────────────────
+  // ─── Reset on close ─────────────────────────────────────────────────────
   useEffect(() => {
     if (!isOpen) {
       setTimeout(() => {
@@ -67,7 +67,7 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     }
   }, [isOpen]);
 
-  // ─── Body scroll lock ───────────────────────────────────────
+  // ─── Body scroll lock ───────────────────────────────────────────────────
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "unset";
     return () => {
@@ -75,7 +75,7 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     };
   }, [isOpen]);
 
-  // ─── ESC key ────────────────────────────────────────────────
+  // ─── ESC key ────────────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e) => {
       if (e.key === "Escape" && isOpen && !isSubmitting) onClose();
@@ -84,7 +84,7 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     return () => document.removeEventListener("keydown", handler);
   }, [isOpen, onClose, isSubmitting]);
 
-  // ─── Input change – clears its own error ────────────────────
+  // ─── Input change – clears its own error ────────────────────────────────
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -96,7 +96,7 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     }
   };
 
-  // ─── Validation ─────────────────────────────────────────────
+  // ─── Validation ─────────────────────────────────────────────────────────
   const validate = (step) => {
     const errs = {};
     switch (step) {
@@ -127,7 +127,7 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     return errs;
   };
 
-  // ─── Navigation ─────────────────────────────────────────────
+  // ─── Navigation ─────────────────────────────────────────────────────────
   const handleNext = () => {
     const stepErrors = validate(currentStep);
     if (Object.keys(stepErrors).length > 0) {
@@ -143,7 +143,7 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  // ─── Submit ─────────────────────────────────────────────────
+  // ─── Submit ─────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
@@ -177,19 +177,23 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
 
   return (
     <>
-      <Toast toasts={toasts} onRemove={removeToast} />
+      <Toast
+        toasts={toasts}
+        onRemove={removeToast}
+        currentTheme={currentTheme}
+      />
 
       <div
         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
         onClick={handleBackdropClick}
       >
         <div
-          className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-scaleIn"
+          className={`relative ${t.modalBg} rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-scaleIn`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div
-            className={`flex items-start justify-between px-6 py-4 border-b border-slate-200 flex-shrink-0 bg-gradient-to-r ${t.modalHeaderGrad} rounded-t-2xl`}
+            className={`flex items-start justify-between px-6 py-4 border-b ${t.modalHeaderBorderBottom} flex-shrink-0 bg-gradient-to-r ${t.modalHeaderGrad} rounded-t-2xl`}
           >
             <div className="flex gap-3">
               <div className="flex items-center">
@@ -213,10 +217,12 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
                 </svg>
               </div>
               <div className="flex flex-col justify-center">
-                <h2 className="text-2xl font-bold text-slate-800 font-spartan">
+                <h2
+                  className={`text-2xl font-bold ${t.modalTitle} font-spartan`}
+                >
                   Incident Report
                 </h2>
-                <p className="text-sm text-slate-600 mt-1 font-kumbh">
+                <p className={`text-sm ${t.modalSubtext} mt-1 font-kumbh`}>
                   Provide detailed information about the incident
                 </p>
               </div>
@@ -225,7 +231,7 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
             <button
               onClick={onClose}
               disabled={isSubmitting}
-              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`p-2 ${t.modalCloseBtnColor} ${t.modalCloseBtnHover} ${t.modalCloseBtnHoverBg} rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
               aria-label="Close modal"
             >
               <svg
@@ -245,7 +251,9 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
           </div>
 
           {/* Progress */}
-          <div className="px-6 py-4 border-b border-slate-100 flex-shrink-0 bg-slate-50">
+          <div
+            className={`px-6 py-4 border-b ${t.progressSectionBorder} flex-shrink-0 ${t.progressSectionBg}`}
+          >
             <ProgressIndicator
               currentStep={currentStep}
               totalSteps={totalSteps}
@@ -265,20 +273,22 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center flex-shrink-0 rounded-b-2xl font-kumbh">
+          <div
+            className={`px-6 py-4 ${t.footerBg} border-t ${t.footerBorder} flex justify-between items-center flex-shrink-0 rounded-b-2xl font-kumbh`}
+          >
             <button
               onClick={handlePrevious}
               disabled={currentStep === 1}
               className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
                 currentStep === 1
-                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                  : "bg-slate-700 text-white hover:bg-slate-800 hover:shadow-md"
+                  ? `${t.footerPrevDisabledBg} ${t.footerPrevDisabledText} cursor-not-allowed`
+                  : `${t.footerPrevActiveBg} ${t.footerPrevActiveText} ${t.footerPrevActiveHover} hover:shadow-md`
               }`}
             >
               ← Previous
             </button>
 
-            <div className="text-sm font-medium text-slate-600">
+            <div className={`text-sm font-medium ${t.footerStepText}`}>
               Step {currentStep} of {totalSteps}
             </div>
 

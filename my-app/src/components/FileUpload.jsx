@@ -55,11 +55,13 @@ const FileUpload = ({
 
   return (
     <div className="form-group">
-      <label className="block text-sm font-semibold text-slate-700 mb-2 font-kumbh">
+      <label
+        className={`block text-sm font-semibold ${t.fileUploadLabelText} mb-2 font-kumbh`}
+      >
         {label}
       </label>
       {description && (
-        <p className="text-sm text-slate-500 mb-3">{description}</p>
+        <p className={`text-sm ${t.fileUploadDescText} mb-3`}>{description}</p>
       )}
 
       <div
@@ -71,7 +73,7 @@ const FileUpload = ({
         className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${
           isDragging
             ? `${t.dragBorder} ${t.dragBg} scale-105`
-            : `border-slate-300 ${t.dragHoverBorder} hover:bg-slate-50`
+            : `${t.dragDefaultBorder} ${t.dragHoverBorder} ${t.dragDefaultHoverBg}`
         }`}
       >
         <input
@@ -87,7 +89,7 @@ const FileUpload = ({
           className={`transition-transform duration-200 ${isDragging ? "scale-110" : ""}`}
         >
           <svg
-            className="w-12 h-12 text-slate-400 mx-auto mb-4"
+            className={`w-12 h-12 ${t.fileUploadIconColor} mx-auto mb-4`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -101,12 +103,12 @@ const FileUpload = ({
           </svg>
         </div>
 
-        <p className="text-slate-700 font-medium mb-1">
+        <p className={`${t.fileUploadTextPrimary} font-medium mb-1`}>
           {isDragging
             ? "Drop files here!"
             : "Drop files here or click to browse"}
         </p>
-        <p className="text-sm text-slate-500">
+        <p className={`text-sm ${t.fileUploadTextSecondary}`}>
           Images, Videos, PDF, Word documents
         </p>
       </div>
@@ -117,17 +119,19 @@ const FileUpload = ({
           {files.map((file, index) => (
             <div
               key={index}
-              className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors group"
+              className={`flex items-center justify-between p-3 ${t.fileListItemBg} rounded-lg border ${t.fileListItemBorder} ${t.fileListItemHoverBg} transition-colors group`}
             >
               <div className="flex items-center space-x-3 flex-1 min-w-0">
                 <span className="text-2xl flex-shrink-0">
                   {getFileIcon(file.name)}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-700 truncate">
+                  <p
+                    className={`text-sm font-medium ${t.fileListItemNameText} truncate`}
+                  >
                     {file.name}
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className={`text-xs ${t.fileListItemSizeText}`}>
                     {formatFileSize(file.size)}
                   </p>
                 </div>
@@ -138,7 +142,7 @@ const FileUpload = ({
                   e.stopPropagation();
                   removeFile(index);
                 }}
-                className="ml-3 text-slate-400 hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100"
+                className={`ml-3 ${t.fileListRemoveBtn} hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100`}
               >
                 <svg
                   className="w-5 h-5"

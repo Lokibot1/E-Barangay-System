@@ -92,7 +92,7 @@ const ProgressIndicator = ({ currentStep, totalSteps, currentTheme }) => {
                   ? `bg-gradient-to-br ${t.stepCompleteBg} text-white scale-100 shadow-lg`
                   : step.number === currentStep
                     ? `bg-gradient-to-br ${t.stepActiveBg} text-white scale-110 shadow-xl ring-4 ${t.stepActiveRing}`
-                    : "bg-white text-slate-400 border-2 border-slate-300"
+                    : `${t.stepInactiveBg} ${t.stepInactiveText} border-2 ${t.stepInactiveBorder}`
               }`}
             >
               {step.number < currentStep ? (
@@ -117,7 +117,7 @@ const ProgressIndicator = ({ currentStep, totalSteps, currentTheme }) => {
             </div>
             <div className="mt-2 text-center font-kumbh">
               <p
-                className={`text-xs font-semibold transition-colors ${step.number <= currentStep ? "text-slate-700" : "text-slate-400"}`}
+                className={`text-xs font-semibold transition-colors ${step.number <= currentStep ? t.stepLabelActive : t.stepLabelInactive}`}
               >
                 {step.title}
               </p>
@@ -129,10 +129,10 @@ const ProgressIndicator = ({ currentStep, totalSteps, currentTheme }) => {
       {/* Mobile */}
       <div className="md:hidden">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-semibold text-slate-700">
+          <span className={`text-sm font-semibold ${t.mobileStepText}`}>
             Step {currentStep} of {totalSteps}
           </span>
-          <span className="text-xs text-slate-500">
+          <span className={`text-xs ${t.mobileStepSubtext}`}>
             {steps[currentStep - 1].title}
           </span>
         </div>

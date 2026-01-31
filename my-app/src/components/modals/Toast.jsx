@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from "react";
+import themeTokens from "../../Themetokens";
 
-const Toast = ({ toasts, onRemove }) => {
+const Toast = ({ toasts, onRemove, currentTheme }) => {
   return (
     <div className="fixed top-6 right-6 z-[100] flex flex-col gap-3 w-full max-w-sm">
       {toasts.map((toast) => (
-        <ToastItem key={toast.id} toast={toast} onRemove={onRemove} />
+        <ToastItem
+          key={toast.id}
+          toast={toast}
+          onRemove={onRemove}
+          currentTheme={currentTheme}
+        />
       ))}
     </div>
   );
 };
 
-const ToastItem = ({ toast, onRemove }) => {
+const ToastItem = ({ toast, onRemove, currentTheme }) => {
   const [exiting, setExiting] = useState(false);
+  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const isDark = currentTheme === "dark";
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -28,13 +36,13 @@ const ToastItem = ({ toast, onRemove }) => {
 
   const config = {
     success: {
-      bg: "bg-green-50",
-      border: "border-green-200",
-      iconBg: "bg-green-100",
-      iconColor: "text-green-600",
-      titleColor: "text-green-800",
-      textColor: "text-green-700",
-      progressBg: "bg-green-500",
+      bg: isDark ? "bg-slate-800" : "bg-green-50",
+      border: isDark ? "border-green-800" : "border-green-200",
+      iconBg: isDark ? "bg-green-900" : "bg-green-100",
+      iconColor: isDark ? "text-green-400" : "text-green-600",
+      titleColor: isDark ? "text-green-300" : "text-green-800",
+      textColor: isDark ? "text-slate-300" : "text-green-700",
+      progressBg: isDark ? "bg-green-500" : "bg-green-500",
       icon: (
         <svg
           className="w-5 h-5"
@@ -52,13 +60,13 @@ const ToastItem = ({ toast, onRemove }) => {
       ),
     },
     error: {
-      bg: "bg-red-50",
-      border: "border-red-200",
-      iconBg: "bg-red-100",
-      iconColor: "text-red-600",
-      titleColor: "text-red-800",
-      textColor: "text-red-700",
-      progressBg: "bg-red-500",
+      bg: isDark ? "bg-slate-800" : "bg-red-50",
+      border: isDark ? "border-red-800" : "border-red-200",
+      iconBg: isDark ? "bg-red-900" : "bg-red-100",
+      iconColor: isDark ? "text-red-400" : "text-red-600",
+      titleColor: isDark ? "text-red-300" : "text-red-800",
+      textColor: isDark ? "text-slate-300" : "text-red-700",
+      progressBg: isDark ? "bg-red-500" : "bg-red-500",
       icon: (
         <svg
           className="w-5 h-5"
@@ -103,7 +111,7 @@ const ToastItem = ({ toast, onRemove }) => {
       {/* Close button */}
       <button
         onClick={() => setExiting(true)}
-        className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition-colors"
+        className={`flex-shrink-0 ${t.toastCloseBtn} ${t.toastCloseBtnHover} transition-colors`}
       >
         <svg
           className="w-4 h-4"

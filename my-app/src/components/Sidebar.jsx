@@ -81,7 +81,9 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
             opacity: collapsed ? 0 : 1,
           }}
         >
-          <p className="font-spartan text-sm font-bold text-slate-800 whitespace-nowrap truncate">
+          <p
+            className={`font-spartan text-sm font-bold ${t.sidebarAppName} whitespace-nowrap truncate`}
+          >
             Logo wala pa
           </p>
           <p

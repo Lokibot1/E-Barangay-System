@@ -15,7 +15,9 @@ const SelectField = ({
 
   return (
     <div className="form-group">
-      <label className="block text-sm font-semibold text-slate-700 mb-2 font-kumbh">
+      <label
+        className={`block text-sm font-semibold ${t.labelText} mb-2 font-kumbh`}
+      >
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -23,10 +25,10 @@ const SelectField = ({
         value={value}
         onChange={onChange}
         required={required}
-        className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 bg-white text-slate-900 appearance-none cursor-pointer font-kumbh ${
+        className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 ${t.formInputBg} ${t.formInputText} appearance-none cursor-pointer font-kumbh ${
           error
             ? "border-red-400 focus:ring-2 focus:ring-red-300 focus:border-red-400 hover:border-red-400"
-            : `border-slate-300 focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
+            : `${t.formInputBorder} focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
         }`}
         style={{
           backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,

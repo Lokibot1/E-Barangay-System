@@ -39,7 +39,9 @@ const IncidentForm = ({
                   />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-slate-800 font-spartan">
+              <h3
+                className={`text-2xl font-bold ${t.stepHeading} font-spartan`}
+              >
                 Basic Information
               </h3>
             </div>
@@ -100,7 +102,9 @@ const IncidentForm = ({
                   />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-slate-800 font-spartan">
+              <h3
+                className={`text-2xl font-bold ${t.stepHeading} font-spartan`}
+              >
                 Incident Details
               </h3>
             </div>
@@ -194,7 +198,9 @@ const IncidentForm = ({
                   />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-slate-800 font-spartan">
+              <h3
+                className={`text-2xl font-bold ${t.stepHeading} font-spartan`}
+              >
                 People Involved
               </h3>
             </div>
@@ -202,7 +208,7 @@ const IncidentForm = ({
             {/* Persons Involved */}
             <div>
               <label
-                className={`block text-sm font-semibold mb-2 font-kumbh ${errors.personsInvolved ? "text-red-600" : "text-slate-700"}`}
+                className={`block text-sm font-semibold mb-2 font-kumbh ${errors.personsInvolved ? "text-red-600" : t.labelText}`}
               >
                 Persons Involved <span className="text-red-500">*</span>
               </label>
@@ -221,10 +227,10 @@ const IncidentForm = ({
                         updated[index] = e.target.value;
                         onInputChange("personsInvolved", updated);
                       }}
-                      className={`flex-1 px-4 py-3 border rounded-lg transition-all duration-200 bg-white text-slate-900 placeholder-slate-400 ${
+                      className={`flex-1 px-4 py-3 border rounded-lg transition-all duration-200 ${t.formInputBg} ${t.formInputText} ${t.formInputPlaceholder} ${
                         errors.personsInvolved
                           ? "border-red-400 focus:ring-2 focus:ring-red-300 focus:border-red-400 hover:border-red-400"
-                          : `border-slate-300 focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
+                          : `${t.formInputBorder} focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
                       }`}
                     />
                     {formData.personsInvolved.length > 1 && (
@@ -238,7 +244,7 @@ const IncidentForm = ({
                             ),
                           )
                         }
-                        className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                        className={`p-2.5 ${t.removeBtn} ${t.removeBtnHoverText} ${t.removeBtnHoverBg} rounded-lg transition-all`}
                       >
                         <svg
                           className="w-5 h-5"
@@ -304,7 +310,7 @@ const IncidentForm = ({
             {/* Witnesses */}
             <div>
               <label
-                className={`block text-sm font-semibold mb-2 font-kumbh ${errors.witnesses ? "text-red-600" : "text-slate-700"}`}
+                className={`block text-sm font-semibold mb-2 font-kumbh ${errors.witnesses ? "text-red-600" : t.labelText}`}
               >
                 Witnesses <span className="text-red-500">*</span>
               </label>
@@ -323,10 +329,10 @@ const IncidentForm = ({
                         updated[index] = e.target.value;
                         onInputChange("witnesses", updated);
                       }}
-                      className={`flex-1 px-4 py-3 border rounded-lg transition-all duration-200 bg-white text-slate-900 placeholder-slate-400 ${
+                      className={`flex-1 px-4 py-3 border rounded-lg transition-all duration-200 ${t.formInputBg} ${t.formInputText} ${t.formInputPlaceholder} ${
                         errors.witnesses
                           ? "border-red-400 focus:ring-2 focus:ring-red-300 focus:border-red-400 hover:border-red-400"
-                          : `border-slate-300 focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
+                          : `${t.formInputBorder} focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
                       }`}
                     />
                     {formData.witnesses.length > 1 && (
@@ -338,7 +344,7 @@ const IncidentForm = ({
                             formData.witnesses.filter((_, i) => i !== index),
                           )
                         }
-                        className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                        className={`p-2.5 ${t.removeBtn} ${t.removeBtnHoverText} ${t.removeBtnHoverBg} rounded-lg transition-all`}
                       >
                         <svg
                           className="w-5 h-5"
@@ -399,9 +405,9 @@ const IncidentForm = ({
             </div>
 
             {/* Impact Assessment */}
-            <div className="pt-6 border-t border-slate-200">
+            <div className={`pt-6 border-t ${t.impactSectionBorder}`}>
               <h4
-                className={`text-lg font-semibold text-slate-700 mb-4 flex items-center font-kumbh`}
+                className={`text-lg font-semibold ${t.impactSectionTitle} mb-4 flex items-center font-kumbh`}
               >
                 <svg
                   className={`w-5 h-5 mr-2 ${t.step3Icon}`}
@@ -418,7 +424,9 @@ const IncidentForm = ({
                 </svg>
                 Impact Assessment
               </h4>
-              <div className="space-y-4 bg-slate-50 p-4 rounded-lg font-kumbh">
+              <div
+                className={`space-y-4 ${t.impactCheckboxBg} p-4 rounded-lg font-kumbh`}
+              >
                 <CheckboxField
                   label="Were there any injuries?"
                   checked={formData.injuries}
@@ -468,7 +476,9 @@ const IncidentForm = ({
                   />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-slate-800 font-spartan">
+              <h3
+                className={`text-2xl font-bold ${t.stepHeading} font-spartan`}
+              >
                 Additional Information
               </h3>
             </div>

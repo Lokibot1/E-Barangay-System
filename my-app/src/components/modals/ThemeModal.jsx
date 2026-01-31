@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import themeTokens from "../../Themetokens";
 
 const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
   const [selectedTheme, setSelectedTheme] = useState(currentTheme);
+  const t = themeTokens[currentTheme] || themeTokens.blue;
 
   useEffect(() => {
     setSelectedTheme(currentTheme);
@@ -67,8 +69,10 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
         onClick={onClose}
       />
 
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-scaleIn">
-        {/* Header */}
+      <div
+        className={`relative ${t.themeModalBg} rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-scaleIn`}
+      >
+        {/* Header — always dark regardless of theme for contrast */}
         <div className="bg-gradient-to-r from-slate-700 to-slate-900 px-6 py-5 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-white font-spartan">
@@ -108,7 +112,7 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
                 className={`relative cursor-pointer rounded-xl border-2 transition-all duration-300 overflow-hidden group ${
                   selectedTheme === theme.id
                     ? "border-blue-600 shadow-xl scale-105"
-                    : "border-slate-200 hover:border-slate-300 hover:shadow-lg"
+                    : `${t.themeModalCardBorder} ${t.themeModalCardHoverBorder} hover:shadow-lg`
                 }`}
               >
                 {/* Selected Badge */}
@@ -164,16 +168,18 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
                 </div>
 
                 {/* Info */}
-                <div className="p-4 bg-white">
+                <div className={`p-4 ${t.themeModalCardInfoBg}`}>
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-bold text-slate-800 font-spartan">
+                    <h3
+                      className={`text-lg font-bold ${t.themeModalCardName} font-spartan`}
+                    >
                       {theme.name}
                     </h3>
                     <div
                       className={`w-4 h-4 bg-gradient-to-r ${theme.colors.primary} rounded-full border-2 border-white shadow-sm`}
                     />
                   </div>
-                  <p className="text-sm text-slate-600 font-kumbh">
+                  <p className={`text-sm ${t.themeModalCardDesc} font-kumbh`}>
                     {theme.description}
                   </p>
                 </div>
@@ -186,10 +192,12 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
           </div>
 
           {/* Note */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+          <div
+            className={`mt-6 p-4 ${t.themeModalInfoBg} border ${t.themeModalInfoBorder} rounded-xl`}
+          >
             <div className="flex items-start space-x-3">
               <svg
-                className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                className={`w-5 h-5 ${t.themeModalInfoIcon} mt-0.5 flex-shrink-0`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -202,10 +210,14 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
                 />
               </svg>
               <div>
-                <p className="text-sm font-semibold text-blue-900 font-kumbh">
+                <p
+                  className={`text-sm font-semibold ${t.themeModalInfoTitle} font-kumbh`}
+                >
                   Theme Preview
                 </p>
-                <p className="text-xs text-blue-700 font-kumbh mt-1">
+                <p
+                  className={`text-xs ${t.themeModalInfoText} font-kumbh mt-1`}
+                >
                   The selected theme will be applied to your entire workspace,
                   including buttons, cards, and navigation elements.
                 </p>
@@ -215,10 +227,12 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
         </div>
 
         {/* Footer */}
-        <div className="bg-slate-50 px-6 py-4 flex items-center justify-between border-t border-slate-200">
+        <div
+          className={`${t.themeModalFooterBg} px-6 py-4 flex items-center justify-between border-t ${t.themeModalFooterBorder}`}
+        >
           <button
             onClick={onClose}
-            className="px-5 py-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg font-semibold font-kumbh transition-colors"
+            className={`px-5 py-2.5 ${t.themeModalCancelText} ${t.themeModalCancelHoverText} ${t.themeModalCancelHoverBg} rounded-lg font-semibold font-kumbh transition-colors`}
           >
             Cancel
           </button>

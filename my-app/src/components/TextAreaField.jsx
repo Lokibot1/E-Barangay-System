@@ -16,7 +16,9 @@ const TextAreaField = ({
 
   return (
     <div className="form-group">
-      <label className="block text-sm font-semibold text-slate-700 mb-2 font-kumbh">
+      <label
+        className={`block text-sm font-semibold ${t.labelText} mb-2 font-kumbh`}
+      >
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -26,10 +28,10 @@ const TextAreaField = ({
         placeholder={placeholder}
         rows={rows}
         required={required}
-        className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 bg-white text-slate-900 placeholder-slate-400 resize-none font-kumbh ${
+        className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 ${t.formInputBg} ${t.formInputText} ${t.formInputPlaceholder} resize-none font-kumbh ${
           error
             ? "border-red-400 focus:ring-2 focus:ring-red-300 focus:border-red-400 hover:border-red-400"
-            : `border-slate-300 focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
+            : `${t.formInputBorder} focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
         }`}
         {...props}
       />
