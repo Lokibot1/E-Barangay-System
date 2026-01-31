@@ -195,14 +195,14 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
           <div
             className={`flex items-start justify-between px-6 py-4 border-b ${t.modalHeaderBorderBottom} flex-shrink-0 bg-gradient-to-r ${t.modalHeaderGrad} rounded-t-2xl`}
           >
-            <div className="flex gap-3">
-              <div className="flex items-center">
+            <div>
+              <div className="flex items-center space-x-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width="40"
-                  height="40"
+                  width="32"
+                  height="32"
                   viewBox="0 0 24 24"
-                  className={t.modalHeaderIcon}
+                  className={`${t.modalHeaderIcon} flex-shrink-0`}
                 >
                   <g
                     fill="none"
@@ -215,17 +215,15 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
                     <path d="m21.5 18l-10 5.5l-10-5.5V7l10-5.5l10 5.5z" />
                   </g>
                 </svg>
-              </div>
-              <div className="flex flex-col justify-center">
                 <h2
                   className={`text-2xl font-bold ${t.modalTitle} font-spartan`}
                 >
                   Incident Report
                 </h2>
-                <p className={`text-sm ${t.modalSubtext} mt-1 font-kumbh`}>
-                  Provide detailed information about the incident
-                </p>
               </div>
+              <p className={`text-sm ${t.modalSubtext} mt-1 font-kumbh`}>
+                Provide detailed information about the incident
+              </p>
             </div>
 
             <button
