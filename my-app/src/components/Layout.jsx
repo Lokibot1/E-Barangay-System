@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
+import FAQChatbot from "./FAQChatbot";
 import themeTokens from "../Themetokens";
 
 const Layout = ({ children }) => {
@@ -30,6 +31,9 @@ const Layout = ({ children }) => {
         <Header currentTheme={currentTheme} onThemeChange={handleThemeChange} />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
+
+      {/* FAQ e-KAP Chatbot */}
+      <FAQChatbot currentTheme={currentTheme} />
     </div>
   );
 };

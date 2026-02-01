@@ -36,15 +36,15 @@ const IncidentReportPage = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Hero */}
-        <div className="text-center mb-12 animate-fadeIn">
+        <div className="text-center mb-8 sm:mb-12 animate-fadeIn">
           <div className="inline-block mb-4">
             <div
-              className={`w-20 h-20 bg-gradient-to-br ${t.primaryGrad} rounded-2xl flex items-center justify-center shadow-xl mx-auto transform rotate-3`}
+              className={`w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br ${t.primaryGrad} rounded-2xl flex items-center justify-center shadow-xl mx-auto transform rotate-3`}
             >
               <svg
-                className="w-10 h-10 text-white -rotate-3"
+                className="w-8 h-8 sm:w-10 sm:h-10 text-white -rotate-3"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -60,12 +60,12 @@ const IncidentReportPage = () => {
           </div>
 
           <h1
-            className={`text-6xl font-bold ${t.cardText} mb-4 tracking-tight font-spartan`}
+            className={`text-4xl sm:text-5xl lg:text-6xl font-bold ${t.cardText} mb-3 sm:mb-4 tracking-tight font-spartan`}
           >
             Incident Report
           </h1>
           <p
-            className={`text-xl ${t.subtleText} mb-8 max-w-2xl mx-auto font-kumbh`}
+            className={`text-base sm:text-lg lg:text-xl ${t.subtleText} mb-6 sm:mb-8 max-w-2xl mx-auto font-kumbh px-4`}
           >
             Report workplace incidents quickly and securely. Your safety is our
             priority.
@@ -73,10 +73,10 @@ const IncidentReportPage = () => {
 
           <button
             onClick={openModal}
-            className={`font-kumbh group inline-flex items-center space-x-3 px-8 py-4 bg-gradient-to-r ${t.primaryGrad} text-white text-lg font-semibold rounded-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105`}
+            className={`font-kumbh group inline-flex items-center space-x-2 sm:space-x-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r ${t.primaryGrad} text-white text-base sm:text-lg font-semibold rounded-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105`}
           >
             <svg
-              className="w-6 h-6 transition-transform group-hover:rotate-90 duration-300"
+              className="w-5 h-5 sm:w-6 sm:h-6 transition-transform group-hover:rotate-90 duration-300"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -93,7 +93,7 @@ const IncidentReportPage = () => {
         </div>
 
         {/* Feature Cards */}
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mt-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto mt-12 sm:mt-16">
           {[
             {
               delay: "0s",
@@ -122,14 +122,14 @@ const IncidentReportPage = () => {
           ].map((card) => (
             <div
               key={card.title}
-              className={`${t.cardBg} rounded-2xl p-6 shadow-lg border ${t.cardBorder} hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-slideUp`}
+              className={`${t.cardBg} rounded-2xl p-5 sm:p-6 shadow-lg border ${t.cardBorder} hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-slideUp text-center`}
               style={{ animationDelay: card.delay }}
             >
               <div
-                className={`w-12 h-12 bg-gradient-to-br ${card.iconBg} rounded-xl flex items-center justify-center mb-4`}
+                className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br ${card.iconBg} rounded-xl flex items-center justify-center mb-3 sm:mb-4 mx-auto`}
               >
                 <svg
-                  className={`w-6 h-6 ${card.iconColor}`}
+                  className={`w-5 h-5 sm:w-6 sm:h-6 ${card.iconColor}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -143,25 +143,27 @@ const IncidentReportPage = () => {
                 </svg>
               </div>
               <h3
-                className={`text-2xl font-bold ${t.cardText} mb-2 font-spartan`}
+                className={`text-xl sm:text-2xl font-bold ${t.cardText} mb-2 font-spartan`}
               >
                 {card.title}
               </h3>
-              <p className={`${t.subtleText} font-kumbh`}>{card.desc}</p>
+              <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh`}>
+                {card.desc}
+              </p>
             </div>
           ))}
         </div>
 
         {/* Stats */}
         <div
-          className={`mt-20 ${t.cardBg} rounded-2xl shadow-lg border ${t.cardBorder} p-8`}
+          className={`mt-16 sm:mt-20 ${t.cardBg} rounded-2xl shadow-lg border ${t.cardBorder} p-6 sm:p-8`}
         >
           <h2
-            className={`text-3xl font-bold text-center ${t.cardText} mb-8 font-spartan`}
+            className={`text-2xl sm:text-3xl font-bold text-center ${t.cardText} mb-6 sm:mb-8 font-spartan`}
           >
             Our Impact
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {[
               {
                 val: "1,234",
@@ -174,11 +176,13 @@ const IncidentReportPage = () => {
             ].map((s) => (
               <div key={s.label} className="text-center">
                 <div
-                  className={`text-4xl font-bold ${s.color} mb-2 font-spartan`}
+                  className={`text-3xl sm:text-4xl font-bold ${s.color} mb-2 font-spartan`}
                 >
                   {s.val}
                 </div>
-                <div className={`${t.subtleText} text-sm font-kumbh`}>
+                <div
+                  className={`${t.subtleText} text-xs sm:text-sm font-kumbh`}
+                >
                   {s.label}
                 </div>
               </div>
@@ -187,12 +191,12 @@ const IncidentReportPage = () => {
         </div>
 
         {/* Help */}
-        <div className="mt-12 text-center font-kumbh">
-          <p className={t.subtleText}>
+        <div className="mt-8 sm:mt-12 text-center font-kumbh px-4">
+          <p className={`text-sm sm:text-base ${t.subtleText}`}>
             Need help? Contact the safety team at{" "}
             <a
               href="mailto:safety@company.com"
-              className={`${t.primaryText} hover:opacity-80 underline font-medium`}
+              className={`${t.primaryText} hover:opacity-80 underline font-medium break-all`}
             >
               safety@company.com
             </a>

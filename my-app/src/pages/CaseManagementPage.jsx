@@ -158,36 +158,42 @@ const CaseManagementPage = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className={`text-4xl font-bold ${t.cardText} mb-2 font-spartan`}>
+        <div className="mb-6 sm:mb-8">
+          <h1
+            className={`text-3xl sm:text-4xl font-bold ${t.cardText} mb-2 font-spartan`}
+          >
             Case Management
           </h1>
-          <p className={`${t.subtleText} font-kumbh`}>
+          <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh`}>
             View and track your submitted incident reports
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div
-            className={`${t.cardBg} rounded-xl p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`}
+            className={`${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-sm ${t.subtleText} mb-1 font-kumbh`}>
+                <p
+                  className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}
+                >
                   On-Going
                 </p>
-                <p className={`text-4xl font-bold ${t.cardText} font-spartan`}>
+                <p
+                  className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}
+                >
                   {statusCounts.ongoing}
                 </p>
               </div>
               <div
-                className={`w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center`}
+                className={`w-12 h-12 sm:w-14 sm:h-14 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0`}
               >
                 <svg
-                  className="w-7 h-7 text-blue-600"
+                  className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -204,22 +210,26 @@ const CaseManagementPage = () => {
           </div>
 
           <div
-            className={`${t.cardBg} rounded-xl p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`}
+            className={`${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-sm ${t.subtleText} mb-1 font-kumbh`}>
+                <p
+                  className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}
+                >
                   Resolved
                 </p>
-                <p className={`text-4xl font-bold ${t.cardText} font-spartan`}>
+                <p
+                  className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}
+                >
                   {statusCounts.resolved}
                 </p>
               </div>
               <div
-                className={`w-14 h-14 bg-green-100 rounded-full flex items-center justify-center`}
+                className={`w-12 h-12 sm:w-14 sm:h-14 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0`}
               >
                 <svg
-                  className="w-7 h-7 text-green-600"
+                  className="w-6 h-6 sm:w-7 sm:h-7 text-green-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -236,22 +246,26 @@ const CaseManagementPage = () => {
           </div>
 
           <div
-            className={`${t.cardBg} rounded-xl p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`}
+            className={`${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all sm:col-span-2 lg:col-span-1`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-sm ${t.subtleText} mb-1 font-kumbh`}>
+                <p
+                  className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}
+                >
                   Rejected
                 </p>
-                <p className={`text-4xl font-bold ${t.cardText} font-spartan`}>
+                <p
+                  className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}
+                >
                   {statusCounts.rejected}
                 </p>
               </div>
               <div
-                className={`w-14 h-14 bg-red-100 rounded-full flex items-center justify-center`}
+                className={`w-12 h-12 sm:w-14 sm:h-14 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0`}
               >
                 <svg
-                  className="w-7 h-7 text-red-600"
+                  className="w-6 h-6 sm:w-7 sm:h-7 text-red-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -269,69 +283,71 @@ const CaseManagementPage = () => {
         </div>
 
         {/* Filter Tabs */}
-        <div
-          className={`inline-flex ${t.cardBg} rounded-lg p-1.5 shadow-md border ${t.cardBorder} mb-6`}
-        >
-          {["ongoing", "resolved", "rejected"].map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`px-6 py-2.5 rounded-md font-semibold text-sm transition-all font-kumbh capitalize ${
-                activeFilter === filter
-                  ? `bg-gradient-to-r ${t.primaryGrad} text-white shadow-md`
-                  : `${t.subtleText} hover:${t.cardText}`
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  {filter === "ongoing" && (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  )}
-                  {filter === "resolved" && (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  )}
-                  {filter === "rejected" && (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  )}
-                </svg>
-                {filter}
-                <span
-                  className={`ml-1 px-2 py-0.5 rounded-full text-xs font-bold ${
-                    activeFilter === filter
-                      ? "bg-white/20"
-                      : "bg-slate-200 text-slate-700"
-                  }`}
-                >
-                  {statusCounts[filter]}
-                </span>
-              </div>
-            </button>
-          ))}
+        <div className="overflow-x-auto mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div
+            className={`inline-flex ${t.cardBg} rounded-lg p-1.5 shadow-md border ${t.cardBorder} min-w-full sm:min-w-0`}
+          >
+            {["ongoing", "resolved", "rejected"].map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-2.5 rounded-md font-semibold text-xs sm:text-sm transition-all font-kumbh capitalize whitespace-nowrap ${
+                  activeFilter === filter
+                    ? `bg-gradient-to-r ${t.primaryGrad} text-white shadow-md`
+                    : `${t.subtleText} hover:${t.cardText}`
+                }`}
+              >
+                <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                  <svg
+                    className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    {filter === "ongoing" && (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    )}
+                    {filter === "resolved" && (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    )}
+                    {filter === "rejected" && (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    )}
+                  </svg>
+                  <span className="hidden sm:inline">{filter}</span>
+                  <span
+                    className={`ml-0.5 sm:ml-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ${
+                      activeFilter === filter
+                        ? "bg-white/20"
+                        : "bg-slate-200 text-slate-700"
+                    }`}
+                  >
+                    {statusCounts[filter]}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Reports Grid */}
         {filteredReports.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredReports.map((report) => (
               <ReportCard
                 key={report.id}
@@ -343,10 +359,10 @@ const CaseManagementPage = () => {
           </div>
         ) : (
           <div
-            className={`${t.cardBg} rounded-xl p-12 text-center border ${t.cardBorder}`}
+            className={`${t.cardBg} rounded-xl p-8 sm:p-12 text-center border ${t.cardBorder}`}
           >
             <svg
-              className={`w-16 h-16 ${t.subtleText} mx-auto mb-4`}
+              className={`w-12 h-12 sm:w-16 sm:h-16 ${t.subtleText} mx-auto mb-4`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -358,10 +374,12 @@ const CaseManagementPage = () => {
                 d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
               />
             </svg>
-            <h3 className={`text-xl font-bold ${t.cardText} mb-2 font-spartan`}>
+            <h3
+              className={`text-lg sm:text-xl font-bold ${t.cardText} mb-2 font-spartan`}
+            >
               No {activeFilter} reports
             </h3>
-            <p className={`${t.subtleText} font-kumbh`}>
+            <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh`}>
               There are no reports with this status at the moment.
             </p>
           </div>

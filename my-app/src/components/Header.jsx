@@ -89,15 +89,15 @@ const Header = ({ currentTheme, onThemeChange }) => {
   return (
     <>
       <header className={`${t.cardBg} border-b ${t.cardBorder} shadow-sm`}>
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3">
               <div
-                className={`w-10 h-10 bg-gradient-to-br ${t.primaryGrad} rounded-lg flex items-center justify-center shadow-lg`}
+                className={`w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br ${t.primaryGrad} rounded-lg flex items-center justify-center shadow-lg`}
               >
                 <svg
-                  className="w-6 h-6 text-white"
+                  className="w-5 h-5 sm:w-6 sm:h-6 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -110,8 +110,10 @@ const Header = ({ currentTheme, onThemeChange }) => {
                   />
                 </svg>
               </div>
-              <div>
-                <h1 className={`font-spartan text-xl font-bold ${t.cardText}`}>
+              <div className="hidden sm:block">
+                <h1
+                  className={`font-spartan text-lg sm:text-xl font-bold ${t.cardText}`}
+                >
                   Logo wala pa
                 </h1>
                 <p className={`text-xs ${t.subtleText} font-kumbh`}>
@@ -121,16 +123,16 @@ const Header = ({ currentTheme, onThemeChange }) => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center space-x-3 relative">
+            <div className="flex items-center space-x-2 sm:space-x-3 relative">
               {/* Notification */}
               <div className="relative">
                 <button
                   onClick={toggleNotifications}
-                  className={`p-2.5 ${t.subtleText} ${isDark ? "hover:text-slate-200 hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} rounded-full transition-all relative`}
+                  className={`p-2 sm:p-2.5 ${t.subtleText} ${isDark ? "hover:text-slate-200 hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} rounded-full transition-all relative`}
                   title="Notifications"
                 >
                   <svg
-                    className="w-5 h-5"
+                    className="w-4 h-4 sm:w-5 sm:h-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -143,7 +145,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                     />
                   </svg>
                   {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                    <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-red-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
                       {unreadCount}
                     </span>
                   )}
@@ -152,30 +154,30 @@ const Header = ({ currentTheme, onThemeChange }) => {
                 {/* Notification Dropdown */}
                 {isNotificationOpen && (
                   <div
-                    className={`absolute right-0 top-full mt-2 w-96 ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} rounded-xl shadow-2xl border z-50 overflow-hidden animate-slideDown`}
+                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-96 ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} rounded-xl shadow-2xl border z-50 overflow-hidden animate-slideDown max-h-[80vh] sm:max-h-[600px]`}
                   >
                     <div
-                      className={`bg-gradient-to-r ${t.primaryGrad} px-5 py-4`}
+                      className={`bg-gradient-to-r ${t.primaryGrad} px-4 sm:px-5 py-3 sm:py-4`}
                     >
                       <div className="flex items-center justify-between">
-                        <h3 className="text-white font-bold text-lg font-spartan">
+                        <h3 className="text-white font-bold text-base sm:text-lg font-spartan">
                           Report Updates
                         </h3>
-                        <span className="bg-white/20 text-white text-xs font-semibold px-2.5 py-1 rounded-full font-kumbh">
+                        <span className="bg-white/20 text-white text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full font-kumbh">
                           {unreadCount} Active
                         </span>
                       </div>
                     </div>
 
-                    <div className="max-h-96 overflow-y-auto">
+                    <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto">
                       {notifications.map((notification) => (
                         <div
                           key={notification.id}
-                          className={`p-4 border-b ${isDark ? "border-slate-700 hover:bg-slate-700/40" : "border-slate-100 hover:bg-slate-50"} transition-colors cursor-pointer group`}
+                          className={`p-3 sm:p-4 border-b ${isDark ? "border-slate-700 hover:bg-slate-700/40" : "border-slate-100 hover:bg-slate-50"} transition-colors cursor-pointer group`}
                         >
                           <div className="flex items-start justify-between mb-2">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2 mb-1">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center space-x-2 mb-1 flex-wrap">
                                 <span
                                   className={`text-xs font-bold ${isDark ? "text-slate-300" : "text-slate-600"} font-kumbh`}
                                 >
@@ -188,64 +190,50 @@ const Header = ({ currentTheme, onThemeChange }) => {
                                 </span>
                               </div>
                               <p
-                                className={`font-semibold text-sm ${isDark ? "text-slate-100" : "text-slate-900"} font-kumbh`}
+                                className={`font-semibold text-sm ${isDark ? "text-slate-100" : "text-slate-900"} font-kumbh mb-1`}
                               >
                                 {notification.type}
                               </p>
                               <p
-                                className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"} mt-1 font-kumbh`}
+                                className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"} font-kumbh line-clamp-2`}
                               >
                                 {notification.description}
                               </p>
                             </div>
-                            <svg
-                              className={`w-4 h-4 ${isDark ? "text-slate-600" : "text-slate-400"} group-hover:text-blue-500 transition-colors flex-shrink-0 ml-2`}
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 5l7 7-7 7"
-                              />
-                            </svg>
                           </div>
 
-                          {/* Progress */}
-                          <div className="flex items-center space-x-2 mt-3">
-                            <div className="flex-1 flex space-x-1">
-                              {[1, 2, 3].map((step) => (
-                                <div
-                                  key={step}
-                                  className={`h-1.5 flex-1 rounded-full ${
-                                    step <= notification.progressSteps
-                                      ? notification.progressColor
-                                      : isDark
-                                        ? "bg-slate-700"
-                                        : "bg-slate-200"
-                                  } transition-all`}
-                                />
-                              ))}
-                            </div>
-                            <span
-                              className={`text-xs ${isDark ? "text-slate-500" : "text-slate-400"} font-kumbh`}
-                            >
-                              {notification.timestamp}
-                            </span>
+                          {/* Progress Steps */}
+                          <div className="flex items-center gap-1.5 mt-3">
+                            {[1, 2, 3].map((step) => (
+                              <div
+                                key={step}
+                                className={`flex-1 h-1.5 rounded-full ${
+                                  step <= notification.progressSteps
+                                    ? notification.progressColor
+                                    : isDark
+                                      ? "bg-slate-700"
+                                      : "bg-slate-200"
+                                }`}
+                              />
+                            ))}
                           </div>
+
+                          <p
+                            className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"} font-kumbh mt-2`}
+                          >
+                            {notification.timestamp}
+                          </p>
                         </div>
                       ))}
                     </div>
 
                     <div
-                      className={`${isDark ? "bg-slate-900 border-slate-700" : "bg-slate-50 border-slate-100"} px-4 py-3 border-t`}
+                      className={`p-3 sm:p-4 border-t ${isDark ? "border-slate-700 bg-slate-800/50" : "border-slate-100 bg-slate-50"}`}
                     >
                       <button
                         className={`w-full text-center text-sm font-semibold ${t.primaryText} hover:opacity-80 transition-opacity font-kumbh`}
                       >
-                        View All Reports
+                        View All Notifications
                       </button>
                     </div>
                   </div>
@@ -256,11 +244,11 @@ const Header = ({ currentTheme, onThemeChange }) => {
               <div className="relative">
                 <button
                   onClick={toggleSettings}
-                  className={`p-2.5 ${t.subtleText} ${isDark ? "hover:text-slate-200 hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} rounded-full transition-all`}
+                  className={`p-2 sm:p-2.5 ${t.subtleText} ${isDark ? "hover:text-slate-200 hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} rounded-full transition-all`}
                   title="Settings"
                 >
                   <svg
-                    className="w-5 h-5"
+                    className="w-4 h-4 sm:w-5 sm:h-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -282,15 +270,15 @@ const Header = ({ currentTheme, onThemeChange }) => {
 
                 {isSettingsOpen && (
                   <div
-                    className={`absolute right-0 top-full mt-2 w-64 ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} rounded-xl shadow-2xl border z-50 overflow-hidden animate-slideDown`}
+                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-64 ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} rounded-xl shadow-2xl border z-50 overflow-hidden animate-slideDown`}
                   >
                     <div className="p-2">
                       <button
                         onClick={openThemeModal}
-                        className={`w-full flex items-center space-x-3 px-4 py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors group`}
+                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors group`}
                       >
                         <svg
-                          className="w-5 h-5 text-blue-500"
+                          className="w-5 h-5 text-blue-500 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -307,10 +295,10 @@ const Header = ({ currentTheme, onThemeChange }) => {
                         </span>
                       </button>
                       <button
-                        className={`w-full flex items-center space-x-3 px-4 py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors group`}
+                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors group`}
                       >
                         <svg
-                          className="w-5 h-5 text-green-500"
+                          className="w-5 h-5 text-green-500 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -335,15 +323,15 @@ const Header = ({ currentTheme, onThemeChange }) => {
               <div className="relative">
                 <button
                   onClick={toggleProfile}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-full ${isDark ? "hover:bg-slate-700" : "hover:bg-slate-100"} transition-all`}
+                  className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full ${isDark ? "hover:bg-slate-700" : "hover:bg-slate-100"} transition-all`}
                 >
                   <div
-                    className={`w-8 h-8 bg-gradient-to-br ${t.primaryGrad} rounded-full flex items-center justify-center text-white font-bold text-sm`}
+                    className={`w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br ${t.primaryGrad} rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm`}
                   >
                     JD
                   </div>
                   <svg
-                    className={`w-4 h-4 ${t.subtleText}`}
+                    className={`w-3 h-3 sm:w-4 sm:h-4 ${t.subtleText} hidden sm:block`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -359,25 +347,25 @@ const Header = ({ currentTheme, onThemeChange }) => {
 
                 {isProfileOpen && (
                   <div
-                    className={`absolute right-0 top-full mt-2 w-64 ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} rounded-xl shadow-2xl border z-50 overflow-hidden animate-slideDown`}
+                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-64 ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} rounded-xl shadow-2xl border z-50 overflow-hidden animate-slideDown`}
                   >
                     <div
-                      className={`px-4 py-4 border-b ${isDark ? "border-slate-700" : "border-slate-100"}`}
+                      className={`px-3 sm:px-4 py-3 sm:py-4 border-b ${isDark ? "border-slate-700" : "border-slate-100"}`}
                     >
                       <div className="flex items-center space-x-3">
                         <div
-                          className={`w-12 h-12 bg-gradient-to-br ${t.primaryGrad} rounded-full flex items-center justify-center text-white font-bold text-lg`}
+                          className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br ${t.primaryGrad} rounded-full flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0`}
                         >
                           JD
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <p
-                            className={`font-semibold ${isDark ? "text-slate-100" : "text-slate-900"} font-kumbh`}
+                            className={`font-semibold text-sm ${isDark ? "text-slate-100" : "text-slate-900"} font-kumbh truncate`}
                           >
                             John Doe
                           </p>
                           <p
-                            className={`text-sm ${isDark ? "text-slate-400" : "text-slate-600"} font-kumbh`}
+                            className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"} font-kumbh truncate`}
                           >
                             john.doe@company.com
                           </p>
@@ -387,10 +375,10 @@ const Header = ({ currentTheme, onThemeChange }) => {
 
                     <div className="p-2">
                       <button
-                        className={`w-full flex items-center space-x-3 px-4 py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors`}
+                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors`}
                       >
                         <svg
-                          className="w-5 h-5 text-blue-500"
+                          className="w-5 h-5 text-blue-500 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -407,10 +395,10 @@ const Header = ({ currentTheme, onThemeChange }) => {
                         </span>
                       </button>
                       <button
-                        className={`w-full flex items-center space-x-3 px-4 py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors`}
+                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors`}
                       >
                         <svg
-                          className="w-5 h-5 text-red-500"
+                          className="w-5 h-5 text-red-500 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
