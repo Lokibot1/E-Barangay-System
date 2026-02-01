@@ -14,6 +14,9 @@ const Layout = ({ children }) => {
   const handleThemeChange = (theme) => {
     setCurrentTheme(theme);
     localStorage.setItem("appTheme", theme);
+
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent("themeChange", { detail: theme }));
   };
 
   return (

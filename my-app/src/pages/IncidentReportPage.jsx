@@ -1,13 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import IncidentReportModal from "../components/modals/IncidentReportModal";
 import themeTokens from "../Themetokens";
 
 const IncidentReportPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentTheme] = useState(() => {
+  const [currentTheme, setCurrentTheme] = useState(() => {
     return localStorage.getItem("appTheme") || "blue";
   });
+
+  // Listen for theme changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setCurrentTheme(localStorage.getItem("appTheme") || "blue");
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    // Also listen for custom theme change event
+    const handleThemeChange = (e) => {
+      setCurrentTheme(e.detail);
+    };
+    window.addEventListener("themeChange", handleThemeChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("themeChange", handleThemeChange);
+    };
+  }, []);
 
   const t = themeTokens[currentTheme];
 
