@@ -20,6 +20,7 @@ module.exports = {
       fontFamily: {
         kumbh: ['"Kumbh Sans"', "sans-serif"],
         spartan: ['"League Spartan"', "sans-serif"],
+        suezone: ['"Suez One"', "serif"],
       },
       animation: {
         fadeIn: "fadeIn 0.6s ease-out",

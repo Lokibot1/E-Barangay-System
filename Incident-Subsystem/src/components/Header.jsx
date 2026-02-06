@@ -89,7 +89,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
   return (
     <>
       <header className={`${t.cardBg} border-b ${t.cardBorder} shadow-sm`}>
-        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
+        <div className="container mx-auto px-4 sm:px-6 py-2 sm:py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center space-x-2 sm:space-x-3">

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
+import DateTimeBar from "./DateTimeBar";
 import FAQChatbot from "./FAQChatbot";
 import themeTokens from "../Themetokens";
 
@@ -27,7 +28,8 @@ const Layout = ({ children }) => {
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed((prev) => !prev)}
       />
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        <DateTimeBar currentTheme={currentTheme} />
         <Header currentTheme={currentTheme} onThemeChange={handleThemeChange} />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
