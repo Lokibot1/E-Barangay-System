@@ -35,7 +35,7 @@ const MainPage = () => {
         {/* White Space */}
         <div className={`${t.pageBg} py-8 sm:py-10 text-center px-4`}>
           <h1
-            className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${t.cardText} mb-2 sm:mb-3 font-kumbh uppercase tracking-tight`}
+            className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${t.cardText} mb-2 sm:mb-3 font-spartan uppercase tracking-tight`}
           >
             INCIDENT & COMPLAINT MANAGEMENT
           </h1>

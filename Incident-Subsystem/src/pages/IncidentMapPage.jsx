@@ -32,7 +32,7 @@ const IncidentMapPage = () => {
     <Layout>
       <div className="h-full flex flex-col overflow-y-auto">
         {/* White Space */}
-        <div className={`${t.pageBg} py-8 sm:py-12 text-center px-4`}>
+        <div className={`${t.pageBg} py-8 sm:py-10 text-center px-4`}>
           <h1
             className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${t.cardText} mb-2 sm:mb-3 font-spartan uppercase tracking-tight`}
           >

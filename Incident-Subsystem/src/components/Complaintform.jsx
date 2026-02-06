@@ -1,0 +1,318 @@
+import React from "react";
+import InputField from "./InputField";
+import TextAreaField from "./TextAreaField";
+import SelectField from "./SelectField";
+import FileUpload from "./FileUpload";
+import themeTokens from "../Themetokens";
+
+const ComplaintForm = ({
+  currentStep,
+  formData,
+  onInputChange,
+  errors,
+  currentTheme,
+}) => {
+  const t = themeTokens[currentTheme] || themeTokens.blue;
+
+  const complaintTypes = [
+    { value: "", label: "Select complaint type" },
+    { value: "noise", label: "Noise Disturbance" },
+    { value: "property", label: "Property Dispute" },
+    { value: "harassment", label: "Harassment" },
+    { value: "trespassing", label: "Trespassing" },
+    { value: "parking", label: "Illegal Parking" },
+    { value: "garbage", label: "Garbage/Sanitation Issue" },
+    { value: "boundary", label: "Boundary Dispute" },
+    { value: "unpaid", label: "Unpaid Debt" },
+    { value: "other", label: "Other" },
+  ];
+
+  const severityLevels = [
+    { value: "", label: "Select severity" },
+    { value: "low", label: "Low - Minor issue" },
+    { value: "medium", label: "Medium - Moderate concern" },
+    { value: "high", label: "High - Urgent attention needed" },
+  ];
+
+  const handleWitnessChange = (index, value) => {
+    const newWitnesses = [...formData.witnesses];
+    newWitnesses[index] = value;
+    onInputChange("witnesses", newWitnesses);
+  };
+
+  const addWitness = () => {
+    onInputChange("witnesses", [...formData.witnesses, ""]);
+  };
+
+  const removeWitness = (index) => {
+    const newWitnesses = formData.witnesses.filter((_, i) => i !== index);
+    onInputChange("witnesses", newWitnesses.length ? newWitnesses : [""]);
+  };
+
+  return (
+    <div className="px-6 py-6">
+      {/* Step 1: Basic Information */}
+      {currentStep === 1 && (
+        <div className="space-y-6 animate-fadeIn">
+          <div>
+            <h3
+              className={`text-xl font-bold ${t.sectionTitle} mb-1 font-spartan`}
+            >
+              Basic Information
+            </h3>
+            <p className={`text-sm ${t.sectionSubtitle} font-kumbh`}>
+              When and where did this occur?
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InputField
+              label="Date of Incident"
+              type="date"
+              value={formData.complaintDate}
+              onChange={(e) => onInputChange("complaintDate", e.target.value)}
+              error={errors.complaintDate}
+              required
+              currentTheme={currentTheme}
+            />
+            <InputField
+              label="Time of Incident"
+              type="time"
+              value={formData.complaintTime}
+              onChange={(e) => onInputChange("complaintTime", e.target.value)}
+              error={errors.complaintTime}
+              required
+              currentTheme={currentTheme}
+            />
+          </div>
+
+          <InputField
+            label="Location / Address"
+            type="text"
+            value={formData.location}
+            onChange={(e) => onInputChange("location", e.target.value)}
+            placeholder="e.g., Block 5 Lot 10, Street Name, Barangay"
+            error={errors.location}
+            required
+            currentTheme={currentTheme}
+          />
+        </div>
+      )}
+
+      {/* Step 2: Complaint Details */}
+      {currentStep === 2 && (
+        <div className="space-y-6 animate-fadeIn">
+          <div>
+            <h3
+              className={`text-xl font-bold ${t.sectionTitle} mb-1 font-spartan`}
+            >
+              Complaint Details
+            </h3>
+            <p className={`text-sm ${t.sectionSubtitle} font-kumbh`}>
+              Describe the nature of your complaint
+            </p>
+          </div>
+
+          <SelectField
+            label="Type of Complaint"
+            value={formData.complaintType}
+            onChange={(e) => onInputChange("complaintType", e.target.value)}
+            options={complaintTypes}
+            error={errors.complaintType}
+            required
+            currentTheme={currentTheme}
+          />
+
+          <SelectField
+            label="Severity Level"
+            value={formData.severity}
+            onChange={(e) => onInputChange("severity", e.target.value)}
+            options={severityLevels}
+            error={errors.severity}
+            required
+            currentTheme={currentTheme}
+          />
+
+          <TextAreaField
+            label="Detailed Description"
+            value={formData.description}
+            onChange={(e) => onInputChange("description", e.target.value)}
+            placeholder="Please provide a clear and detailed account of what happened..."
+            rows={6}
+            error={errors.description}
+            required
+            currentTheme={currentTheme}
+          />
+        </div>
+      )}
+
+      {/* Step 3: Parties Involved */}
+      {currentStep === 3 && (
+        <div className="space-y-6 animate-fadeIn">
+          <div>
+            <h3
+              className={`text-xl font-bold ${t.sectionTitle} mb-1 font-spartan`}
+            >
+              Parties Involved
+            </h3>
+            <p className={`text-sm ${t.sectionSubtitle} font-kumbh`}>
+              Information about complainant and respondent
+            </p>
+          </div>
+
+          {/* Complainant Section */}
+          <div
+            className={`${t.inlineBg} border ${t.dividerBorder} rounded-lg p-4`}
+          >
+            <h4
+              className={`text-lg font-semibold ${t.cardText} mb-4 font-spartan`}
+            >
+              Complainant (You)
+            </h4>
+            <div className="space-y-4">
+              <InputField
+                label="Full Name"
+                type="text"
+                value={formData.complainantName}
+                onChange={(e) =>
+                  onInputChange("complainantName", e.target.value)
+                }
+                placeholder="Your full name"
+                error={errors.complainantName}
+                required
+                currentTheme={currentTheme}
+              />
+              <InputField
+                label="Contact Number"
+                type="tel"
+                value={formData.complainantContact}
+                onChange={(e) =>
+                  onInputChange("complainantContact", e.target.value)
+                }
+                placeholder="09XX XXX XXXX"
+                currentTheme={currentTheme}
+              />
+            </div>
+          </div>
+
+          {/* Respondent Section */}
+          <div
+            className={`${t.inlineBg} border ${t.dividerBorder} rounded-lg p-4`}
+          >
+            <h4
+              className={`text-lg font-semibold ${t.cardText} mb-4 font-spartan`}
+            >
+              Respondent (Person You're Complaining Against)
+            </h4>
+            <div className="space-y-4">
+              <InputField
+                label="Full Name"
+                type="text"
+                value={formData.respondentName}
+                onChange={(e) =>
+                  onInputChange("respondentName", e.target.value)
+                }
+                placeholder="Name of the person"
+                error={errors.respondentName}
+                required
+                currentTheme={currentTheme}
+              />
+              <TextAreaField
+                label="Address (if known)"
+                value={formData.respondentAddress}
+                onChange={(e) =>
+                  onInputChange("respondentAddress", e.target.value)
+                }
+                placeholder="Respondent's address or location"
+                rows={2}
+                currentTheme={currentTheme}
+              />
+            </div>
+          </div>
+
+          {/* Witnesses */}
+          <div>
+            <label
+              className={`block text-sm font-semibold ${t.labelText} mb-3 font-kumbh`}
+            >
+              Witnesses (Optional)
+            </label>
+            <div className="space-y-3">
+              {formData.witnesses.map((witness, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={witness}
+                    onChange={(e) => handleWitnessChange(index, e.target.value)}
+                    placeholder={`Witness ${index + 1} name`}
+                    className={`flex-1 px-4 py-3 border rounded-lg ${t.inputBg} ${t.inputText} ${t.inputBorder} font-kumbh`}
+                  />
+                  {formData.witnesses.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeWitness(index)}
+                      className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addWitness}
+                className={`text-sm ${t.primaryText} hover:opacity-80 font-medium font-kumbh`}
+              >
+                + Add Another Witness
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Step 4: Additional Information */}
+      {currentStep === 4 && (
+        <div className="space-y-6 animate-fadeIn">
+          <div>
+            <h3
+              className={`text-xl font-bold ${t.sectionTitle} mb-1 font-spartan`}
+            >
+              Additional Information
+            </h3>
+            <p className={`text-sm ${t.sectionSubtitle} font-kumbh`}>
+              Supporting documents and desired resolution
+            </p>
+          </div>
+
+          <TextAreaField
+            label="Desired Resolution"
+            value={formData.desiredResolution}
+            onChange={(e) => onInputChange("desiredResolution", e.target.value)}
+            placeholder="What outcome are you seeking? (e.g., apology, compensation, cease of activity)"
+            rows={4}
+            currentTheme={currentTheme}
+          />
+
+          <FileUpload
+            label="Supporting Documents"
+            description="Upload any photos, videos, or documents that support your complaint"
+            files={formData.attachments}
+            onChange={(files) => onInputChange("attachments", files)}
+            currentTheme={currentTheme}
+          />
+
+          <TextAreaField
+            label="Additional Notes (Optional)"
+            value={formData.additionalNotes}
+            onChange={(e) => onInputChange("additionalNotes", e.target.value)}
+            placeholder="Any other information you'd like to add..."
+            rows={4}
+            currentTheme={currentTheme}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ComplaintForm;
