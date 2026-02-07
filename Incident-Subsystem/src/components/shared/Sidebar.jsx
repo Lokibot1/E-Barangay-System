@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import themeTokens from "../../Themetokens";
 
-// ── Nav link definitions ────────────────────────────────────────────────────
-const NAV_LINKS = [
+// ── Nav structure ─
+const NAV_ITEMS = [
   {
     id: "main",
     label: "Main",
@@ -11,34 +11,46 @@ const NAV_LINKS = [
     path: "/",
   },
   {
-    id: "file-complaint",
-    label: "File a Complaint",
-    icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
-    path: "/file-complaint",
+    id: "subsystem-1",
+    label: "Subsystem 1",
+    icon: "M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z",
   },
   {
-    id: "incident-report",
-    label: "Report an Incident",
+    id: "subsystem-2",
+    label: "Subsystem 2",
+    icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
+  },
+  {
+    id: "incident-complaint",
+    label: "Incident & Complaint",
     icon: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z",
-    path: "/incident-report",
-  },
-  {
-    id: "incident-map",
-    label: "Incident Map",
-    icon: "M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7",
-    path: "/incident-map",
-  },
-  {
-    id: "case-management",
-    label: "Case Management",
-    icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
-    path: "/case-management",
-  },
-  {
-    id: "help",
-    label: "Help",
-    icon: "M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-    path: "/help",
+    path: "/incident-complaint",
+    children: [
+      {
+        id: "file-complaint",
+        label: "File a Complaint",
+        icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+        path: "/incident-complaint/file-complaint",
+      },
+      {
+        id: "incident-report",
+        label: "Report an Incident",
+        icon: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z",
+        path: "/incident-complaint/incident-report",
+      },
+      {
+        id: "incident-map",
+        label: "Incident Map",
+        icon: "M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7",
+        path: "/incident-complaint/incident-map",
+      },
+      {
+        id: "case-management",
+        label: "Case Management",
+        icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+        path: "/incident-complaint/case-management",
+      },
+    ],
   },
 ];
 
@@ -49,13 +61,50 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const handleLinkClick = (link) => {
-    navigate(link.path);
+  // Initialize expanded state based on current path
+  const [expandedItems, setExpandedItems] = useState(() => {
+    const expanded = {};
+    NAV_ITEMS.forEach((item) => {
+      if (item.children) {
+        const isChildActive = item.children.some(
+          (child) => location.pathname === child.path,
+        );
+        if (isChildActive || location.pathname === item.path) {
+          expanded[item.id] = true;
+        }
+      }
+    });
+    return expanded;
+  });
+
+  const toggleExpand = (itemId) => {
+    setExpandedItems((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
+  };
+
+  const handleItemClick = (item) => {
+    if (item.children) {
+      if (item.path) navigate(item.path);
+      toggleExpand(item.id);
+    } else if (item.path) {
+      navigate(item.path);
+    }
     setIsMobileMenuOpen(false);
   };
 
-  const isLinkActive = (link) => {
-    return location.pathname === link.path;
+  const handleSubItemClick = (e, subItem) => {
+    e.stopPropagation();
+    navigate(subItem.path);
+    setIsMobileMenuOpen(false);
+  };
+
+  const isPathActive = (path) => location.pathname === path;
+
+  const isParentActive = (item) => {
+    if (item.path && isPathActive(item.path)) return true;
+    if (item.children) {
+      return item.children.some((child) => isPathActive(child.path));
+    }
+    return false;
   };
 
   return (
@@ -162,30 +211,34 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
         {/* ── Nav links ───────────────────────────────────────────────────── */}
         <nav className="flex-1 overflow-y-auto py-3 px-2">
           <ul className="flex flex-col gap-0.5">
-            {NAV_LINKS.map((link) => {
-              const isActive = isLinkActive(link);
+            {NAV_ITEMS.map((item) => {
+              const active = item.path ? isParentActive(item) : false;
+              const expanded = expandedItems[item.id];
+              const hasChildren = item.children && item.children.length > 0;
+              const isPlaceholder = !item.path && !hasChildren;
 
               return (
-                <li key={link.id}>
+                <li key={item.id}>
+                  {/* Main item */}
                   <button
-                    onClick={() => handleLinkClick(link)}
-                    title={collapsed ? link.label : undefined}
+                    onClick={() => handleItemClick(item)}
+                    title={collapsed ? item.label : undefined}
                     className={`
                       w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
                       transition-all duration-150 text-left
                       border-l-[3px]
-
                       ${
-                        isActive
+                        active
                           ? `${t.sidebarActiveBg} ${t.sidebarActiveText} ${t.sidebarActiveBorder}`
-                          : `border-transparent ${t.sidebarText} ${t.sidebarHoverBg}`
+                          : `border-transparent ${t.sidebarText} ${!isPlaceholder ? t.sidebarHoverBg : ""}`
                       }
+                      ${isPlaceholder ? "opacity-50 cursor-default" : ""}
                     `}
                   >
                     {/* Icon */}
                     <svg
                       className={`w-5 h-5 flex-shrink-0 transition-colors duration-150 ${
-                        isActive ? t.sidebarIconActive : "text-current"
+                        active ? t.sidebarIconActive : "text-current"
                       }`}
                       fill="none"
                       stroke="currentColor"
@@ -195,7 +248,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d={link.icon}
+                        d={item.icon}
                       />
                     </svg>
 
@@ -207,9 +260,76 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                         opacity: collapsed ? 0 : 1,
                       }}
                     >
-                      {link.label}
+                      {item.label}
                     </span>
+
+                    {/* Chevron for expandable items */}
+                    {hasChildren && !collapsed && (
+                      <svg
+                        className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${
+                          expanded ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    )}
                   </button>
+
+                  {/* Sublinks */}
+                  {hasChildren && expanded && !collapsed && (
+                    <ul className="mt-0.5 ml-4 pl-3 border-l border-gray-300/30">
+                      {item.children.map((child) => {
+                        const childActive = isPathActive(child.path);
+
+                        return (
+                          <li key={child.id}>
+                            <button
+                              onClick={(e) => handleSubItemClick(e, child)}
+                              className={`
+                                w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg
+                                transition-all duration-150 text-left
+                                ${
+                                  childActive
+                                    ? `${t.sidebarActiveBg} ${t.sidebarActiveText}`
+                                    : `${t.sidebarText} ${t.sidebarHoverBg}`
+                                }
+                              `}
+                            >
+                              <svg
+                                className={`w-4 h-4 flex-shrink-0 transition-colors duration-150 ${
+                                  childActive
+                                    ? t.sidebarIconActive
+                                    : "text-current"
+                                }`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d={child.icon}
+                                />
+                              </svg>
+
+                              <span className="font-kumbh text-xs font-medium whitespace-nowrap truncate">
+                                {child.label}
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
                 </li>
               );
             })}
