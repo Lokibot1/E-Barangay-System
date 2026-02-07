@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import Header from "./Header";
-import Sidebar from "./Sidebar";
+import Header from "../shared/Header";
+import Sidebar from "../shared/Sidebar";
 import DateTimeBar from "./DateTimeBar";
-import FAQChatbot from "./FAQChatbot";
-import themeTokens from "../Themetokens";
+import FAQChatbot from "../../components/shared/FAQChatbot";
+import themeTokens from "../../Themetokens";
 
 const Layout = ({ children }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);

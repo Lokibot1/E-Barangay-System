@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import ThemeModal from "./modals/ThemeModal";
-import themeTokens from "../Themetokens";
+import ThemeModal from "../../components/sub-system-3/ThemeModal";
+import themeTokens from "../../Themetokens";
 
 const Header = ({ currentTheme, onThemeChange }) => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);

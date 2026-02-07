@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import themeTokens from "../Themetokens";
+import themeTokens from "../../Themetokens";
 
 const FAQChatbot = ({ currentTheme }) => {
   const [isOpen, setIsOpen] = useState(false);

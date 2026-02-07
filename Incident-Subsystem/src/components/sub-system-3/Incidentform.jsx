@@ -1,10 +1,10 @@
 import React from "react";
-import InputField from "./InputField";
-import TextAreaField from "./TextAreaField";
-import SelectField from "./SelectField";
-import FileUpload from "./FileUpload";
-import CheckboxField from "./CheckboxField";
-import themeTokens from "../Themetokens";
+import InputField from "../../components/shared/InputField";
+import TextAreaField from "../../components/shared/TextAreaField";
+import SelectField from "../../components/shared/SelectField";
+import FileUpload from "../../components/shared/FileUpload";
+import CheckboxField from "../../components/shared/CheckboxField";
+import themeTokens from "../../Themetokens";
 
 const IncidentForm = ({
   currentStep,

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import Layout from "../components/Layout";
-import MainMenuCards from "../components/MainMenuCards";
-import Footer from "../components/Footer";
-import themeTokens from "../Themetokens";
+import Layout from "../../components/shared/Layout";
+import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
+import Footer from "../../components/shared/Footer";
+import themeTokens from "../../Themetokens";
 
 const MainPage = () => {
   const [currentTheme, setCurrentTheme] = useState(() => {

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import themeTokens from "../Themetokens";
+import themeTokens from "../../Themetokens";
 
 const FileUpload = ({
   label,

@@ -1,5 +1,5 @@
 import React from "react";
-import themeTokens from "../Themetokens";
+import themeTokens from "../../Themetokens";
 
 const ProgressIndicator = ({ currentStep, totalSteps, currentTheme }) => {
   const t = themeTokens[currentTheme] || themeTokens.blue;

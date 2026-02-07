@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import Layout from "../components/Layout";
-import MainMenuCards from "../components/MainMenuCards";
-import ComplaintModal from "../components/modals/ComplaintModal";
-import themeTokens from "../Themetokens";
+import Layout from "../../components/shared/Layout";
+import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
+import ComplaintModal from "../../components/sub-system-3/ComplaintModal";
+import themeTokens from "../../Themetokens";
 
 const FileComplaintPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);

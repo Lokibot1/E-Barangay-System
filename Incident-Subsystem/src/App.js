@@ -1,10 +1,10 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import MainPage from "./pages/MainPage";
-import FileComplaintPage from "./pages/FileComplaintPage";
-import IncidentReportPage from "./pages/IncidentReportPage";
-import IncidentMapPage from "./pages/IncidentMapPage";
-import CaseManagementPage from "./pages/CaseManagementPage";
+import MainPage from "./pages/sub-system-3/MainPage";
+import FileComplaintPage from "./pages/sub-system-3/FileComplaintPage";
+import IncidentReportPage from "./pages/sub-system-3/IncidentReportPage";
+import IncidentMapPage from "./pages/sub-system-3/IncidentMapPage";
+import CaseManagementPage from "./pages/sub-system-3/CaseManagementPage";
 import "./App.css";
 
 function App() {

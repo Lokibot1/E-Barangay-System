@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import themeTokens from "../Themetokens";
+import themeTokens from "../../Themetokens";
 
 const MainMenuCards = ({ currentTheme }) => {
   const navigate = useNavigate();

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import MainMenuCards from "../components/MainMenuCards";
-import themeTokens from "../Themetokens";
+import themeTokens from "../../Themetokens";
 
 const DashboardPage = () => {
   const [currentTheme, setCurrentTheme] = useState(() => {

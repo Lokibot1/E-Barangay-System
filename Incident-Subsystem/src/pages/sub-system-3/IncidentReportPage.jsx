@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import Layout from "../components/Layout";
-import MainMenuCards from "../components/MainMenuCards";
-import IncidentReportModal from "../components/modals/IncidentReportModal";
-import themeTokens from "../Themetokens";
+import Layout from "../../components/shared/Layout";
+import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
+import IncidentReportModal from "../../components/sub-system-3/IncidentReportModal";
+import themeTokens from "../../Themetokens";
 
 const IncidentReportPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -1,5 +1,5 @@
 import React from "react";
-import themeTokens from "../Themetokens";
+import themeTokens from "../../Themetokens";
 
 const ReportCard = ({ report, currentTheme, onClick }) => {
   const t = themeTokens[currentTheme];

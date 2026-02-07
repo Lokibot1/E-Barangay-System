@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import Layout from "../components/Layout";
-import MainMenuCards from "../components/MainMenuCards";
-import ReportCard from "../components/ReportCard";
-import ReportDetailModal from "../components/modals/Reportdetailmodal";
-import themeTokens from "../Themetokens";
+import Layout from "../../components/shared/Layout";
+import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
+import ReportCard from "../../components/sub-system-3/ReportCard";
+import ReportDetailModal from "../../components/sub-system-3/Reportdetailmodal";
+import themeTokens from "../../Themetokens";
 
 const CaseManagementPage = () => {
   const [selectedReport, setSelectedReport] = useState(null);

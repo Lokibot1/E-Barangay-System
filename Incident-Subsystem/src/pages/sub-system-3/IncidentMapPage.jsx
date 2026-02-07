@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import Layout from "../components/Layout";
-import MainMenuCards from "../components/MainMenuCards";
-import themeTokens from "../Themetokens";
+import Layout from "../../components/shared/Layout";
+import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
+import themeTokens from "../../Themetokens";
 
 const IncidentMapPage = () => {
   const [currentTheme, setCurrentTheme] = useState(() => {

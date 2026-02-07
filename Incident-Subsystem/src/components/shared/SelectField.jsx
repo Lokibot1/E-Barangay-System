@@ -1,12 +1,11 @@
 import React from "react";
-import themeTokens from "../Themetokens";
+import themeTokens from "../../Themetokens";
 
-const InputField = ({
+const SelectField = ({
   label,
-  type = "text",
   value,
   onChange,
-  placeholder,
+  options,
   required = false,
   error,
   currentTheme,
@@ -22,19 +21,30 @@ const InputField = ({
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
-      <input
-        type={type}
+      <select
         value={value}
         onChange={onChange}
-        placeholder={placeholder}
         required={required}
-        className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 ${t.inputBg} ${t.inputText} ${t.inputPlaceholder} font-kumbh ${
+        className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 bg-white text-slate-900 appearance-none cursor-pointer font-kumbh ${
           error
             ? "border-red-400 focus:ring-2 focus:ring-red-300 focus:border-red-400 hover:border-red-400"
             : `${t.inputBorder} focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
         }`}
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+          backgroundPosition: "right 0.5rem center",
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "1.5em 1.5em",
+          paddingRight: "2.5rem",
+        }}
         {...props}
-      />
+      >
+        {options.map((option, index) => (
+          <option key={index} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
       {error && (
         <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1.5">
           <svg
@@ -55,4 +65,4 @@ const InputField = ({
   );
 };
 
-export default InputField;
+export default SelectField;
