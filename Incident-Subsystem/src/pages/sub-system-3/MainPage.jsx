@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import Layout from "../../components/shared/Layout";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
 import Footer from "../../components/shared/Footer";
 import themeTokens from "../../Themetokens";
@@ -30,8 +29,7 @@ const MainPage = () => {
   const t = themeTokens[currentTheme];
 
   return (
-    <Layout>
-      <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col">
         {/* White Space */}
         <div className={`${t.pageBg} py-8 sm:py-10 text-center px-4`}>
           <h1
@@ -56,7 +54,6 @@ const MainPage = () => {
         {/* Footer */}
         <Footer currentTheme={currentTheme} />
       </div>
-    </Layout>
   );
 };
 

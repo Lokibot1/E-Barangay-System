@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import Layout from "../../components/shared/Layout";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
 import IncidentReportModal from "../../components/sub-system-3/IncidentReportModal";
 import themeTokens from "../../Themetokens";
@@ -34,7 +33,7 @@ const IncidentReportPage = () => {
   const closeModal = () => setIsModalOpen(false);
 
   return (
-    <Layout>
+    <>
       <div className="h-full flex flex-col overflow-y-auto">
         {/* White Space */}
         <div className={`${t.pageBg} py-8 sm:py-12 text-center px-4`}>
@@ -443,7 +442,7 @@ const IncidentReportPage = () => {
         onClose={closeModal}
         currentTheme={currentTheme}
       />
-    </Layout>
+    </>
   );
 };
 

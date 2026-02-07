@@ -1,11 +1,12 @@
 import React, { useState } from "react";
+import { Outlet } from "react-router-dom";
 import Header from "../shared/Header";
 import Sidebar from "../shared/Sidebar";
 import DateTimeBar from "./DateTimeBar";
 import FAQChatbot from "../../components/shared/FAQChatbot";
 import themeTokens from "../../Themetokens";
 
-const Layout = ({ children }) => {
+const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(() => {
     return localStorage.getItem("appTheme") || "blue";
@@ -31,7 +32,9 @@ const Layout = ({ children }) => {
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <DateTimeBar currentTheme={currentTheme} />
         <Header currentTheme={currentTheme} onThemeChange={handleThemeChange} />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto">
+          <Outlet />
+        </main>
       </div>
 
       {/* FAQ e-KAP Chatbot */}

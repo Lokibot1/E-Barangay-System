@@ -7,7 +7,6 @@ import {
   Popup,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import Layout from "../../components/shared/Layout";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
 import themeTokens from "../../Themetokens";
 
@@ -197,7 +196,7 @@ const IncidentMapPage = () => {
   const t = themeTokens[currentTheme];
 
   return (
-    <Layout>
+    <>
       <div className="h-full flex flex-col overflow-y-auto">
         {/* White Space */}
         <div className={`${t.pageBg} py-8 sm:py-12 text-center px-4`}>
@@ -507,7 +506,7 @@ const IncidentMapPage = () => {
           </div>
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

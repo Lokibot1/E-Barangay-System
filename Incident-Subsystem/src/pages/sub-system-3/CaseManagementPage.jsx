@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import Layout from "../../components/shared/Layout";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
 import ReportCard from "../../components/sub-system-3/ReportCard";
 import ReportDetailModal from "../../components/sub-system-3/Reportdetailmodal";
@@ -156,7 +155,7 @@ const CaseManagementPage = () => {
   };
 
   return (
-    <Layout>
+    <>
       <div className="h-full flex flex-col overflow-y-auto">
         {/* White Space */}
         <div className={`${t.pageBg} py-8 sm:py-10 text-center px-4`}>
@@ -412,7 +411,7 @@ const CaseManagementPage = () => {
         report={selectedReport}
         currentTheme={currentTheme}
       />
-    </Layout>
+    </>
   );
 };
 
