@@ -176,7 +176,7 @@ const CaseManagementPage = () => {
         </div>
 
         {/* Case Management Content */}
-        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div id="main-content" className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
           {/* Header */}
           <div className="mb-6 sm:mb-8">
             <h2
