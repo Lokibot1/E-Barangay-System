@@ -199,7 +199,7 @@ const IncidentMapPage = () => {
     <>
       <div className="h-full flex flex-col overflow-y-auto">
         {/* White Space */}
-        <div className={`${t.pageBg} py-8 sm:py-12 text-center px-4`}>
+        <div className={`${t.pageBg} py-8 sm:py-10 text-center px-4`}>
           <h1
             className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${t.cardText} mb-2 sm:mb-3 font-spartan uppercase tracking-tight`}
           >
@@ -259,46 +259,271 @@ const IncidentMapPage = () => {
                     className="w-full h-auto"
                   >
                     {/* Background circles */}
-                    <circle cx="120" cy="100" r="70" fill="#dcfce7" opacity="0.5" />
-                    <circle cx="90" cy="80" r="40" fill="#bbf7d0" opacity="0.4" />
+                    <circle
+                      cx="120"
+                      cy="100"
+                      r="70"
+                      fill="#dcfce7"
+                      opacity="0.5"
+                    />
+                    <circle
+                      cx="90"
+                      cy="80"
+                      r="40"
+                      fill="#bbf7d0"
+                      opacity="0.4"
+                    />
                     {/* Small colored dots */}
-                    <circle cx="40" cy="60" r="8" fill="#f43f5e" opacity="0.7" />
-                    <circle cx="55" cy="75" r="5" fill="#fb923c" opacity="0.7" />
-                    <circle cx="30" cy="80" r="4" fill="#a78bfa" opacity="0.7" />
+                    <circle
+                      cx="40"
+                      cy="60"
+                      r="8"
+                      fill="#f43f5e"
+                      opacity="0.7"
+                    />
+                    <circle
+                      cx="55"
+                      cy="75"
+                      r="5"
+                      fill="#fb923c"
+                      opacity="0.7"
+                    />
+                    <circle
+                      cx="30"
+                      cy="80"
+                      r="4"
+                      fill="#a78bfa"
+                      opacity="0.7"
+                    />
                     {/* Buildings */}
-                    <rect x="70" y="90" width="30" height="50" rx="2" fill="#94a3b8" />
-                    <rect x="75" y="96" width="8" height="8" rx="1" fill="#e2e8f0" />
-                    <rect x="87" y="96" width="8" height="8" rx="1" fill="#e2e8f0" />
-                    <rect x="75" y="108" width="8" height="8" rx="1" fill="#e2e8f0" />
-                    <rect x="87" y="108" width="8" height="8" rx="1" fill="#e2e8f0" />
-                    <rect x="75" y="120" width="8" height="8" rx="1" fill="#e2e8f0" />
-                    <rect x="87" y="120" width="8" height="8" rx="1" fill="#e2e8f0" />
-                    <rect x="108" y="70" width="35" height="70" rx="2" fill="#64748b" />
-                    <rect x="114" y="76" width="8" height="8" rx="1" fill="#e2e8f0" />
-                    <rect x="126" y="76" width="8" height="8" rx="1" fill="#e2e8f0" />
-                    <rect x="114" y="88" width="8" height="8" rx="1" fill="#e2e8f0" />
-                    <rect x="126" y="88" width="8" height="8" rx="1" fill="#e2e8f0" />
-                    <rect x="114" y="100" width="8" height="8" rx="1" fill="#e2e8f0" />
-                    <rect x="126" y="100" width="8" height="8" rx="1" fill="#e2e8f0" />
-                    <rect x="114" y="112" width="8" height="8" rx="1" fill="#e2e8f0" />
-                    <rect x="126" y="112" width="8" height="8" rx="1" fill="#e2e8f0" />
-                    <rect x="114" y="124" width="8" height="8" rx="1" fill="#e2e8f0" />
-                    <rect x="126" y="124" width="8" height="8" rx="1" fill="#e2e8f0" />
-                    <rect x="150" y="100" width="25" height="40" rx="2" fill="#94a3b8" />
-                    <rect x="155" y="106" width="6" height="6" rx="1" fill="#e2e8f0" />
-                    <rect x="164" y="106" width="6" height="6" rx="1" fill="#e2e8f0" />
-                    <rect x="155" y="116" width="6" height="6" rx="1" fill="#e2e8f0" />
-                    <rect x="164" y="116" width="6" height="6" rx="1" fill="#e2e8f0" />
+                    <rect
+                      x="70"
+                      y="90"
+                      width="30"
+                      height="50"
+                      rx="2"
+                      fill="#94a3b8"
+                    />
+                    <rect
+                      x="75"
+                      y="96"
+                      width="8"
+                      height="8"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="87"
+                      y="96"
+                      width="8"
+                      height="8"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="75"
+                      y="108"
+                      width="8"
+                      height="8"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="87"
+                      y="108"
+                      width="8"
+                      height="8"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="75"
+                      y="120"
+                      width="8"
+                      height="8"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="87"
+                      y="120"
+                      width="8"
+                      height="8"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="108"
+                      y="70"
+                      width="35"
+                      height="70"
+                      rx="2"
+                      fill="#64748b"
+                    />
+                    <rect
+                      x="114"
+                      y="76"
+                      width="8"
+                      height="8"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="126"
+                      y="76"
+                      width="8"
+                      height="8"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="114"
+                      y="88"
+                      width="8"
+                      height="8"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="126"
+                      y="88"
+                      width="8"
+                      height="8"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="114"
+                      y="100"
+                      width="8"
+                      height="8"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="126"
+                      y="100"
+                      width="8"
+                      height="8"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="114"
+                      y="112"
+                      width="8"
+                      height="8"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="126"
+                      y="112"
+                      width="8"
+                      height="8"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="114"
+                      y="124"
+                      width="8"
+                      height="8"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="126"
+                      y="124"
+                      width="8"
+                      height="8"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="150"
+                      y="100"
+                      width="25"
+                      height="40"
+                      rx="2"
+                      fill="#94a3b8"
+                    />
+                    <rect
+                      x="155"
+                      y="106"
+                      width="6"
+                      height="6"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="164"
+                      y="106"
+                      width="6"
+                      height="6"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="155"
+                      y="116"
+                      width="6"
+                      height="6"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
+                    <rect
+                      x="164"
+                      y="116"
+                      width="6"
+                      height="6"
+                      rx="1"
+                      fill="#e2e8f0"
+                    />
                     {/* Leaves */}
-                    <ellipse cx="185" cy="110" rx="12" ry="6" transform="rotate(-30 185 110)" fill="#22c55e" opacity="0.6" />
-                    <ellipse cx="195" cy="100" rx="10" ry="5" transform="rotate(15 195 100)" fill="#4ade80" opacity="0.5" />
-                    <ellipse cx="50" cy="100" rx="10" ry="5" transform="rotate(-20 50 100)" fill="#22c55e" opacity="0.5" />
+                    <ellipse
+                      cx="185"
+                      cy="110"
+                      rx="12"
+                      ry="6"
+                      transform="rotate(-30 185 110)"
+                      fill="#22c55e"
+                      opacity="0.6"
+                    />
+                    <ellipse
+                      cx="195"
+                      cy="100"
+                      rx="10"
+                      ry="5"
+                      transform="rotate(15 195 100)"
+                      fill="#4ade80"
+                      opacity="0.5"
+                    />
+                    <ellipse
+                      cx="50"
+                      cy="100"
+                      rx="10"
+                      ry="5"
+                      transform="rotate(-20 50 100)"
+                      fill="#22c55e"
+                      opacity="0.5"
+                    />
                     {/* Large Map Pin */}
-                    <path d="M125 10C115.06 10 107 18.06 107 28c0 14 18 30 18 30s18-16 18-30c0-9.94-8.06-18-18-18z" fill="#16a34a" />
+                    <path
+                      d="M125 10C115.06 10 107 18.06 107 28c0 14 18 30 18 30s18-16 18-30c0-9.94-8.06-18-18-18z"
+                      fill="#16a34a"
+                    />
                     <circle cx="125" cy="28" r="7" fill="white" />
                     <circle cx="125" cy="28" r="3.5" fill="#16a34a" />
                     {/* Ground line */}
-                    <line x1="55" y1="140" x2="190" y2="140" stroke="#cbd5e1" strokeWidth="2" />
+                    <line
+                      x1="55"
+                      y1="140"
+                      x2="190"
+                      y2="140"
+                      stroke="#cbd5e1"
+                      strokeWidth="2"
+                    />
                   </svg>
                 </div>
 
@@ -452,8 +677,8 @@ const IncidentMapPage = () => {
                                 {zone.status === "in-progress"
                                   ? "In-Progress"
                                   : zone.status === "active"
-                                  ? "New / Active"
-                                  : "Resolved"}
+                                    ? "New / Active"
+                                    : "Resolved"}
                               </span>
                             </p>
                             <p className="text-xs text-slate-600">
@@ -498,10 +723,10 @@ const IncidentMapPage = () => {
             </div>
           </div>
 
-          {/* Footer text */}
-          <div className="text-center">
-            <p className={`text-sm ${t.subtleText} mt-4 font-kumbh`}>
-              &copy; 2026 Barangay San Bartolome
+          {/* Bottom Bar */}
+          <div className={`pt-6 mt-8 border-t ${t.dividerBorder} text-center`}>
+            <p className={`text-sm ${t.subtleText} font-kumbh`}>
+              © {new Date().getFullYear()} Barangay Incident & Complaint Management System. All rights reserved.
             </p>
           </div>
         </div>

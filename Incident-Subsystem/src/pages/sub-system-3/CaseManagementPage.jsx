@@ -402,6 +402,13 @@ const CaseManagementPage = () => {
               </p>
             </div>
           )}
+
+          {/* Bottom Bar */}
+          <div className={`pt-6 mt-8 border-t ${t.dividerBorder} text-center`}>
+            <p className={`text-sm ${t.subtleText} font-kumbh`}>
+              © {new Date().getFullYear()} Barangay Incident & Complaint Management System. All rights reserved.
+            </p>
+          </div>
         </div>
       </div>
 

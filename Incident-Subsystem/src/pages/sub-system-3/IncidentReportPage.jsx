@@ -36,7 +36,7 @@ const IncidentReportPage = () => {
     <>
       <div className="h-full flex flex-col overflow-y-auto">
         {/* White Space */}
-        <div className={`${t.pageBg} py-8 sm:py-12 text-center px-4`}>
+        <div className={`${t.pageBg} py-8 sm:py-10 text-center px-4`}>
           <h1
             className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${t.cardText} mb-2 sm:mb-3 font-spartan uppercase tracking-tight`}
           >
@@ -430,8 +430,12 @@ const IncidentReportPage = () => {
               </svg>
               REPORT AN INCIDENT
             </button>
-            <p className={`text-sm ${t.subtleText} mt-4 font-kumbh`}>
-              © 2026 Barangay San Bartolome
+          </div>
+
+          {/* Bottom Bar */}
+          <div className={`pt-6 mt-8 border-t ${t.dividerBorder} text-center`}>
+            <p className={`text-sm ${t.subtleText} font-kumbh`}>
+              © {new Date().getFullYear()} Barangay Incident & Complaint Management System. All rights reserved.
             </p>
           </div>
         </div>
