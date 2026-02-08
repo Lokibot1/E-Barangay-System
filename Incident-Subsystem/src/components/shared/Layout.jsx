@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import Header from "../shared/Header";
 import Sidebar from "../shared/Sidebar";
 import DateTimeBar from "./DateTimeBar";
@@ -11,6 +11,18 @@ const Layout = () => {
   const [currentTheme, setCurrentTheme] = useState(() => {
     return localStorage.getItem("appTheme") || "blue";
   });
+  const location = useLocation();
+
+  // Scroll to main content section on route change
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const el = document.getElementById("main-content");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
 
   const t = themeTokens[currentTheme];
 

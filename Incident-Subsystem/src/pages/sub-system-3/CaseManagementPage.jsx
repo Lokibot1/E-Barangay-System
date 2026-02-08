@@ -176,7 +176,7 @@ const CaseManagementPage = () => {
         </div>
 
         {/* Case Management Content */}
-        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div id="main-content" className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
           {/* Header */}
           <div className="mb-6 sm:mb-8">
             <h2
@@ -402,6 +402,13 @@ const CaseManagementPage = () => {
               </p>
             </div>
           )}
+
+          {/* Bottom Bar */}
+          <div className={`pt-6 mt-8 border-t ${t.dividerBorder} text-center`}>
+            <p className={`text-sm ${t.subtleText} font-kumbh`}>
+              © {new Date().getFullYear()} Barangay Incident & Complaint Management System. All rights reserved.
+            </p>
+          </div>
         </div>
       </div>
 

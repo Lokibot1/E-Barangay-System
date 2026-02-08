@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
-import Footer from "../../components/shared/Footer";
+import Footer from "../../components/sub-system-3/Footer";
 import themeTokens from "../../Themetokens";
 
 const MainPage = () => {
@@ -30,30 +30,28 @@ const MainPage = () => {
 
   return (
     <div className="h-full flex flex-col">
-        {/* White Space */}
-        <div className={`${t.pageBg} py-8 sm:py-10 text-center px-4`}>
-          <h1
-            className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${t.cardText} mb-2 sm:mb-3 font-spartan uppercase tracking-tight`}
-          >
-            INCIDENT & COMPLAINT MANAGEMENT
-          </h1>
-        </div>
-
-        {/* Dynamic Theme Section with MainMenuCards */}
-        <div
-          className={`bg-gradient-to-r ${t.primaryGrad} py-12 sm:py-16 px-4`}
+      {/* White Space */}
+      <div className={`${t.pageBg} py-8 sm:py-10 text-center px-4`}>
+        <h1
+          className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${t.cardText} mb-2 sm:mb-3 font-spartan uppercase tracking-tight`}
         >
-          <div className="container mx-auto px-4 sm:px-6">
-            <MainMenuCards currentTheme={currentTheme} />
-          </div>
-        </div>
-
-        {/* Bottom White Space */}
-        <div className="flex-1"></div>
-
-        {/* Footer */}
-        <Footer currentTheme={currentTheme} />
+          INCIDENT & COMPLAINT MANAGEMENT
+        </h1>
       </div>
+
+      {/* Dynamic Theme Section with MainMenuCards */}
+      <div className={`bg-gradient-to-r ${t.primaryGrad} py-12 sm:py-16 px-4`}>
+        <div className="container mx-auto px-4 sm:px-6">
+          <MainMenuCards currentTheme={currentTheme} />
+        </div>
+      </div>
+
+      {/* Bottom White Space */}
+      <div className="flex-1"></div>
+
+      {/* Footer */}
+      <Footer currentTheme={currentTheme} />
+    </div>
   );
 };
 

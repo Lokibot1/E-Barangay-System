@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import themeTokens from "../../Themetokens";
 
 const Footer = ({ currentTheme }) => {
@@ -27,36 +28,36 @@ const Footer = ({ currentTheme }) => {
             </h3>
             <ul className="space-y-2">
               <li>
-                <a
-                  href="/file-complaint"
+                <Link
+                  to="/incident-complaint/file-complaint"
                   className={`text-sm ${t.subtleText} hover:${t.primaryText} transition-colors font-kumbh`}
                 >
                   File a Complaint
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="/incident-report"
+                <Link
+                  to="/incident-complaint/incident-report"
                   className={`text-sm ${t.subtleText} hover:${t.primaryText} transition-colors font-kumbh`}
                 >
                   Report an Incident
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="/incident-map"
+                <Link
+                  to="/incident-complaint/incident-map"
                   className={`text-sm ${t.subtleText} hover:${t.primaryText} transition-colors font-kumbh`}
                 >
                   Incident Map
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="/case-management"
+                <Link
+                  to="/incident-complaint/case-management"
                   className={`text-sm ${t.subtleText} hover:${t.primaryText} transition-colors font-kumbh`}
                 >
                   Track Your Reports
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
