@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import ComplaintForm from "../../components/sub-system-3/Complaintform";
 import ProgressIndicator from "../../components/sub-system-3/ProgressIndicator";
 import Toast from "../../components/shared/modals/Toast";
+import { fileComplaint } from "../../services/sub-system-3/complaintService";
 import themeTokens from "../../Themetokens";
 
 const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
   const t = themeTokens[currentTheme] || themeTokens.blue;
+  const navigate = useNavigate();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -146,8 +149,7 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await fileComplaint(formData);
 
       addToast({
         type: "success",
@@ -158,11 +160,22 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
       });
       setTimeout(() => onClose(), 2000);
     } catch (error) {
-      console.error("Error submitting complaint:", error);
+      // If not logged in, redirect to login page
+      if (error.message === "You must be logged in to file a complaint.") {
+        addToast({
+          type: "error",
+          title: "Session Expired",
+          message: "Please log in again to continue.",
+          duration: 4000,
+        });
+        setTimeout(() => navigate("/login", { replace: true }), 1500);
+        return;
+      }
+
       addToast({
         type: "error",
         title: "Submission Failed",
-        message: "Something went wrong. Please try again.",
+        message: error.message || "Something went wrong. Please try again.",
         duration: 5000,
       });
     } finally {

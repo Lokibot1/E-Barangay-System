@@ -1,5 +1,8 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ThemeModal from "../../components/sub-system-3/ThemeModal";
+import LogoutModal from "./LogoutModal";
+import { logout } from "../../services/sub-system-3/loginService";
 import themeTokens from "../../Themetokens";
 
 const Header = ({ currentTheme, onThemeChange }) => {
@@ -7,6 +10,9 @@ const Header = ({ currentTheme, onThemeChange }) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
+  const navigate = useNavigate();
 
   const t = themeTokens[currentTheme];
   const isDark = currentTheme === "dark";
@@ -32,6 +38,24 @@ const Header = ({ currentTheme, onThemeChange }) => {
   const openThemeModal = () => {
     setIsThemeModalOpen(true);
     setIsSettingsOpen(false);
+  };
+
+  const openLogoutModal = () => {
+    setIsLogoutModalOpen(true);
+    setIsProfileOpen(false);
+  };
+
+  const handleLogout = async () => {
+    setLogoutLoading(true);
+    try {
+      await logout();
+    } catch {
+      // Even if the API call fails, still clear local auth and redirect
+    } finally {
+      setLogoutLoading(false);
+      setIsLogoutModalOpen(false);
+      navigate("/login", { replace: true });
+    }
   };
 
   // Mock notification data
@@ -395,6 +419,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                         </span>
                       </button>
                       <button
+                        onClick={openLogoutModal}
                         className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors`}
                       >
                         <svg
@@ -428,6 +453,14 @@ const Header = ({ currentTheme, onThemeChange }) => {
         onClose={() => setIsThemeModalOpen(false)}
         currentTheme={currentTheme}
         onThemeChange={onThemeChange}
+      />
+
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleLogout}
+        loading={logoutLoading}
+        currentTheme={currentTheme}
       />
 
       <style jsx>{`

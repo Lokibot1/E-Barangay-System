@@ -3,7 +3,7 @@ import IncidentForm from "../../components/sub-system-3/Incidentform";
 import ProgressIndicator from "../../components/sub-system-3/ProgressIndicator";
 import Toast from "../../components/shared/modals/Toast";
 import themeTokens from "../../Themetokens";
-import { incidentService } from "../../services/incidentService";
+import { incidentService } from "../../services/sub-system-3/incidentService";
 
 const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
   const t = themeTokens[currentTheme] || themeTokens.blue;

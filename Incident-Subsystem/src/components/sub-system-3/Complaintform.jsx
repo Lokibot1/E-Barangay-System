@@ -113,32 +113,34 @@ const ComplaintForm = ({
             </p>
           </div>
 
-          <SelectField
-            label="Type of Complaint"
-            value={formData.complaintType}
-            onChange={(e) => onInputChange("complaintType", e.target.value)}
-            options={complaintTypes}
-            error={errors.complaintType}
-            required
-            currentTheme={currentTheme}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <SelectField
+              label="Type of Complaint"
+              value={formData.complaintType}
+              onChange={(e) => onInputChange("complaintType", e.target.value)}
+              options={complaintTypes}
+              error={errors.complaintType}
+              required
+              currentTheme={currentTheme}
+            />
 
-          <SelectField
-            label="Severity Level"
-            value={formData.severity}
-            onChange={(e) => onInputChange("severity", e.target.value)}
-            options={severityLevels}
-            error={errors.severity}
-            required
-            currentTheme={currentTheme}
-          />
+            <SelectField
+              label="Severity Level"
+              value={formData.severity}
+              onChange={(e) => onInputChange("severity", e.target.value)}
+              options={severityLevels}
+              error={errors.severity}
+              required
+              currentTheme={currentTheme}
+            />
+          </div>
 
           <TextAreaField
             label="Detailed Description"
             value={formData.description}
             onChange={(e) => onInputChange("description", e.target.value)}
             placeholder="Please provide a clear and detailed account of what happened..."
-            rows={6}
+            rows={4}
             error={errors.description}
             required
             currentTheme={currentTheme}
@@ -160,73 +162,76 @@ const ComplaintForm = ({
             </p>
           </div>
 
-          {/* Complainant Section */}
-          <div
-            className={`${t.inlineBg} border ${t.dividerBorder} rounded-lg p-4`}
-          >
-            <h4
-              className={`text-lg font-semibold ${t.cardText} mb-4 font-spartan`}
+          {/* Complainant + Respondent side-by-side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Complainant Section */}
+            <div
+              className={`${t.inlineBg} border ${t.dividerBorder} rounded-lg p-4`}
             >
-              Complainant (You)
-            </h4>
-            <div className="space-y-4">
-              <InputField
-                label="Full Name"
-                type="text"
-                value={formData.complainantName}
-                onChange={(e) =>
-                  onInputChange("complainantName", e.target.value)
-                }
-                placeholder="Your full name"
-                error={errors.complainantName}
-                required
-                currentTheme={currentTheme}
-              />
-              <InputField
-                label="Contact Number"
-                type="tel"
-                value={formData.complainantContact}
-                onChange={(e) =>
-                  onInputChange("complainantContact", e.target.value)
-                }
-                placeholder="09XX XXX XXXX"
-                currentTheme={currentTheme}
-              />
+              <h4
+                className={`text-lg font-semibold ${t.cardText} mb-4 font-spartan`}
+              >
+                Complainant (You)
+              </h4>
+              <div className="space-y-4">
+                <InputField
+                  label="Full Name"
+                  type="text"
+                  value={formData.complainantName}
+                  onChange={(e) =>
+                    onInputChange("complainantName", e.target.value)
+                  }
+                  placeholder="Your full name"
+                  error={errors.complainantName}
+                  required
+                  currentTheme={currentTheme}
+                />
+                <InputField
+                  label="Contact Number"
+                  type="tel"
+                  value={formData.complainantContact}
+                  onChange={(e) =>
+                    onInputChange("complainantContact", e.target.value)
+                  }
+                  placeholder="09XX XXX XXXX"
+                  currentTheme={currentTheme}
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Respondent Section */}
-          <div
-            className={`${t.inlineBg} border ${t.dividerBorder} rounded-lg p-4`}
-          >
-            <h4
-              className={`text-lg font-semibold ${t.cardText} mb-4 font-spartan`}
+            {/* Respondent Section */}
+            <div
+              className={`${t.inlineBg} border ${t.dividerBorder} rounded-lg p-4`}
             >
-              Respondent (Person You're Complaining Against)
-            </h4>
-            <div className="space-y-4">
-              <InputField
-                label="Full Name"
-                type="text"
-                value={formData.respondentName}
-                onChange={(e) =>
-                  onInputChange("respondentName", e.target.value)
-                }
-                placeholder="Name of the person"
-                error={errors.respondentName}
-                required
-                currentTheme={currentTheme}
-              />
-              <TextAreaField
-                label="Address (if known)"
-                value={formData.respondentAddress}
-                onChange={(e) =>
-                  onInputChange("respondentAddress", e.target.value)
-                }
-                placeholder="Respondent's address or location"
-                rows={2}
-                currentTheme={currentTheme}
-              />
+              <h4
+                className={`text-lg font-semibold ${t.cardText} mb-4 font-spartan`}
+              >
+                Respondent
+              </h4>
+              <div className="space-y-4">
+                <InputField
+                  label="Full Name"
+                  type="text"
+                  value={formData.respondentName}
+                  onChange={(e) =>
+                    onInputChange("respondentName", e.target.value)
+                  }
+                  placeholder="Name of the person"
+                  error={errors.respondentName}
+                  required
+                  currentTheme={currentTheme}
+                />
+                <TextAreaField
+                  label="Address (if known)"
+                  value={formData.respondentAddress}
+                  onChange={(e) =>
+                    onInputChange("respondentAddress", e.target.value)
+                  }
+                  placeholder="Respondent's address or location"
+                  rows={2}
+                  currentTheme={currentTheme}
+                />
+              </div>
             </div>
           </div>
 
@@ -284,29 +289,31 @@ const ComplaintForm = ({
             </p>
           </div>
 
-          <TextAreaField
-            label="Desired Resolution"
-            value={formData.desiredResolution}
-            onChange={(e) => onInputChange("desiredResolution", e.target.value)}
-            placeholder="What outcome are you seeking? (e.g., apology, compensation, cease of activity)"
-            rows={4}
-            currentTheme={currentTheme}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <TextAreaField
+              label="Desired Resolution"
+              value={formData.desiredResolution}
+              onChange={(e) => onInputChange("desiredResolution", e.target.value)}
+              placeholder="What outcome are you seeking? (e.g., apology, compensation, cease of activity)"
+              rows={3}
+              currentTheme={currentTheme}
+            />
+
+            <TextAreaField
+              label="Additional Notes (Optional)"
+              value={formData.additionalNotes}
+              onChange={(e) => onInputChange("additionalNotes", e.target.value)}
+              placeholder="Any other information you'd like to add..."
+              rows={3}
+              currentTheme={currentTheme}
+            />
+          </div>
 
           <FileUpload
             label="Supporting Documents"
             description="Upload any photos, videos, or documents that support your complaint"
             files={formData.attachments}
             onChange={(files) => onInputChange("attachments", files)}
-            currentTheme={currentTheme}
-          />
-
-          <TextAreaField
-            label="Additional Notes (Optional)"
-            value={formData.additionalNotes}
-            onChange={(e) => onInputChange("additionalNotes", e.target.value)}
-            placeholder="Any other information you'd like to add..."
-            rows={4}
             currentTheme={currentTheme}
           />
         </div>

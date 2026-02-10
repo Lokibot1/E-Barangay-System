@@ -1,6 +1,8 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/shared/Layout";
+import ProtectedRoute from "./components/shared/ProtectedRoute";
+import LoginPage from "./pages/sub-system-3/LoginPage";
 import MainPage from "./pages/sub-system-3/MainPage";
 import FileComplaintPage from "./pages/sub-system-3/FileComplaintPage";
 import IncidentReportPage from "./pages/sub-system-3/IncidentReportPage";
@@ -13,35 +15,44 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
-          <Route element={<Layout />}>
-            <Route
-              path="/"
-              element={
-                <div className="h-full flex items-center justify-center">
-                  <h1 className="text-2xl font-bold text-gray-400 font-spartan">
-                    E-Barangay System Dashboard
-                  </h1>
-                </div>
-              }
-            />
-            <Route path="/incident-complaint" element={<MainPage />} />
-            <Route
-              path="/incident-complaint/file-complaint"
-              element={<FileComplaintPage />}
-            />
-            <Route
-              path="/incident-complaint/incident-report"
-              element={<IncidentReportPage />}
-            />
-            <Route
-              path="/incident-complaint/incident-map"
-              element={<IncidentMapPage />}
-            />
-            <Route
-              path="/incident-complaint/case-management"
-              element={<CaseManagementPage />}
-            />
+          {/* Public route */}
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* Protected routes — redirects to /login when no token */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<Layout />}>
+              <Route
+                path="/"
+                element={
+                  <div className="h-full flex items-center justify-center">
+                    <h1 className="text-2xl font-bold text-gray-400 font-spartan">
+                      E-Barangay System Dashboard
+                    </h1>
+                  </div>
+                }
+              />
+              <Route path="/incident-complaint" element={<MainPage />} />
+              <Route
+                path="/incident-complaint/file-complaint"
+                element={<FileComplaintPage />}
+              />
+              <Route
+                path="/incident-complaint/incident-report"
+                element={<IncidentReportPage />}
+              />
+              <Route
+                path="/incident-complaint/incident-map"
+                element={<IncidentMapPage />}
+              />
+              <Route
+                path="/incident-complaint/case-management"
+                element={<CaseManagementPage />}
+              />
+            </Route>
           </Route>
+
+          {/* Catch-all — send unknown paths to login */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
     </Router>

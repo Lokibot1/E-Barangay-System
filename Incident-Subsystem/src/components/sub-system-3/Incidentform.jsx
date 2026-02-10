@@ -109,70 +109,74 @@ const IncidentForm = ({
               </h3>
             </div>
 
-            <SelectField
-              label="Type of Incident"
-              value={formData.incidentType}
-              onChange={(e) => onInputChange("incidentType", e.target.value)}
-              options={[
-                { value: "", label: "Select incident type" },
-                { value: "safety", label: "⚠️ Safety Incident" },
-                { value: "security", label: "🔒 Security Breach" },
-                { value: "environmental", label: "🌍 Environmental Hazard" },
-                { value: "equipment", label: "⚙️ Equipment Failure" },
-                { value: "workplace-violence", label: "🚨 Workplace Violence" },
-                { value: "fire", label: "🔥 Fire / Evacuation" },
-                { value: "accident", label: "🩹 Accident / Injury" },
-                { value: "near-miss", label: "⚡ Near Miss" },
-                { value: "other", label: "📋 Other" },
-              ]}
-              required
-              error={errors.incidentType}
-              currentTheme={currentTheme}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <SelectField
+                label="Type of Incident"
+                value={formData.incidentType}
+                onChange={(e) => onInputChange("incidentType", e.target.value)}
+                options={[
+                  { value: "", label: "Select incident type" },
+                  { value: "safety", label: "⚠️ Safety Incident" },
+                  { value: "security", label: "🔒 Security Breach" },
+                  { value: "environmental", label: "🌍 Environmental Hazard" },
+                  { value: "equipment", label: "⚙️ Equipment Failure" },
+                  { value: "workplace-violence", label: "🚨 Workplace Violence" },
+                  { value: "fire", label: "🔥 Fire / Evacuation" },
+                  { value: "accident", label: "🩹 Accident / Injury" },
+                  { value: "near-miss", label: "⚡ Near Miss" },
+                  { value: "other", label: "📋 Other" },
+                ]}
+                required
+                error={errors.incidentType}
+                currentTheme={currentTheme}
+              />
 
-            <SelectField
-              label="Severity Level"
-              value={formData.severity}
-              onChange={(e) => onInputChange("severity", e.target.value)}
-              options={[
-                { value: "", label: "Select severity level" },
-                { value: "low", label: "🟢 Low - Minor incident, no injuries" },
-                {
-                  value: "medium",
-                  label: "🟡 Medium - Moderate impact, minor injuries",
-                },
-                {
-                  value: "high",
-                  label: "🟠 High - Serious incident, significant damage",
-                },
-                {
-                  value: "critical",
-                  label: "🔴 Critical - Life-threatening, major damage",
-                },
-              ]}
-              required
-              error={errors.severity}
-              currentTheme={currentTheme}
-            />
+              <SelectField
+                label="Severity Level"
+                value={formData.severity}
+                onChange={(e) => onInputChange("severity", e.target.value)}
+                options={[
+                  { value: "", label: "Select severity level" },
+                  { value: "low", label: "🟢 Low - Minor incident, no injuries" },
+                  {
+                    value: "medium",
+                    label: "🟡 Medium - Moderate impact, minor injuries",
+                  },
+                  {
+                    value: "high",
+                    label: "🟠 High - Serious incident, significant damage",
+                  },
+                  {
+                    value: "critical",
+                    label: "🔴 Critical - Life-threatening, major damage",
+                  },
+                ]}
+                required
+                error={errors.severity}
+                currentTheme={currentTheme}
+              />
+            </div>
 
-            <TextAreaField
-              label="Detailed Description"
-              placeholder="Describe what happened, including the sequence of events, circumstances, and any contributing factors..."
-              value={formData.description}
-              onChange={(e) => onInputChange("description", e.target.value)}
-              rows={6}
-              required
-              error={errors.description}
-              currentTheme={currentTheme}
-            />
-            <TextAreaField
-              label="Immediate Action Taken"
-              placeholder="Describe any immediate actions taken to address the incident..."
-              value={formData.immediateAction}
-              onChange={(e) => onInputChange("immediateAction", e.target.value)}
-              rows={4}
-              currentTheme={currentTheme}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <TextAreaField
+                label="Detailed Description"
+                placeholder="Describe what happened, including the sequence of events, circumstances, and any contributing factors..."
+                value={formData.description}
+                onChange={(e) => onInputChange("description", e.target.value)}
+                rows={4}
+                required
+                error={errors.description}
+                currentTheme={currentTheme}
+              />
+              <TextAreaField
+                label="Immediate Action Taken"
+                placeholder="Describe any immediate actions taken to address the incident..."
+                value={formData.immediateAction}
+                onChange={(e) => onInputChange("immediateAction", e.target.value)}
+                rows={4}
+                currentTheme={currentTheme}
+              />
+            </div>
           </div>
         );
 
@@ -205,203 +209,206 @@ const IncidentForm = ({
               </h3>
             </div>
 
-            {/* Persons Involved */}
-            <div>
-              <label
-                className={`block text-sm font-semibold mb-2 font-kumbh ${errors.personsInvolved ? "text-red-600" : t.labelText}`}
-              >
-                Persons Involved <span className="text-red-500">*</span>
-              </label>
-              <div className="space-y-2">
-                {formData.personsInvolved.map((person, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 font-kumbh"
-                  >
-                    <input
-                      type="text"
-                      value={person}
-                      placeholder={`Person ${index + 1} — e.g. John Doe, Security Officer`}
-                      onChange={(e) => {
-                        const updated = [...formData.personsInvolved];
-                        updated[index] = e.target.value;
-                        onInputChange("personsInvolved", updated);
-                      }}
-                      className={`flex-1 px-4 py-3 border rounded-lg transition-all duration-200 ${t.inputBg} ${t.inputText} ${t.inputPlaceholder} ${
-                        errors.personsInvolved
-                          ? "border-red-400 focus:ring-2 focus:ring-red-300 focus:border-red-400 hover:border-red-400"
-                          : `${t.inputBorder} focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
-                      }`}
-                    />
-                    {formData.personsInvolved.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onInputChange(
-                            "personsInvolved",
-                            formData.personsInvolved.filter(
-                              (_, i) => i !== index,
-                            ),
-                          )
-                        }
-                        className={`p-2.5 ${t.removeBtn} rounded-lg transition-all`}
-                      >
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+            {/* Persons Involved + Witnesses side-by-side */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Persons Involved */}
+              <div>
+                <label
+                  className={`block text-sm font-semibold mb-2 font-kumbh ${errors.personsInvolved ? "text-red-600" : t.labelText}`}
+                >
+                  Persons Involved <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-2">
+                  {formData.personsInvolved.map((person, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 font-kumbh"
+                    >
+                      <input
+                        type="text"
+                        value={person}
+                        placeholder={`Person ${index + 1}`}
+                        onChange={(e) => {
+                          const updated = [...formData.personsInvolved];
+                          updated[index] = e.target.value;
+                          onInputChange("personsInvolved", updated);
+                        }}
+                        className={`flex-1 px-4 py-3 border rounded-lg transition-all duration-200 ${t.inputBg} ${t.inputText} ${t.inputPlaceholder} ${
+                          errors.personsInvolved
+                            ? "border-red-400 focus:ring-2 focus:ring-red-300 focus:border-red-400 hover:border-red-400"
+                            : `${t.inputBorder} focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
+                        }`}
+                      />
+                      {formData.personsInvolved.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onInputChange(
+                              "personsInvolved",
+                              formData.personsInvolved.filter(
+                                (_, i) => i !== index,
+                              ),
+                            )
+                          }
+                          className={`p-2.5 ${t.removeBtn} rounded-lg transition-all`}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              {errors.personsInvolved && (
-                <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1.5">
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {errors.personsInvolved && (
+                  <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1.5">
+                    <svg
+                      className="w-4 h-4 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    {errors.personsInvolved}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={() =>
+                    onInputChange("personsInvolved", [
+                      ...formData.personsInvolved,
+                      "",
+                    ])
+                  }
+                  className={`mt-3 flex items-center gap-2 px-4 py-2 text-sm font-medium ${t.addBtnText} ${t.addBtnHoverText} ${t.addBtnHoverBg} rounded-lg transition-all font-kumbh`}
+                >
                   <svg
-                    className="w-4 h-4 flex-shrink-0"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
                     <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
                     />
                   </svg>
-                  {errors.personsInvolved}
-                </p>
-              )}
-              <button
-                type="button"
-                onClick={() =>
-                  onInputChange("personsInvolved", [
-                    ...formData.personsInvolved,
-                    "",
-                  ])
-                }
-                className={`mt-3 flex items-center gap-2 px-4 py-2 text-sm font-medium ${t.addBtnText} ${t.addBtnHoverText} ${t.addBtnHoverBg} rounded-lg transition-all font-kumbh`}
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Add Person
-              </button>
-            </div>
+                  Add Person
+                </button>
+              </div>
 
-            {/* Witnesses */}
-            <div>
-              <label
-                className={`block text-sm font-semibold mb-2 font-kumbh ${errors.witnesses ? "text-red-600" : t.labelText}`}
-              >
-                Witnesses <span className="text-red-500">*</span>
-              </label>
-              <div className="space-y-2">
-                {formData.witnesses.map((witness, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 font-kumbh"
-                  >
-                    <input
-                      type="text"
-                      value={witness}
-                      placeholder={`Witness ${index + 1} — e.g. Jane Doe, +63 912 345 6789`}
-                      onChange={(e) => {
-                        const updated = [...formData.witnesses];
-                        updated[index] = e.target.value;
-                        onInputChange("witnesses", updated);
-                      }}
-                      className={`flex-1 px-4 py-3 border rounded-lg transition-all duration-200 ${t.inputBg} ${t.inputText} ${t.inputPlaceholder} ${
-                        errors.witnesses
-                          ? "border-red-400 focus:ring-2 focus:ring-red-300 focus:border-red-400 hover:border-red-400"
-                          : `${t.inputBorder} focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
-                      }`}
-                    />
-                    {formData.witnesses.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onInputChange(
-                            "witnesses",
-                            formData.witnesses.filter((_, i) => i !== index),
-                          )
-                        }
-                        className={`p-2.5 ${t.removeBtn} rounded-lg transition-all`}
-                      >
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+              {/* Witnesses */}
+              <div>
+                <label
+                  className={`block text-sm font-semibold mb-2 font-kumbh ${errors.witnesses ? "text-red-600" : t.labelText}`}
+                >
+                  Witnesses <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-2">
+                  {formData.witnesses.map((witness, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 font-kumbh"
+                    >
+                      <input
+                        type="text"
+                        value={witness}
+                        placeholder={`Witness ${index + 1}`}
+                        onChange={(e) => {
+                          const updated = [...formData.witnesses];
+                          updated[index] = e.target.value;
+                          onInputChange("witnesses", updated);
+                        }}
+                        className={`flex-1 px-4 py-3 border rounded-lg transition-all duration-200 ${t.inputBg} ${t.inputText} ${t.inputPlaceholder} ${
+                          errors.witnesses
+                            ? "border-red-400 focus:ring-2 focus:ring-red-300 focus:border-red-400 hover:border-red-400"
+                            : `${t.inputBorder} focus:ring-2 ${t.primaryRing} ${t.primaryBorder} ${t.primaryHoverBorder}`
+                        }`}
+                      />
+                      {formData.witnesses.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onInputChange(
+                              "witnesses",
+                              formData.witnesses.filter((_, i) => i !== index),
+                            )
+                          }
+                          className={`p-2.5 ${t.removeBtn} rounded-lg transition-all`}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              {errors.witnesses && (
-                <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1.5">
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {errors.witnesses && (
+                  <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1.5">
+                    <svg
+                      className="w-4 h-4 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    {errors.witnesses}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={() =>
+                    onInputChange("witnesses", [...formData.witnesses, ""])
+                  }
+                  className={`mt-3 flex items-center gap-2 px-4 py-2 text-sm font-medium ${t.addBtnText} ${t.addBtnHoverText} ${t.addBtnHoverBg} rounded-lg transition-all font-kumbh`}
+                >
                   <svg
-                    className="w-4 h-4 flex-shrink-0"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
                     <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
                     />
                   </svg>
-                  {errors.witnesses}
-                </p>
-              )}
-              <button
-                type="button"
-                onClick={() =>
-                  onInputChange("witnesses", [...formData.witnesses, ""])
-                }
-                className={`mt-3 flex items-center gap-2 px-4 py-2 text-sm font-medium ${t.addBtnText} ${t.addBtnHoverText} ${t.addBtnHoverBg} rounded-lg transition-all font-kumbh`}
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Add Witness
-              </button>
+                  Add Witness
+                </button>
+              </div>
             </div>
 
             {/* Impact Assessment */}
