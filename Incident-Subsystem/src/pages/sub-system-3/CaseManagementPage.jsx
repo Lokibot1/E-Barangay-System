@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
 import ReportCard from "../../components/sub-system-3/ReportCard";
 import ReportDetailModal from "../../components/sub-system-3/Reportdetailmodal";
+import MapComponent from "../../components/shared/MapComponent";
 import themeTokens from "../../Themetokens";
 
 const CaseManagementPage = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("ongoing");
+  const [showMap, setShowMap] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(() => {
     return localStorage.getItem("appTheme") || "blue";
   });
@@ -38,6 +40,7 @@ const CaseManagementPage = () => {
       title: "Ankle Deep Flooding",
       category: "Flooding",
       location: "Green Acres Subdivision, Novaliches, Quezon City",
+      coordinates: { lat: 14.7235, lng: 121.0509 },
       description:
         "The road at Green Acres Subdivision is currently flooded ankle-deep. Reported at 3:31 PM today.",
       date: "January 27, 2025",
@@ -51,6 +54,7 @@ const CaseManagementPage = () => {
       title: "Broken Streetlight",
       category: "Infrastructure",
       location: "Corner of Main St. and 5th Ave.",
+      coordinates: { lat: 14.6892, lng: 121.0589 },
       description:
         "Streetlight has been non-functional for 3 days, creating safety concerns at night.",
       date: "January 25, 2025",
@@ -65,6 +69,7 @@ const CaseManagementPage = () => {
       title: "Pothole on Road",
       category: "Road Damage",
       location: "Riverside Drive, near Gate 2",
+      coordinates: { lat: 14.655, lng: 121.0245 },
       description:
         "Large pothole causing traffic issues and potential vehicle damage. Urgent repair needed.",
       date: "January 22, 2025",
@@ -79,6 +84,7 @@ const CaseManagementPage = () => {
       title: "Tree Branch Blocking Path",
       category: "Obstruction",
       location: "City Park, Main Walkway",
+      coordinates: { lat: 14.6712, lng: 121.0389 },
       description:
         "Fallen tree branch blocking the main walking path in City Park. Resolved on January 21, 2025.",
       date: "January 20, 2025",
@@ -93,6 +99,7 @@ const CaseManagementPage = () => {
       title: "Graffiti on Public Wall",
       category: "Vandalism",
       location: "City Hall Building, East Wall",
+      coordinates: { lat: 14.6634, lng: 121.0322 },
       description:
         "Graffiti found on the east wall of City Hall. Cleaned on January 19, 2025.",
       date: "January 18, 2025",
@@ -107,6 +114,7 @@ const CaseManagementPage = () => {
       title: "Water Leak on Street",
       category: "Infrastructure",
       location: "Elm Street, near House #45",
+      coordinates: { lat: 14.6801, lng: 121.0498 },
       description:
         "Water leak reported near House #45 on Elm Street. Rejected due to insufficient evidence.",
       date: "January 15, 2025",
@@ -121,6 +129,7 @@ const CaseManagementPage = () => {
       title: "Stray Animals in Park",
       category: "Public Safety",
       location: "Sunset Park, Near Playground",
+      coordinates: { lat: 14.6923, lng: 121.0445 },
       description:
         "Multiple stray animals reported near the playground area. Rejected as no evidence provided.",
       date: "January 12, 2025",
@@ -154,6 +163,29 @@ const CaseManagementPage = () => {
     setTimeout(() => setSelectedReport(null), 300);
   };
 
+  // Convert reports to map markers
+  const getMapMarkers = () => {
+    const severityColors = {
+      High: "#EF4444", // red
+      Medium: "#F59E0B", // amber
+      Low: "#10B981", // green
+    };
+
+    return filteredReports
+      .filter((r) => r.coordinates)
+      .map((report) => ({
+        lat: report.coordinates.lat,
+        lng: report.coordinates.lng,
+        title: report.title,
+        color: severityColors[report.severity] || "#3B82F6",
+        data: {
+          description: report.description,
+          severity: report.severity,
+          id: report.id,
+        },
+      }));
+  };
+
   return (
     <>
       <div className="h-full flex flex-col overflow-y-auto">
@@ -176,14 +208,59 @@ const CaseManagementPage = () => {
         </div>
 
         {/* Case Management Content */}
-        <div id="main-content" className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div
+          id="main-content"
+          className="container mx-auto px-4 sm:px-6 py-6 sm:py-8"
+        >
           {/* Header */}
           <div className="mb-6 sm:mb-8">
-            <h2
-              className={`text-3xl sm:text-4xl font-bold ${t.cardText} mb-2 font-spartan`}
-            >
-              Case Management
-            </h2>
+            <div className="flex items-center justify-between mb-2">
+              <h2
+                className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}
+              >
+                Case Management
+              </h2>
+              <button
+                onClick={() => setShowMap(!showMap)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg ${t.cardBg} border ${t.cardBorder} hover:shadow-md transition-all font-kumbh`}
+              >
+                {showMap ? (
+                  <>
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                      />
+                    </svg>
+                    <span className="hidden sm:inline">Grid View</span>
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                      />
+                    </svg>
+                    <span className="hidden sm:inline">Map View</span>
+                  </>
+                )}
+              </button>
+            </div>
             <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh`}>
               View and track your submitted incident reports
             </p>
@@ -363,50 +440,67 @@ const CaseManagementPage = () => {
             </div>
           </div>
 
-          {/* Reports Grid */}
-          {filteredReports.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {filteredReports.map((report) => (
-                <ReportCard
-                  key={report.id}
-                  report={report}
-                  currentTheme={currentTheme}
-                  onClick={() => handleReportClick(report)}
-                />
-              ))}
+          {/* Map or Grid View */}
+          {showMap ? (
+            <div className="mb-6">
+              <MapComponent
+                mode="view"
+                markers={getMapMarkers()}
+                currentTheme={currentTheme}
+                height="600px"
+              />
             </div>
           ) : (
-            <div
-              className={`${t.cardBg} rounded-xl p-8 sm:p-12 text-center border ${t.cardBorder}`}
-            >
-              <svg
-                className={`w-12 h-12 sm:w-16 sm:h-16 ${t.subtleText} mx-auto mb-4`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                />
-              </svg>
-              <h3
-                className={`text-lg sm:text-xl font-bold ${t.cardText} mb-2 font-spartan`}
-              >
-                No {activeFilter} reports
-              </h3>
-              <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh`}>
-                There are no reports with this status at the moment.
-              </p>
-            </div>
+            <>
+              {/* Reports Grid */}
+              {filteredReports.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                  {filteredReports.map((report) => (
+                    <ReportCard
+                      key={report.id}
+                      report={report}
+                      currentTheme={currentTheme}
+                      onClick={() => handleReportClick(report)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div
+                  className={`${t.cardBg} rounded-xl p-8 sm:p-12 text-center border ${t.cardBorder}`}
+                >
+                  <svg
+                    className={`w-12 h-12 sm:w-16 sm:h-16 ${t.subtleText} mx-auto mb-4`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                    />
+                  </svg>
+                  <h3
+                    className={`text-lg sm:text-xl font-bold ${t.cardText} mb-2 font-spartan`}
+                  >
+                    No {activeFilter} reports
+                  </h3>
+                  <p
+                    className={`text-sm sm:text-base ${t.subtleText} font-kumbh`}
+                  >
+                    There are no reports with this status at the moment.
+                  </p>
+                </div>
+              )}
+            </>
           )}
 
           {/* Bottom Bar */}
           <div className={`pt-6 mt-8 border-t ${t.dividerBorder} text-center`}>
             <p className={`text-sm ${t.subtleText} font-kumbh`}>
-              © {new Date().getFullYear()} Barangay Incident & Complaint Management System. All rights reserved.
+              © {new Date().getFullYear()} Barangay Incident & Complaint
+              Management System. All rights reserved.
             </p>
           </div>
         </div>

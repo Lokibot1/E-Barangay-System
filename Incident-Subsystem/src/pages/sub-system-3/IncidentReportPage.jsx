@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
-import IncidentReportModal from "../../components/sub-system-3/IncidentReportModal";
+import TwoStepIncidentReportModal from "../../components/sub-system-3/TwoStepIncidentReportModal";
 import themeTokens from "../../Themetokens";
 
 const IncidentReportPage = () => {
@@ -54,7 +54,10 @@ const IncidentReportPage = () => {
         </div>
 
         {/* Incident Report Content */}
-        <div id="main-content" className="flex-1 container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <div
+          id="main-content"
+          className="flex-1 container mx-auto px-4 sm:px-6 py-8 sm:py-12"
+        >
           {/* Header with illustration */}
           <div className="mb-8 sm:mb-12">
             <div className="flex items-start gap-4 mb-6">
@@ -435,13 +438,14 @@ const IncidentReportPage = () => {
           {/* Bottom Bar */}
           <div className={`pt-6 mt-8 border-t ${t.dividerBorder} text-center`}>
             <p className={`text-sm ${t.subtleText} font-kumbh`}>
-              © {new Date().getFullYear()} Barangay Incident & Complaint Management System. All rights reserved.
+              © {new Date().getFullYear()} Barangay Incident & Complaint
+              Management System. All rights reserved.
             </p>
           </div>
         </div>
       </div>
 
-      <IncidentReportModal
+      <TwoStepIncidentReportModal
         isOpen={isModalOpen}
         onClose={closeModal}
         currentTheme={currentTheme}
