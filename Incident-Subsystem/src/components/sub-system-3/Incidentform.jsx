@@ -5,6 +5,7 @@ import SelectField from "../../components/shared/SelectField";
 import FileUpload from "../../components/shared/FileUpload";
 import CheckboxField from "../../components/shared/CheckboxField";
 import themeTokens from "../../Themetokens";
+import { useLanguage } from "../../context/LanguageContext";
 
 const IncidentForm = ({
   currentStep,
@@ -14,6 +15,10 @@ const IncidentForm = ({
   currentTheme,
 }) => {
   const t = themeTokens[currentTheme] || themeTokens.blue;
+  const { tr } = useLanguage();
+  const inf = tr.incidentForm;
+
+  const today = new Date().toISOString().split("T")[0];
 
   const renderStep = () => {
     switch (currentStep) {
@@ -42,22 +47,23 @@ const IncidentForm = ({
               <h3
                 className={`text-2xl font-bold ${t.sectionTitle} font-spartan`}
               >
-                Basic Information
+                {inf.step1Title}
               </h3>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6 font-kumbh">
               <InputField
-                label="Date of Incident"
+                label={inf.dateOfIncident}
                 type="date"
                 value={formData.incidentDate}
                 onChange={(e) => onInputChange("incidentDate", e.target.value)}
                 required
+                max={today}
                 error={errors.incidentDate}
                 currentTheme={currentTheme}
               />
               <InputField
-                label="Time of Incident"
+                label={inf.timeOfIncident}
                 type="time"
                 value={formData.incidentTime}
                 onChange={(e) => onInputChange("incidentTime", e.target.value)}
@@ -68,9 +74,9 @@ const IncidentForm = ({
             </div>
 
             <InputField
-              label="Location of Incident"
+              label={inf.location}
               type="text"
-              placeholder="Building, floor, room number, or specific area"
+              placeholder={inf.locationPlaceholder}
               value={formData.location}
               onChange={(e) => onInputChange("location", e.target.value)}
               required
@@ -105,26 +111,26 @@ const IncidentForm = ({
               <h3
                 className={`text-2xl font-bold ${t.sectionTitle} font-spartan`}
               >
-                Incident Details
+                {inf.step2Title}
               </h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <SelectField
-                label="Type of Incident"
+                label={inf.incidentType}
                 value={formData.incidentType}
                 onChange={(e) => onInputChange("incidentType", e.target.value)}
                 options={[
-                  { value: "", label: "Select incident type" },
-                  { value: "safety", label: "⚠️ Safety Incident" },
-                  { value: "security", label: "🔒 Security Breach" },
-                  { value: "environmental", label: "🌍 Environmental Hazard" },
-                  { value: "equipment", label: "⚙️ Equipment Failure" },
-                  { value: "workplace-violence", label: "🚨 Workplace Violence" },
-                  { value: "fire", label: "🔥 Fire / Evacuation" },
-                  { value: "accident", label: "🩹 Accident / Injury" },
-                  { value: "near-miss", label: "⚡ Near Miss" },
-                  { value: "other", label: "📋 Other" },
+                  { value: "", label: inf.selectIncidentType },
+                  { value: "safety", label: "⚠️ " + inf.safety },
+                  { value: "security", label: "🔒 " + inf.security },
+                  { value: "environmental", label: "🌍 " + inf.environmental },
+                  { value: "equipment", label: "⚙️ " + inf.equipment },
+                  { value: "workplace-violence", label: "🚨 " + inf.workplaceViolence },
+                  { value: "fire", label: "🔥 " + inf.fire },
+                  { value: "accident", label: "🩹 " + inf.accident },
+                  { value: "near-miss", label: "⚡ " + inf.nearMiss },
+                  { value: "other", label: "📋 " + inf.other },
                 ]}
                 required
                 error={errors.incidentType}
@@ -132,23 +138,23 @@ const IncidentForm = ({
               />
 
               <SelectField
-                label="Severity Level"
+                label={inf.severity}
                 value={formData.severity}
                 onChange={(e) => onInputChange("severity", e.target.value)}
                 options={[
-                  { value: "", label: "Select severity level" },
-                  { value: "low", label: "🟢 Low - Minor incident, no injuries" },
+                  { value: "", label: inf.selectSeverity },
+                  { value: "low", label: "🟢 " + inf.severityLow },
                   {
                     value: "medium",
-                    label: "🟡 Medium - Moderate impact, minor injuries",
+                    label: "🟡 " + inf.severityMedium,
                   },
                   {
                     value: "high",
-                    label: "🟠 High - Serious incident, significant damage",
+                    label: "🟠 " + inf.severityHigh,
                   },
                   {
                     value: "critical",
-                    label: "🔴 Critical - Life-threatening, major damage",
+                    label: "🔴 " + inf.severityCritical,
                   },
                 ]}
                 required
@@ -159,8 +165,8 @@ const IncidentForm = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <TextAreaField
-                label="Detailed Description"
-                placeholder="Describe what happened, including the sequence of events, circumstances, and any contributing factors..."
+                label={inf.description}
+                placeholder={inf.descriptionPlaceholder}
                 value={formData.description}
                 onChange={(e) => onInputChange("description", e.target.value)}
                 rows={4}
@@ -169,8 +175,8 @@ const IncidentForm = ({
                 currentTheme={currentTheme}
               />
               <TextAreaField
-                label="Immediate Action Taken"
-                placeholder="Describe any immediate actions taken to address the incident..."
+                label={inf.immediateAction}
+                placeholder={inf.immediateActionPlaceholder}
                 value={formData.immediateAction}
                 onChange={(e) => onInputChange("immediateAction", e.target.value)}
                 rows={4}
@@ -205,7 +211,7 @@ const IncidentForm = ({
               <h3
                 className={`text-2xl font-bold ${t.sectionTitle} font-spartan`}
               >
-                People Involved
+                {inf.step3Title}
               </h3>
             </div>
 
@@ -216,7 +222,7 @@ const IncidentForm = ({
                 <label
                   className={`block text-sm font-semibold mb-2 font-kumbh ${errors.personsInvolved ? "text-red-600" : t.labelText}`}
                 >
-                  Persons Involved <span className="text-red-500">*</span>
+                  {inf.personsInvolved} <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2">
                   {formData.personsInvolved.map((person, index) => (
@@ -227,7 +233,7 @@ const IncidentForm = ({
                       <input
                         type="text"
                         value={person}
-                        placeholder={`Person ${index + 1}`}
+                        placeholder={`${inf.personPlaceholder} ${index + 1}`}
                         onChange={(e) => {
                           const updated = [...formData.personsInvolved];
                           updated[index] = e.target.value;
@@ -309,7 +315,7 @@ const IncidentForm = ({
                       d="M12 4v16m8-8H4"
                     />
                   </svg>
-                  Add Person
+                  {inf.addPerson}
                 </button>
               </div>
 
@@ -318,7 +324,7 @@ const IncidentForm = ({
                 <label
                   className={`block text-sm font-semibold mb-2 font-kumbh ${errors.witnesses ? "text-red-600" : t.labelText}`}
                 >
-                  Witnesses <span className="text-red-500">*</span>
+                  {inf.witnesses} <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2">
                   {formData.witnesses.map((witness, index) => (
@@ -329,7 +335,7 @@ const IncidentForm = ({
                       <input
                         type="text"
                         value={witness}
-                        placeholder={`Witness ${index + 1}`}
+                        placeholder={`${inf.witnessPlaceholder} ${index + 1}`}
                         onChange={(e) => {
                           const updated = [...formData.witnesses];
                           updated[index] = e.target.value;
@@ -406,7 +412,7 @@ const IncidentForm = ({
                       d="M12 4v16m8-8H4"
                     />
                   </svg>
-                  Add Witness
+                  {inf.addWitness}
                 </button>
               </div>
             </div>
@@ -429,19 +435,19 @@ const IncidentForm = ({
                     d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                   />
                 </svg>
-                Impact Assessment
+                {inf.impactAssessment}
               </h4>
               <div
                 className={`space-y-4 ${t.inlineBg} p-4 rounded-lg font-kumbh`}
               >
                 <CheckboxField
-                  label="Were there any injuries?"
+                  label={inf.injuries}
                   checked={formData.injuries}
                   onChange={(e) => onInputChange("injuries", e.target.checked)}
                   currentTheme={currentTheme}
                 />
                 <CheckboxField
-                  label="Was there property damage?"
+                  label={inf.propertyDamage}
                   checked={formData.propertyDamage}
                   onChange={(e) =>
                     onInputChange("propertyDamage", e.target.checked)
@@ -449,7 +455,7 @@ const IncidentForm = ({
                   currentTheme={currentTheme}
                 />
                 <CheckboxField
-                  label="Was medical attention required?"
+                  label={inf.medicalAttention}
                   checked={formData.medicalAttention}
                   onChange={(e) =>
                     onInputChange("medicalAttention", e.target.checked)
@@ -486,20 +492,20 @@ const IncidentForm = ({
               <h3
                 className={`text-2xl font-bold ${t.sectionTitle} font-spartan`}
               >
-                Additional Information
+                {inf.step4Title}
               </h3>
             </div>
 
             <FileUpload
-              label="Attachments"
-              description="Upload photos, videos, or documents related to the incident (Max 10MB per file)"
+              label={inf.attachments}
+              description={inf.attachmentsDesc}
               files={formData.attachments}
               onChange={(files) => onInputChange("attachments", files)}
               currentTheme={currentTheme}
             />
             <TextAreaField
-              label="Additional Notes"
-              placeholder="Any other relevant information, recommendations, or comments..."
+              label={inf.additionalNotes}
+              placeholder={inf.additionalNotesPlaceholder}
               value={formData.additionalNotes}
               onChange={(e) => onInputChange("additionalNotes", e.target.value)}
               rows={6}
@@ -526,12 +532,10 @@ const IncidentForm = ({
                   <h4
                     className={`font-semibold ${t.bannerTitle} mb-1 font-kumbh`}
                   >
-                    Review Before Submitting
+                    {inf.reviewTitle}
                   </h4>
                   <p className={`text-sm ${t.bannerText} font-kumbh`}>
-                    Please review all information carefully. Once submitted,
-                    this report will be sent to the safety team for
-                    investigation.
+                    {inf.reviewDesc}
                   </p>
                 </div>
               </div>

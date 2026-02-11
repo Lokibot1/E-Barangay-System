@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
 import Footer from "../../components/sub-system-3/Footer";
+import { useLanguage } from "../../context/LanguageContext";
 import themeTokens from "../../Themetokens";
 
 const MainPage = () => {
@@ -27,6 +28,7 @@ const MainPage = () => {
   }, []);
 
   const t = themeTokens[currentTheme];
+  const { tr } = useLanguage();
 
   return (
     <div className="h-full flex flex-col">
@@ -35,7 +37,7 @@ const MainPage = () => {
         <h1
           className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${t.cardText} mb-2 sm:mb-3 font-spartan uppercase tracking-tight`}
         >
-          INCIDENT & COMPLAINT MANAGEMENT
+          {tr.mainPage.title}
         </h1>
       </div>
 

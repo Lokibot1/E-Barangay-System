@@ -4,9 +4,12 @@ import ProgressIndicator from "../../components/sub-system-3/ProgressIndicator";
 import Toast from "../../components/shared/modals/Toast";
 import themeTokens from "../../Themetokens";
 import { incidentService } from "../../services/sub-system-3/incidentService";
+import { useLanguage } from "../../context/LanguageContext";
 
 const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
   const t = themeTokens[currentTheme] || themeTokens.blue;
+  const { tr } = useLanguage();
+  const im = tr.incidentModal;
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -102,24 +105,26 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     switch (step) {
       case 1:
         if (!formData.incidentDate.trim())
-          errs.incidentDate = "Date of incident is required.";
+          errs.incidentDate = im.dateRequired;
+        else if (formData.incidentDate > new Date().toISOString().split("T")[0])
+          errs.incidentDate = im.dateFuture;
         if (!formData.incidentTime.trim())
-          errs.incidentTime = "Time of incident is required.";
-        if (!formData.location.trim()) errs.location = "Location is required.";
+          errs.incidentTime = im.timeRequired;
+        if (!formData.location.trim()) errs.location = im.locationRequired;
         break;
       case 2:
         if (!formData.incidentType)
-          errs.incidentType = "Please select an incident type.";
+          errs.incidentType = im.typeRequired;
         if (!formData.severity)
-          errs.severity = "Please select a severity level.";
+          errs.severity = im.severityRequired;
         if (!formData.description.trim())
-          errs.description = "A detailed description is required.";
+          errs.description = im.descriptionRequired;
         break;
       case 3:
         if (formData.personsInvolved.every((p) => !p.trim()))
-          errs.personsInvolved = "At least one person involved is required.";
+          errs.personsInvolved = im.personsRequired;
         if (formData.witnesses.every((w) => !w.trim()))
-          errs.witnesses = "At least one witness is required.";
+          errs.witnesses = im.witnessesRequired;
         break;
       default:
         break;
@@ -150,9 +155,8 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
       await incidentService.submitReport(formData);
       addToast({
         type: "success",
-        title: "Report Submitted!",
-        message:
-          "Your incident report has been recorded and will be reviewed shortly.",
+        title: im.successTitle,
+        message: im.successMessage,
         duration: 5000,
       });
       setTimeout(() => onClose(), 2000);
@@ -160,8 +164,8 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
       console.error("Error submitting report:", error);
       addToast({
         type: "error",
-        title: "Submission Failed",
-        message: "Something went wrong. Please try again.",
+        title: im.errorTitle,
+        message: im.errorMessage,
         duration: 5000,
       });
     } finally {
@@ -218,11 +222,11 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
                 <h2
                   className={`text-2xl font-bold ${t.modalTitle} font-spartan`}
                 >
-                  Incident Report
+                  {im.title}
                 </h2>
               </div>
               <p className={`text-sm ${t.modalSubtext} mt-1 font-kumbh`}>
-                Provide detailed information about the incident
+                {im.subtitle}
               </p>
             </div>
 
@@ -283,11 +287,11 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
                   : `${t.footerPrevActiveBg} ${t.footerPrevActiveText} ${t.footerPrevActiveHover} hover:shadow-md`
               }`}
             >
-              ← Previous
+              {im.previous}
             </button>
 
             <div className={`text-sm font-medium ${t.footerStepText}`}>
-              Step {currentStep} of {totalSteps}
+              {im.step} {currentStep} {im.of} {totalSteps}
             </div>
 
             {currentStep < totalSteps ? (
@@ -295,7 +299,7 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
                 onClick={handleNext}
                 className={`px-6 py-3 ${t.nextBtnBg} text-white rounded-lg font-medium ${t.nextBtnHover} hover:shadow-lg transition-all duration-200`}
               >
-                Next →
+                {im.next}
               </button>
             ) : (
               <button
@@ -307,7 +311,7 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
                     : `bg-gradient-to-r ${t.submitGrad} text-white hover:shadow-xl hover:scale-105`
                 }`}
               >
-                {isSubmitting ? "Submitting..." : "✓ Submit Report"}
+                {isSubmitting ? im.submitting : im.submit}
               </button>
             )}
           </div>

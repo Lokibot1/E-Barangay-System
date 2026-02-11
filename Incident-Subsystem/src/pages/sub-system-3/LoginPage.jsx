@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import themeTokens from "../../Themetokens";
-import { login, saveAuth, isAuthenticated } from "../../services/sub-system-3/loginService";
+import { login, saveAuth, isAuthenticated, isAdmin } from "../../services/sub-system-3/loginService";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -15,9 +15,9 @@ const LoginPage = () => {
   const [apiError, setApiError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // If already logged in, go straight to the dashboard
+  // If already logged in, go straight to the correct dashboard
   if (isAuthenticated()) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={isAdmin() ? "/admin" : "/"} replace />;
   }
 
   const t = themeTokens[currentTheme];
@@ -50,7 +50,7 @@ const LoginPage = () => {
     try {
       const data = await login(email, password);
       saveAuth(data);
-      navigate("/");
+      navigate(isAdmin() ? "/admin" : "/");
     } catch (err) {
       setApiError(err.message || "Login failed. Please try again.");
     } finally {

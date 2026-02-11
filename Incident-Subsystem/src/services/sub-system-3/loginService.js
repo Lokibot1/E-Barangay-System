@@ -5,9 +5,15 @@ const API_BASE = "http://localhost:8000/api";
  * Sends a POST request to /api/login and returns the parsed JSON response.
  */
 export const login = async (email, password) => {
+  // Clear any stale session before attempting a fresh login
+  clearAuth();
+
   const response = await fetch(`${API_BASE}/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
     body: JSON.stringify({ email, password }),
   });
 
@@ -77,4 +83,12 @@ export const getToken = () => {
 export const getUser = () => {
   const user = localStorage.getItem("authUser");
   return user ? JSON.parse(user) : null;
+};
+
+/**
+ * Check whether the logged-in user has the admin role.
+ */
+export const isAdmin = () => {
+  const user = getUser();
+  return user?.role === "admin";
 };

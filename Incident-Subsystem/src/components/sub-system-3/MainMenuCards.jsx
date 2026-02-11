@@ -1,15 +1,17 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../../context/LanguageContext";
 import themeTokens from "../../Themetokens";
 
 const MainMenuCards = ({ currentTheme }) => {
   const navigate = useNavigate();
   const t = themeTokens[currentTheme];
+  const { tr } = useLanguage();
 
   const menuItems = [
     {
       id: "file-complaint",
-      title: "FILE A COMPLAINT",
+      title: tr.menuCards.fileComplaint,
       icon: (
         <svg
           className="w-8 h-8 text-white"
@@ -32,7 +34,7 @@ const MainMenuCards = ({ currentTheme }) => {
     },
     {
       id: "report-incident",
-      title: "REPORT AN INCIDENT",
+      title: tr.menuCards.reportIncident,
       icon: (
         <svg
           className="w-8 h-8 text-white"
@@ -55,7 +57,7 @@ const MainMenuCards = ({ currentTheme }) => {
     },
     {
       id: "incident-map",
-      title: "INCIDENT MAP",
+      title: tr.menuCards.incidentMap,
       icon: (
         <svg
           className="w-8 h-8 text-white"
@@ -78,7 +80,7 @@ const MainMenuCards = ({ currentTheme }) => {
     },
     {
       id: "incident-status",
-      title: "INCIDENT & COMPLAINT STATUS",
+      title: tr.menuCards.incidentStatus,
       icon: (
         <svg
           className="w-8 h-8 text-white"

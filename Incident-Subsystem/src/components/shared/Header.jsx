@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ThemeModal from "../../components/sub-system-3/ThemeModal";
 import LogoutModal from "./LogoutModal";
-import { logout } from "../../services/sub-system-3/loginService";
+import { logout, getUser } from "../../services/sub-system-3/loginService";
+import { useLanguage } from "../../context/LanguageContext";
 import themeTokens from "../../Themetokens";
 
 const Header = ({ currentTheme, onThemeChange }) => {
@@ -13,6 +14,17 @@ const Header = ({ currentTheme, onThemeChange }) => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
   const navigate = useNavigate();
+  const { language, setLanguage, tr } = useLanguage();
+
+  const user = getUser();
+  const userName = user?.name || "User";
+  const userEmail = user?.email || "";
+  const userInitials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   const t = themeTokens[currentTheme];
   const isDark = currentTheme === "dark";
@@ -141,7 +153,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                   Logo wala pa
                 </h1>
                 <p className={`text-xs ${t.subtleText} font-kumbh`}>
-                  Incident Reporting System
+                  {tr.header.incidentReporting}
                 </p>
               </div>
             </div>
@@ -185,10 +197,10 @@ const Header = ({ currentTheme, onThemeChange }) => {
                     >
                       <div className="flex items-center justify-between">
                         <h3 className="text-white font-bold text-base sm:text-lg font-spartan">
-                          Report Updates
+                          {tr.header.reportUpdates}
                         </h3>
                         <span className="bg-white/20 text-white text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full font-kumbh">
-                          {unreadCount} Active
+                          {unreadCount} {tr.header.active}
                         </span>
                       </div>
                     </div>
@@ -257,7 +269,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                       <button
                         className={`w-full text-center text-sm font-semibold ${t.primaryText} hover:opacity-80 transition-opacity font-kumbh`}
                       >
-                        View All Notifications
+                        {tr.header.viewAllNotifications}
                       </button>
                     </div>
                   </div>
@@ -315,8 +327,37 @@ const Header = ({ currentTheme, onThemeChange }) => {
                           />
                         </svg>
                         <span className="font-semibold text-sm font-kumbh">
-                          Change Theme
+                          {tr.header.changeTheme}
                         </span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setLanguage(language === "en" ? "tl" : "en");
+                          setIsSettingsOpen(false);
+                        }}
+                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors group`}
+                      >
+                        <svg
+                          className="w-5 h-5 text-amber-500 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
+                          />
+                        </svg>
+                        <div className="flex-1 flex items-center justify-between">
+                          <span className="font-semibold text-sm font-kumbh">
+                            {tr.header.language}
+                          </span>
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isDark ? "bg-slate-600 text-slate-300" : "bg-slate-100 text-slate-600"} font-kumbh`}>
+                            {language === "en" ? "EN" : "TL"}
+                          </span>
+                        </div>
                       </button>
                       <button
                         className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors group`}
@@ -335,7 +376,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                           />
                         </svg>
                         <span className="font-semibold text-sm font-kumbh">
-                          Privacy Settings
+                          {tr.header.privacySettings}
                         </span>
                       </button>
                     </div>
@@ -352,7 +393,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                   <div
                     className={`w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br ${t.primaryGrad} rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm`}
                   >
-                    JD
+                    {userInitials}
                   </div>
                   <svg
                     className={`w-3 h-3 sm:w-4 sm:h-4 ${t.subtleText} hidden sm:block`}
@@ -380,18 +421,18 @@ const Header = ({ currentTheme, onThemeChange }) => {
                         <div
                           className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br ${t.primaryGrad} rounded-full flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0`}
                         >
-                          JD
+                          {userInitials}
                         </div>
                         <div className="min-w-0">
                           <p
                             className={`font-semibold text-sm ${isDark ? "text-slate-100" : "text-slate-900"} font-kumbh truncate`}
                           >
-                            John Doe
+                            {userName}
                           </p>
                           <p
                             className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"} font-kumbh truncate`}
                           >
-                            john.doe@company.com
+                            {userEmail}
                           </p>
                         </div>
                       </div>
@@ -415,7 +456,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                           />
                         </svg>
                         <span className="font-semibold text-sm font-kumbh">
-                          View Profile
+                          {tr.header.viewProfile}
                         </span>
                       </button>
                       <button
@@ -436,7 +477,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                           />
                         </svg>
                         <span className="font-semibold text-sm font-kumbh">
-                          Logout
+                          {tr.header.logout}
                         </span>
                       </button>
                     </div>

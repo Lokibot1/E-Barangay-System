@@ -5,9 +5,12 @@ import ProgressIndicator from "../../components/sub-system-3/ProgressIndicator";
 import Toast from "../../components/shared/modals/Toast";
 import { fileComplaint } from "../../services/sub-system-3/complaintService";
 import themeTokens from "../../Themetokens";
+import { useLanguage } from "../../context/LanguageContext";
 
 const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
   const t = themeTokens[currentTheme] || themeTokens.blue;
+  const { tr } = useLanguage();
+  const cm = tr.complaintModal;
   const navigate = useNavigate();
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -104,24 +107,26 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
     switch (step) {
       case 1:
         if (!formData.complaintDate.trim())
-          errs.complaintDate = "Date of complaint is required.";
+          errs.complaintDate = cm.dateRequired;
+        else if (formData.complaintDate > new Date().toISOString().split("T")[0])
+          errs.complaintDate = cm.dateFuture;
         if (!formData.complaintTime.trim())
-          errs.complaintTime = "Time of complaint is required.";
-        if (!formData.location.trim()) errs.location = "Location is required.";
+          errs.complaintTime = cm.timeRequired;
+        if (!formData.location.trim()) errs.location = cm.locationRequired;
         break;
       case 2:
         if (!formData.complaintType)
-          errs.complaintType = "Please select a complaint type.";
+          errs.complaintType = cm.typeRequired;
         if (!formData.severity)
-          errs.severity = "Please select a severity level.";
+          errs.severity = cm.severityRequired;
         if (!formData.description.trim())
-          errs.description = "A detailed description is required.";
+          errs.description = cm.descriptionRequired;
         break;
       case 3:
         if (!formData.complainantName.trim())
-          errs.complainantName = "Complainant name is required.";
+          errs.complainantName = cm.complainantRequired;
         if (!formData.respondentName.trim())
-          errs.respondentName = "Respondent name is required.";
+          errs.respondentName = cm.respondentRequired;
         break;
       default:
         break;
@@ -153,9 +158,8 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
 
       addToast({
         type: "success",
-        title: "Complaint Submitted!",
-        message:
-          "Your complaint has been recorded and will be processed by the Barangay.",
+        title: cm.successTitle,
+        message: cm.successMessage,
         duration: 5000,
       });
       setTimeout(() => onClose(), 2000);
@@ -164,8 +168,8 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
       if (error.message === "You must be logged in to file a complaint.") {
         addToast({
           type: "error",
-          title: "Session Expired",
-          message: "Please log in again to continue.",
+          title: cm.errorSessionTitle,
+          message: cm.errorSessionMessage,
           duration: 4000,
         });
         setTimeout(() => navigate("/login", { replace: true }), 1500);
@@ -174,8 +178,8 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
 
       addToast({
         type: "error",
-        title: "Submission Failed",
-        message: error.message || "Something went wrong. Please try again.",
+        title: cm.errorTitle,
+        message: error.message || cm.errorMessage,
         duration: 5000,
       });
     } finally {
@@ -225,11 +229,11 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
                   />
                 </svg>
                 <h2 className="text-2xl font-bold text-white font-spartan">
-                  File a Complaint
+                  {cm.title}
                 </h2>
               </div>
               <p className="text-sm text-white/90 mt-1 font-kumbh">
-                Submit your complaint for barangay mediation
+                {cm.subtitle}
               </p>
             </div>
 
@@ -290,11 +294,11 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
                   : `${t.footerPrevActiveBg} ${t.footerPrevActiveText} ${t.footerPrevActiveHover} hover:shadow-md`
               }`}
             >
-              ← Previous
+              {cm.previous}
             </button>
 
             <div className={`text-sm font-medium ${t.footerStepText}`}>
-              Step {currentStep} of {totalSteps}
+              {cm.step} {currentStep} {cm.of} {totalSteps}
             </div>
 
             {currentStep < totalSteps ? (
@@ -302,7 +306,7 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
                 onClick={handleNext}
                 className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200"
               >
-                Next →
+                {cm.next}
               </button>
             ) : (
               <button
@@ -314,7 +318,7 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
                     : "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-xl hover:scale-105"
                 }`}
               >
-                {isSubmitting ? "Submitting..." : "✓ Submit Complaint"}
+                {isSubmitting ? cm.submitting : cm.submit}
               </button>
             )}
           </div>

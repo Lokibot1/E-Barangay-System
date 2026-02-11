@@ -3,6 +3,7 @@ import InputField from "../../components/shared/InputField";
 import TextAreaField from "../../components/shared/TextAreaField";
 import SelectField from "../../components/shared/SelectField";
 import FileUpload from "../../components/shared/FileUpload";
+import { useLanguage } from "../../context/LanguageContext";
 import themeTokens from "../../Themetokens";
 
 const ComplaintForm = ({
@@ -13,25 +14,29 @@ const ComplaintForm = ({
   currentTheme,
 }) => {
   const t = themeTokens[currentTheme] || themeTokens.blue;
+  const { tr } = useLanguage();
+  const cf = tr.complaintForm;
+
+  const today = new Date().toISOString().split("T")[0];
 
   const complaintTypes = [
-    { value: "", label: "Select complaint type" },
-    { value: "noise", label: "Noise Disturbance" },
-    { value: "property", label: "Property Dispute" },
-    { value: "harassment", label: "Harassment" },
-    { value: "trespassing", label: "Trespassing" },
-    { value: "parking", label: "Illegal Parking" },
-    { value: "garbage", label: "Garbage/Sanitation Issue" },
-    { value: "boundary", label: "Boundary Dispute" },
-    { value: "unpaid", label: "Unpaid Debt" },
-    { value: "other", label: "Other" },
+    { value: "", label: cf.selectComplaintType },
+    { value: "noise", label: cf.noise },
+    { value: "property", label: cf.property },
+    { value: "harassment", label: cf.harassment },
+    { value: "trespassing", label: cf.trespassing },
+    { value: "parking", label: cf.parking },
+    { value: "garbage", label: cf.garbage },
+    { value: "boundary", label: cf.boundary },
+    { value: "unpaid", label: cf.unpaid },
+    { value: "other", label: cf.other },
   ];
 
   const severityLevels = [
-    { value: "", label: "Select severity" },
-    { value: "low", label: "Low - Minor issue" },
-    { value: "medium", label: "Medium - Moderate concern" },
-    { value: "high", label: "High - Urgent attention needed" },
+    { value: "", label: cf.selectSeverity },
+    { value: "low", label: cf.severityLow },
+    { value: "medium", label: cf.severityMedium },
+    { value: "high", label: cf.severityHigh },
   ];
 
   const handleWitnessChange = (index, value) => {
@@ -58,25 +63,26 @@ const ComplaintForm = ({
             <h3
               className={`text-xl font-bold ${t.sectionTitle} mb-1 font-spartan`}
             >
-              Basic Information
+              {cf.step1Title}
             </h3>
             <p className={`text-sm ${t.sectionSubtitle} font-kumbh`}>
-              When and where did this occur?
+              {cf.step1Subtitle}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField
-              label="Date of Incident"
+              label={cf.dateOfIncident}
               type="date"
               value={formData.complaintDate}
               onChange={(e) => onInputChange("complaintDate", e.target.value)}
               error={errors.complaintDate}
               required
+              max={today}
               currentTheme={currentTheme}
             />
             <InputField
-              label="Time of Incident"
+              label={cf.timeOfIncident}
               type="time"
               value={formData.complaintTime}
               onChange={(e) => onInputChange("complaintTime", e.target.value)}
@@ -87,11 +93,11 @@ const ComplaintForm = ({
           </div>
 
           <InputField
-            label="Location / Address"
+            label={cf.location}
             type="text"
             value={formData.location}
             onChange={(e) => onInputChange("location", e.target.value)}
-            placeholder="e.g., Block 5 Lot 10, Street Name, Barangay"
+            placeholder={cf.locationPlaceholder}
             error={errors.location}
             required
             currentTheme={currentTheme}
@@ -106,16 +112,16 @@ const ComplaintForm = ({
             <h3
               className={`text-xl font-bold ${t.sectionTitle} mb-1 font-spartan`}
             >
-              Complaint Details
+              {cf.step2Title}
             </h3>
             <p className={`text-sm ${t.sectionSubtitle} font-kumbh`}>
-              Describe the nature of your complaint
+              {cf.step2Subtitle}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <SelectField
-              label="Type of Complaint"
+              label={cf.complaintType}
               value={formData.complaintType}
               onChange={(e) => onInputChange("complaintType", e.target.value)}
               options={complaintTypes}
@@ -125,7 +131,7 @@ const ComplaintForm = ({
             />
 
             <SelectField
-              label="Severity Level"
+              label={cf.severity}
               value={formData.severity}
               onChange={(e) => onInputChange("severity", e.target.value)}
               options={severityLevels}
@@ -136,10 +142,10 @@ const ComplaintForm = ({
           </div>
 
           <TextAreaField
-            label="Detailed Description"
+            label={cf.description}
             value={formData.description}
             onChange={(e) => onInputChange("description", e.target.value)}
-            placeholder="Please provide a clear and detailed account of what happened..."
+            placeholder={cf.descriptionPlaceholder}
             rows={4}
             error={errors.description}
             required
@@ -155,10 +161,10 @@ const ComplaintForm = ({
             <h3
               className={`text-xl font-bold ${t.sectionTitle} mb-1 font-spartan`}
             >
-              Parties Involved
+              {cf.step3Title}
             </h3>
             <p className={`text-sm ${t.sectionSubtitle} font-kumbh`}>
-              Information about complainant and respondent
+              {cf.step3Subtitle}
             </p>
           </div>
 
@@ -171,23 +177,23 @@ const ComplaintForm = ({
               <h4
                 className={`text-lg font-semibold ${t.cardText} mb-4 font-spartan`}
               >
-                Complainant (You)
+                {cf.complainantYou}
               </h4>
               <div className="space-y-4">
                 <InputField
-                  label="Full Name"
+                  label={cf.fullName}
                   type="text"
                   value={formData.complainantName}
                   onChange={(e) =>
                     onInputChange("complainantName", e.target.value)
                   }
-                  placeholder="Your full name"
+                  placeholder={cf.yourFullName}
                   error={errors.complainantName}
                   required
                   currentTheme={currentTheme}
                 />
                 <InputField
-                  label="Contact Number"
+                  label={cf.contactNumber}
                   type="tel"
                   value={formData.complainantContact}
                   onChange={(e) =>
@@ -206,28 +212,28 @@ const ComplaintForm = ({
               <h4
                 className={`text-lg font-semibold ${t.cardText} mb-4 font-spartan`}
               >
-                Respondent
+                {cf.respondent}
               </h4>
               <div className="space-y-4">
                 <InputField
-                  label="Full Name"
+                  label={cf.fullName}
                   type="text"
                   value={formData.respondentName}
                   onChange={(e) =>
                     onInputChange("respondentName", e.target.value)
                   }
-                  placeholder="Name of the person"
+                  placeholder={cf.respondentName}
                   error={errors.respondentName}
                   required
                   currentTheme={currentTheme}
                 />
                 <TextAreaField
-                  label="Address (if known)"
+                  label={cf.respondentAddress}
                   value={formData.respondentAddress}
                   onChange={(e) =>
                     onInputChange("respondentAddress", e.target.value)
                   }
-                  placeholder="Respondent's address or location"
+                  placeholder={cf.respondentAddressPlaceholder}
                   rows={2}
                   currentTheme={currentTheme}
                 />
@@ -240,7 +246,7 @@ const ComplaintForm = ({
             <label
               className={`block text-sm font-semibold ${t.labelText} mb-3 font-kumbh`}
             >
-              Witnesses (Optional)
+              {cf.witnesses}
             </label>
             <div className="space-y-3">
               {formData.witnesses.map((witness, index) => (
@@ -249,7 +255,7 @@ const ComplaintForm = ({
                     type="text"
                     value={witness}
                     onChange={(e) => handleWitnessChange(index, e.target.value)}
-                    placeholder={`Witness ${index + 1} name`}
+                    placeholder={`${cf.witnessPlaceholder} ${index + 1}`}
                     className={`flex-1 px-4 py-3 border rounded-lg ${t.inputBg} ${t.inputText} ${t.inputBorder} font-kumbh`}
                   />
                   {formData.witnesses.length > 1 && (
@@ -268,7 +274,7 @@ const ComplaintForm = ({
                 onClick={addWitness}
                 className={`text-sm ${t.primaryText} hover:opacity-80 font-medium font-kumbh`}
               >
-                + Add Another Witness
+                {cf.addWitness}
               </button>
             </div>
           </div>
@@ -282,36 +288,36 @@ const ComplaintForm = ({
             <h3
               className={`text-xl font-bold ${t.sectionTitle} mb-1 font-spartan`}
             >
-              Additional Information
+              {cf.step4Title}
             </h3>
             <p className={`text-sm ${t.sectionSubtitle} font-kumbh`}>
-              Supporting documents and desired resolution
+              {cf.step4Subtitle}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <TextAreaField
-              label="Desired Resolution"
+              label={cf.desiredResolution}
               value={formData.desiredResolution}
               onChange={(e) => onInputChange("desiredResolution", e.target.value)}
-              placeholder="What outcome are you seeking? (e.g., apology, compensation, cease of activity)"
+              placeholder={cf.desiredResolutionPlaceholder}
               rows={3}
               currentTheme={currentTheme}
             />
 
             <TextAreaField
-              label="Additional Notes (Optional)"
+              label={cf.additionalNotes}
               value={formData.additionalNotes}
               onChange={(e) => onInputChange("additionalNotes", e.target.value)}
-              placeholder="Any other information you'd like to add..."
+              placeholder={cf.additionalNotesPlaceholder}
               rows={3}
               currentTheme={currentTheme}
             />
           </div>
 
           <FileUpload
-            label="Supporting Documents"
-            description="Upload any photos, videos, or documents that support your complaint"
+            label={cf.supportingDocuments}
+            description={cf.supportingDocumentsDesc}
             files={formData.attachments}
             onChange={(files) => onInputChange("attachments", files)}
             currentTheme={currentTheme}
