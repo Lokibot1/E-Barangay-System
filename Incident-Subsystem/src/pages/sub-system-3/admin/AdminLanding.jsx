@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import themeTokens from "../../../Themetokens";
 import { getUser } from "../../../services/sub-system-3/loginService";
 import sanBartolomeImg from "../../../assets/css/images/SanBartolome.jpg";
@@ -17,6 +18,7 @@ const AdminLanding = () => {
   const t = themeTokens[currentTheme];
   const user = getUser();
   const firstName = user?.name?.split(" ")[0] || "Admin";
+  const navigate = useNavigate();
 
   const stats = [
     {
@@ -27,6 +29,7 @@ const AdminLanding = () => {
       circleBg: "bg-gray-200",
       circleText: "text-gray-700",
       arrowColor: "text-amber-500",
+      link: "/admin/requests",
     },
     {
       count: 15,
@@ -36,6 +39,7 @@ const AdminLanding = () => {
       circleBg: "bg-gray-200",
       circleText: "text-green-700",
       arrowColor: "text-amber-500",
+      link: "/admin/incidents",
     },
     {
       count: 15,
@@ -45,6 +49,7 @@ const AdminLanding = () => {
       circleBg: "bg-gray-200",
       circleText: "text-gray-700",
       arrowColor: "text-gray-400",
+      link: "/admin/incidents",
     },
   ];
 
@@ -111,6 +116,7 @@ const AdminLanding = () => {
 
               {/* Arrow icon */}
               <button
+                onClick={() => navigate(stat.link)}
                 className={`absolute top-4 right-4 ${stat.arrowColor} hover:opacity-70 transition-opacity`}
               >
                 <svg

@@ -5,7 +5,8 @@
       "WebFetch(domain:nominatim.openstreetmap.org)",
       "WebFetch(domain:wiki.openstreetmap.org)",
       "WebFetch(domain:polygons.openstreetmap.fr)",
-      "WebFetch(domain:overpass-api.de)"
+      "WebFetch(domain:overpass-api.de)",
+      "Bash(npx react-scripts build)"
     ]
   }
 }
