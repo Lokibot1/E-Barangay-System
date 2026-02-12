@@ -60,7 +60,7 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, loading, currentTheme }) => {
             disabled={loading}
             className={`flex-1 py-2.5 rounded-lg text-sm font-semibold font-kumbh border transition-all duration-200 ${
               isDark
-                ? "border-slate-600 text-slate-300 hover:bg-slate-700"
+                ? "border-slate-600 text-slate-300 hover:bg-slate-200 hover:text-slate-800 hover:border-slate-400"
                 : "border-slate-300 text-slate-700 hover:bg-slate-100"
             } disabled:opacity-50`}
           >

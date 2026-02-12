@@ -680,6 +680,7 @@ const AdminIncidentReports = () => {
   }, []);
 
   const t = themeTokens[currentTheme] || themeTokens.blue;
+  const isDark = currentTheme === "dark";
 
   // ── Modal state ─────────────────────────────────────────────────────
   const [selectedIncident, setSelectedIncident] = useState(null);
@@ -766,9 +767,9 @@ const AdminIncidentReports = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* ── Page Header ─────────────────────────────────────────── */}
         <div className="flex items-center gap-4 mb-8">
-          <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+          <div className={`w-12 h-12 ${isDark ? "bg-slate-700" : "bg-gray-200"} rounded-lg flex items-center justify-center`}>
             <svg
-              className="w-7 h-7 text-gray-600"
+              className={`w-7 h-7 ${isDark ? "text-slate-300" : "text-gray-600"}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -801,7 +802,9 @@ const AdminIncidentReports = () => {
                 className={`px-4 py-2 rounded-lg text-xs font-bold font-kumbh uppercase tracking-wide border-2 transition-all ${
                   activeTab === key
                     ? `${cfg.tabBg} ${cfg.tabText} ${cfg.tabBorder} shadow-md`
-                    : `bg-white text-gray-500 border-gray-200 hover:border-gray-300`
+                    : isDark
+                      ? "bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-200 hover:text-slate-800 hover:border-slate-400"
+                      : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
                 }`}
               >
                 {cfg.label} ({statusCounts[key]})
@@ -859,20 +862,20 @@ const AdminIncidentReports = () => {
           <div className="overflow-x-auto px-5 pb-5">
             <table className="w-full text-sm font-kumbh table-fixed">
               <thead>
-                <tr className="bg-gray-100 border-y border-gray-200">
-                  <th className="text-left px-4 py-3 text-xs font-bold text-gray-600 uppercase w-[16%]">
+                <tr className={`${isDark ? "bg-slate-700 border-y border-slate-600" : "bg-gray-100 border-y border-gray-200"}`}>
+                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[16%]`}>
                     Type of Incident
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-gray-600 uppercase w-[28%]">
+                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[28%]`}>
                     Details
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-gray-600 uppercase w-[12%]">
+                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[12%]`}>
                     Date
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-gray-600 uppercase w-[22%]">
+                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[22%]`}>
                     Reported By
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-gray-600 uppercase w-[22%]">
+                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[22%]`}>
                     Incident Number
                   </th>
                 </tr>
@@ -883,7 +886,7 @@ const AdminIncidentReports = () => {
                     <tr
                       key={inc.id}
                       onClick={() => setSelectedIncident(inc)}
-                      className={`border-b ${t.cardBorder} hover:bg-gray-50 transition-colors cursor-pointer`}
+                      className={`border-b ${t.cardBorder} ${isDark ? "hover:bg-slate-200 hover:text-slate-800" : "hover:bg-gray-50"} transition-colors cursor-pointer`}
                     >
                       <td className={`px-4 py-3 ${t.cardText} truncate`}>
                         {inc.type}
@@ -924,7 +927,7 @@ const AdminIncidentReports = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-2">
+              <div className={`flex items-center justify-between pt-4 border-t ${isDark ? "border-slate-700" : "border-gray-100"} mt-2`}>
                 <p className={`text-xs ${t.subtleText} font-kumbh`}>
                   Showing {(currentPage - 1) * ROWS_PER_PAGE + 1}–
                   {Math.min(currentPage * ROWS_PER_PAGE, filteredTableData.length)}{" "}
@@ -936,8 +939,8 @@ const AdminIncidentReports = () => {
                     disabled={currentPage === 1}
                     className={`px-3 py-1.5 rounded-lg text-xs font-kumbh font-semibold transition-colors ${
                       currentPage === 1
-                        ? "text-gray-300 cursor-not-allowed"
-                        : "text-gray-600 hover:bg-gray-100"
+                        ? isDark ? "text-slate-600 cursor-not-allowed" : "text-gray-300 cursor-not-allowed"
+                        : isDark ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800" : "text-gray-600 hover:bg-gray-100"
                     }`}
                   >
                     Prev
@@ -950,7 +953,7 @@ const AdminIncidentReports = () => {
                         className={`w-8 h-8 rounded-lg text-xs font-kumbh font-bold transition-colors ${
                           page === currentPage
                             ? "bg-green-700 text-white"
-                            : "text-gray-600 hover:bg-gray-100"
+                            : isDark ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800" : "text-gray-600 hover:bg-gray-100"
                         }`}
                       >
                         {page}
@@ -962,8 +965,8 @@ const AdminIncidentReports = () => {
                     disabled={currentPage === totalPages}
                     className={`px-3 py-1.5 rounded-lg text-xs font-kumbh font-semibold transition-colors ${
                       currentPage === totalPages
-                        ? "text-gray-300 cursor-not-allowed"
-                        : "text-gray-600 hover:bg-gray-100"
+                        ? isDark ? "text-slate-600 cursor-not-allowed" : "text-gray-300 cursor-not-allowed"
+                        : isDark ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800" : "text-gray-600 hover:bg-gray-100"
                     }`}
                   >
                     Next
@@ -980,11 +983,11 @@ const AdminIncidentReports = () => {
         >
           <div className="flex flex-col lg:flex-row">
             {/* Map Legend / Filters */}
-            <div className="lg:w-[280px] flex-shrink-0 p-5 border-b lg:border-b-0 lg:border-r border-gray-200">
+            <div className={`lg:w-[280px] flex-shrink-0 p-5 border-b lg:border-b-0 lg:border-r ${isDark ? "border-slate-700" : "border-gray-200"}`}>
               {/* Legend header */}
               <div className="flex items-center gap-2 mb-5">
                 <svg
-                  className="w-6 h-6 text-green-600"
+                  className={`w-6 h-6 ${isDark ? "text-green-400" : "text-green-600"}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -996,14 +999,14 @@ const AdminIncidentReports = () => {
                     d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
                   />
                 </svg>
-                <h3 className="text-lg font-bold text-green-700 font-spartan uppercase">
+                <h3 className={`text-lg font-bold ${isDark ? "text-green-400" : "text-green-700"} font-spartan uppercase`}>
                   Map Legend
                 </h3>
               </div>
 
               {/* Type Filter */}
               <div className="mb-4">
-                <label className="block text-xs font-bold text-gray-600 mb-1.5 font-kumbh uppercase">
+                <label className={`block text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} mb-1.5 font-kumbh uppercase`}>
                   Type of Incident
                 </label>
                 <select
@@ -1021,7 +1024,7 @@ const AdminIncidentReports = () => {
 
               {/* Date Range */}
               <div className="mb-5">
-                <label className="block text-xs font-bold text-gray-600 mb-1.5 font-kumbh uppercase">
+                <label className={`block text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} mb-1.5 font-kumbh uppercase`}>
                   Date
                 </label>
                 <div className="flex items-center gap-2">
@@ -1045,18 +1048,18 @@ const AdminIncidentReports = () => {
               <div className="space-y-3">
                 {/* Resolved */}
                 <div
-                  className={`p-3 rounded-lg border ${visibleStatuses.resolved ? "border-green-300 bg-green-50" : "border-gray-200"} transition-colors`}
+                  className={`p-3 rounded-lg border ${visibleStatuses.resolved ? (isDark ? "border-green-400 bg-green-50" : "border-green-300 bg-green-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded-full bg-green-500" />
-                      <span className="text-sm font-bold text-green-700 font-kumbh">
+                      <span className={`text-sm font-bold ${visibleStatuses.resolved && isDark ? "text-green-800" : "text-green-700"} font-kumbh`}>
                         RESOLVED
                       </span>
                     </div>
                     <button
                       onClick={() => toggleStatus("resolved")}
-                      className="text-gray-400 hover:text-gray-600"
+                      className={`${isDark ? "text-slate-400 hover:text-slate-800 hover:bg-slate-200" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
                     >
                       <svg
                         className="w-5 h-5"
@@ -1082,25 +1085,25 @@ const AdminIncidentReports = () => {
                       </svg>
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 font-kumbh">
+                  <p className={`text-xs ${visibleStatuses.resolved && isDark ? "text-gray-600" : "text-gray-500"} font-kumbh`}>
                     Issue has been cleared or fixed
                   </p>
                 </div>
 
                 {/* Dispatched */}
                 <div
-                  className={`p-3 rounded-lg border ${visibleStatuses.dispatched ? "border-amber-300 bg-amber-50" : "border-gray-200"} transition-colors`}
+                  className={`p-3 rounded-lg border ${visibleStatuses.dispatched ? (isDark ? "border-amber-400 bg-amber-50" : "border-amber-300 bg-amber-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded-full bg-amber-400" />
-                      <span className="text-sm font-bold text-amber-700 font-kumbh">
+                      <span className={`text-sm font-bold ${visibleStatuses.dispatched && isDark ? "text-amber-800" : "text-amber-700"} font-kumbh`}>
                         DISPATCHED
                       </span>
                     </div>
                     <button
                       onClick={() => toggleStatus("dispatched")}
-                      className="text-gray-400 hover:text-gray-600"
+                      className={`${isDark ? "text-slate-400 hover:text-slate-800 hover:bg-slate-200" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
                     >
                       <svg
                         className="w-5 h-5"
@@ -1126,25 +1129,25 @@ const AdminIncidentReports = () => {
                       </svg>
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 font-kumbh">
+                  <p className={`text-xs ${visibleStatuses.dispatched && isDark ? "text-gray-600" : "text-gray-500"} font-kumbh`}>
                     Barangay officials dispatched on the site to check.
                   </p>
                 </div>
 
                 {/* In-Progress / Active */}
                 <div
-                  className={`p-3 rounded-lg border ${visibleStatuses.active ? "border-blue-300 bg-blue-50" : "border-gray-200"} transition-colors`}
+                  className={`p-3 rounded-lg border ${visibleStatuses.active ? (isDark ? "border-blue-400 bg-blue-50" : "border-blue-300 bg-blue-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded-full bg-blue-600" />
-                      <span className="text-sm font-bold text-blue-700 font-kumbh">
+                      <span className={`text-sm font-bold ${visibleStatuses.active && isDark ? "text-blue-800" : "text-blue-700"} font-kumbh`}>
                         IN-PROGRESS
                       </span>
                     </div>
                     <button
                       onClick={() => toggleStatus("active")}
-                      className="text-gray-400 hover:text-gray-600"
+                      className={`${isDark ? "text-slate-400 hover:text-slate-800 hover:bg-slate-200" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
                     >
                       <svg
                         className="w-5 h-5"
@@ -1170,25 +1173,25 @@ const AdminIncidentReports = () => {
                       </svg>
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 font-kumbh">
+                  <p className={`text-xs ${visibleStatuses.active && isDark ? "text-gray-600" : "text-gray-500"} font-kumbh`}>
                     Barangay officials or maintenance teams are on-site.
                   </p>
                 </div>
 
                 {/* New / Active (pending) */}
                 <div
-                  className={`p-3 rounded-lg border ${visibleStatuses.pending ? "border-red-300 bg-red-50" : "border-gray-200"} transition-colors`}
+                  className={`p-3 rounded-lg border ${visibleStatuses.pending ? (isDark ? "border-red-400 bg-red-50" : "border-red-300 bg-red-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded-full bg-red-500" />
-                      <span className="text-sm font-bold text-red-700 font-kumbh">
+                      <span className={`text-sm font-bold ${visibleStatuses.pending && isDark ? "text-red-800" : "text-red-700"} font-kumbh`}>
                         NEW/ACTIVE
                       </span>
                     </div>
                     <button
                       onClick={() => toggleStatus("pending")}
-                      className="text-gray-400 hover:text-gray-600"
+                      className={`${isDark ? "text-slate-400 hover:text-slate-800 hover:bg-slate-200" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
                     >
                       <svg
                         className="w-5 h-5"
@@ -1214,7 +1217,7 @@ const AdminIncidentReports = () => {
                       </svg>
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 font-kumbh">
+                  <p className={`text-xs ${visibleStatuses.pending && isDark ? "text-gray-600" : "text-gray-500"} font-kumbh`}>
                     Issue recently reported and awaiting dispatch.
                   </p>
                 </div>

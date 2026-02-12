@@ -164,7 +164,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
               <div className="relative">
                 <button
                   onClick={toggleNotifications}
-                  className={`p-2 sm:p-2.5 ${t.subtleText} ${isDark ? "hover:text-slate-200 hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} rounded-full transition-all relative`}
+                  className={`p-2 sm:p-2.5 ${t.subtleText} ${isDark ? "hover:text-slate-800 hover:bg-slate-200" : "hover:text-slate-800 hover:bg-slate-100"} rounded-full transition-all relative`}
                   title="Notifications"
                 >
                   <svg
@@ -209,7 +209,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                       {notifications.map((notification) => (
                         <div
                           key={notification.id}
-                          className={`p-3 sm:p-4 border-b ${isDark ? "border-slate-700 hover:bg-slate-700/40" : "border-slate-100 hover:bg-slate-50"} transition-colors cursor-pointer group`}
+                          className={`p-3 sm:p-4 border-b ${isDark ? "border-slate-700 hover:bg-slate-200 hover:text-slate-800" : "border-slate-100 hover:bg-slate-50"} transition-colors cursor-pointer group`}
                         >
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex-1 min-w-0">
@@ -280,7 +280,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
               <div className="relative">
                 <button
                   onClick={toggleSettings}
-                  className={`p-2 sm:p-2.5 ${t.subtleText} ${isDark ? "hover:text-slate-200 hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} rounded-full transition-all`}
+                  className={`p-2 sm:p-2.5 ${t.subtleText} ${isDark ? "hover:text-slate-800 hover:bg-slate-200" : "hover:text-slate-800 hover:bg-slate-100"} rounded-full transition-all`}
                   title="Settings"
                 >
                   <svg
@@ -311,7 +311,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                     <div className="p-2">
                       <button
                         onClick={openThemeModal}
-                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors group`}
+                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-200 hover:text-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors group`}
                       >
                         <svg
                           className="w-5 h-5 text-blue-500 flex-shrink-0"
@@ -335,7 +335,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                           setLanguage(language === "en" ? "tl" : "en");
                           setIsSettingsOpen(false);
                         }}
-                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors group`}
+                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-200 hover:text-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors group`}
                       >
                         <svg
                           className="w-5 h-5 text-amber-500 flex-shrink-0"
@@ -360,7 +360,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                         </div>
                       </button>
                       <button
-                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors group`}
+                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-200 hover:text-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors group`}
                       >
                         <svg
                           className="w-5 h-5 text-green-500 flex-shrink-0"
@@ -388,7 +388,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
               <div className="relative">
                 <button
                   onClick={toggleProfile}
-                  className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full ${isDark ? "hover:bg-slate-700" : "hover:bg-slate-100"} transition-all`}
+                  className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full ${isDark ? "hover:bg-slate-200" : "hover:bg-slate-100"} transition-all`}
                 >
                   <div
                     className={`w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br ${t.primaryGrad} rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm`}
@@ -440,7 +440,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
 
                     <div className="p-2">
                       <button
-                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors`}
+                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-200 hover:text-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors`}
                       >
                         <svg
                           className="w-5 h-5 text-blue-500 flex-shrink-0"
@@ -461,7 +461,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                       </button>
                       <button
                         onClick={openLogoutModal}
-                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors`}
+                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-200 hover:text-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors`}
                       >
                         <svg
                           className="w-5 h-5 text-red-500 flex-shrink-0"

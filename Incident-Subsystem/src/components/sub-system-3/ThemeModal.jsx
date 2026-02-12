@@ -108,7 +108,7 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
           </div>
           <button
             onClick={onClose}
-            className={`${isDark ? "text-white hover:bg-white/10" : `${t.subtleText} hover:bg-black/5`} p-2 rounded-full transition-colors`}
+            className={`${isDark ? "text-white hover:bg-slate-200 hover:text-slate-800" : `${t.subtleText} hover:bg-black/5`} p-2 rounded-full transition-colors`}
           >
             <svg
               className="w-6 h-6"
@@ -136,7 +136,7 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
                 className={`relative cursor-pointer rounded-xl border-2 transition-all duration-300 overflow-hidden group ${
                   selectedTheme === theme.id
                     ? "border-blue-600 shadow-xl scale-105"
-                    : `${isDark ? "border-slate-600" : "border-slate-200"} hover:border-slate-300 hover:shadow-lg`
+                    : `${isDark ? "border-slate-600 hover:border-slate-300 hover:bg-slate-700/50" : "border-slate-200 hover:border-slate-300"} hover:shadow-lg`
                 }`}
               >
                 {/* Selected Badge */}
@@ -256,7 +256,7 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
         >
           <button
             onClick={onClose}
-            className={`px-5 py-2.5 ${isDark ? "text-slate-300 hover:text-slate-100 hover:bg-slate-700" : "text-slate-600 hover:text-slate-800 hover:bg-slate-200"} rounded-lg font-semibold font-kumbh transition-colors`}
+            className={`px-5 py-2.5 ${isDark ? "text-slate-300 hover:text-slate-800 hover:bg-slate-200" : "text-slate-600 hover:text-slate-800 hover:bg-slate-200"} rounded-lg font-semibold font-kumbh transition-colors`}
           >
             Cancel
           </button>

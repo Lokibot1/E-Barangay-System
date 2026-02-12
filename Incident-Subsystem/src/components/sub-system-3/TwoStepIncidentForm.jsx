@@ -10,6 +10,7 @@ const TwoStepIncidentForm = ({
   currentTheme,
 }) => {
   const t = themeTokens[currentTheme] || themeTokens.blue;
+  const isDark = currentTheme === "dark";
 
   const incidentTypes = [
     { value: "waste", label: "Waste Management / Garbage" },
@@ -56,9 +57,11 @@ const TwoStepIncidentForm = ({
                 key={type.value}
                 className={`flex items-center gap-3 p-3 rounded-lg border ${
                   formData.incidentTypes?.includes(type.value)
-                    ? `${t.cardBorder} bg-blue-50 border-blue-500`
+                    ? isDark
+                      ? "bg-slate-200 border-slate-400"
+                      : "bg-blue-50 border-blue-500"
                     : `${t.cardBorder} ${t.cardBg}`
-                } cursor-pointer hover:shadow-md transition-all`}
+                } cursor-pointer ${isDark ? "hover:bg-slate-200 hover:text-slate-800" : "hover:shadow-md"} transition-all`}
               >
                 <input
                   type="checkbox"
@@ -72,9 +75,13 @@ const TwoStepIncidentForm = ({
                       : currentTypes.filter((t) => t !== type.value);
                     onInputChange("incidentTypes", newTypes);
                   }}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                  className={`w-4 h-4 ${t.checkboxAccent} rounded focus:ring-2 ${t.checkboxRing}`}
                 />
-                <span className={`text-sm ${t.cardText} font-kumbh`}>
+                <span className={`text-sm ${
+                  formData.incidentTypes?.includes(type.value) && isDark
+                    ? "text-slate-800"
+                    : t.cardText
+                } font-kumbh`}>
                   {type.label}
                 </span>
               </label>
@@ -115,7 +122,7 @@ const TwoStepIncidentForm = ({
           </label>
 
           <div
-            className={`relative border-2 border-dashed ${t.cardBorder} rounded-lg p-6 ${t.cardBg} hover:border-blue-500 transition-all cursor-pointer group`}
+            className={`relative border-2 border-dashed ${t.cardBorder} rounded-lg p-6 ${t.cardBg} ${isDark ? "hover:border-slate-400 hover:bg-slate-200/10" : "hover:border-blue-500"} transition-all cursor-pointer group`}
           >
             <input
               type="file"

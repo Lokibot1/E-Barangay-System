@@ -6,7 +6,9 @@
       "WebFetch(domain:wiki.openstreetmap.org)",
       "WebFetch(domain:polygons.openstreetmap.fr)",
       "WebFetch(domain:overpass-api.de)",
-      "Bash(npx react-scripts build)"
+      "Bash(npx react-scripts build)",
+      "Bash(npx vite build)",
+      "Bash(npm run build:*)"
     ]
   }
 }

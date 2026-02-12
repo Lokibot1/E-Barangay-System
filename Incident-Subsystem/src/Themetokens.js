@@ -333,7 +333,7 @@ const themeTokens = {
     primaryHover: "hover:bg-slate-500",
     primaryText: "text-slate-300",
     primaryLight: "bg-slate-700",
-    primaryLightHover: "hover:bg-slate-600",
+    primaryLightHover: "hover:bg-slate-200 hover:text-slate-800",
     primaryRing: "focus:ring-slate-500",
     primaryBorder: "focus:border-slate-500",
     primaryHoverBorder: "hover:border-slate-500",
@@ -356,8 +356,8 @@ const themeTokens = {
     modalSubtext: "text-slate-400",
     modalHeaderBorderBottom: "border-slate-700",
     modalCloseBtnColor: "text-slate-400",
-    modalCloseBtnHover: "hover:text-slate-200",
-    modalCloseBtnHoverBg: "hover:bg-slate-700",
+    modalCloseBtnHover: "hover:text-slate-800",
+    modalCloseBtnHoverBg: "hover:bg-slate-200",
 
     progressSectionBg: "bg-slate-900",
     progressSectionBorder: "border-slate-700",
@@ -367,7 +367,7 @@ const themeTokens = {
     footerStepText: "text-slate-500",
     footerPrevActiveBg: "bg-slate-800",
     footerPrevActiveText: "text-slate-300",
-    footerPrevActiveHover: "hover:bg-slate-700",
+    footerPrevActiveHover: "hover:bg-slate-200 hover:text-slate-800",
     footerPrevDisabledBg: "bg-slate-800",
     footerPrevDisabledText: "text-slate-600",
 
@@ -403,8 +403,8 @@ const themeTokens = {
     bannerText: "text-slate-400",
 
     addBtnText: "text-slate-300",
-    addBtnHoverText: "hover:text-slate-100",
-    addBtnHoverBg: "hover:bg-slate-700",
+    addBtnHoverText: "hover:text-slate-800",
+    addBtnHoverBg: "hover:bg-slate-200",
 
     checkboxAccent: "text-slate-400",
     checkboxRing: "focus:ring-slate-500",
@@ -417,11 +417,11 @@ const themeTokens = {
     sidebarBg: "bg-slate-900",
     sidebarBorder: "border-slate-700",
     sidebarText: "text-slate-400",
-    sidebarActiveText: "text-slate-200",
-    sidebarActiveBg: "bg-slate-800",
-    sidebarActiveBorder: "border-slate-500",
-    sidebarHoverBg: "hover:bg-slate-800",
-    sidebarIconActive: "text-slate-300",
+    sidebarActiveText: "text-slate-800",
+    sidebarActiveBg: "bg-slate-200",
+    sidebarActiveBorder: "border-slate-400",
+    sidebarHoverBg: "hover:bg-slate-200 hover:text-slate-800",
+    sidebarIconActive: "text-slate-700",
   },
 };
 
