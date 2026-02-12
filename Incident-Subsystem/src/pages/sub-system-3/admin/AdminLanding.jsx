@@ -54,7 +54,7 @@ const AdminLanding = () => {
       <div className="relative w-full h-[340px] sm:h-[400px] overflow-hidden">
         <img
           src={sanBartolomeImg}
-          alt="Barangay San Bartolome"
+          alt="Barangay Gulod"
           className="absolute inset-0 w-full h-full object-cover"
         />
         {/* Dark overlay */}
@@ -70,7 +70,7 @@ const AdminLanding = () => {
             <br />
             E-Barangay Integrated Services Platform of
             <br />
-            San Bartolome
+            Gulod
           </h1>
           <div className="mt-6">
             <button className="px-6 py-3 bg-green-700 hover:bg-green-800 text-white text-sm font-bold font-kumbh uppercase tracking-wider rounded transition-colors">

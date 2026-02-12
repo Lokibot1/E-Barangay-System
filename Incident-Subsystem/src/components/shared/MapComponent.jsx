@@ -23,20 +23,195 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
-// Barangay San Bartolome boundary coordinates
+// Barangay Gulod boundary coordinates (from OpenStreetMap Relation 270990)
 const barangayBoundary = [
-  [14.735, 121.035],
-  [14.735, 121.065],
-  [14.715, 121.065],
-  [14.7, 121.055],
-  [14.695, 121.045],
-  [14.695, 121.035],
-  [14.71, 121.03],
-  [14.725, 121.03],
+  [14.710492, 121.0335323],
+  [14.7101886, 121.033562],
+  [14.709774, 121.0338342],
+  [14.7095436, 121.0339713],
+  [14.7094757, 121.0345597],
+  [14.7094277, 121.0350814],
+  [14.7093446, 121.0362553],
+  [14.7092669, 121.0363582],
+  [14.709162, 121.0364442],
+  [14.7089794, 121.0366244],
+  [14.7089056, 121.036688],
+  [14.7091458, 121.03699],
+  [14.7091637, 121.0372903],
+  [14.709336, 121.0375888],
+  [14.7094565, 121.0382147],
+  [14.709263, 121.0384845],
+  [14.7091378, 121.03848],
+  [14.7090308, 121.0384375],
+  [14.708583, 121.0387608],
+  [14.7084187, 121.0387662],
+  [14.7083563, 121.0389081],
+  [14.7080226, 121.0396347],
+  [14.7080861, 121.0400809],
+  [14.7080705, 121.0401844],
+  [14.7075016, 121.0415248],
+  [14.7066561, 121.0415217],
+  [14.7058151, 121.0418078],
+  [14.7052453, 121.0419812],
+  [14.7052824, 121.0440479],
+  [14.7052707, 121.0454888],
+  [14.704594, 121.0455003],
+  [14.7050443, 121.0468975],
+  [14.7053168, 121.0474573],
+  [14.7061441, 121.0472436],
+  [14.7061633, 121.0472437],
+  [14.7063696, 121.0471759],
+  [14.7070541, 121.047172],
+  [14.7074933, 121.0468812],
+  [14.7079836, 121.0468267],
+  [14.7084147, 121.0467387],
+  [14.7087975, 121.0466027],
+  [14.7088616, 121.0465728],
+  [14.708988, 121.0465237],
+  [14.7090729, 121.0465472],
+  [14.7091216, 121.0466418],
+  [14.7091885, 121.0467319],
+  [14.7093433, 121.0467944],
+  [14.709431, 121.0467645],
+  [14.7095276, 121.0466762],
+  [14.709637, 121.0464922],
+  [14.7097706, 121.0459681],
+  [14.7098262, 121.0459465],
+  [14.7099749, 121.0459745],
+  [14.7100253, 121.0459659],
+  [14.7100798, 121.0460252],
+  [14.7102054, 121.045984],
+  [14.7104115, 121.0460574],
+  [14.7105981, 121.046219],
+  [14.7107014, 121.046361],
+  [14.7109051, 121.0467486],
+  [14.7110597, 121.0469001],
+  [14.7112651, 121.0470558],
+  [14.7113701, 121.0470603],
+  [14.7118121, 121.0468657],
+  [14.7120473, 121.04668],
+  [14.7122458, 121.0463628],
+  [14.7125295, 121.0461321],
+  [14.712751, 121.0459071],
+  [14.7128774, 121.04565],
+  [14.7129189, 121.0452638],
+  [14.7128681, 121.0449875],
+  [14.7126643, 121.0446371],
+  [14.7125356, 121.0444294],
+  [14.7122657, 121.0441094],
+  [14.7119655, 121.0436705],
+  [14.7119718, 121.0434184],
+  [14.7120946, 121.0432508],
+  [14.7122324, 121.0431034],
+  [14.7123962, 121.0429966],
+  [14.7125755, 121.0429383],
+  [14.7127791, 121.0429079],
+  [14.7130402, 121.0429966],
+  [14.7133731, 121.0431543],
+  [14.7135, 121.0432095],
+  [14.7136163, 121.0432103],
+  [14.7139198, 121.0430658],
+  [14.7146356, 121.0428879],
+  [14.7148887, 121.0428612],
+  [14.7150544, 121.0429258],
+  [14.7151967, 121.0430697],
+  [14.7154815, 121.0434241],
+  [14.7157166, 121.0438905],
+  [14.7158245, 121.0442338],
+  [14.7159932, 121.0443492],
+  [14.7161024, 121.0443099],
+  [14.7162898, 121.0441341],
+  [14.7165224, 121.0440041],
+  [14.7173538, 121.0438154],
+  [14.717601, 121.0437188],
+  [14.7178396, 121.0436498],
+  [14.7184845, 121.0434931],
+  [14.7185908, 121.0434293],
+  [14.7186606, 121.0433855],
+  [14.718696, 121.0433491],
+  [14.7187068, 121.0432445],
+  [14.7186606, 121.0430669],
+  [14.7184907, 121.0427013],
+  [14.7184298, 121.042527],
+  [14.7183594, 121.0421883],
+  [14.7183753, 121.0420877],
+  [14.7185368, 121.0418588],
+  [14.7186873, 121.0416664],
+  [14.7188422, 121.0414534],
+  [14.7190733, 121.0411207],
+  [14.7190759, 121.0409713],
+  [14.7188598, 121.0404672],
+  [14.7187086, 121.0401682],
+  [14.7184233, 121.039773],
+  [14.7176617, 121.0391703],
+  [14.7175646, 121.0390905],
+  [14.7174147, 121.0389286],
+  [14.7173238, 121.0388499],
+  [14.7172294, 121.0387788],
+  [14.7171469, 121.0387494],
+  [14.7170159, 121.0387334],
+  [14.7168797, 121.0387279],
+  [14.7167954, 121.0387239],
+  [14.7167398, 121.0386924],
+  [14.7166645, 121.0386199],
+  [14.7164802, 121.0383958],
+  [14.7159739, 121.0374912],
+  [14.7159302, 121.0374116],
+  [14.7159069, 121.0373821],
+  [14.7158693, 121.0373667],
+  [14.7158368, 121.0373533],
+  [14.7157973, 121.0373462],
+  [14.7157255, 121.0373377],
+  [14.715513, 121.0373544],
+  [14.7153563, 121.0373727],
+  [14.7152856, 121.0373694],
+  [14.7152214, 121.0373586],
+  [14.7151652, 121.0373378],
+  [14.71503, 121.0372433],
+  [14.7148582, 121.0370918],
+  [14.7146629, 121.0369087],
+  [14.7146156, 121.0368524],
+  [14.7145884, 121.0368115],
+  [14.7145735, 121.0367752],
+  [14.7145637, 121.0367116],
+  [14.7145624, 121.0366505],
+  [14.7145683, 121.0365533],
+  [14.714615, 121.0361651],
+  [14.7146798, 121.0357641],
+  [14.7147687, 121.0351744],
+  [14.7147602, 121.0351244],
+  [14.7147391, 121.0350697],
+  [14.7146952, 121.035004],
+  [14.7145509, 121.0348887],
+  [14.7140667, 121.0344099],
+  [14.7138862, 121.0342536],
+  [14.7136913, 121.0341839],
+  [14.7135132, 121.0341969],
+  [14.7133827, 121.0342312],
+  [14.7132461, 121.0342965],
+  [14.7130565, 121.0344816],
+  [14.7129008, 121.0345607],
+  [14.7127621, 121.0345812],
+  [14.712633, 121.0345279],
+  [14.7122626, 121.0341479],
+  [14.712102, 121.0339345],
+  [14.7118143, 121.0335527],
+  [14.711682, 121.0334848],
+  [14.7115454, 121.0334957],
+  [14.7114846, 121.0335308],
+  [14.7114333, 121.0335862],
+  [14.7112641, 121.0337882],
+  [14.7111092, 121.0339523],
+  [14.7109148, 121.0340751],
+  [14.7108099, 121.0341028],
+  [14.7106753, 121.0340604],
+  [14.7105621, 121.0339774],
+  [14.7105114, 121.0338543],
+  [14.7104859, 121.0336751],
 ];
 
-// Barangay San Bartolome center
-const barangayCenter = [14.715, 121.0475];
+// Barangay Gulod center (from OSM)
+const barangayCenter = [14.7118, 121.0404];
 
 // Check if point is inside polygon
 const isPointInPolygon = (point, polygon) => {
@@ -102,7 +277,7 @@ function ClickHandler({ mode, onLocationClick, onError }) {
           onLocationClick(clickedPoint);
         } else {
           onError(
-            "Please pin a location within Barangay San Bartolome boundaries",
+            "Please pin a location within Barangay Gulod boundaries",
           );
         }
       }
@@ -163,6 +338,7 @@ const MapComponent = ({
   const [selectedAddress, setSelectedAddress] = useState("");
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isOutsideBoundary, setIsOutsideBoundary] = useState(false);
   const t = themeTokens[currentTheme] || themeTokens.blue;
 
   // Use barangay center for pin mode, otherwise use provided center
@@ -203,6 +379,7 @@ const MapComponent = ({
     setPinnedLocation(position);
     reverseGeocode(position);
     setError(null);
+    setIsOutsideBoundary(false);
   };
 
   // Handle error display
@@ -226,7 +403,7 @@ const MapComponent = ({
         // Check if current location is within barangay boundary
         if (mode === "pin" && !isPointInPolygon(pos, barangayBoundary)) {
           handleError(
-            "Your location is outside Barangay San Bartolome. Please pin manually.",
+            "Your location is outside Barangay Gulod. Please pin manually.",
           );
           setIsLoading(false);
           return;
@@ -249,6 +426,7 @@ const MapComponent = ({
   // Auto-locate on mount for pin mode
   useEffect(() => {
     if (mode === "pin" && enableGPS && navigator.geolocation) {
+      setIsLoading(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const pos = [position.coords.latitude, position.coords.longitude];
@@ -257,10 +435,15 @@ const MapComponent = ({
           if (isPointInPolygon(pos, barangayBoundary)) {
             setPinnedLocation(pos);
             reverseGeocode(pos);
+            setIsOutsideBoundary(false);
+          } else {
+            setIsOutsideBoundary(true);
           }
+          setIsLoading(false);
         },
         (error) => {
           console.warn("GPS location error:", error);
+          setIsLoading(false);
         },
       );
     }
@@ -331,7 +514,7 @@ const MapComponent = ({
                     // Snap back to previous position
                     e.target.setLatLng(pinnedLocation);
                     handleError(
-                      "Marker must be within Barangay San Bartolome boundaries",
+                      "Marker must be within Barangay Gulod boundaries",
                     );
                   }
                 },
@@ -526,8 +709,39 @@ const MapComponent = ({
         </div>
       )}
 
+      {/* Outside Boundary Warning */}
+      {mode === "pin" && isOutsideBoundary && !pinnedLocation && (
+        <div
+          className="mt-3 p-4 rounded-lg border-2 border-amber-500 bg-amber-50"
+        >
+          <div className="flex items-start gap-3">
+            <svg
+              className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <div>
+              <p className="text-sm font-semibold text-amber-900 mb-1">
+                Current location is outside Barangay Gulod
+              </p>
+              <p className="text-xs text-amber-700">
+                Your current location could not be pinned automatically because you are outside the barangay boundary. Please manually click on the map within the highlighted area to pin the incident location.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Instructions for Pin Mode */}
-      {mode === "pin" && !selectedAddress && (
+      {mode === "pin" && !selectedAddress && !isOutsideBoundary && (
         <div
           className={`mt-3 p-4 ${t.cardBg} rounded-lg border-2 border-blue-500 bg-blue-50`}
         >
@@ -547,10 +761,10 @@ const MapComponent = ({
             </svg>
             <div>
               <p className="text-sm font-semibold text-blue-900 mb-1">
-                Pin Location within Barangay San Bartolome
+                Pin Location within Barangay Gulod
               </p>
               <p className="text-xs text-blue-700">
-                📍 Click on the map within the highlighted boundary to pin the
+                Click on the map within the highlighted boundary to pin the
                 incident location, or use the GPS button to auto-locate
               </p>
             </div>
