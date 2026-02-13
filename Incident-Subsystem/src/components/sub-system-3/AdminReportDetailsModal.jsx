@@ -227,12 +227,67 @@ const AdminReportDetailsModal = ({ incident, onClose }) => {
             </div>
           ) : (
             <div className="px-5 pb-5">
-              <div className="text-center py-8 text-gray-400">
-                <svg className="w-10 h-10 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-xs font-kumbh">No updates yet</p>
-              </div>
+              {incident.updates && incident.updates.length > 0 ? (
+                <div className="space-y-0 divide-y divide-gray-200">
+                  {incident.updates.map((update, idx) => {
+                    const dt = new Date(update.timestamp);
+                    const dateStr = dt.toLocaleDateString("en-US", {
+                      month: "2-digit",
+                      day: "2-digit",
+                      year: "numeric",
+                    });
+                    const timeStr = dt.toLocaleTimeString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    });
+                    const dayStr = dt.toLocaleDateString("en-US", {
+                      weekday: "long",
+                    }).toUpperCase();
+
+                    return (
+                      <div key={idx} className="py-3">
+                        {/* Date row */}
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2 text-xs text-gray-500 font-kumbh">
+                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span className="uppercase">
+                              {dateStr} &nbsp; {timeStr} &nbsp; {dayStr}
+                            </span>
+                          </div>
+                          {update.type === "note" && (
+                            <span className="text-xs font-bold text-gray-700 font-kumbh uppercase">
+                              Notes
+                            </span>
+                          )}
+                        </div>
+                        {/* Description */}
+                        <p className="text-xs text-gray-700 font-kumbh uppercase leading-relaxed">
+                          {update.text}
+                        </p>
+                        {/* Author */}
+                        {update.author && (
+                          <div className="flex items-center gap-1.5 mt-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-700 flex-shrink-0" />
+                            <p className="text-xs text-gray-600 font-kumbh uppercase">
+                              {update.author}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <svg className="w-10 h-10 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-xs font-kumbh">No updates yet</p>
+                </div>
+              )}
             </div>
           )}
         </div>

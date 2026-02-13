@@ -235,6 +235,19 @@ const MOCK_INCIDENTS = [
       "https://images.unsplash.com/photo-1594230420743-52fa9e2f1322?w=600",
       "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=600",
     ],
+    updates: [
+      {
+        timestamp: "2026-01-02T08:23:56",
+        text: "Filed an incident.",
+        type: "status",
+      },
+      {
+        timestamp: "2026-01-02T12:03:29",
+        text: "Insufficient images / blurred images, upload photo again until today",
+        type: "note",
+        author: "KGD. Juan Dela Cruz",
+      },
+    ],
   },
   {
     id: "2026-02241026",
