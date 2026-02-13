@@ -626,6 +626,134 @@ const MOCK_INCIDENTS = [
   },
 ];
 
+// ── Mock complaints data ──────────────────────────────────────────────
+const MOCK_COMPLAINTS = [
+  {
+    id: "2026-CMP-0001",
+    type: "Noise Complaint",
+    details: "Loud karaoke from a neighbor's house past midnight disturbing the whole street",
+    description: "Resident reports extremely loud karaoke singing every night from 10 PM to 3 AM coming from the house at the end of the street. Multiple households are affected and cannot sleep.",
+    date: "2026-01-05",
+    lastUpdated: "2026-01-05T22:30:00",
+    reportedBy: "RAMOS, JOSE A.",
+    status: "pending",
+    lat: 14.7120,
+    lng: 121.0390,
+    address: "Purok 3, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
+    plusCode: "M3MR+4H Quezon City, Metro Manila",
+    photos: [],
+  },
+  {
+    id: "2026-CMP-0002",
+    type: "Neighbor Dispute",
+    details: "Property boundary dispute between two households causing verbal altercation",
+    description: "Two neighboring households are in a heated dispute over the property boundary line. The conflict has escalated to verbal altercations and is disturbing the peace of the community.",
+    date: "2026-01-10",
+    lastUpdated: "2026-01-11T09:00:00",
+    reportedBy: "MENDOZA, LINDA C.",
+    status: "dispatched",
+    lat: 14.7095,
+    lng: 121.0410,
+    address: "Purok 5, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
+    plusCode: "M3MQ+7R Quezon City, Metro Manila",
+    photos: [],
+  },
+  {
+    id: "2026-CMP-0003",
+    type: "Public Disturbance",
+    details: "Group of individuals drinking and causing disturbance near the basketball court",
+    description: "A group of individuals gather every night near the basketball court to drink alcohol. They become rowdy, shout obscenities, and leave broken bottles on the court, making it unsafe for children.",
+    date: "2026-01-12",
+    lastUpdated: "2026-01-13T08:15:00",
+    reportedBy: "VILLANUEVA, MARK R.",
+    status: "active",
+    lat: 14.7110,
+    lng: 121.0400,
+    address: "Near Basketball Court, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
+    plusCode: "M3MR+2C Quezon City, Metro Manila",
+    photos: [
+      "https://images.unsplash.com/photo-1567521464027-f127ff144326?w=600",
+    ],
+  },
+  {
+    id: "2026-CMP-0004",
+    type: "Illegal Activity",
+    details: "Suspected illegal gambling operation in a residential area in Purok 2",
+    description: "Residents report a suspected illegal gambling operation running daily in a house in Purok 2. Large groups of people gather every afternoon and money exchanges are visible from the street.",
+    date: "2026-01-18",
+    lastUpdated: "2026-01-19T11:30:00",
+    reportedBy: "SANTOS, ANNA B.",
+    status: "dispatched",
+    lat: 14.7088,
+    lng: 121.0395,
+    address: "Purok 2, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
+    plusCode: "M3MQ+8G Quezon City, Metro Manila",
+    photos: [],
+  },
+  {
+    id: "2026-CMP-0005",
+    type: "Property Damage",
+    details: "Vandalism on barangay hall wall and damaged public bench in the plaza",
+    description: "Unknown individuals vandalized the barangay hall's outer wall with graffiti and damaged the public bench near the plaza. The incident likely occurred overnight.",
+    date: "2026-01-22",
+    lastUpdated: "2026-01-22T07:00:00",
+    reportedBy: "GARCIA, MARIA L.",
+    status: "resolved",
+    lat: 14.7085,
+    lng: 121.0395,
+    address: "Near Gulod Barangay Hall, Novaliches, Quezon City, Metro Manila",
+    plusCode: "M3MQ+8G Quezon City, Metro Manila",
+    photos: [
+      "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600",
+    ],
+  },
+  {
+    id: "2026-CMP-0006",
+    type: "Noise Complaint",
+    details: "Construction noise from a nearby house starting at 5 AM daily",
+    description: "A residential construction project starts operating heavy machinery and hammering at 5 AM every day including weekends. Multiple residents have been woken up and are requesting intervention.",
+    date: "2026-01-28",
+    lastUpdated: "2026-01-29T10:00:00",
+    reportedBy: "REYES, ANA M.",
+    status: "pending",
+    lat: 14.7130,
+    lng: 121.0432,
+    address: "Purok 7, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
+    plusCode: "M3MR+5X Quezon City, Metro Manila",
+    photos: [],
+  },
+  {
+    id: "2026-CMP-0007",
+    type: "Public Disturbance",
+    details: "Stray dogs from a neighbor's property chasing pedestrians and children",
+    description: "A resident keeps multiple dogs that roam freely and have chased pedestrians and children on the street. Several near-bite incidents have been reported.",
+    date: "2026-02-01",
+    lastUpdated: "2026-02-02T14:00:00",
+    reportedBy: "DELA CRUZ, PEDRO R.",
+    status: "active",
+    lat: 14.7105,
+    lng: 121.0445,
+    address: "Purok 6, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
+    plusCode: "M3MR+2P Quezon City, Metro Manila",
+    photos: [],
+  },
+  {
+    id: "2026-CMP-0008",
+    type: "Neighbor Dispute",
+    details: "Water drainage from upper lot flooding lower lot resident's property",
+    description: "The resident on the upper lot has redirected their water drainage causing persistent flooding on the lower lot property. The affected resident's garden and foundation are being damaged.",
+    date: "2026-02-05",
+    lastUpdated: "2026-02-06T16:30:00",
+    reportedBy: "BAUTISTA, ELENA S.",
+    status: "pending",
+    lat: 14.7098,
+    lng: 121.0420,
+    address: "Purok 4, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
+    plusCode: "M3MQ+9M Quezon City, Metro Manila",
+    photos: [],
+  },
+];
+
 // ── Status config ──────────────────────────────────────────────────────
 const STATUS_CONFIG = {
   all: {
@@ -680,6 +808,15 @@ const INCIDENT_TYPES = [
   "Stray Animals",
 ];
 
+const COMPLAINT_TYPES = [
+  "All Types",
+  "Noise Complaint",
+  "Neighbor Dispute",
+  "Public Disturbance",
+  "Illegal Activity",
+  "Property Damage",
+];
+
 // ════════════════════════════════════════════════════════════════════════
 const AdminIncidentReports = () => {
   const [currentTheme, setCurrentTheme] = useState(
@@ -694,6 +831,9 @@ const AdminIncidentReports = () => {
 
   const t = themeTokens[currentTheme] || themeTokens.blue;
   const isDark = currentTheme === "dark";
+
+  // ── Page tab state (Incidents vs Complaints) ───────────────────────
+  const [pageTab, setPageTab] = useState("incidents");
 
   // ── Modal state ─────────────────────────────────────────────────────
   const [selectedIncident, setSelectedIncident] = useState(null);
@@ -721,9 +861,21 @@ const AdminIncidentReports = () => {
     setVisibleStatuses((prev) => ({ ...prev, [status]: !prev[status] }));
   };
 
+  // ── Dynamic data source based on page tab ─────────────────────────
+  const dataSource = pageTab === "incidents" ? MOCK_INCIDENTS : MOCK_COMPLAINTS;
+  const typeOptions = pageTab === "incidents" ? INCIDENT_TYPES : COMPLAINT_TYPES;
+
+  // Reset filters when switching page tabs
+  useEffect(() => {
+    setActiveTab("all");
+    setSearchQuery("");
+    setCurrentPage(1);
+    setMapType("All Types");
+  }, [pageTab]);
+
   // ── Filtered data for table ────────────────────────────────────────
   const filteredTableData = useMemo(() => {
-    return MOCK_INCIDENTS.filter((inc) => {
+    return dataSource.filter((inc) => {
       if (activeTab !== "all" && inc.status !== activeTab) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -738,7 +890,7 @@ const AdminIncidentReports = () => {
       if (endDate && inc.date > endDate) return false;
       return true;
     });
-  }, [activeTab, searchQuery, startDate, endDate]);
+  }, [activeTab, searchQuery, startDate, endDate, dataSource]);
 
   // ── Pagination ─────────────────────────────────────────────────────
   const totalPages = Math.ceil(filteredTableData.length / ROWS_PER_PAGE);
@@ -750,11 +902,11 @@ const AdminIncidentReports = () => {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeTab, searchQuery, startDate, endDate]);
+  }, [activeTab, searchQuery, startDate, endDate, dataSource]);
 
   // ── Filtered data for map ──────────────────────────────────────────
   const filteredMapData = useMemo(() => {
-    return MOCK_INCIDENTS.filter((inc) => {
+    return dataSource.filter((inc) => {
       if (!visibleStatuses[inc.status]) return false;
       if (mapType !== "All Types" && inc.type !== mapType) return false;
       if (mapStartDate && inc.date < mapStartDate) return false;
@@ -763,23 +915,23 @@ const AdminIncidentReports = () => {
         return false;
       return true;
     });
-  }, [visibleStatuses, mapType, mapStartDate, mapEndDate]);
+  }, [visibleStatuses, mapType, mapStartDate, mapEndDate, dataSource]);
 
   // ── Status tab counts ──────────────────────────────────────────────
   const statusCounts = useMemo(() => {
     const counts = { all: 0, pending: 0, dispatched: 0, active: 0, resolved: 0 };
-    MOCK_INCIDENTS.forEach((inc) => {
+    dataSource.forEach((inc) => {
       counts.all++;
       if (counts[inc.status] !== undefined) counts[inc.status]++;
     });
     return counts;
-  }, []);
+  }, [dataSource]);
 
   return (
     <div className={`min-h-full ${t.pageBg} pb-10`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* ── Page Header ─────────────────────────────────────────── */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-6">
           <div className={`w-12 h-12 ${isDark ? "bg-slate-700" : "bg-gray-200"} rounded-lg flex items-center justify-center`}>
             <svg
               className={`w-7 h-7 ${isDark ? "text-slate-300" : "text-gray-600"}`}
@@ -798,8 +950,40 @@ const AdminIncidentReports = () => {
           <h1
             className={`text-2xl sm:text-3xl font-bold ${t.cardText} font-spartan uppercase`}
           >
-            Incident Reports
+            Incident & Complaints Report Management
           </h1>
+        </div>
+
+        {/* ── Page Tabs (Incidents / Complaints) ─────────────────── */}
+        <div className="flex gap-3 mb-6">
+          <button
+            onClick={() => setPageTab("incidents")}
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold font-kumbh uppercase tracking-wide transition-all duration-200 ${
+              pageTab === "incidents"
+                ? isDark
+                  ? "bg-green-600 text-white shadow-md"
+                  : "bg-gray-800 text-white shadow-md"
+                : isDark
+                  ? "bg-slate-700 text-slate-300 border border-slate-600 hover:bg-slate-600"
+                  : "bg-white text-gray-500 border border-gray-300 hover:bg-gray-100"
+            }`}
+          >
+            Incidents
+          </button>
+          <button
+            onClick={() => setPageTab("complaints")}
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold font-kumbh uppercase tracking-wide transition-all duration-200 ${
+              pageTab === "complaints"
+                ? isDark
+                  ? "bg-green-600 text-white shadow-md"
+                  : "bg-gray-800 text-white shadow-md"
+                : isDark
+                  ? "bg-slate-700 text-slate-300 border border-slate-600 hover:bg-slate-600"
+                  : "bg-white text-gray-500 border border-gray-300 hover:bg-gray-100"
+            }`}
+          >
+            Complaints
+          </button>
         </div>
 
         {/* ── Table Section ────────────────────────────────────────── */}
@@ -877,7 +1061,7 @@ const AdminIncidentReports = () => {
               <thead>
                 <tr className={`${isDark ? "bg-slate-700 border-y border-slate-600" : "bg-gray-100 border-y border-gray-200"}`}>
                   <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[25%]`}>
-                    Type of Incident
+                    {pageTab === "incidents" ? "Type of Incident" : "Type of Complaint"}
                   </th>
                   <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[20%]`}>
                     Date
@@ -1011,14 +1195,14 @@ const AdminIncidentReports = () => {
               {/* Type Filter */}
               <div className="mb-4">
                 <label className={`block text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} mb-1.5 font-kumbh uppercase`}>
-                  Type of Incident
+                  {pageTab === "incidents" ? "Type of Incident" : "Type of Complaint"}
                 </label>
                 <select
                   value={mapType}
                   onChange={(e) => setMapType(e.target.value)}
                   className={`w-full px-3 py-2 rounded-lg border ${t.cardBorder} text-sm font-kumbh ${t.cardText} focus:outline-none focus:ring-2 focus:ring-green-500`}
                 >
-                  {INCIDENT_TYPES.map((type) => (
+                  {typeOptions.map((type) => (
                     <option key={type} value={type}>
                       {type.toUpperCase()}
                     </option>
