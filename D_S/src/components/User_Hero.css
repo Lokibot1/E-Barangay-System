@@ -1,0 +1,32 @@
+/* Hero section styles */
+.ds-hero{
+  position:relative;
+  min-height:420px;
+  display:flex;
+  align-items:center;
+  color:#fff;
+  background-image: url('/hero.png');
+  background-size:cover;
+  background-position:center;
+}
+.ds-hero-overlay{
+  position:absolute; inset:0; background:rgba(3,70,3,0.45); mix-blend-mode:normal;
+}
+.ds-hero-inner{
+  position:relative; z-index:2; max-width:1100px; margin:0; padding:80px 24px 48px 80px; text-align:left;
+}
+.ds-hero-pre{ font-size:36px; font-weight:800; margin:0 0 6px 0; opacity:0.95 }
+.ds-hero-title{ font-size:48px; font-weight:800; margin:0 0 12px 0; line-height:1.05 }
+.ds-hero-sub{ font-size:18px; color:rgba(255,255,255,0.9); margin-bottom:22px; max-width:720px }
+
+.ds-hero-ctas{ display:flex; gap:14px; }
+.btn-primary{ background:#23a23b; color:#fff; border:0; padding:12px 22px; border-radius:999px; font-weight:700; box-shadow:0 6px 20px rgba(0,0,0,0.25); cursor:pointer }
+.btn-outline{ background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.55); padding:10px 20px; border-radius:999px; font-weight:600; cursor:pointer }
+
+@media (max-width:900px){
+  .ds-hero{ min-height:520px }
+  .ds-hero-title{ font-size:36px }
+  .ds-hero-pre{ font-size:28px }
+  .ds-hero-inner{ padding:36px 16px }
+  .ds-hero-sub{ font-size:16px }
+}
