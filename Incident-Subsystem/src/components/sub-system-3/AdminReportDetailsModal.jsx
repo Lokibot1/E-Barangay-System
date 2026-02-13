@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const STATUS_CONFIG = {
   all: { label: "ALL", color: "#374151" },
@@ -11,10 +11,34 @@ const STATUS_CONFIG = {
 const AdminReportDetailsModal = ({ incident, onClose }) => {
   const [modalTab, setModalTab] = useState("details");
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [showDispatch, setShowDispatch] = useState(false);
+  const [officials, setOfficials] = useState(["", "", ""]);
+  const [showNotes, setShowNotes] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const [dispatchedTeam, setDispatchedTeam] = useState(null);
+  const [currentStatus, setCurrentStatus] = useState(incident?.status || "pending");
+  const [showUpdate, setShowUpdate] = useState(false);
+  const [updateText, setUpdateText] = useState("");
+
+  // Reset all state when a different incident is opened
+  useEffect(() => {
+    if (!incident) return;
+    setCurrentStatus(incident.status || "pending");
+    setModalTab("details");
+    setPhotoIndex(0);
+    setShowDispatch(false);
+    setShowNotes(false);
+    setShowUpdate(false);
+    setOfficials(["", "", ""]);
+    setNoteText("");
+    setUpdateText("");
+    setDispatchedTeam(null);
+  }, [incident?.id]);
 
   if (!incident) return null;
 
-  const statusCfg = STATUS_CONFIG[incident.status];
+  const isDispatched = currentStatus === "dispatched" || currentStatus === "active" || currentStatus === "resolved" || dispatchedTeam;
+  const statusCfg = STATUS_CONFIG[currentStatus];
 
   return (
     <div
@@ -153,9 +177,14 @@ const AdminReportDetailsModal = ({ incident, onClose }) => {
           {/* Details / Updates Tabs */}
           <div className="px-5 flex gap-2 mb-4">
             <button
-              onClick={() => setModalTab("details")}
-              className={`px-5 py-2 rounded-lg text-xs font-bold font-kumbh uppercase transition-all ${
-                modalTab === "details"
+              onClick={() => {
+                setModalTab("details");
+                setShowDispatch(false);
+                setShowNotes(false);
+                setShowUpdate(false);
+              }}
+              className={`px-5 py-2 rounded-lg text-xs font-bold font-kumbh uppercase transition-all duration-200 ${
+                modalTab === "details" && !showDispatch && !showNotes && !showUpdate
                   ? "bg-gray-700 text-white"
                   : "bg-gray-100 text-gray-500 hover:bg-gray-200"
               }`}
@@ -163,9 +192,14 @@ const AdminReportDetailsModal = ({ incident, onClose }) => {
               Details
             </button>
             <button
-              onClick={() => setModalTab("updates")}
-              className={`px-5 py-2 rounded-lg text-xs font-bold font-kumbh uppercase transition-all ${
-                modalTab === "updates"
+              onClick={() => {
+                setModalTab("updates");
+                setShowDispatch(false);
+                setShowNotes(false);
+                setShowUpdate(false);
+              }}
+              className={`px-5 py-2 rounded-lg text-xs font-bold font-kumbh uppercase transition-all duration-200 ${
+                modalTab === "updates" && !showDispatch && !showNotes && !showUpdate
                   ? "bg-gray-700 text-white"
                   : "bg-gray-100 text-gray-500 hover:bg-gray-200"
               }`}
@@ -174,145 +208,342 @@ const AdminReportDetailsModal = ({ incident, onClose }) => {
             </button>
           </div>
 
-          {/* Tab Content */}
-          {modalTab === "details" ? (
-            <div className="px-5 pb-5 space-y-4">
-              {/* Address */}
-              <div className="space-y-2">
-                <div className="flex items-start gap-2">
-                  <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <p className="text-xs text-gray-700 font-kumbh uppercase leading-relaxed">
-                    {incident.address}
-                  </p>
+          {/* Tab / Dispatch / Notes / Update Content */}
+          <div className="transition-all duration-300 ease-in-out">
+            {showUpdate ? (
+              /* ── Add Update Form ── */
+              <div className="px-5 pb-5 animate-fadeIn">
+                <h3 className="text-sm font-bold text-gray-800 font-kumbh uppercase text-center mb-3">
+                  Add Update
+                </h3>
+                <hr className="border-gray-300 mb-4" />
+                <textarea
+                  value={updateText}
+                  onChange={(e) => setUpdateText(e.target.value)}
+                  placeholder="Enter update details here ..."
+                  rows={6}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm font-kumbh text-gray-700 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200"
+                />
+                <button className="w-full mt-3 py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh hover:bg-gray-100 active:scale-[0.98] transition-all duration-200">
+                  + Add Attachment
+                </button>
+                <button
+                  onClick={() => {
+                    setShowUpdate(false);
+                    setUpdateText("");
+                  }}
+                  className="w-full mt-3 py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200"
+                >
+                  Save Update
+                </button>
+              </div>
+            ) : showNotes ? (
+              /* ── Add Notes Form ── */
+              <div className="px-5 pb-5 animate-fadeIn">
+                <h3 className="text-sm font-bold text-gray-800 font-kumbh uppercase text-center mb-3">
+                  Add Notes
+                </h3>
+                <hr className="border-gray-300 mb-4" />
+                <textarea
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  placeholder="Enter your notes here ..."
+                  rows={6}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm font-kumbh text-gray-700 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200"
+                />
+                <div className="flex gap-3 mt-3">
+                  <button
+                    onClick={() => {
+                      setShowNotes(false);
+                      setNoteText("");
+                    }}
+                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh uppercase hover:bg-gray-100 active:scale-[0.98] transition-all duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh uppercase hover:bg-gray-100 active:scale-[0.98] transition-all duration-200">
+                    Save
+                  </button>
                 </div>
-                {incident.plusCode && (
+              </div>
+            ) : showDispatch ? (
+              /* ── Dispatch Team Form ── */
+              <div className="px-5 pb-5 animate-fadeIn">
+                <h3 className="text-sm font-bold text-gray-800 font-kumbh uppercase text-center mb-3">
+                  Dispatch Team
+                </h3>
+                <hr className="border-gray-300 mb-4" />
+                <div className="space-y-3">
+                  {officials.map((official, idx) => (
+                    <input
+                      key={idx}
+                      type="text"
+                      value={official}
+                      onChange={(e) => {
+                        const updated = [...officials];
+                        updated[idx] = e.target.value;
+                        setOfficials(updated);
+                      }}
+                      placeholder="+ Add Official"
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm font-kumbh text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all duration-200"
+                    />
+                  ))}
+                </div>
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={() => {
+                      setShowDispatch(false);
+                      if (!dispatchedTeam) setOfficials(["", "", ""]);
+                      else setOfficials([...dispatchedTeam.officials]);
+                    }}
+                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh uppercase hover:bg-gray-100 active:scale-[0.98] transition-all duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      const filled = officials.filter((o) => o.trim() !== "");
+                      if (filled.length === 0) return;
+                      setDispatchedTeam({
+                        officials: filled,
+                        timestamp: new Date().toISOString(),
+                      });
+                      setCurrentStatus("dispatched");
+                      setShowDispatch(false);
+                    }}
+                    className="flex-1 py-2.5 rounded-lg bg-amber-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-amber-600 active:scale-[0.98] transition-all duration-200"
+                  >
+                    Save Dispatch
+                  </button>
+                </div>
+              </div>
+            ) : modalTab === "details" ? (
+              /* ── Details Tab ── */
+              <div className="px-5 pb-5 space-y-4 animate-fadeIn">
+                {/* Address */}
+                <div className="space-y-2">
                   <div className="flex items-start gap-2">
                     <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <p className="text-xs text-gray-500 font-kumbh uppercase">
-                      {incident.plusCode}
+                    <p className="text-xs text-gray-700 font-kumbh uppercase leading-relaxed">
+                      {incident.address}
                     </p>
+                  </div>
+                  {incident.plusCode && (
+                    <div className="flex items-start gap-2">
+                      <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      </svg>
+                      <p className="text-xs text-gray-500 font-kumbh uppercase">
+                        {incident.plusCode}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Reported By */}
+                <div>
+                  <p className="text-xs font-bold text-gray-900 font-kumbh uppercase mb-1.5">
+                    Incident Reported By:
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <p className="text-xs text-gray-700 font-kumbh">
+                      {incident.reportedBy}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <p className="text-xs font-bold text-gray-900 font-kumbh uppercase mb-1.5">
+                    Incident Description:
+                  </p>
+                  <p className="text-xs text-gray-600 font-kumbh leading-relaxed">
+                    {incident.description}
+                  </p>
+                </div>
+
+                {/* Dispatched Team – shown after save */}
+                {dispatchedTeam && (
+                  <div
+                    onClick={() => {
+                      const padded = [...dispatchedTeam.officials];
+                      while (padded.length < 3) padded.push("");
+                      setOfficials(padded);
+                      setShowDispatch(true);
+                      setShowNotes(false);
+                    }}
+                    className="border-t border-gray-200 pt-4 cursor-pointer hover:bg-gray-50 -mx-5 px-5 pb-1 transition-colors duration-200"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs font-bold text-gray-900 font-kumbh uppercase">
+                        Dispatch Team
+                      </p>
+                      <span className="text-xs text-gray-500 font-kumbh">
+                        {new Date(dispatchedTeam.timestamp).toLocaleDateString("en-US", {
+                          month: "2-digit",
+                          day: "2-digit",
+                          year: "numeric",
+                        })}{" "}
+                        {new Date(dispatchedTeam.timestamp).toLocaleTimeString("en-US", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      {dispatchedTeam.officials.map((name, idx) => (
+                        <p key={idx} className="text-xs text-gray-700 font-kumbh uppercase">
+                          {name}
+                        </p>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
+            ) : (
+              /* ── Updates Tab ── */
+              <div className="px-5 pb-5 animate-fadeIn">
+                {incident.updates && incident.updates.length > 0 ? (
+                  <div className="space-y-0 divide-y divide-gray-200">
+                    {incident.updates.map((update, idx) => {
+                      const dt = new Date(update.timestamp);
+                      const dateStr = dt.toLocaleDateString("en-US", {
+                        month: "2-digit",
+                        day: "2-digit",
+                        year: "numeric",
+                      });
+                      const timeStr = dt.toLocaleTimeString("en-US", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      });
+                      const dayStr = dt.toLocaleDateString("en-US", {
+                        weekday: "long",
+                      }).toUpperCase();
 
-              {/* Reported By */}
-              <div>
-                <p className="text-xs font-bold text-gray-900 font-kumbh uppercase mb-1.5">
-                  Incident Reported By:
-                </p>
-                <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <p className="text-xs text-gray-700 font-kumbh">
-                    {incident.reportedBy}
-                  </p>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <p className="text-xs font-bold text-gray-900 font-kumbh uppercase mb-1.5">
-                  Incident Description:
-                </p>
-                <p className="text-xs text-gray-600 font-kumbh leading-relaxed">
-                  {incident.description}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="px-5 pb-5">
-              {incident.updates && incident.updates.length > 0 ? (
-                <div className="space-y-0 divide-y divide-gray-200">
-                  {incident.updates.map((update, idx) => {
-                    const dt = new Date(update.timestamp);
-                    const dateStr = dt.toLocaleDateString("en-US", {
-                      month: "2-digit",
-                      day: "2-digit",
-                      year: "numeric",
-                    });
-                    const timeStr = dt.toLocaleTimeString("en-US", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                    });
-                    const dayStr = dt.toLocaleDateString("en-US", {
-                      weekday: "long",
-                    }).toUpperCase();
-
-                    return (
-                      <div key={idx} className="py-3">
-                        {/* Date row */}
-                        <div className="flex items-center justify-between mb-1.5">
-                          <div className="flex items-center gap-2 text-xs text-gray-500 font-kumbh">
-                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <span className="uppercase">
-                              {dateStr} &nbsp; {timeStr} &nbsp; {dayStr}
-                            </span>
+                      return (
+                        <div key={idx} className="py-3">
+                          {/* Date row */}
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2 text-xs text-gray-500 font-kumbh">
+                              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              <span className="uppercase">
+                                {dateStr} &nbsp; {timeStr} &nbsp; {dayStr}
+                              </span>
+                            </div>
+                            {update.type === "note" && (
+                              <span className="text-xs font-bold text-gray-700 font-kumbh uppercase">
+                                Notes
+                              </span>
+                            )}
                           </div>
-                          {update.type === "note" && (
-                            <span className="text-xs font-bold text-gray-700 font-kumbh uppercase">
-                              Notes
-                            </span>
+                          {/* Description */}
+                          <p className="text-xs text-gray-700 font-kumbh uppercase leading-relaxed">
+                            {update.text}
+                          </p>
+                          {/* Author */}
+                          {update.author && (
+                            <div className="flex items-center gap-1.5 mt-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-gray-700 flex-shrink-0" />
+                              <p className="text-xs text-gray-600 font-kumbh uppercase">
+                                {update.author}
+                              </p>
+                            </div>
                           )}
                         </div>
-                        {/* Description */}
-                        <p className="text-xs text-gray-700 font-kumbh uppercase leading-relaxed">
-                          {update.text}
-                        </p>
-                        {/* Author */}
-                        {update.author && (
-                          <div className="flex items-center gap-1.5 mt-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-gray-700 flex-shrink-0" />
-                            <p className="text-xs text-gray-600 font-kumbh uppercase">
-                              {update.author}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-400">
-                  <svg className="w-10 h-10 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <p className="text-xs font-kumbh">No updates yet</p>
-                </div>
-              )}
-            </div>
-          )}
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-400">
+                    <svg className="w-10 h-10 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-xs font-kumbh">No updates yet</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Modal Footer / Actions */}
         <div className="flex-shrink-0 border-t border-gray-200 px-5 py-4 space-y-3 bg-gray-50">
-          {/* Add Notes */}
-          <button className="w-full py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh hover:bg-gray-100 transition-colors">
-            + Add Notes
-          </button>
-
-          {/* Dispatch Team */}
-          <button className="w-full py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 transition-colors">
-            Dispatch Team
-          </button>
-
-          {/* Bottom row */}
-          <div className="flex gap-3">
-            <button className="flex-1 py-2.5 rounded-lg bg-gray-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-gray-600 transition-colors">
-              Mark as Invalid
+          {/* Add Notes – hidden when notes form is open */}
+          {!showNotes && (
+            <button
+              onClick={() => {
+                setShowNotes(true);
+                setShowDispatch(false);
+                setShowUpdate(false);
+              }}
+              className="w-full py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh hover:bg-gray-100 active:scale-[0.98] transition-all duration-200"
+            >
+              + Add Notes
             </button>
-            <button className="flex-1 py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-red-600 transition-colors">
-              Mark as Resolved
-            </button>
-          </div>
+          )}
+
+          {isDispatched ? (
+            <>
+              {/* + Add Update */}
+              <button
+                onClick={() => {
+                  setShowUpdate(true);
+                  setShowNotes(false);
+                  setShowDispatch(false);
+                }}
+                className="w-full py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200"
+              >
+                + Add Update
+              </button>
+
+              {/* Bottom row – post-dispatch */}
+              <button
+                onClick={() => setCurrentStatus("active")}
+                className="w-full py-2.5 rounded-lg bg-gray-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-gray-600 active:scale-[0.98] transition-all duration-200"
+              >
+                Mark as In-Progress
+              </button>
+              <button className="w-full py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-red-600 active:scale-[0.98] transition-all duration-200">
+                Mark as Resolved
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Dispatch Team – hidden when dispatch form is open */}
+              {!showDispatch && (
+                <button
+                  onClick={() => {
+                    setShowDispatch(true);
+                    setShowNotes(false);
+                    setShowUpdate(false);
+                  }}
+                  className="w-full py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200"
+                >
+                  Dispatch Team
+                </button>
+              )}
+
+              {/* Bottom row – pre-dispatch */}
+              <div className="flex gap-3">
+                <button className="flex-1 py-2.5 rounded-lg bg-gray-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-gray-600 active:scale-[0.98] transition-all duration-200">
+                  Mark as Invalid
+                </button>
+                <button className="flex-1 py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-red-600 active:scale-[0.98] transition-all duration-200">
+                  Mark as Resolved
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

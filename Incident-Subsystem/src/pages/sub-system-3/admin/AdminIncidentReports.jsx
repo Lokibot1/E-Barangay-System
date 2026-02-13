@@ -640,33 +640,33 @@ const STATUS_CONFIG = {
     label: "NEW (PENDING)",
     color: "#dc2626",
     bg: "bg-red-600",
-    tabBg: "bg-green-700",
+    tabBg: "bg-red-600",
     tabText: "text-white",
-    tabBorder: "border-green-700",
+    tabBorder: "border-red-600",
   },
   dispatched: {
     label: "DISPATCHED",
     color: "#f59e0b",
     bg: "bg-amber-400",
-    tabBg: "bg-amber-100",
-    tabText: "text-amber-800",
-    tabBorder: "border-amber-400",
+    tabBg: "bg-amber-500",
+    tabText: "text-white",
+    tabBorder: "border-amber-500",
   },
   active: {
     label: "ON-SITE (ACTIVE)",
     color: "#2563eb",
     bg: "bg-blue-600",
-    tabBg: "bg-white",
-    tabText: "text-gray-700",
-    tabBorder: "border-gray-300",
+    tabBg: "bg-blue-600",
+    tabText: "text-white",
+    tabBorder: "border-blue-600",
   },
   resolved: {
     label: "RESOLVED",
     color: "#16a34a",
     bg: "bg-green-500",
-    tabBg: "bg-white",
-    tabText: "text-gray-700",
-    tabBorder: "border-gray-300",
+    tabBg: "bg-green-600",
+    tabText: "text-white",
+    tabBorder: "border-green-600",
   },
 };
 
@@ -876,19 +876,16 @@ const AdminIncidentReports = () => {
             <table className="w-full text-sm font-kumbh table-fixed">
               <thead>
                 <tr className={`${isDark ? "bg-slate-700 border-y border-slate-600" : "bg-gray-100 border-y border-gray-200"}`}>
-                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[16%]`}>
+                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[25%]`}>
                     Type of Incident
                   </th>
-                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[28%]`}>
-                    Details
-                  </th>
-                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[12%]`}>
+                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[20%]`}>
                     Date
                   </th>
-                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[22%]`}>
+                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[30%]`}>
                     Reported By
                   </th>
-                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[22%]`}>
+                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[25%]`}>
                     Incident Number
                   </th>
                 </tr>
@@ -901,26 +898,20 @@ const AdminIncidentReports = () => {
                       onClick={() => setSelectedIncident(inc)}
                       className={`border-b ${t.cardBorder} ${isDark ? "hover:bg-slate-200 hover:text-slate-800" : "hover:bg-gray-50"} transition-colors cursor-pointer`}
                     >
-                      <td className={`px-4 py-3 ${t.cardText} truncate`}>
+                      <td className={`text-left px-4 py-3 ${t.cardText} truncate`}>
                         {inc.type}
                       </td>
-                      <td
-                        className={`px-4 py-3 ${t.subtleText} truncate`}
-                        title={inc.details}
-                      >
-                        {inc.details}
-                      </td>
-                      <td className={`px-4 py-3 ${t.cardText} whitespace-nowrap`}>
+                      <td className={`text-left px-4 py-3 ${t.cardText} whitespace-nowrap`}>
                         {new Date(inc.date).toLocaleDateString("en-US", {
                           month: "2-digit",
                           day: "2-digit",
                           year: "numeric",
                         })}
                       </td>
-                      <td className={`px-4 py-3 ${t.cardText} truncate`}>
+                      <td className={`text-left px-4 py-3 ${t.cardText} truncate`}>
                         {inc.reportedBy}
                       </td>
-                      <td className={`px-4 py-3 font-bold ${t.cardText}`}>
+                      <td className={`text-left px-4 py-3 font-bold ${t.cardText}`}>
                         {inc.id}
                       </td>
                     </tr>
@@ -928,7 +919,7 @@ const AdminIncidentReports = () => {
                 ) : (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={4}
                       className={`px-4 py-8 text-center ${t.subtleText}`}
                     >
                       No incidents found for the selected filters.
