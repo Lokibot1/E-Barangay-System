@@ -1,0 +1,58 @@
+/* Navbar styles matching provided design */
+.ds-navbar{
+  border-top: 4px solid #0b7dd1;
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+}
+.ds-navbar-inner{
+  max-width:1200px;
+  margin:0 auto;
+  height:76px;
+  display:flex;
+  align-items:center;
+  padding:0 18px;
+  gap:16px;
+}
+.ds-left{ flex:0 0 auto; }
+.ds-logo{ display:flex; align-items:center; gap:12px; }
+.ds-seal{
+  width:56px; height:56px; border-radius:50%;
+  background: radial-gradient(circle at 30% 30%, #fff 0%, #e6f2ff 30%, #bfe4ff 100%);
+  border:2px solid #0b7dd1; color:#0b7dd1; font-weight:700; display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 1px 2px rgba(11,125,209,0.15);
+}
+.ds-seal-img{
+  width:56px; height:56px; border-radius:50%;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.ds-brand{ line-height:1; }
+.ds-title{ font-weight:700; color:#111; font-size:16px; }
+.ds-sub{ color:#6b7280; font-size:12px; margin-top:2px; }
+
+.ds-center{ flex:1 1 auto; display:flex; align-items:center; justify-content:center; gap:36px; }
+.ds-search{ display:flex; align-items:center; background:#f3f4f6; padding:8px 12px; border-radius:999px; width:340px; max-width:45%; }
+.ds-search-icon{ width:18px; height:18px; margin-right:8px; opacity:0.85; }
+.ds-search-input{ border:0; outline:none; background:transparent; width:100%; font-size:14px; }
+
+.ds-links{ list-style:none; display:flex; gap:24px; margin:0; padding:0; align-items:center; }
+.ds-links li{ color:#111; font-size:14px; cursor:pointer; }
+.ds-links li:hover{ color:#0b7dd1; }
+
+.ds-right{ flex:0 0 auto; }
+.ds-login{ background:linear-gradient(180deg,#2fb04a,#1fa63d); color:white; padding:10px 20px; border-radius:999px; border:0; font-weight:600; box-shadow:0 4px 10px rgba(31,166,61,0.18); cursor:pointer; }
+
+/* User menu when logged in */
+.ds-user-menu{ position:relative; display:inline-block; }
+.ds-user-btn{ background:linear-gradient(180deg,#16a34a,#0f9b2f); color:white; padding:10px 20px; border-radius:999px; border:0; font-weight:600; box-shadow:0 4px 10px rgba(16,163,64,0.16); cursor:pointer; }
+.ds-user-dropdown{ display:none; position:absolute; right:0; top:calc(100% + 8px); background:#fff; border-radius:8px; box-shadow:0 8px 24px rgba(15,23,42,0.12); min-width:140px; z-index:50; }
+.ds-user-menu:focus-within .ds-user-dropdown, .ds-user-menu:hover .ds-user-dropdown{ display:block; }
+.ds-user-dropdown .ds-user-logout{ display:block; width:100%; padding:10px 12px; text-align:left; background:transparent; border:0; cursor:pointer; font-weight:600; }
+.ds-user-dropdown .ds-user-logout:hover{ background:#f3f4f6; }
+
+@media (max-width:900px){
+  .ds-navbar-inner{ padding:0 12px; }
+  .ds-center{ gap:12px; }
+  .ds-search{ width:220px; }
+  .ds-links{ display:none; }
+}
