@@ -1,5 +1,6 @@
 import React from "react";
 import themeTokens from "../../Themetokens";
+import defaultImage from "../../assets/images/defaultImage.png";
 
 const ReportDetailModal = ({ isOpen, onClose, report, currentTheme }) => {
   if (!isOpen || !report) return null;
@@ -115,7 +116,7 @@ const ReportDetailModal = ({ isOpen, onClose, report, currentTheme }) => {
           {/* Status Badge */}
           <div className="flex items-center justify-between">
             <span
-              className={`${config.badge} text-white px-4 py-2 rounded-full font-semibold font-kumbh`}
+              className={`${config.badge} text-white px-4 py-2 rounded-full font-semibold font-kumbh capitalize`}
             >
               {report.status}
             </span>
@@ -125,15 +126,13 @@ const ReportDetailModal = ({ isOpen, onClose, report, currentTheme }) => {
           </div>
 
           {/* Image */}
-          {report.image && (
-            <div className="rounded-xl overflow-hidden">
-              <img
-                src={report.image}
-                alt={report.title}
-                className="w-full h-64 object-cover"
-              />
-            </div>
-          )}
+          <div className="rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center">
+            <img
+              src={report.image || defaultImage}
+              alt={report.title}
+              className="w-full max-h-80 object-contain"
+            />
+          </div>
 
           {/* Title & Category */}
           <div>

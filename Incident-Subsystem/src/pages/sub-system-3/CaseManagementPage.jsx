@@ -1,15 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
+import TabsComponent from "../../components/sub-system-3/TabsComponent";
 import ReportCard from "../../components/sub-system-3/ReportCard";
 import ReportDetailModal from "../../components/sub-system-3/Reportdetailmodal";
 import MapComponent from "../../components/shared/MapComponent";
 import themeTokens from "../../Themetokens";
+import { incidentService } from "../../services/sub-system-3/incidentService";
+import { getMyComplaints } from "../../services/sub-system-3/complaintService";
 
 const CaseManagementPage = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("complaints");
   const [activeFilter, setActiveFilter] = useState("ongoing");
   const [showMap, setShowMap] = useState(false);
+  const [complaints, setComplaints] = useState([]);
+  const [incidents, setIncidents] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(() => {
     return localStorage.getItem("appTheme") || "blue";
   });
@@ -35,123 +42,104 @@ const CaseManagementPage = () => {
   const t = themeTokens[currentTheme];
   const isDark = currentTheme === "dark";
 
-  const mockReports = [
-    {
-      id: "INC-2025-0127",
-      title: "Ankle Deep Flooding",
-      category: "Flooding",
-      location: "Green Acres Subdivision, Novaliches, Quezon City",
-      coordinates: { lat: 14.7235, lng: 121.0509 },
-      description:
-        "The road at Green Acres Subdivision is currently flooded ankle-deep. Reported at 3:31 PM today.",
-      date: "January 27, 2025",
-      status: "Ongoing",
-      severity: "Medium",
-      submittedBy: "Juan Dela Cruz",
-      image: "https://images.unsplash.com/photo-1547683905-f686c993aae5?w=500",
-    },
-    {
-      id: "INC-2025-0125",
-      title: "Broken Streetlight",
-      category: "Infrastructure",
-      location: "Corner of Main St. and 5th Ave.",
-      coordinates: { lat: 14.6892, lng: 121.0589 },
-      description:
-        "Streetlight has been non-functional for 3 days, creating safety concerns at night.",
-      date: "January 25, 2025",
-      status: "Ongoing",
-      severity: "Low",
-      submittedBy: "Maria Santos",
-      image:
-        "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=500",
-    },
-    {
-      id: "INC-2025-0122",
-      title: "Pothole on Road",
-      category: "Road Damage",
-      location: "Riverside Drive, near Gate 2",
-      coordinates: { lat: 14.655, lng: 121.0245 },
-      description:
-        "Large pothole causing traffic issues and potential vehicle damage. Urgent repair needed.",
-      date: "January 22, 2025",
-      status: "Ongoing",
-      severity: "High",
-      submittedBy: "Pedro Reyes",
-      image:
-        "https://images.unsplash.com/photo-1625935229727-b3089e3fc1ce?w=500",
-    },
-    {
-      id: "INC-2025-0120",
-      title: "Tree Branch Blocking Path",
-      category: "Obstruction",
-      location: "City Park, Main Walkway",
-      coordinates: { lat: 14.6712, lng: 121.0389 },
-      description:
-        "Fallen tree branch blocking the main walking path in City Park. Resolved on January 21, 2025.",
-      date: "January 20, 2025",
-      status: "Resolved",
-      severity: "Medium",
-      submittedBy: "Ana Lopez",
-      image:
-        "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=500",
-    },
-    {
-      id: "INC-2025-0118",
-      title: "Graffiti on Public Wall",
-      category: "Vandalism",
-      location: "City Hall Building, East Wall",
-      coordinates: { lat: 14.6634, lng: 121.0322 },
-      description:
-        "Graffiti found on the east wall of City Hall. Cleaned on January 19, 2025.",
-      date: "January 18, 2025",
-      status: "Resolved",
-      severity: "Low",
-      submittedBy: "Carlos Mendoza",
-      image:
-        "https://images.unsplash.com/photo-1618609378039-b572f64c5b42?w=500",
-    },
-    {
-      id: "INC-2025-0115",
-      title: "Water Leak on Street",
-      category: "Infrastructure",
-      location: "Elm Street, near House #45",
-      coordinates: { lat: 14.6801, lng: 121.0498 },
-      description:
-        "Water leak reported near House #45 on Elm Street. Rejected due to insufficient evidence.",
-      date: "January 15, 2025",
-      status: "Rejected",
-      severity: "Medium",
-      submittedBy: "Sofia Garcia",
-      image:
-        "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=500",
-    },
-    {
-      id: "INC-2025-0112",
-      title: "Stray Animals in Park",
-      category: "Public Safety",
-      location: "Sunset Park, Near Playground",
-      coordinates: { lat: 14.6923, lng: 121.0445 },
-      description:
-        "Multiple stray animals reported near the playground area. Rejected as no evidence provided.",
-      date: "January 12, 2025",
-      status: "Rejected",
-      severity: "Low",
-      submittedBy: "Elena Flores",
-      image: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=500",
-    },
-  ];
+  // Map API status values to frontend filter keys
+  // API records have no status field — default to "ongoing"
+  const normalizeStatus = (status) => {
+    if (!status) return "ongoing";
+    const s = status.toLowerCase();
+    if (s === "pending" || s === "ongoing" || s === "in_progress" || s === "in progress") return "ongoing";
+    if (s === "resolved" || s === "completed" || s === "closed") return "resolved";
+    if (s === "rejected" || s === "dismissed" || s === "denied") return "rejected";
+    return "ongoing";
+  };
 
-  const filteredReports = mockReports.filter(
-    (r) => r.status.toLowerCase() === activeFilter,
+  // Capitalize first letter of each word
+  const capitalize = (str) =>
+    str.replace(/\b\w/g, (c) => c.toUpperCase());
+
+  // Parse incident type which comes as a JSON string e.g. "[\"waste\",\"draining\"]"
+  const parseIncidentType = (type) => {
+    if (!type) return "Incident";
+    try {
+      const parsed = JSON.parse(type);
+      if (Array.isArray(parsed)) return parsed.map(capitalize).join(", ");
+      return capitalize(String(parsed));
+    } catch {
+      return capitalize(String(type));
+    }
+  };
+
+  // Normalize complaint from API to ReportCard format
+  const normalizeComplaint = (c) => {
+    const typeLabel = capitalize(c.type || "Complaint");
+    return {
+      ...c,
+      id: c.id,
+      title: typeLabel,
+      category: typeLabel,
+      status: normalizeStatus(c.status),
+      location: c.location || "N/A",
+      description: c.description || "",
+      date: c.incident_date || c.created_at?.split("T")[0] || "",
+      severity: c.severity ? capitalize(c.severity) : "N/A",
+      image: c.evidence || null,
+      submittedBy: c.complainant_name || "",
+    };
+  };
+
+  // Normalize incident from API to ReportCard format
+  const normalizeIncident = (i) => {
+    const typeLabel = parseIncidentType(i.type);
+    return {
+      ...i,
+      id: i.id,
+      title: typeLabel,
+      category: typeLabel,
+      status: normalizeStatus(i.status),
+      location: i.location || "N/A",
+      description: i.description || "",
+      date: i.created_at?.split("T")[0] || "",
+      severity: i.severity || "N/A",
+      image: i.evidence || null,
+      latitude: i.latitude,
+      longitude: i.longitude,
+    };
+  };
+
+  // Fetch data when tab changes
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      if (activeTab === "complaints") {
+        const data = await getMyComplaints();
+        const raw = Array.isArray(data) ? data : data.data || [];
+        setComplaints(raw.map(normalizeComplaint));
+      } else {
+        const data = await incidentService.getMyIncidents();
+        const raw = Array.isArray(data) ? data : data.data || [];
+        setIncidents(raw.map(normalizeIncident));
+      }
+    } catch (error) {
+      console.error(`Failed to fetch ${activeTab}:`, error);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const currentReports = activeTab === "complaints" ? complaints : incidents;
+
+  const filteredReports = currentReports.filter(
+    (r) => r.status === activeFilter,
   );
 
   const statusCounts = {
-    ongoing: mockReports.filter((r) => r.status.toLowerCase() === "ongoing")
-      .length,
-    resolved: mockReports.filter((r) => r.status.toLowerCase() === "resolved")
-      .length,
-    rejected: mockReports.filter((r) => r.status.toLowerCase() === "rejected")
-      .length,
+    ongoing: currentReports.filter((r) => r.status === "ongoing").length,
+    resolved: currentReports.filter((r) => r.status === "resolved").length,
+    rejected: currentReports.filter((r) => r.status === "rejected").length,
   };
 
   const handleReportClick = (report) => {
@@ -167,17 +155,17 @@ const CaseManagementPage = () => {
   // Convert reports to map markers
   const getMapMarkers = () => {
     const severityColors = {
-      High: "#EF4444", // red
-      Medium: "#F59E0B", // amber
-      Low: "#10B981", // green
+      High: "#EF4444",
+      Medium: "#F59E0B",
+      Low: "#10B981",
     };
 
     return filteredReports
-      .filter((r) => r.coordinates)
+      .filter((r) => r.coordinates || (r.latitude && r.longitude))
       .map((report) => ({
-        lat: report.coordinates.lat,
-        lng: report.coordinates.lng,
-        title: report.title,
+        lat: report.coordinates?.lat || parseFloat(report.latitude),
+        lng: report.coordinates?.lng || parseFloat(report.longitude),
+        title: report.title || report.type || "Report",
         color: severityColors[report.severity] || "#3B82F6",
         data: {
           description: report.description,
@@ -213,13 +201,25 @@ const CaseManagementPage = () => {
           id="main-content"
           className="container mx-auto px-4 sm:px-6 py-6 sm:py-8"
         >
+          {/* Tabs */}
+          <TabsComponent
+            activeTab={activeTab}
+            onTabChange={(tab) => {
+              setActiveTab(tab);
+              setActiveFilter("ongoing");
+            }}
+            currentTheme={currentTheme}
+          />
+
           {/* Header */}
           <div className="mb-6 sm:mb-8">
             <div className="flex items-center justify-between mb-2">
               <h2
                 className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}
               >
-                Case Management
+                {activeTab === "complaints"
+                  ? "Complaint Management"
+                  : "Incident Management"}
               </h2>
               <button
                 onClick={() => setShowMap(!showMap)}
@@ -262,8 +262,10 @@ const CaseManagementPage = () => {
                 )}
               </button>
             </div>
-            <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh`}>
-              View and track your submitted incident reports
+            <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh text-left`}>
+              {activeTab === "complaints"
+                ? "View and track your submitted complaints"
+                : "View and track your submitted incident reports"}
             </p>
           </div>
 
@@ -430,7 +432,9 @@ const CaseManagementPage = () => {
                       className={`ml-0.5 sm:ml-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ${
                         activeFilter === filter
                           ? "bg-white/20"
-                          : isDark ? "bg-slate-600 text-slate-300" : "bg-slate-200 text-slate-700"
+                          : isDark
+                            ? "bg-slate-600 text-slate-300"
+                            : "bg-slate-200 text-slate-700"
                       }`}
                     >
                       {statusCounts[filter]}
@@ -441,8 +445,17 @@ const CaseManagementPage = () => {
             </div>
           </div>
 
-          {/* Map or Grid View */}
-          {showMap ? (
+          {/* Loading State */}
+          {loading ? (
+            <div
+              className={`${t.cardBg} rounded-xl p-8 sm:p-12 text-center border ${t.cardBorder}`}
+            >
+              <div className="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
+              <p className={`text-sm ${t.subtleText} font-kumbh`}>
+                Loading {activeTab}...
+              </p>
+            </div>
+          ) : showMap ? (
             <div className="mb-6">
               <MapComponent
                 mode="view"
@@ -485,12 +498,12 @@ const CaseManagementPage = () => {
                   <h3
                     className={`text-lg sm:text-xl font-bold ${t.cardText} mb-2 font-spartan`}
                   >
-                    No {activeFilter} reports
+                    No {activeFilter} {activeTab === "complaints" ? "complaints" : "incidents"}
                   </h3>
                   <p
                     className={`text-sm sm:text-base ${t.subtleText} font-kumbh`}
                   >
-                    There are no reports with this status at the moment.
+                    There are no {activeTab === "complaints" ? "complaints" : "incidents"} with this status at the moment.
                   </p>
                 </div>
               )}

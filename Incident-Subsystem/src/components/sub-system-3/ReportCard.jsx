@@ -1,5 +1,6 @@
 import React from "react";
 import themeTokens from "../../Themetokens";
+import defaultImage from "../../assets/images/defaultImage.png";
 
 const ReportCard = ({ report, currentTheme, onClick }) => {
   const t = themeTokens[currentTheme];
@@ -46,7 +47,7 @@ const ReportCard = ({ report, currentTheme, onClick }) => {
               {report.id}
             </span>
             <span
-              className={`${config.badge} text-white text-xs font-semibold px-2 py-0.5 rounded-full font-kumbh`}
+              className={`${config.badge} text-white text-xs font-semibold px-2 py-0.5 rounded-full font-kumbh capitalize`}
             >
               {report.status}
             </span>
@@ -76,15 +77,13 @@ const ReportCard = ({ report, currentTheme, onClick }) => {
       </div>
 
       {/* Image/Thumbnail */}
-      {report.image && (
-        <div className="mb-3 rounded-md overflow-hidden">
-          <img
-            src={report.image}
-            alt={report.title}
-            className="w-full h-32 object-cover"
-          />
-        </div>
-      )}
+      <div className="mb-3 rounded-md overflow-hidden bg-slate-100">
+        <img
+          src={report.image || defaultImage}
+          alt={report.title}
+          className="w-full h-44 object-contain"
+        />
+      </div>
 
       {/* Details */}
       <div className="space-y-1.5 mb-3">
