@@ -13,7 +13,7 @@ const submitReport = async (formData) => {
 
   const body = new FormData();
 
-  body.append("incident_types", JSON.stringify(formData.incidentTypes));
+  body.append("type", JSON.stringify(formData.incidentTypes));
   body.append("other_incident_type", formData.otherIncidentType || "");
   body.append("description", formData.description || "");
   body.append("latitude", formData.latitude || "");
@@ -22,9 +22,7 @@ const submitReport = async (formData) => {
   body.append("additional_notes", formData.additionalNotes || "");
 
   if (formData.attachments && formData.attachments.length > 0) {
-    formData.attachments.forEach((file) => {
-      body.append("attachments[]", file);
-    });
+    body.append("evidence", formData.attachments[0]);
   }
 
   const response = await fetch(`${API_BASE}/incidents`, {
