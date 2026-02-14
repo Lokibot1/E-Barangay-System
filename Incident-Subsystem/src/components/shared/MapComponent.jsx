@@ -291,19 +291,16 @@ function MapController({ mode, markers }) {
   const map = useMap();
 
   useEffect(() => {
-    if (mode === "pin") {
-      // Set max bounds for pin mode
-      const bounds = L.latLngBounds(barangayBoundary);
-      map.setMaxBounds(bounds.pad(0.5));
+    // Lock map to Barangay Gulod boundaries for all modes
+    const bounds = L.latLngBounds(barangayBoundary);
+    map.setMaxBounds(bounds.pad(0.3));
+    map.setMinZoom(14);
+
+    if (mode === "view") {
+      // Center on barangay, don't fly to markers outside
+      map.setView(barangayCenter, 15);
     }
   }, [mode, map]);
-
-  useEffect(() => {
-    if (mode === "view" && markers && markers.length > 0) {
-      const bounds = L.latLngBounds(markers.map((m) => [m.lat, m.lng]));
-      map.fitBounds(bounds, { padding: [50, 50] });
-    }
-  }, [mode, markers, map]);
 
   return null;
 }
