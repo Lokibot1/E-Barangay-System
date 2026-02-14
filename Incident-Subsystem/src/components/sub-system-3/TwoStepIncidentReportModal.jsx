@@ -253,6 +253,7 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
             <ProgressIndicator
               currentStep={currentStep}
               totalSteps={totalSteps}
+              stepLabels={["Incident Details", "Location"]}
               currentTheme={currentTheme}
             />
           </div>

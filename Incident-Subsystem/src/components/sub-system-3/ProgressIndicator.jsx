@@ -1,13 +1,16 @@
 import React from "react";
 import themeTokens from "../../Themetokens";
 
-const ProgressIndicator = ({ currentStep, totalSteps, currentTheme }) => {
+const ProgressIndicator = ({ currentStep, totalSteps, currentTheme, stepLabels }) => {
   const t = themeTokens[currentTheme] || themeTokens.blue;
+
+  const defaultLabels = ["Basic Info", "Details", "People", "Additional"];
+  const labels = stepLabels || defaultLabels;
 
   const steps = [
     {
       number: 1,
-      title: "Basic Info",
+      title: labels[0] || "Basic Info",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -30,7 +33,7 @@ const ProgressIndicator = ({ currentStep, totalSteps, currentTheme }) => {
     },
     {
       number: 2,
-      title: "Details",
+      title: labels[1] || "Details",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -53,7 +56,7 @@ const ProgressIndicator = ({ currentStep, totalSteps, currentTheme }) => {
     },
     {
       number: 3,
-      title: "People",
+      title: labels[2] || "People",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -68,9 +71,10 @@ const ProgressIndicator = ({ currentStep, totalSteps, currentTheme }) => {
         </svg>
       ),
     },
-    { number: 4, title: "Additional", icon: "📎" },
+    { number: 4, title: labels[3] || "Additional", icon: "📎" },
   ];
 
+  const visibleSteps = steps.slice(0, totalSteps);
   const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
 
   return (
@@ -86,7 +90,7 @@ const ProgressIndicator = ({ currentStep, totalSteps, currentTheme }) => {
           />
         </div>
 
-        {steps.map((step) => (
+        {visibleSteps.map((step) => (
           <div key={step.number} className="flex flex-col items-center flex-1">
             <div
               className={`w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all duration-300 transform ${
@@ -135,7 +139,7 @@ const ProgressIndicator = ({ currentStep, totalSteps, currentTheme }) => {
             Step {currentStep} of {totalSteps}
           </span>
           <span className={`text-xs ${t.stepLabelInactive}`}>
-            {steps[currentStep - 1].title}
+            {visibleSteps[currentStep - 1].title}
           </span>
         </div>
         <div
