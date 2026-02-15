@@ -265,7 +265,7 @@ const AdminLanding = () => {
   const chartCardClass = `${t.cardBg} border ${isDark ? "border-slate-700" : "border-gray-200"} rounded-xl p-4 shadow-md`;
 
   return (
-    <div className="h-full flex flex-col overflow-y-auto">
+    <div className="flex flex-col min-h-full">
       {/* ── Hero Section ─────────────────────────────────────────────── */}
       <div className="relative w-full h-[420px] sm:h-[500px] overflow-hidden">
         <img
@@ -275,16 +275,16 @@ const AdminLanding = () => {
         />
         <div className="absolute inset-0 bg-black/50" />
 
-        <div className="relative z-10 flex flex-col justify-center h-full px-6 sm:px-10 lg:px-16 max-w-7xl mx-auto w-full">
+        <div className="relative z-10 flex flex-col justify-center items-start h-full px-6 sm:px-10 lg:px-16 max-w-7xl mx-auto w-full">
           <p className="text-white/90 text-lg sm:text-xl font-semibold font-kumbh mb-2">
             Hi, {firstName}!
           </p>
-          <h1 className="text-white text-3xl sm:text-4xl lg:text-5xl font-bold font-spartan leading-tight">
+          <h1 className="text-white text-3xl sm:text-4xl lg:text-5xl font-bold font-spartan leading-tight text-left">
             Welcome to
             <br />
-            E-Barangay Integrated Services Platform of
+            E-Barangay Integrated Services
             <br />
-            Gulod
+            Platform of Gulod
           </h1>
           <div className="mt-6">
             <button className="px-6 py-3 bg-green-700 hover:bg-green-800 text-white text-sm font-bold font-kumbh uppercase tracking-wider rounded transition-colors">

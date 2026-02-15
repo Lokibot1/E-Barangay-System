@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { isAdmin } from "../../services/sub-system-3/loginService";
 import { useLanguage } from "../../context/LanguageContext";
 import themeTokens from "../../Themetokens";
+import logo from "../../assets/images/logo.jpg";
 
 // ── Nav structure factories (labels come from translations) ─────────────────
 const getUserNavItems = (s) => [
@@ -243,21 +244,13 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
           <button
             onClick={onToggle}
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className={`w-8 h-8 bg-gradient-to-br ${t.primaryGrad} rounded-lg flex items-center justify-center shadow-md flex-shrink-0 cursor-pointer hover:opacity-80 hover:shadow-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 ${t.primaryRing}`}
+            className="w-9 h-9 rounded-full shadow-md flex-shrink-0 cursor-pointer hover:opacity-80 hover:shadow-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 overflow-hidden"
           >
-            <svg
-              className="w-4 h-4 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
+            <img
+              src={logo}
+              alt="Barangay Gulod Logo"
+              className="w-full h-full object-cover"
+            />
           </button>
 
           {/* App name — fades out when collapsed */}
@@ -271,7 +264,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
             <p
               className={`font-spartan text-sm font-bold ${t.sidebarAppName} whitespace-nowrap truncate`}
             >
-              {adminMode ? tr.sidebar.adminPanel : "Logo wala pa"}
+              {adminMode ? tr.sidebar.adminPanel : "Barangay Gulod"}
             </p>
             <p
               className={`font-kumbh text-xs ${t.sidebarText} whitespace-nowrap truncate`}

@@ -536,7 +536,7 @@ const MOCK_INCIDENTS = [
     date: "2026-01-30",
     lastUpdated: "2026-01-31T13:00:00",
     reportedBy: "DELA CRUZ, PEDRO R.",
-    status: "resolved",
+    status: "rejected",
     lat: 14.7150,
     lng: 121.0440,
     address: "Near Basketball Court, Barangay Gulod, Novaliches, Quezon City",
@@ -568,7 +568,7 @@ const MOCK_INCIDENTS = [
     date: "2026-01-28",
     lastUpdated: "2026-01-30T10:00:00",
     reportedBy: "BAUTISTA, ELENA S.",
-    status: "resolved",
+    status: "rejected",
     lat: 14.7088,
     lng: 121.0465,
     address: "Near Creek, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
@@ -698,7 +698,7 @@ const MOCK_COMPLAINTS = [
     date: "2026-01-22",
     lastUpdated: "2026-01-22T07:00:00",
     reportedBy: "GARCIA, MARIA L.",
-    status: "resolved",
+    status: "rejected",
     lat: 14.7085,
     lng: 121.0395,
     address: "Near Gulod Barangay Hall, Novaliches, Quezon City, Metro Manila",
@@ -796,6 +796,14 @@ const STATUS_CONFIG = {
     tabText: "text-white",
     tabBorder: "border-green-600",
   },
+  rejected: {
+    label: "REJECTED",
+    color: "#6b7280",
+    bg: "bg-gray-500",
+    tabBg: "bg-gray-500",
+    tabText: "text-white",
+    tabBorder: "border-gray-500",
+  },
 };
 
 const INCIDENT_TYPES = [
@@ -855,6 +863,7 @@ const AdminIncidentReports = () => {
     dispatched: true,
     active: true,
     pending: true,
+    rejected: true,
   });
 
   const toggleStatus = (status) => {
@@ -919,7 +928,7 @@ const AdminIncidentReports = () => {
 
   // ── Status tab counts ──────────────────────────────────────────────
   const statusCounts = useMemo(() => {
-    const counts = { all: 0, pending: 0, dispatched: 0, active: 0, resolved: 0 };
+    const counts = { all: 0, pending: 0, dispatched: 0, active: 0, resolved: 0, rejected: 0 };
     dataSource.forEach((inc) => {
       counts.all++;
       if (counts[inc.status] !== undefined) counts[inc.status]++;
@@ -1407,6 +1416,50 @@ const AdminIncidentReports = () => {
                   </div>
                   <p className={`text-xs ${visibleStatuses.pending && isDark ? "text-gray-600" : "text-gray-500"} font-kumbh`}>
                     Issue recently reported and awaiting dispatch.
+                  </p>
+                </div>
+
+                {/* Rejected */}
+                <div
+                  className={`p-3 rounded-lg border ${visibleStatuses.rejected ? (isDark ? "border-gray-400 bg-gray-50" : "border-gray-300 bg-gray-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-gray-500" />
+                      <span className={`text-sm font-bold ${visibleStatuses.rejected && isDark ? "text-gray-800" : "text-gray-700"} font-kumbh`}>
+                        REJECTED
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => toggleStatus("rejected")}
+                      className={`${isDark ? "text-slate-400 hover:text-slate-800 hover:bg-slate-200" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        {visibleStatuses.rejected ? (
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
+                        ) : (
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18"
+                          />
+                        )}
+                      </svg>
+                    </button>
+                  </div>
+                  <p className={`text-xs ${visibleStatuses.rejected && isDark ? "text-gray-600" : "text-gray-500"} font-kumbh`}>
+                    Report was rejected or deemed invalid.
                   </p>
                 </div>
               </div>

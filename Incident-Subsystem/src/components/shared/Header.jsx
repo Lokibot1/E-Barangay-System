@@ -5,6 +5,7 @@ import LogoutModal from "./LogoutModal";
 import { logout, getUser } from "../../services/sub-system-3/loginService";
 import { useLanguage } from "../../context/LanguageContext";
 import themeTokens from "../../Themetokens";
+import logo from "../../assets/images/logo.jpg";
 
 const Header = ({ currentTheme, onThemeChange }) => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -129,28 +130,16 @@ const Header = ({ currentTheme, onThemeChange }) => {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center space-x-2 sm:space-x-3">
-              <div
-                className={`w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br ${t.primaryGrad} rounded-lg flex items-center justify-center shadow-lg`}
-              >
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-              </div>
+              <img
+                src={logo}
+                alt="Barangay Gulod Logo"
+                className="w-9 h-9 sm:w-11 sm:h-11 rounded-full shadow-lg object-cover"
+              />
               <div className="hidden sm:block">
                 <h1
                   className={`font-spartan text-lg sm:text-xl font-bold ${t.cardText}`}
                 >
-                  Logo wala pa
+                  Barangay Gulod
                 </h1>
                 <p className={`text-xs ${t.subtleText} font-kumbh`}>
                   {tr.header.incidentReporting}
