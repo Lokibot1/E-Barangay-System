@@ -3,6 +3,7 @@ import InputField from "../../components/shared/InputField";
 import TextAreaField from "../../components/shared/TextAreaField";
 import SelectField from "../../components/shared/SelectField";
 import FileUpload from "../../components/shared/FileUpload";
+import MapComponent from "../shared/MapComponent";
 import { useLanguage } from "../../context/LanguageContext";
 import themeTokens from "../../Themetokens";
 
@@ -38,6 +39,12 @@ const ComplaintForm = ({
     { value: "medium", label: cf.severityMedium },
     { value: "high", label: cf.severityHigh },
   ];
+
+  const handleLocationSelect = (lat, lng, address) => {
+    onInputChange("latitude", lat);
+    onInputChange("longitude", lng);
+    onInputChange("location", address || `${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+  };
 
   const handleWitnessChange = (index, value) => {
     const newWitnesses = [...formData.witnesses];
@@ -102,6 +109,24 @@ const ComplaintForm = ({
             required
             currentTheme={currentTheme}
           />
+
+          <div>
+            <label
+              className={`block text-sm font-semibold ${t.labelText || t.cardText} mb-2 font-kumbh`}
+            >
+              Pin Location on Map
+            </label>
+            <p className={`text-xs ${t.sectionSubtitle || t.subtleText} mb-3 font-kumbh`}>
+              Click on the map to pin the location, or it will auto-pin to your current location.
+            </p>
+            <MapComponent
+              mode="pin"
+              onLocationSelect={handleLocationSelect}
+              currentTheme={currentTheme}
+              enableGPS={true}
+              height="300px"
+            />
+          </div>
         </div>
       )}
 

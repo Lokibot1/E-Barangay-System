@@ -244,7 +244,7 @@ const normalizeIncident = (item) => ({
   lng: parseFloat(item.longitude) || 0,
   address: item.location || "",
   plusCode: "",
-  photos: item.evidence ? [`http://localhost:8000/storage/${item.evidence}`] : [],
+  photos: item.evidence ? [item.evidence] : [],
   updates: [],
 });
 
@@ -265,7 +265,7 @@ const normalizeComplaint = (item) => ({
   lng: parseFloat(item.longitude) || 0,
   address: item.location || "",
   plusCode: "",
-  photos: item.evidence_path ? [`http://localhost:8000/storage/${item.evidence_path}`] : [],
+  photos: item.evidence ? [item.evidence] : [],
   updates: [],
 });
 
@@ -1089,6 +1089,18 @@ const AdminIncidentReports = () => {
       <AdminReportDetailsModal
         incident={selectedIncident}
         onClose={() => setSelectedIncident(null)}
+        reportType={pageTab}
+        onStatusUpdate={(id, newStatus) => {
+          const updateList = (list, setList) =>
+            setList(list.map((item) =>
+              item.id === String(id) ? { ...item, status: newStatus } : item
+            ));
+          if (pageTab === "incidents") updateList(incidents, setIncidents);
+          else updateList(complaints, setComplaints);
+          setSelectedIncident((prev) =>
+            prev && prev.id === String(id) ? { ...prev, status: newStatus } : prev
+          );
+        }}
       />
     </div>
   );

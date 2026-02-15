@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { incidentService } from "../../services/sub-system-3/incidentService";
+import { updateComplaint } from "../../services/sub-system-3/complaintService";
 
 const STATUS_CONFIG = {
   all: { label: "ALL", color: "#374151" },
@@ -6,9 +8,10 @@ const STATUS_CONFIG = {
   dispatched: { label: "DISPATCHED", color: "#f59e0b" },
   active: { label: "ON-SITE (ACTIVE)", color: "#2563eb" },
   resolved: { label: "RESOLVED", color: "#16a34a" },
+  rejected: { label: "REJECTED", color: "#6b7280" },
 };
 
-const AdminReportDetailsModal = ({ incident, onClose }) => {
+const AdminReportDetailsModal = ({ incident, onClose, reportType, onStatusUpdate }) => {
   const [modalTab, setModalTab] = useState("details");
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showDispatch, setShowDispatch] = useState(false);
@@ -19,6 +22,7 @@ const AdminReportDetailsModal = ({ incident, onClose }) => {
   const [currentStatus, setCurrentStatus] = useState(incident?.status || "pending");
   const [showUpdate, setShowUpdate] = useState(false);
   const [updateText, setUpdateText] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Reset all state when a different incident is opened
   useEffect(() => {
@@ -39,6 +43,87 @@ const AdminReportDetailsModal = ({ incident, onClose }) => {
 
   const isDispatched = currentStatus === "dispatched" || currentStatus === "active" || currentStatus === "resolved" || dispatchedTeam;
   const statusCfg = STATUS_CONFIG[currentStatus];
+
+  // Call the correct update API based on report type
+  const updateReport = async (updates) => {
+    if (reportType === "complaints") {
+      return updateComplaint(incident.id, updates);
+    }
+    return incidentService.updateIncident(incident.id, updates);
+  };
+
+  // Handle status change via API
+  const handleStatusChange = async (newStatus) => {
+    setIsUpdating(true);
+    try {
+      await updateReport({ status: newStatus });
+      setCurrentStatus(newStatus);
+      if (onStatusUpdate) onStatusUpdate(incident.id, newStatus);
+    } catch (err) {
+      console.error("Failed to update status:", err);
+      alert(err.message || "Failed to update status.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Handle dispatch save
+  const handleSaveDispatch = async () => {
+    const filled = officials.filter((o) => o.trim() !== "");
+    if (filled.length === 0) return;
+
+    setIsUpdating(true);
+    try {
+      await updateReport({
+        status: "dispatched",
+        additional_notes: `Dispatch Team: ${filled.join(", ")}`,
+      });
+      setDispatchedTeam({
+        officials: filled,
+        timestamp: new Date().toISOString(),
+      });
+      setCurrentStatus("dispatched");
+      setShowDispatch(false);
+      if (onStatusUpdate) onStatusUpdate(incident.id, "dispatched");
+    } catch (err) {
+      console.error("Failed to dispatch:", err);
+      alert(err.message || "Failed to save dispatch.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Handle save notes
+  const handleSaveNotes = async () => {
+    if (!noteText.trim()) return;
+    setIsUpdating(true);
+    try {
+      await updateReport({ additional_notes: noteText.trim() });
+      setShowNotes(false);
+      setNoteText("");
+    } catch (err) {
+      console.error("Failed to save notes:", err);
+      alert(err.message || "Failed to save notes.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Handle save update
+  const handleSaveUpdate = async () => {
+    if (!updateText.trim()) return;
+    setIsUpdating(true);
+    try {
+      await updateReport({ additional_notes: updateText.trim() });
+      setShowUpdate(false);
+      setUpdateText("");
+    } catch (err) {
+      console.error("Failed to save update:", err);
+      alert(err.message || "Failed to save update.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   return (
     <div
@@ -61,7 +146,7 @@ const AdminReportDetailsModal = ({ incident, onClose }) => {
               </svg>
             </button>
             <h2 className="text-sm font-bold font-spartan tracking-wide">
-              INCIDENT ID # {incident.id}
+              {reportType === "complaints" ? "COMPLAINT" : "INCIDENT"} ID # {incident.id}
             </h2>
           </div>
           <button
@@ -228,13 +313,11 @@ const AdminReportDetailsModal = ({ incident, onClose }) => {
                   + Add Attachment
                 </button>
                 <button
-                  onClick={() => {
-                    setShowUpdate(false);
-                    setUpdateText("");
-                  }}
-                  className="w-full mt-3 py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200"
+                  onClick={handleSaveUpdate}
+                  disabled={isUpdating}
+                  className="w-full mt-3 py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
                 >
-                  Save Update
+                  {isUpdating ? "Saving..." : "Save Update"}
                 </button>
               </div>
             ) : showNotes ? (
@@ -261,8 +344,12 @@ const AdminReportDetailsModal = ({ incident, onClose }) => {
                   >
                     Cancel
                   </button>
-                  <button className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh uppercase hover:bg-gray-100 active:scale-[0.98] transition-all duration-200">
-                    Save
+                  <button
+                    onClick={handleSaveNotes}
+                    disabled={isUpdating}
+                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh uppercase hover:bg-gray-100 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
+                  >
+                    {isUpdating ? "Saving..." : "Save"}
                   </button>
                 </div>
               </div>
@@ -301,19 +388,11 @@ const AdminReportDetailsModal = ({ incident, onClose }) => {
                     Cancel
                   </button>
                   <button
-                    onClick={() => {
-                      const filled = officials.filter((o) => o.trim() !== "");
-                      if (filled.length === 0) return;
-                      setDispatchedTeam({
-                        officials: filled,
-                        timestamp: new Date().toISOString(),
-                      });
-                      setCurrentStatus("dispatched");
-                      setShowDispatch(false);
-                    }}
-                    className="flex-1 py-2.5 rounded-lg bg-amber-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-amber-600 active:scale-[0.98] transition-all duration-200"
+                    onClick={handleSaveDispatch}
+                    disabled={isUpdating}
+                    className="flex-1 py-2.5 rounded-lg bg-amber-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-amber-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
                   >
-                    Save Dispatch
+                    {isUpdating ? "Saving..." : "Save Dispatch"}
                   </button>
                 </div>
               </div>
@@ -346,7 +425,7 @@ const AdminReportDetailsModal = ({ incident, onClose }) => {
                 {/* Reported By */}
                 <div>
                   <p className="text-xs font-bold text-gray-900 font-kumbh uppercase mb-1.5">
-                    Incident Reported By:
+                    {reportType === "complaints" ? "Complaint" : "Incident"} Reported By:
                   </p>
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -361,7 +440,7 @@ const AdminReportDetailsModal = ({ incident, onClose }) => {
                 {/* Description */}
                 <div>
                   <p className="text-xs font-bold text-gray-900 font-kumbh uppercase mb-1.5">
-                    Incident Description:
+                    {reportType === "complaints" ? "Complaint" : "Incident"} Description:
                   </p>
                   <p className="text-xs text-gray-600 font-kumbh leading-relaxed">
                     {incident.description}
@@ -486,7 +565,8 @@ const AdminReportDetailsModal = ({ incident, onClose }) => {
                 setShowDispatch(false);
                 setShowUpdate(false);
               }}
-              className="w-full py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh hover:bg-gray-100 active:scale-[0.98] transition-all duration-200"
+              disabled={isUpdating}
+              className="w-full py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh hover:bg-gray-100 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
             >
               + Add Notes
             </button>
@@ -501,20 +581,26 @@ const AdminReportDetailsModal = ({ incident, onClose }) => {
                   setShowNotes(false);
                   setShowDispatch(false);
                 }}
-                className="w-full py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200"
+                disabled={isUpdating}
+                className="w-full py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
               >
                 + Add Update
               </button>
 
               {/* Bottom row – post-dispatch */}
               <button
-                onClick={() => setCurrentStatus("active")}
-                className="w-full py-2.5 rounded-lg bg-gray-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-gray-600 active:scale-[0.98] transition-all duration-200"
+                onClick={() => handleStatusChange("active")}
+                disabled={isUpdating || currentStatus === "active"}
+                className="w-full py-2.5 rounded-lg bg-gray-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-gray-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Mark as In-Progress
+                {isUpdating ? "Updating..." : "Mark as In-Progress"}
               </button>
-              <button className="w-full py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-red-600 active:scale-[0.98] transition-all duration-200">
-                Mark as Resolved
+              <button
+                onClick={() => handleStatusChange("resolved")}
+                disabled={isUpdating || currentStatus === "resolved"}
+                className="w-full py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-red-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isUpdating ? "Updating..." : "Mark as Resolved"}
               </button>
             </>
           ) : (
@@ -527,7 +613,8 @@ const AdminReportDetailsModal = ({ incident, onClose }) => {
                     setShowNotes(false);
                     setShowUpdate(false);
                   }}
-                  className="w-full py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200"
+                  disabled={isUpdating}
+                  className="w-full py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
                 >
                   Dispatch Team
                 </button>
@@ -535,11 +622,19 @@ const AdminReportDetailsModal = ({ incident, onClose }) => {
 
               {/* Bottom row – pre-dispatch */}
               <div className="flex gap-3">
-                <button className="flex-1 py-2.5 rounded-lg bg-gray-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-gray-600 active:scale-[0.98] transition-all duration-200">
-                  Mark as Invalid
+                <button
+                  onClick={() => handleStatusChange("rejected")}
+                  disabled={isUpdating}
+                  className="flex-1 py-2.5 rounded-lg bg-gray-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-gray-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
+                >
+                  {isUpdating ? "Updating..." : "Mark as Invalid"}
                 </button>
-                <button className="flex-1 py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-red-600 active:scale-[0.98] transition-all duration-200">
-                  Mark as Resolved
+                <button
+                  onClick={() => handleStatusChange("resolved")}
+                  disabled={isUpdating}
+                  className="flex-1 py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-red-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
+                >
+                  {isUpdating ? "Updating..." : "Mark as Resolved"}
                 </button>
               </div>
             </>

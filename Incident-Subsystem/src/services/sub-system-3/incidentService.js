@@ -87,8 +87,33 @@ const getAllIncidents = async () => {
   return data;
 };
 
+const updateIncident = async (id, updates) => {
+  if (!isAuthenticated()) {
+    throw new Error("You must be logged in to update an incident.");
+  }
+
+  const response = await fetch(`${API_BASE}/incidents/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify(updates),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to update incident.");
+  }
+
+  return data;
+};
+
 export const incidentService = {
   submitReport,
   getMyIncidents,
   getAllIncidents,
+  updateIncident,
 };

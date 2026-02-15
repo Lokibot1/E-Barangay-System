@@ -4,6 +4,7 @@ import ComplaintForm from "../../components/sub-system-3/Complaintform";
 import ProgressIndicator from "../../components/sub-system-3/ProgressIndicator";
 import Toast from "../../components/shared/modals/Toast";
 import { fileComplaint } from "../../services/sub-system-3/complaintService";
+import { getUser } from "../../services/sub-system-3/loginService";
 import themeTokens from "../../Themetokens";
 import { useLanguage } from "../../context/LanguageContext";
 
@@ -14,14 +15,24 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
   const navigate = useNavigate();
 
   const [currentStep, setCurrentStep] = useState(1);
+
+  const getLoggedInName = () => {
+    const user = getUser();
+    if (!user) return "";
+    const parts = [user.first_name, user.middle_name, user.last_name].filter(Boolean);
+    return parts.join(" ");
+  };
+
   const [formData, setFormData] = useState({
     complaintDate: "",
     complaintTime: "",
     location: "",
+    latitude: null,
+    longitude: null,
     complaintType: "",
     severity: "",
     description: "",
-    complainantName: "",
+    complainantName: getLoggedInName(),
     complainantContact: "",
     respondentName: "",
     respondentAddress: "",
@@ -46,6 +57,16 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
     setToasts((prev) => prev.filter((x) => x.id !== id));
   }, []);
 
+  // ─── Auto-fill complainant name on open ─────────────────────────────────────
+  useEffect(() => {
+    if (isOpen) {
+      const name = getLoggedInName();
+      if (name) {
+        setFormData((prev) => ({ ...prev, complainantName: name }));
+      }
+    }
+  }, [isOpen]);
+
   // ─── Reset on close ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!isOpen) {
@@ -56,10 +77,12 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
           complaintDate: "",
           complaintTime: "",
           location: "",
+          latitude: null,
+          longitude: null,
           complaintType: "",
           severity: "",
           description: "",
-          complainantName: "",
+          complainantName: getLoggedInName(),
           complainantContact: "",
           respondentName: "",
           respondentAddress: "",

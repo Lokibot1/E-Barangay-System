@@ -28,6 +28,9 @@ export const fileComplaint = async (formData) => {
   body.append("desired_resolution", formData.desiredResolution);
   body.append("additional_notes", formData.additionalNotes);
 
+  if (formData.latitude) body.append("latitude", formData.latitude);
+  if (formData.longitude) body.append("longitude", formData.longitude);
+
   // Witnesses — join into a single string (backend stores as one field)
   const witnesses = formData.witnesses.filter((w) => w.trim() !== "");
   if (witnesses.length > 0) {
@@ -36,7 +39,7 @@ export const fileComplaint = async (formData) => {
 
   // Evidence file (backend stores as evidence_path)
   if (formData.attachments && formData.attachments.length > 0) {
-    body.append("evidence_path", formData.attachments[0]);
+    body.append("evidence", formData.attachments[0]);
   }
 
   const response = await fetch(`${API_BASE}/complaints`, {
@@ -74,6 +77,30 @@ export const getMyComplaints = async () => {
 
   if (!response.ok) {
     throw new Error(data.message || "Failed to fetch complaints.");
+  }
+
+  return data;
+};
+
+export const updateComplaint = async (id, updates) => {
+  if (!isAuthenticated()) {
+    throw new Error("You must be logged in to update a complaint.");
+  }
+
+  const response = await fetch(`${API_BASE}/complaints/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify(updates),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to update complaint.");
   }
 
   return data;
