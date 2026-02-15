@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -9,6 +9,8 @@ import {
 import "leaflet/dist/leaflet.css";
 import themeTokens from "../../../Themetokens";
 import AdminReportDetailsModal from "../../../components/sub-system-3/AdminReportDetailsModal";
+import { incidentService } from "../../../services/sub-system-3/incidentService";
+import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
 
 // ── Barangay Gulod boundary (OSM Relation 270990) ──────────────────────
 const BARANGAY_BOUNDARY = [
@@ -216,543 +218,56 @@ const isPointInPolygon = (point, polygon) => {
   return inside;
 };
 
-// ── Mock incident data ─────────────────────────────────────────────────
-const MOCK_INCIDENTS = [
-  {
-    id: "2026-02241025",
-    type: "Traffic & Parking",
-    details: "Illegally parked vehicles along Quirino Highway near Gulod intersection causing traffic",
-    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut enim lorem, fringilla in ullamcorper sit amet, facilisis vel leo. Pellentesque volutpat nisi a malesuada iaculis. Nam vitae purus laoreet nisi condimentum lobortis ut ac quam. Vivamus porta sapien nec mi tincidunt.",
-    date: "2026-01-02",
-    lastUpdated: "2026-01-02T12:03:29",
-    reportedBy: "JONOTA, CHRISTOPHER B.",
-    status: "pending",
-    lat: 14.7155,
-    lng: 121.0375,
-    address: "Ciudad Regina Subdivision, 26 Calle Luz, Batasan Hills, Quezon City, 1126 Metro Manila",
-    plusCode: "M3MR+9W Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1594230420743-52fa9e2f1322?w=600",
-      "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=600",
-    ],
-    updates: [
-      {
-        timestamp: "2026-01-02T08:23:56",
-        text: "Filed an incident.",
-        type: "status",
-      },
-      {
-        timestamp: "2026-01-02T12:03:29",
-        text: "Insufficient images / blurred images, upload photo again until today",
-        type: "note",
-        author: "KGD. Juan Dela Cruz",
-      },
-    ],
-  },
-  {
-    id: "2026-02241026",
-    type: "Traffic & Parking",
-    details: "Illegally parked vehicles along residential area blocking pedestrian access",
-    description: "Multiple vehicles have been parked along the narrow residential street for several days, blocking pedestrian walkways and preventing emergency vehicle access. Residents have complained about the obstruction.",
-    date: "2026-01-02",
-    lastUpdated: "2026-01-02T14:20:00",
-    reportedBy: "JONOTA, CHRISTOPHER B.",
-    status: "pending",
-    lat: 14.7130,
-    lng: 121.0432,
-    address: "Purok 7, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MR+5X Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1594230420743-52fa9e2f1322?w=600",
-    ],
-  },
-  {
-    id: "2026-02241027",
-    type: "Waste Management",
-    details: "Overflowing garbage bins near Gulod Barangay Hall causing foul odor",
-    description: "The community garbage bins located near the barangay hall have not been collected for over a week. The overflowing waste is causing a strong foul odor and attracting pests in the area.",
-    date: "2026-01-15",
-    lastUpdated: "2026-01-16T09:15:00",
-    reportedBy: "GARCIA, MARIA L.",
-    status: "dispatched",
-    lat: 14.7085,
-    lng: 121.0395,
-    address: "Near Gulod Barangay Hall, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MQ+8G Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=600",
-    ],
-  },
-  {
-    id: "2026-02241028",
-    type: "Roads & Infrastructure",
-    details: "Large pothole on the main road near the barangay health center",
-    description: "A large pothole approximately 2 feet wide has formed on the main road near the health center. Several motorcycles have already been affected and it poses danger especially at night when visibility is low.",
-    date: "2026-01-20",
-    lastUpdated: "2026-01-21T08:00:00",
-    reportedBy: "SANTOS, JUAN P.",
-    status: "dispatched",
-    lat: 14.7095,
-    lng: 121.0360,
-    address: "Main Road, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MQ+9C Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600",
-    ],
-  },
-  {
-    id: "2026-02241029",
-    type: "Traffic & Parking",
-    details: "Double parking issue near Geneva Gardens entrance blocking emergency lane",
-    description: "Vehicles are consistently double parked near the Geneva Gardens entrance, completely blocking the emergency lane. This has been an ongoing issue during peak hours from 7-9 AM and 5-7 PM.",
-    date: "2026-01-25",
-    lastUpdated: "2026-01-25T18:45:00",
-    reportedBy: "REYES, ANA M.",
-    status: "active",
-    lat: 14.7105,
-    lng: 121.0460,
-    address: "Geneva Gardens Entrance, Barangay Gulod, Novaliches, Quezon City",
-    plusCode: "M3MR+3W Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1594230420743-52fa9e2f1322?w=600",
-    ],
-  },
-  {
-    id: "2026-02241030",
-    type: "Draining & Flooding",
-    details: "Clogged drainage causing street flooding during heavy rain near purok 5",
-    description: "The main drainage canal near Purok 5 is severely clogged with debris and solid waste, causing significant street flooding even during moderate rainfall. Several homes have experienced minor flooding.",
-    date: "2026-01-28",
-    lastUpdated: "2026-01-29T07:30:00",
-    reportedBy: "DELA CRUZ, PEDRO R.",
-    status: "active",
-    lat: 14.7070,
-    lng: 121.0420,
-    address: "Purok 5, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MQ+4M Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1547683905-f686c993aae5?w=600",
-    ],
-  },
-  {
-    id: "2026-02241031",
-    type: "Pollution",
-    details: "Excessive noise from construction site during nighttime in residential zone",
-    description: "A construction site near the residential area has been operating heavy machinery past 10 PM, violating noise ordinance regulations. Multiple residents have lost sleep and complained about the situation.",
-    date: "2026-02-01",
-    lastUpdated: "2026-02-02T11:00:00",
-    reportedBy: "BAUTISTA, ELENA S.",
-    status: "resolved",
-    lat: 14.7060,
-    lng: 121.0445,
-    address: "Residential Zone, Barangay Gulod, Novaliches, Quezon City",
-    plusCode: "M3MQ+2R Quezon City, Metro Manila",
-    photos: [],
-  },
-  {
-    id: "2026-02241032",
-    type: "Stray Animals",
-    details: "Pack of stray dogs roaming near the elementary school posing risk to children",
-    description: "A pack of approximately 6-8 stray dogs has been spotted near the elementary school grounds. They have shown aggressive behavior towards children during morning and afternoon dismissal times.",
-    date: "2026-02-01",
-    lastUpdated: "2026-02-01T15:20:00",
-    reportedBy: "LOPEZ, RICARDO T.",
-    status: "resolved",
-    lat: 14.7175,
-    lng: 121.0410,
-    address: "Near Gulod Elementary School, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3PR+5H Quezon City, Metro Manila",
-    photos: [],
-  },
-  {
-    id: "2026-02241033",
-    type: "Waste Management",
-    details: "Illegal dumping of construction debris near the creek behind the chapel",
-    description: "Construction waste including cement, broken tiles, and wood scraps have been illegally dumped near the creek behind the chapel. This is polluting the waterway and blocking water flow.",
-    date: "2026-02-03",
-    lastUpdated: "2026-02-03T10:45:00",
-    reportedBy: "MENDOZA, JOSEFA C.",
-    status: "pending",
-    lat: 14.7120,
-    lng: 121.0345,
-    address: "Behind Chapel, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MR+6A Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=600",
-    ],
-  },
-  {
-    id: "2026-02241034",
-    type: "Roads & Infrastructure",
-    details: "Broken street light on the main corner creating safety hazard at night",
-    description: "The street light at the main corner intersection has been broken for two weeks. The area becomes very dark at night, making it unsafe for pedestrians and motorists passing through.",
-    date: "2026-02-05",
-    lastUpdated: "2026-02-05T20:00:00",
-    reportedBy: "VILLANUEVA, MARK D.",
-    status: "active",
-    lat: 14.7092,
-    lng: 121.0370,
-    address: "Main Corner, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MQ+8E Quezon City, Metro Manila",
-    photos: [],
-  },
-  {
-    id: "2026-02241035",
-    type: "Traffic & Parking",
-    details: "Tricycles blocking the main road during rush hour near the market area",
-    description: "Tricycle drivers congregate at the intersection during peak hours, blocking two-way traffic. The situation is worst from 7-8 AM and 5-6 PM causing significant delays for commuters.",
-    date: "2026-02-06",
-    lastUpdated: "2026-02-06T08:30:00",
-    reportedBy: "AQUINO, TERESA G.",
-    status: "pending",
-    lat: 14.7145,
-    lng: 121.0368,
-    address: "Market Area, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MR+7D Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1594230420743-52fa9e2f1322?w=600",
-    ],
-  },
-  {
-    id: "2026-02241036",
-    type: "Waste Management",
-    details: "Uncollected garbage bags piled up at the corner of Purok 3 for three days",
-    description: "Residents of Purok 3 have placed their garbage bags at the designated collection point, but the garbage truck has not come for three consecutive days. The waste is attracting stray animals and flies.",
-    date: "2026-02-06",
-    lastUpdated: "2026-02-06T10:15:00",
-    reportedBy: "CRUZ, ROBERTO M.",
-    status: "pending",
-    lat: 14.7098,
-    lng: 121.0345,
-    address: "Purok 3, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MQ+9A Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=600",
-    ],
-  },
-  {
-    id: "2026-02241037",
-    type: "Draining & Flooding",
-    details: "Manhole cover missing on residential street posing danger to pedestrians",
-    description: "The manhole cover near the chapel has been missing for over a week. The open manhole is a significant safety hazard, especially at night when visibility is poor. Temporary barriers have been placed but keep getting moved.",
-    date: "2026-02-04",
-    lastUpdated: "2026-02-05T09:00:00",
-    reportedBy: "FERNANDEZ, LILIA A.",
-    status: "dispatched",
-    lat: 14.7110,
-    lng: 121.0440,
-    address: "Near Chapel, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MR+4P Quezon City, Metro Manila",
-    photos: [],
-  },
-  {
-    id: "2026-02241038",
-    type: "Pollution",
-    details: "Open burning of garbage in vacant lot producing thick smoke in residential area",
-    description: "Someone has been burning garbage in the vacant lot behind the residential houses. The thick smoke is affecting residents with respiratory conditions and young children. This occurs almost every evening.",
-    date: "2026-02-03",
-    lastUpdated: "2026-02-04T07:45:00",
-    reportedBy: "RAMOS, GLORIA F.",
-    status: "dispatched",
-    lat: 14.7135,
-    lng: 121.0345,
-    address: "Vacant Lot, Purok 6, Barangay Gulod, Novaliches, Quezon City",
-    plusCode: "M3MR+6A Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=600",
-    ],
-  },
-  {
-    id: "2026-02241039",
-    type: "Roads & Infrastructure",
-    details: "Collapsed concrete sidewalk near the barangay hall entrance causing trip hazard",
-    description: "A section of the concrete sidewalk near the barangay hall main entrance has collapsed, creating a 6-inch drop that is a trip hazard for pedestrians, especially the elderly and children.",
-    date: "2026-02-01",
-    lastUpdated: "2026-02-02T14:00:00",
-    reportedBy: "GARCIA, MARIA L.",
-    status: "active",
-    lat: 14.7082,
-    lng: 121.0400,
-    address: "Near Barangay Hall, Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MQ+8H Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600",
-    ],
-  },
-  {
-    id: "2026-02241040",
-    type: "Stray Animals",
-    details: "Aggressive stray cat colony near the daycare center scratching children",
-    description: "A colony of approximately 10 stray cats has taken up residence near the daycare center. Some cats have become aggressive and have scratched two children this week. Parents are concerned about rabies risk.",
-    date: "2026-02-07",
-    lastUpdated: "2026-02-07T11:30:00",
-    reportedBy: "SANTOS, JUAN P.",
-    status: "pending",
-    lat: 14.7165,
-    lng: 121.0430,
-    address: "Near Daycare Center, Barangay Gulod, Novaliches, Quezon City",
-    plusCode: "M3PR+3N Quezon City, Metro Manila",
-    photos: [],
-  },
-  {
-    id: "2026-02241041",
-    type: "Traffic & Parking",
-    details: "Delivery trucks blocking narrow residential street during daytime hours",
-    description: "Large delivery trucks have been parking along the narrow residential street for hours during the day while making deliveries to a nearby warehouse. The trucks completely block two-way traffic.",
-    date: "2026-02-07",
-    lastUpdated: "2026-02-07T16:00:00",
-    reportedBy: "PEREZ, ANTONIO J.",
-    status: "pending",
-    lat: 14.7125,
-    lng: 121.0435,
-    address: "Residential Street, Barangay Gulod, Novaliches, Quezon City",
-    plusCode: "M3MR+5N Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1594230420743-52fa9e2f1322?w=600",
-    ],
-  },
-  {
-    id: "2026-02241042",
-    type: "Draining & Flooding",
-    details: "Storm drain overflowing onto the road every time it rains near Purok 2",
-    description: "The storm drain near Purok 2 has been consistently overflowing during even light rainfall, causing flooding on the road. The drain appears to be clogged with leaves and debris.",
-    date: "2026-02-05",
-    lastUpdated: "2026-02-06T06:00:00",
-    reportedBy: "MORALES, CYNTHIA R.",
-    status: "dispatched",
-    lat: 14.7068,
-    lng: 121.0440,
-    address: "Purok 2, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MQ+3P Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1547683905-f686c993aae5?w=600",
-    ],
-  },
-  {
-    id: "2026-02241043",
-    type: "Waste Management",
-    details: "Abandoned refrigerator dumped on sidewalk near the basketball court",
-    description: "An old refrigerator has been abandoned on the sidewalk near the basketball court for over a week. It is an eyesore and takes up the entire walkway, forcing pedestrians to walk on the road.",
-    date: "2026-01-30",
-    lastUpdated: "2026-01-31T13:00:00",
-    reportedBy: "DELA CRUZ, PEDRO R.",
-    status: "rejected",
-    lat: 14.7150,
-    lng: 121.0440,
-    address: "Near Basketball Court, Barangay Gulod, Novaliches, Quezon City",
-    plusCode: "M3MR+8P Quezon City, Metro Manila",
-    photos: [],
-  },
-  {
-    id: "2026-02241044",
-    type: "Roads & Infrastructure",
-    details: "Water pipe leak causing road erosion and water waste on main street",
-    description: "A water pipe beneath the main street has been leaking for several days, causing water to pool on the road surface. The constant water flow is eroding the pavement and creating muddy conditions.",
-    date: "2026-02-02",
-    lastUpdated: "2026-02-03T08:30:00",
-    reportedBy: "REYES, ANA M.",
-    status: "active",
-    lat: 14.7140,
-    lng: 121.0350,
-    address: "Main Street, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MR+7B Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600",
-    ],
-  },
-  {
-    id: "2026-02241045",
-    type: "Pollution",
-    details: "Auto repair shop discharging oil waste into drainage canal near creek",
-    description: "An auto repair shop has been discharging used motor oil and other automotive fluids directly into the drainage canal. The oil is visible in the water and is flowing towards the nearby creek.",
-    date: "2026-01-28",
-    lastUpdated: "2026-01-30T10:00:00",
-    reportedBy: "BAUTISTA, ELENA S.",
-    status: "rejected",
-    lat: 14.7088,
-    lng: 121.0465,
-    address: "Near Creek, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MQ+8W Quezon City, Metro Manila",
-    photos: [],
-  },
-  {
-    id: "2026-02241046",
-    type: "Traffic & Parking",
-    details: "Unauthorized road construction blocking half of the two-lane road",
-    description: "A private construction project has placed barriers blocking the entire right lane of the two-lane road without any permit or traffic management plan, causing dangerous one-lane traffic flow.",
-    date: "2026-02-08",
-    lastUpdated: "2026-02-08T09:00:00",
-    reportedBy: "LOPEZ, RICARDO T.",
-    status: "pending",
-    lat: 14.7170,
-    lng: 121.0395,
-    address: "Two-Lane Road, Barangay Gulod, Novaliches, Quezon City",
-    plusCode: "M3PR+4G Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1594230420743-52fa9e2f1322?w=600",
-    ],
-  },
-  {
-    id: "2026-02241047",
-    type: "Stray Animals",
-    details: "Roaming stray dogs chasing joggers at the barangay park early morning",
-    description: "Multiple stray dogs have been chasing joggers and walkers at the barangay park during early morning hours (5-7 AM). Two joggers have reported being bitten in the past week.",
-    date: "2026-02-04",
-    lastUpdated: "2026-02-04T18:30:00",
-    reportedBy: "MENDOZA, JOSEFA C.",
-    status: "active",
-    lat: 14.7115,
-    lng: 121.0460,
-    address: "Barangay Park, Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MR+4W Quezon City, Metro Manila",
-    photos: [],
-  },
-  {
-    id: "2026-02241048",
-    type: "Waste Management",
-    details: "Clogged communal trash bin attracting rats and cockroaches in Purok 4",
-    description: "The communal trash bin in Purok 4 is severely overfilled and has not been emptied in over a week. Rats and cockroaches are now visible around the area, raising health concerns among residents.",
-    date: "2026-02-07",
-    lastUpdated: "2026-02-07T14:45:00",
-    reportedBy: "AQUINO, TERESA G.",
-    status: "dispatched",
-    lat: 14.7100,
-    lng: 121.0385,
-    address: "Purok 4, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MQ+9F Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=600",
-    ],
-  },
-];
+// ── Helpers to normalize API responses into the shape the UI expects ───
+const parseIncidentType = (type) => {
+  if (!type) return "Other";
+  try {
+    const parsed = JSON.parse(type);
+    return Array.isArray(parsed) ? parsed.join(", ") : String(parsed);
+  } catch {
+    return String(type);
+  }
+};
 
-// ── Mock complaints data ──────────────────────────────────────────────
-const MOCK_COMPLAINTS = [
-  {
-    id: "2026-CMP-0001",
-    type: "Noise Complaint",
-    details: "Loud karaoke from a neighbor's house past midnight disturbing the whole street",
-    description: "Resident reports extremely loud karaoke singing every night from 10 PM to 3 AM coming from the house at the end of the street. Multiple households are affected and cannot sleep.",
-    date: "2026-01-05",
-    lastUpdated: "2026-01-05T22:30:00",
-    reportedBy: "RAMOS, JOSE A.",
-    status: "pending",
-    lat: 14.7120,
-    lng: 121.0390,
-    address: "Purok 3, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MR+4H Quezon City, Metro Manila",
-    photos: [],
-  },
-  {
-    id: "2026-CMP-0002",
-    type: "Neighbor Dispute",
-    details: "Property boundary dispute between two households causing verbal altercation",
-    description: "Two neighboring households are in a heated dispute over the property boundary line. The conflict has escalated to verbal altercations and is disturbing the peace of the community.",
-    date: "2026-01-10",
-    lastUpdated: "2026-01-11T09:00:00",
-    reportedBy: "MENDOZA, LINDA C.",
-    status: "dispatched",
-    lat: 14.7095,
-    lng: 121.0410,
-    address: "Purok 5, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MQ+7R Quezon City, Metro Manila",
-    photos: [],
-  },
-  {
-    id: "2026-CMP-0003",
-    type: "Public Disturbance",
-    details: "Group of individuals drinking and causing disturbance near the basketball court",
-    description: "A group of individuals gather every night near the basketball court to drink alcohol. They become rowdy, shout obscenities, and leave broken bottles on the court, making it unsafe for children.",
-    date: "2026-01-12",
-    lastUpdated: "2026-01-13T08:15:00",
-    reportedBy: "VILLANUEVA, MARK R.",
-    status: "active",
-    lat: 14.7110,
-    lng: 121.0400,
-    address: "Near Basketball Court, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MR+2C Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1567521464027-f127ff144326?w=600",
-    ],
-  },
-  {
-    id: "2026-CMP-0004",
-    type: "Illegal Activity",
-    details: "Suspected illegal gambling operation in a residential area in Purok 2",
-    description: "Residents report a suspected illegal gambling operation running daily in a house in Purok 2. Large groups of people gather every afternoon and money exchanges are visible from the street.",
-    date: "2026-01-18",
-    lastUpdated: "2026-01-19T11:30:00",
-    reportedBy: "SANTOS, ANNA B.",
-    status: "dispatched",
-    lat: 14.7088,
-    lng: 121.0395,
-    address: "Purok 2, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MQ+8G Quezon City, Metro Manila",
-    photos: [],
-  },
-  {
-    id: "2026-CMP-0005",
-    type: "Property Damage",
-    details: "Vandalism on barangay hall wall and damaged public bench in the plaza",
-    description: "Unknown individuals vandalized the barangay hall's outer wall with graffiti and damaged the public bench near the plaza. The incident likely occurred overnight.",
-    date: "2026-01-22",
-    lastUpdated: "2026-01-22T07:00:00",
-    reportedBy: "GARCIA, MARIA L.",
-    status: "rejected",
-    lat: 14.7085,
-    lng: 121.0395,
-    address: "Near Gulod Barangay Hall, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MQ+8G Quezon City, Metro Manila",
-    photos: [
-      "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600",
-    ],
-  },
-  {
-    id: "2026-CMP-0006",
-    type: "Noise Complaint",
-    details: "Construction noise from a nearby house starting at 5 AM daily",
-    description: "A residential construction project starts operating heavy machinery and hammering at 5 AM every day including weekends. Multiple residents have been woken up and are requesting intervention.",
-    date: "2026-01-28",
-    lastUpdated: "2026-01-29T10:00:00",
-    reportedBy: "REYES, ANA M.",
-    status: "pending",
-    lat: 14.7130,
-    lng: 121.0432,
-    address: "Purok 7, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MR+5X Quezon City, Metro Manila",
-    photos: [],
-  },
-  {
-    id: "2026-CMP-0007",
-    type: "Public Disturbance",
-    details: "Stray dogs from a neighbor's property chasing pedestrians and children",
-    description: "A resident keeps multiple dogs that roam freely and have chased pedestrians and children on the street. Several near-bite incidents have been reported.",
-    date: "2026-02-01",
-    lastUpdated: "2026-02-02T14:00:00",
-    reportedBy: "DELA CRUZ, PEDRO R.",
-    status: "active",
-    lat: 14.7105,
-    lng: 121.0445,
-    address: "Purok 6, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MR+2P Quezon City, Metro Manila",
-    photos: [],
-  },
-  {
-    id: "2026-CMP-0008",
-    type: "Neighbor Dispute",
-    details: "Water drainage from upper lot flooding lower lot resident's property",
-    description: "The resident on the upper lot has redirected their water drainage causing persistent flooding on the lower lot property. The affected resident's garden and foundation are being damaged.",
-    date: "2026-02-05",
-    lastUpdated: "2026-02-06T16:30:00",
-    reportedBy: "BAUTISTA, ELENA S.",
-    status: "pending",
-    lat: 14.7098,
-    lng: 121.0420,
-    address: "Purok 4, Barangay Gulod, Novaliches, Quezon City, Metro Manila",
-    plusCode: "M3MQ+9M Quezon City, Metro Manila",
-    photos: [],
-  },
-];
+const normalizeIncident = (item) => ({
+  id: String(item.id),
+  type: parseIncidentType(item.type),
+  details: item.description || "",
+  description: item.additional_notes || item.description || "",
+  date: (item.created_at || "").split("T")[0],
+  lastUpdated: item.updated_at || item.created_at || "",
+  reportedBy: item.user
+    ? `${item.user.last_name || ""}, ${item.user.first_name || ""} ${item.user.middle_name ? item.user.middle_name.charAt(0) + "." : ""}`.toUpperCase()
+    : "UNKNOWN",
+  status: (item.status || "pending").toLowerCase(),
+  lat: parseFloat(item.latitude) || 0,
+  lng: parseFloat(item.longitude) || 0,
+  address: item.location || "",
+  plusCode: "",
+  photos: item.evidence ? [`http://localhost:8000/storage/${item.evidence}`] : [],
+  updates: [],
+});
+
+const normalizeComplaint = (item) => ({
+  id: String(item.id),
+  type: item.type || "Other",
+  details: item.description || "",
+  description: item.additional_notes || item.description || "",
+  date: item.incident_date || (item.created_at || "").split("T")[0],
+  lastUpdated: item.updated_at || item.created_at || "",
+  reportedBy: item.user
+    ? `${item.user.last_name || ""}, ${item.user.first_name || ""} ${item.user.middle_name ? item.user.middle_name.charAt(0) + "." : ""}`.toUpperCase()
+    : item.complainant_name
+      ? item.complainant_name.toUpperCase()
+      : "UNKNOWN",
+  status: (item.status || "pending").toLowerCase(),
+  lat: parseFloat(item.latitude) || 0,
+  lng: parseFloat(item.longitude) || 0,
+  address: item.location || "",
+  plusCode: "",
+  photos: item.evidence_path ? [`http://localhost:8000/storage/${item.evidence_path}`] : [],
+  updates: [],
+});
 
 // ── Status config ──────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -843,21 +358,48 @@ const AdminIncidentReports = () => {
   // ── Page tab state (Incidents vs Complaints) ───────────────────────
   const [pageTab, setPageTab] = useState("incidents");
 
+  // ── API data state ────────────────────────────────────────────────
+  const [incidents, setIncidents] = useState([]);
+  const [complaints, setComplaints] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [incData, compData] = await Promise.all([
+        incidentService.getAllIncidents(),
+        getAllComplaints(),
+      ]);
+      const incArray = Array.isArray(incData) ? incData : incData.data || [];
+      const compArray = Array.isArray(compData) ? compData : compData.data || [];
+      setIncidents(incArray.map(normalizeIncident));
+      setComplaints(compArray.map(normalizeComplaint));
+    } catch (err) {
+      console.error("Failed to fetch reports:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
   // ── Modal state ─────────────────────────────────────────────────────
   const [selectedIncident, setSelectedIncident] = useState(null);
 
   // ── Filter state ───────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [startDate, setStartDate] = useState("2026-01-01");
-  const [endDate, setEndDate] = useState("2026-02-28");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const ROWS_PER_PAGE = 10;
 
   // ── Map legend filter state ────────────────────────────────────────
   const [mapType, setMapType] = useState("All Types");
-  const [mapStartDate, setMapStartDate] = useState("2026-01-01");
-  const [mapEndDate, setMapEndDate] = useState("2026-02-28");
+  const [mapStartDate, setMapStartDate] = useState("");
+  const [mapEndDate, setMapEndDate] = useState("");
   const [visibleStatuses, setVisibleStatuses] = useState({
     resolved: true,
     dispatched: true,
@@ -871,7 +413,7 @@ const AdminIncidentReports = () => {
   };
 
   // ── Dynamic data source based on page tab ─────────────────────────
-  const dataSource = pageTab === "incidents" ? MOCK_INCIDENTS : MOCK_COMPLAINTS;
+  const dataSource = pageTab === "incidents" ? incidents : complaints;
   const typeOptions = pageTab === "incidents" ? INCIDENT_TYPES : COMPLAINT_TYPES;
 
   // Reset filters when switching page tabs
@@ -889,10 +431,10 @@ const AdminIncidentReports = () => {
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         const matchesSearch =
-          inc.type.toLowerCase().includes(q) ||
-          inc.details.toLowerCase().includes(q) ||
-          inc.reportedBy.toLowerCase().includes(q) ||
-          inc.id.toLowerCase().includes(q);
+          (inc.type || "").toLowerCase().includes(q) ||
+          (inc.details || "").toLowerCase().includes(q) ||
+          (inc.reportedBy || "").toLowerCase().includes(q) ||
+          String(inc.id).toLowerCase().includes(q);
         if (!matchesSearch) return false;
       }
       if (startDate && inc.date < startDate) return false;
@@ -1069,29 +611,35 @@ const AdminIncidentReports = () => {
             <table className="w-full text-sm font-kumbh table-fixed">
               <thead>
                 <tr className={`${isDark ? "bg-slate-700 border-y border-slate-600" : "bg-gray-100 border-y border-gray-200"}`}>
-                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[25%]`}>
+                  <th className={`text-center px-3 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[6%]`}>
+                    #
+                  </th>
+                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[24%]`}>
                     {pageTab === "incidents" ? "Type of Incident" : "Type of Complaint"}
                   </th>
-                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[20%]`}>
+                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[18%]`}>
                     Date
                   </th>
-                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[30%]`}>
+                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[28%]`}>
                     Reported By
                   </th>
-                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[25%]`}>
-                    Incident Number
+                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[24%]`}>
+                    {pageTab === "incidents" ? "Incident ID" : "Complaint ID"}
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedData.length > 0 ? (
-                  paginatedData.map((inc) => (
+                  paginatedData.map((inc, index) => (
                     <tr
                       key={inc.id}
                       onClick={() => setSelectedIncident(inc)}
-                      className={`border-b ${t.cardBorder} ${isDark ? "hover:bg-slate-200 hover:text-slate-800" : "hover:bg-gray-50"} transition-colors cursor-pointer`}
+                      className={`border-b ${t.cardBorder} ${isDark ? "hover:bg-slate-600" : "hover:bg-gray-50"} transition-colors cursor-pointer`}
                     >
-                      <td className={`text-left px-4 py-3 ${t.cardText} truncate`}>
+                      <td className={`text-center px-3 py-3 ${t.cardText}`}>
+                        {(currentPage - 1) * ROWS_PER_PAGE + index + 1}
+                      </td>
+                      <td className={`text-left px-4 py-3 ${t.cardText} truncate capitalize`}>
                         {inc.type}
                       </td>
                       <td className={`text-left px-4 py-3 ${t.cardText} whitespace-nowrap`}>
@@ -1112,10 +660,10 @@ const AdminIncidentReports = () => {
                 ) : (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className={`px-4 py-8 text-center ${t.subtleText}`}
                     >
-                      No incidents found for the selected filters.
+                      {loading ? "Loading reports..." : "No reports found for the selected filters."}
                     </td>
                   </tr>
                 )}
@@ -1180,7 +728,7 @@ const AdminIncidentReports = () => {
         >
           <div className="flex flex-col lg:flex-row">
             {/* Map Legend / Filters */}
-            <div className={`lg:w-[280px] flex-shrink-0 p-5 border-b lg:border-b-0 lg:border-r ${isDark ? "border-slate-700" : "border-gray-200"}`}>
+            <div className={`lg:w-[300px] flex-shrink-0 p-5 border-b lg:border-b-0 lg:border-r ${isDark ? "border-slate-700" : "border-gray-200"} relative z-10`}>
               {/* Legend header */}
               <div className="flex items-center gap-2 mb-5">
                 <svg
@@ -1209,7 +757,7 @@ const AdminIncidentReports = () => {
                 <select
                   value={mapType}
                   onChange={(e) => setMapType(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg border ${t.cardBorder} text-sm font-kumbh ${t.cardText} focus:outline-none focus:ring-2 focus:ring-green-500`}
+                  className={`w-full px-3 py-2 rounded-lg border ${t.cardBorder} ${isDark ? "bg-slate-700 text-slate-200" : "bg-white text-gray-800"} text-sm font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500`}
                 >
                   {typeOptions.map((type) => (
                     <option key={type} value={type}>
@@ -1220,7 +768,7 @@ const AdminIncidentReports = () => {
               </div>
 
               {/* Date Range */}
-              <div className="mb-5">
+              <div className="mb-6">
                 <label className={`block text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} mb-1.5 font-kumbh uppercase`}>
                   Date
                 </label>
@@ -1229,14 +777,14 @@ const AdminIncidentReports = () => {
                     type="date"
                     value={mapStartDate}
                     onChange={(e) => setMapStartDate(e.target.value)}
-                    className={`flex-1 px-2 py-2 rounded-lg border ${t.cardBorder} text-xs font-kumbh ${t.cardText} focus:outline-none focus:ring-2 focus:ring-green-500`}
+                    className={`flex-1 px-2 py-2 rounded-lg border ${t.cardBorder} ${isDark ? "bg-slate-700 text-slate-200" : "bg-white text-gray-800"} text-xs font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500`}
                   />
                   <span className={`text-xs ${t.subtleText}`}>-</span>
                   <input
                     type="date"
                     value={mapEndDate}
                     onChange={(e) => setMapEndDate(e.target.value)}
-                    className={`flex-1 px-2 py-2 rounded-lg border ${t.cardBorder} text-xs font-kumbh ${t.cardText} focus:outline-none focus:ring-2 focus:ring-green-500`}
+                    className={`flex-1 px-2 py-2 rounded-lg border ${t.cardBorder} ${isDark ? "bg-slate-700 text-slate-200" : "bg-white text-gray-800"} text-xs font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500`}
                   />
                 </div>
               </div>
@@ -1245,18 +793,18 @@ const AdminIncidentReports = () => {
               <div className="space-y-3">
                 {/* Resolved */}
                 <div
-                  className={`p-3 rounded-lg border ${visibleStatuses.resolved ? (isDark ? "border-green-400 bg-green-50" : "border-green-300 bg-green-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
+                  className={`p-3 rounded-lg border ${visibleStatuses.resolved ? (isDark ? "border-green-500 bg-green-900/30" : "border-green-300 bg-green-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded-full bg-green-500" />
-                      <span className={`text-sm font-bold ${visibleStatuses.resolved && isDark ? "text-green-800" : "text-green-700"} font-kumbh`}>
+                      <span className={`text-sm font-bold ${isDark ? "text-green-400" : "text-green-700"} font-kumbh`}>
                         RESOLVED
                       </span>
                     </div>
                     <button
                       onClick={() => toggleStatus("resolved")}
-                      className={`${isDark ? "text-slate-400 hover:text-slate-800 hover:bg-slate-200" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
+                      className={`${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-600" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
                     >
                       <svg
                         className="w-5 h-5"
@@ -1282,25 +830,25 @@ const AdminIncidentReports = () => {
                       </svg>
                     </button>
                   </div>
-                  <p className={`text-xs ${visibleStatuses.resolved && isDark ? "text-gray-600" : "text-gray-500"} font-kumbh`}>
+                  <p className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}>
                     Issue has been cleared or fixed
                   </p>
                 </div>
 
                 {/* Dispatched */}
                 <div
-                  className={`p-3 rounded-lg border ${visibleStatuses.dispatched ? (isDark ? "border-amber-400 bg-amber-50" : "border-amber-300 bg-amber-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
+                  className={`p-3 rounded-lg border ${visibleStatuses.dispatched ? (isDark ? "border-amber-500 bg-amber-900/30" : "border-amber-300 bg-amber-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded-full bg-amber-400" />
-                      <span className={`text-sm font-bold ${visibleStatuses.dispatched && isDark ? "text-amber-800" : "text-amber-700"} font-kumbh`}>
+                      <span className={`text-sm font-bold ${isDark ? "text-amber-400" : "text-amber-700"} font-kumbh`}>
                         DISPATCHED
                       </span>
                     </div>
                     <button
                       onClick={() => toggleStatus("dispatched")}
-                      className={`${isDark ? "text-slate-400 hover:text-slate-800 hover:bg-slate-200" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
+                      className={`${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-600" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
                     >
                       <svg
                         className="w-5 h-5"
@@ -1326,25 +874,25 @@ const AdminIncidentReports = () => {
                       </svg>
                     </button>
                   </div>
-                  <p className={`text-xs ${visibleStatuses.dispatched && isDark ? "text-gray-600" : "text-gray-500"} font-kumbh`}>
+                  <p className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}>
                     Barangay officials dispatched on the site to check.
                   </p>
                 </div>
 
                 {/* In-Progress / Active */}
                 <div
-                  className={`p-3 rounded-lg border ${visibleStatuses.active ? (isDark ? "border-blue-400 bg-blue-50" : "border-blue-300 bg-blue-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
+                  className={`p-3 rounded-lg border ${visibleStatuses.active ? (isDark ? "border-blue-500 bg-blue-900/30" : "border-blue-300 bg-blue-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded-full bg-blue-600" />
-                      <span className={`text-sm font-bold ${visibleStatuses.active && isDark ? "text-blue-800" : "text-blue-700"} font-kumbh`}>
+                      <span className={`text-sm font-bold ${isDark ? "text-blue-400" : "text-blue-700"} font-kumbh`}>
                         IN-PROGRESS
                       </span>
                     </div>
                     <button
                       onClick={() => toggleStatus("active")}
-                      className={`${isDark ? "text-slate-400 hover:text-slate-800 hover:bg-slate-200" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
+                      className={`${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-600" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
                     >
                       <svg
                         className="w-5 h-5"
@@ -1370,25 +918,25 @@ const AdminIncidentReports = () => {
                       </svg>
                     </button>
                   </div>
-                  <p className={`text-xs ${visibleStatuses.active && isDark ? "text-gray-600" : "text-gray-500"} font-kumbh`}>
+                  <p className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}>
                     Barangay officials or maintenance teams are on-site.
                   </p>
                 </div>
 
                 {/* New / Active (pending) */}
                 <div
-                  className={`p-3 rounded-lg border ${visibleStatuses.pending ? (isDark ? "border-red-400 bg-red-50" : "border-red-300 bg-red-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
+                  className={`p-3 rounded-lg border ${visibleStatuses.pending ? (isDark ? "border-red-500 bg-red-900/30" : "border-red-300 bg-red-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded-full bg-red-500" />
-                      <span className={`text-sm font-bold ${visibleStatuses.pending && isDark ? "text-red-800" : "text-red-700"} font-kumbh`}>
+                      <span className={`text-sm font-bold ${isDark ? "text-red-400" : "text-red-700"} font-kumbh`}>
                         NEW/ACTIVE
                       </span>
                     </div>
                     <button
                       onClick={() => toggleStatus("pending")}
-                      className={`${isDark ? "text-slate-400 hover:text-slate-800 hover:bg-slate-200" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
+                      className={`${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-600" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
                     >
                       <svg
                         className="w-5 h-5"
@@ -1414,25 +962,25 @@ const AdminIncidentReports = () => {
                       </svg>
                     </button>
                   </div>
-                  <p className={`text-xs ${visibleStatuses.pending && isDark ? "text-gray-600" : "text-gray-500"} font-kumbh`}>
+                  <p className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}>
                     Issue recently reported and awaiting dispatch.
                   </p>
                 </div>
 
                 {/* Rejected */}
                 <div
-                  className={`p-3 rounded-lg border ${visibleStatuses.rejected ? (isDark ? "border-gray-400 bg-gray-50" : "border-gray-300 bg-gray-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
+                  className={`p-3 rounded-lg border ${visibleStatuses.rejected ? (isDark ? "border-gray-500 bg-gray-700/50" : "border-gray-300 bg-gray-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded-full bg-gray-500" />
-                      <span className={`text-sm font-bold ${visibleStatuses.rejected && isDark ? "text-gray-800" : "text-gray-700"} font-kumbh`}>
+                      <span className={`text-sm font-bold ${isDark ? "text-gray-300" : "text-gray-700"} font-kumbh`}>
                         REJECTED
                       </span>
                     </div>
                     <button
                       onClick={() => toggleStatus("rejected")}
-                      className={`${isDark ? "text-slate-400 hover:text-slate-800 hover:bg-slate-200" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
+                      className={`${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-600" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
                     >
                       <svg
                         className="w-5 h-5"
@@ -1458,7 +1006,7 @@ const AdminIncidentReports = () => {
                       </svg>
                     </button>
                   </div>
-                  <p className={`text-xs ${visibleStatuses.rejected && isDark ? "text-gray-600" : "text-gray-500"} font-kumbh`}>
+                  <p className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}>
                     Report was rejected or deemed invalid.
                   </p>
                 </div>

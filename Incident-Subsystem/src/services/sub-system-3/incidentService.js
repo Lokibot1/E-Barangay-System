@@ -65,7 +65,30 @@ const getMyIncidents = async () => {
   return data;
 };
 
+const getAllIncidents = async () => {
+  if (!isAuthenticated()) {
+    throw new Error("You must be logged in to view incidents.");
+  }
+
+  const response = await fetch(`${API_BASE}/incidents`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to fetch all incidents.");
+  }
+
+  return data;
+};
+
 export const incidentService = {
   submitReport,
   getMyIncidents,
+  getAllIncidents,
 };
