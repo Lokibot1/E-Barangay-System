@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import themeTokens from "../../Themetokens";
 import MapComponent from "../shared/MapComponent";
 
@@ -8,20 +8,13 @@ const TwoStepIncidentForm = ({
   onInputChange,
   errors,
   currentTheme,
+  incidentTypeOptions = [],
+  typesLoading = false,
 }) => {
   const t = themeTokens[currentTheme] || themeTokens.blue;
   const isDark = currentTheme === "dark";
 
-  const incidentTypes = [
-    { value: "waste", label: "Waste Management / Garbage" },
-    { value: "roads", label: "Roads / Infrastructure" },
-    { value: "draining", label: "Draining / Flooding" },
-    { value: "water", label: "Water Supply" },
-    { value: "pollution", label: "Pollution (Noise / Smoke / Odor)" },
-    { value: "stray", label: "Stray Animals / Public Safety" },
-    { value: "traffic", label: "Traffic & Parking" },
-    { value: "other", label: "Others" },
-  ];
+  const [customTypeInput, setCustomTypeInput] = useState("");
 
   const handleLocationSelect = (lat, lng, address) => {
     onInputChange("latitude", lat);
@@ -35,6 +28,28 @@ const TwoStepIncidentForm = ({
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     onInputChange("attachments", files);
+  };
+
+  const handleAddCustomType = () => {
+    const trimmed = customTypeInput.trim();
+    if (trimmed && !formData.customTypes?.includes(trimmed)) {
+      onInputChange("customTypes", [...(formData.customTypes || []), trimmed]);
+      setCustomTypeInput("");
+    }
+  };
+
+  const handleRemoveCustomType = (typeToRemove) => {
+    onInputChange(
+      "customTypes",
+      (formData.customTypes || []).filter((ct) => ct !== typeToRemove),
+    );
+  };
+
+  const handleCustomTypeKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddCustomType();
+    }
   };
 
   // Step 1: Incident Details
@@ -51,57 +66,117 @@ const TwoStepIncidentForm = ({
               (Check all that apply)
             </span>
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {incidentTypes.map((type) => (
-              <label
-                key={type.value}
-                className={`flex items-center gap-3 p-3 rounded-lg border ${
-                  formData.incidentTypes?.includes(type.value)
-                    ? isDark
-                      ? "bg-slate-200 border-slate-400"
-                      : "bg-blue-50 border-blue-500"
-                    : `${t.cardBorder} ${t.cardBg}`
-                } cursor-pointer ${isDark ? "hover:bg-slate-200 hover:text-slate-800" : "hover:shadow-md"} transition-all`}
-              >
-                <input
-                  type="checkbox"
-                  checked={
-                    formData.incidentTypes?.includes(type.value) || false
-                  }
-                  onChange={(e) => {
-                    const currentTypes = formData.incidentTypes || [];
-                    const newTypes = e.target.checked
-                      ? [...currentTypes, type.value]
-                      : currentTypes.filter((t) => t !== type.value);
-                    onInputChange("incidentTypes", newTypes);
-                  }}
-                  className={`w-4 h-4 ${t.checkboxAccent} rounded focus:ring-2 ${t.checkboxRing}`}
-                />
-                <span className={`text-sm ${
-                  formData.incidentTypes?.includes(type.value) && isDark
-                    ? "text-slate-800"
-                    : t.cardText
-                } font-kumbh`}>
-                  {type.label}
-                </span>
-              </label>
-            ))}
-          </div>
 
-          {/* Custom "Other" input */}
-          {formData.incidentTypes?.includes("other") && (
-            <div className="mt-3">
-              <input
-                type="text"
-                value={formData.otherIncidentType || ""}
-                onChange={(e) =>
-                  onInputChange("otherIncidentType", e.target.value)
-                }
-                placeholder="Please specify..."
-                className={`w-full px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-kumbh`}
-              />
+          {typesLoading ? (
+            <div className={`text-sm ${t.subtleText} font-kumbh py-4 text-center`}>
+              Loading incident types...
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {incidentTypeOptions.map((type) => (
+                <label
+                  key={type.id}
+                  className={`flex items-center gap-3 p-3 rounded-lg border ${
+                    formData.incidentTypes?.includes(type.id)
+                      ? isDark
+                        ? "bg-slate-200 border-slate-400"
+                        : "bg-blue-50 border-blue-500"
+                      : `${t.cardBorder} ${t.cardBg}`
+                  } cursor-pointer ${isDark ? "hover:bg-slate-200 hover:text-slate-800" : "hover:shadow-md"} transition-all`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={
+                      formData.incidentTypes?.includes(type.id) || false
+                    }
+                    onChange={(e) => {
+                      const currentTypes = formData.incidentTypes || [];
+                      const newTypes = e.target.checked
+                        ? [...currentTypes, type.id]
+                        : currentTypes.filter((id) => id !== type.id);
+                      onInputChange("incidentTypes", newTypes);
+                    }}
+                    className={`w-4 h-4 ${t.checkboxAccent} rounded focus:ring-2 ${t.checkboxRing}`}
+                  />
+                  <span className={`text-sm ${
+                    formData.incidentTypes?.includes(type.id) && isDark
+                      ? "text-slate-800"
+                      : t.cardText
+                  } font-kumbh`}>
+                    {type.name}
+                  </span>
+                </label>
+              ))}
             </div>
           )}
+
+          {/* Custom type input for "Others" */}
+          <div className="mt-4">
+            <label
+              className={`block text-xs font-medium ${t.subtleText} mb-2 font-kumbh`}
+            >
+              Other type not listed? Add it here:
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customTypeInput}
+                onChange={(e) => setCustomTypeInput(e.target.value)}
+                onKeyDown={handleCustomTypeKeyDown}
+                placeholder="Enter custom incident type..."
+                className={`flex-1 px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-kumbh text-sm`}
+              />
+              <button
+                type="button"
+                onClick={handleAddCustomType}
+                disabled={!customTypeInput.trim()}
+                className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                  customTypeInput.trim()
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : `${isDark ? "bg-slate-600 text-slate-400" : "bg-gray-200 text-gray-400"} cursor-not-allowed`
+                } font-kumbh`}
+              >
+                Add
+              </button>
+            </div>
+
+            {/* Display custom types as chips */}
+            {formData.customTypes && formData.customTypes.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {formData.customTypes.map((ct, index) => (
+                  <span
+                    key={index}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-kumbh ${
+                      isDark
+                        ? "bg-slate-200 text-slate-800"
+                        : "bg-blue-100 text-blue-800"
+                    }`}
+                  >
+                    {ct}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCustomType(ct)}
+                      className={`${isDark ? "hover:text-red-600" : "hover:text-red-500"} transition-colors`}
+                    >
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
 
           {errors.incidentTypes && (
             <p className="text-red-500 text-sm mt-2 font-kumbh">
@@ -250,7 +325,7 @@ const TwoStepIncidentForm = ({
       <div className="px-6 py-6 space-y-4">
         <div className="mb-4">
           <h3 className={`text-lg font-bold ${t.cardText} mb-2 font-spartan`}>
-            📍 Pin the Incident Location
+            Pin the Incident Location
           </h3>
           <p className={`text-sm ${t.subtleText} font-kumbh`}>
             Click on the map to mark where the incident occurred, or use the GPS

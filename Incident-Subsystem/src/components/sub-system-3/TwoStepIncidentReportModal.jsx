@@ -14,7 +14,7 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     incidentTypes: [],
-    otherIncidentType: "",
+    customTypes: [],
     attachments: [],
     description: "",
     latitude: null,
@@ -26,6 +26,8 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const [incidentTypeOptions, setIncidentTypeOptions] = useState([]);
+  const [typesLoading, setTypesLoading] = useState(false);
 
   const totalSteps = 2;
 
@@ -38,6 +40,28 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     setToasts((prev) => prev.filter((x) => x.id !== id));
   }, []);
 
+  // ─── Fetch incident types from backend ─────────────────────────────────────
+  useEffect(() => {
+    if (isOpen) {
+      setTypesLoading(true);
+      incidentService
+        .getIncidentTypes()
+        .then((res) => {
+          setIncidentTypeOptions(res.data || res);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch incident types:", err);
+          addToast({
+            type: "error",
+            title: "Failed to load incident types",
+            message: "Could not load incident types. Please try again.",
+            duration: 5000,
+          });
+        })
+        .finally(() => setTypesLoading(false));
+    }
+  }, [isOpen, addToast]);
+
   // ─── Reset on close ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!isOpen) {
@@ -46,7 +70,7 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
         setErrors({});
         setFormData({
           incidentTypes: [],
-          otherIncidentType: "",
+          customTypes: [],
           attachments: [],
           description: "",
           latitude: null,
@@ -92,14 +116,11 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     const errs = {};
     switch (step) {
       case 1:
-        if (!formData.incidentTypes || formData.incidentTypes.length === 0) {
-          errs.incidentTypes = "Please select at least one incident type";
-        }
         if (
-          formData.incidentTypes?.includes("other") &&
-          !formData.otherIncidentType?.trim()
+          (!formData.incidentTypes || formData.incidentTypes.length === 0) &&
+          (!formData.customTypes || formData.customTypes.length === 0)
         ) {
-          errs.incidentTypes = "Please specify the other incident type";
+          errs.incidentTypes = "Please select at least one incident type";
         }
         if (!formData.attachments || formData.attachments.length === 0) {
           errs.attachments = "Please upload at least one photo as proof";
@@ -266,6 +287,8 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
               onInputChange={handleInputChange}
               errors={errors}
               currentTheme={currentTheme}
+              incidentTypeOptions={incidentTypeOptions}
+              typesLoading={typesLoading}
             />
           </div>
 

@@ -6,6 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { LanguageProvider } from "./context/LanguageContext";
+import { RealTimeProvider } from "./context/RealTimeContext";
 import Layout from "./components/shared/Layout";
 import ProtectedRoute, {
   AdminRoute,
@@ -66,7 +67,13 @@ function App() {
 
             {/* Admin-only routes — regular users get redirected to / */}
             <Route element={<AdminRoute />}>
-              <Route element={<Layout />}>
+              <Route
+                element={
+                  <RealTimeProvider>
+                    <Layout />
+                  </RealTimeProvider>
+                }
+              >
                 <Route path="/admin" element={<AdminLanding />} />
                 {/* Placeholder admin pages — replace with real components later */}
                 <Route

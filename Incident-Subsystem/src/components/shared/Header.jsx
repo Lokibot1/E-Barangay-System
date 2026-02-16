@@ -1,12 +1,114 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import ThemeModal from "../../components/sub-system-3/ThemeModal";
 import LogoutModal from "./LogoutModal";
 import { logout, getUser } from "../../services/sub-system-3/loginService";
 import { useLanguage } from "../../context/LanguageContext";
+import { useRealTime } from "../../context/RealTimeContext";
 import themeTokens from "../../Themetokens";
 import logo from "../../assets/images/logo.jpg";
 
+// ── Notification sound using Web Audio API (no mp3 file needed) ─────────
+const playNotificationSound = () => {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // First tone (higher pitch)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(880, ctx.currentTime);
+    gain1.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(ctx.currentTime);
+    osc1.stop(ctx.currentTime + 0.15);
+
+    // Second tone (even higher, slight delay)
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(1175, ctx.currentTime + 0.12);
+    gain2.gain.setValueAtTime(0.001, ctx.currentTime);
+    gain2.gain.setValueAtTime(0.15, ctx.currentTime + 0.12);
+    gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(ctx.currentTime + 0.12);
+    osc2.stop(ctx.currentTime + 0.3);
+
+    // Cleanup
+    setTimeout(() => ctx.close(), 500);
+  } catch {
+    // Ignore — no audio support or blocked by autoplay policy
+  }
+};
+
+// ── Relative time utility ───────────────────────────────────────────────
+const getRelativeTime = (date) => {
+  const now = new Date();
+  const diff = Math.floor((now - new Date(date)) / 1000);
+  if (diff < 60) return "Just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+  return `${Math.floor(diff / 86400)} days ago`;
+};
+
+// ── Memoized notification list item ─────────────────────────────────────
+const NotificationItem = memo(({ notification, isDark, onMarkAsRead }) => {
+  const statusColor = notification.read ? "bg-gray-400" : "bg-amber-500";
+  const statusLabel = notification.read ? "Read" : "New";
+  const timeAgo = getRelativeTime(notification.timestamp);
+  const isIncident = notification.source === "incident";
+
+  return (
+    <div
+      onClick={() => onMarkAsRead(notification.id)}
+      className={`p-3 sm:p-4 border-b ${isDark ? "border-slate-700 hover:bg-slate-200 hover:text-slate-800" : "border-slate-100 hover:bg-slate-50"} transition-colors cursor-pointer group ${
+        !notification.read
+          ? isDark
+            ? "bg-slate-700/50"
+            : "bg-blue-50/50"
+          : ""
+      }`}
+    >
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center space-x-2 mb-1 flex-wrap">
+            <span
+              className={`text-xs font-bold ${isDark ? "text-slate-300" : "text-slate-600"} font-kumbh uppercase`}
+            >
+              {isIncident ? "Incident" : "Complaint"}
+            </span>
+            <span
+              className={`${statusColor} text-white text-xs font-semibold px-2 py-0.5 rounded-full font-kumbh`}
+            >
+              {statusLabel}
+            </span>
+          </div>
+          <p
+            className={`font-semibold text-sm ${isDark ? "text-slate-100" : "text-slate-900"} font-kumbh mb-1`}
+          >
+            {notification.type}
+          </p>
+          <p
+            className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"} font-kumbh line-clamp-2`}
+          >
+            {notification.description || "No description provided"}
+          </p>
+        </div>
+      </div>
+      <p
+        className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"} font-kumbh mt-2`}
+      >
+        {timeAgo} &middot; Reported by {notification.reportedBy}
+      </p>
+    </div>
+  );
+});
+
+// ── Header ──────────────────────────────────────────────────────────────
 const Header = ({ currentTheme, onThemeChange }) => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -16,6 +118,10 @@ const Header = ({ currentTheme, onThemeChange }) => {
   const [logoutLoading, setLogoutLoading] = useState(false);
   const navigate = useNavigate();
   const { language, setLanguage, tr } = useLanguage();
+
+  // Real-time notifications (safe defaults when outside RealTimeProvider)
+  const { notifications, unreadCount, markAsRead, markAllAsRead } =
+    useRealTime();
 
   const user = getUser();
   const userName = user?.name || "User";
@@ -29,6 +135,16 @@ const Header = ({ currentTheme, onThemeChange }) => {
 
   const t = themeTokens[currentTheme];
   const isDark = currentTheme === "dark";
+
+  // ── Notification sound on new unread items ────────────────────────────
+  const prevUnreadRef = useRef(unreadCount);
+
+  useEffect(() => {
+    if (unreadCount > prevUnreadRef.current) {
+      playNotificationSound();
+    }
+    prevUnreadRef.current = unreadCount;
+  }, [unreadCount]);
 
   const toggleNotifications = () => {
     setIsNotificationOpen(!isNotificationOpen);
@@ -71,57 +187,16 @@ const Header = ({ currentTheme, onThemeChange }) => {
     }
   };
 
-  // Mock notification data
-  const notifications = [
-    {
-      id: 1,
-      reportId: "INC-2025-0127",
-      type: "Workplace Injury",
-      status: "Pending",
-      statusColor: "bg-amber-500",
-      progressColor: "bg-amber-500",
-      progressSteps: 1,
-      timestamp: "2 hours ago",
-      description: "Slip and fall incident in warehouse",
+  const handleMarkAsRead = useCallback(
+    (id) => {
+      markAsRead(id);
     },
-    {
-      id: 2,
-      reportId: "INC-2025-0125",
-      type: "Equipment Damage",
-      status: "On Going",
-      statusColor: "bg-blue-500",
-      progressColor: "bg-blue-500",
-      progressSteps: 2,
-      timestamp: "1 day ago",
-      description: "Forklift collision with storage rack",
-    },
-    {
-      id: 3,
-      reportId: "INC-2025-0123",
-      type: "Safety Hazard",
-      status: "Resolved",
-      statusColor: "bg-green-500",
-      progressColor: "bg-green-500",
-      progressSteps: 3,
-      timestamp: "3 days ago",
-      description: "Exposed electrical wiring in break room",
-    },
-    {
-      id: 4,
-      reportId: "INC-2025-0120",
-      type: "Near Miss",
-      status: "Pending",
-      statusColor: "bg-amber-500",
-      progressColor: "bg-amber-500",
-      progressSteps: 1,
-      timestamp: "5 days ago",
-      description: "Close call with overhead crane",
-    },
-  ];
+    [markAsRead],
+  );
 
-  const unreadCount = notifications.filter(
-    (n) => n.status !== "Resolved",
-  ).length;
+  const handleMarkAllAsRead = useCallback(() => {
+    markAllAsRead();
+  }, [markAllAsRead]);
 
   return (
     <>
@@ -171,7 +246,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                   </svg>
                   {unreadCount > 0 && (
                     <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-red-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
-                      {unreadCount}
+                      {unreadCount > 99 ? "99+" : unreadCount}
                     </span>
                   )}
                 </button>
@@ -195,72 +270,54 @@ const Header = ({ currentTheme, onThemeChange }) => {
                     </div>
 
                     <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto">
-                      {notifications.map((notification) => (
+                      {notifications.length > 0 ? (
+                        notifications.slice(0, 15).map((notification) => (
+                          <NotificationItem
+                            key={notification.id}
+                            notification={notification}
+                            isDark={isDark}
+                            onMarkAsRead={handleMarkAsRead}
+                          />
+                        ))
+                      ) : (
                         <div
-                          key={notification.id}
-                          className={`p-3 sm:p-4 border-b ${isDark ? "border-slate-700 hover:bg-slate-200 hover:text-slate-800" : "border-slate-100 hover:bg-slate-50"} transition-colors cursor-pointer group`}
+                          className={`p-8 text-center ${t.subtleText}`}
                         >
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center space-x-2 mb-1 flex-wrap">
-                                <span
-                                  className={`text-xs font-bold ${isDark ? "text-slate-300" : "text-slate-600"} font-kumbh`}
-                                >
-                                  {notification.reportId}
-                                </span>
-                                <span
-                                  className={`${notification.statusColor} text-white text-xs font-semibold px-2 py-0.5 rounded-full font-kumbh`}
-                                >
-                                  {notification.status}
-                                </span>
-                              </div>
-                              <p
-                                className={`font-semibold text-sm ${isDark ? "text-slate-100" : "text-slate-900"} font-kumbh mb-1`}
-                              >
-                                {notification.type}
-                              </p>
-                              <p
-                                className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"} font-kumbh line-clamp-2`}
-                              >
-                                {notification.description}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Progress Steps */}
-                          <div className="flex items-center gap-1.5 mt-3">
-                            {[1, 2, 3].map((step) => (
-                              <div
-                                key={step}
-                                className={`flex-1 h-1.5 rounded-full ${
-                                  step <= notification.progressSteps
-                                    ? notification.progressColor
-                                    : isDark
-                                      ? "bg-slate-700"
-                                      : "bg-slate-200"
-                                }`}
-                              />
-                            ))}
-                          </div>
-
-                          <p
-                            className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"} font-kumbh mt-2`}
+                          <svg
+                            className="w-12 h-12 mx-auto mb-3 opacity-30"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
                           >
-                            {notification.timestamp}
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                            />
+                          </svg>
+                          <p className="text-sm font-kumbh">
+                            No notifications yet
+                          </p>
+                          <p className="text-xs mt-1 font-kumbh opacity-60">
+                            New reports will appear here in real-time
                           </p>
                         </div>
-                      ))}
+                      )}
                     </div>
 
-                    <div
-                      className={`p-3 sm:p-4 border-t ${isDark ? "border-slate-700 bg-slate-800/50" : "border-slate-100 bg-slate-50"}`}
-                    >
-                      <button
-                        className={`w-full text-center text-sm font-semibold ${t.primaryText} hover:opacity-80 transition-opacity font-kumbh`}
+                    {notifications.length > 0 && (
+                      <div
+                        className={`p-3 sm:p-4 border-t ${isDark ? "border-slate-700 bg-slate-800/50" : "border-slate-100 bg-slate-50"}`}
                       >
-                        {tr.header.viewAllNotifications}
-                      </button>
-                    </div>
+                        <button
+                          onClick={handleMarkAllAsRead}
+                          className={`w-full text-center text-sm font-semibold ${t.primaryText} hover:opacity-80 transition-opacity font-kumbh`}
+                        >
+                          Mark All as Read
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -343,7 +400,9 @@ const Header = ({ currentTheme, onThemeChange }) => {
                           <span className="font-semibold text-sm font-kumbh">
                             {tr.header.language}
                           </span>
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isDark ? "bg-slate-600 text-slate-300" : "bg-slate-100 text-slate-600"} font-kumbh`}>
+                          <span
+                            className={`text-xs font-medium px-2 py-0.5 rounded-full ${isDark ? "bg-slate-600 text-slate-300" : "bg-slate-100 text-slate-600"} font-kumbh`}
+                          >
                             {language === "en" ? "EN" : "TL"}
                           </span>
                         </div>

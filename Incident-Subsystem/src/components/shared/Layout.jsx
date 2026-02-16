@@ -4,7 +4,9 @@ import Header from "../shared/Header";
 import Sidebar from "../shared/Sidebar";
 import DateTimeBar from "./DateTimeBar";
 import FAQChatbot from "../../components/shared/FAQChatbot";
+import AdminNotificationToast from "./AdminNotificationToast";
 import themeTokens from "../../Themetokens";
+import { isAdmin } from "../../services/sub-system-3/loginService";
 
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -51,6 +53,9 @@ const Layout = () => {
 
       {/* FAQ e-KAP Chatbot */}
       <FAQChatbot currentTheme={currentTheme} />
+
+      {/* Real-time notification toasts (admin only) */}
+      {isAdmin() && <AdminNotificationToast currentTheme={currentTheme} />}
     </div>
   );
 };

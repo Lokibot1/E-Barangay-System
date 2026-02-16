@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -9,8 +9,10 @@ import {
 import "leaflet/dist/leaflet.css";
 import themeTokens from "../../../Themetokens";
 import AdminReportDetailsModal from "../../../components/sub-system-3/AdminReportDetailsModal";
+import Toast from "../../../components/shared/modals/Toast";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
 import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
+import { useRealTime } from "../../../context/RealTimeContext";
 
 // ── Barangay Gulod boundary (OSM Relation 270990) ──────────────────────
 const BARANGAY_BOUNDARY = [
@@ -219,19 +221,14 @@ const isPointInPolygon = (point, polygon) => {
 };
 
 // ── Helpers to normalize API responses into the shape the UI expects ───
-const parseIncidentType = (type) => {
-  if (!type) return "Other";
-  try {
-    const parsed = JSON.parse(type);
-    return Array.isArray(parsed) ? parsed.join(", ") : String(parsed);
-  } catch {
-    return String(type);
-  }
+const parseIncidentTypes = (types) => {
+  if (!types || !Array.isArray(types) || types.length === 0) return "Other";
+  return types.map((t) => t.name).join(", ");
 };
 
 const normalizeIncident = (item) => ({
   id: String(item.id),
-  type: parseIncidentType(item.type),
+  type: parseIncidentTypes(item.types),
   details: item.description || "",
   description: item.additional_notes || item.description || "",
   date: (item.created_at || "").split("T")[0],
@@ -340,6 +337,38 @@ const COMPLAINT_TYPES = [
   "Property Damage",
 ];
 
+// ── Memoized table row ─────────────────────────────────────────────────
+const TableRow = memo(
+  ({ inc, index, currentPage, ROWS_PER_PAGE, onClick, t, isDark }) => (
+    <tr
+      onClick={() => onClick(inc)}
+      className={`border-b ${t.cardBorder} ${isDark ? "hover:bg-slate-600" : "hover:bg-gray-50"} transition-colors cursor-pointer`}
+    >
+      <td className={`text-center px-3 py-3 ${t.cardText}`}>
+        {(currentPage - 1) * ROWS_PER_PAGE + index + 1}
+      </td>
+      <td
+        className={`text-left px-4 py-3 ${t.cardText} truncate capitalize`}
+      >
+        {inc.type}
+      </td>
+      <td className={`text-left px-4 py-3 ${t.cardText} whitespace-nowrap`}>
+        {new Date(inc.date).toLocaleDateString("en-US", {
+          month: "2-digit",
+          day: "2-digit",
+          year: "numeric",
+        })}
+      </td>
+      <td className={`text-left px-4 py-3 ${t.cardText} truncate`}>
+        {inc.reportedBy}
+      </td>
+      <td className={`text-left px-4 py-3 font-bold ${t.cardText}`}>
+        {inc.id}
+      </td>
+    </tr>
+  ),
+);
+
 // ════════════════════════════════════════════════════════════════════════
 const AdminIncidentReports = () => {
   const [currentTheme, setCurrentTheme] = useState(
@@ -384,6 +413,38 @@ const AdminIncidentReports = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // ── Real-time: auto-refresh when new events arrive ────────────────────
+  const { latestBatch, eventVersion } = useRealTime();
+  const [toasts, setToasts] = useState([]);
+  const prevEventVersionRef = useRef(0);
+
+  useEffect(() => {
+    // Only fire when eventVersion actually increments (new batch arrived)
+    if (eventVersion === 0 || eventVersion === prevEventVersionRef.current)
+      return;
+    prevEventVersionRef.current = eventVersion;
+
+    fetchData();
+
+    if (latestBatch.length > 0) {
+      const latestEvent = latestBatch[0];
+      setToasts((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          type: "success",
+          title: `New ${latestEvent.source === "incident" ? "Incident" : "Complaint"} Received`,
+          message: `${latestBatch.length} new report(s) detected. Table refreshed.`,
+          duration: 4000,
+        },
+      ]);
+    }
+  }, [eventVersion, latestBatch, fetchData]);
+
+  const removeToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   // ── Modal state ─────────────────────────────────────────────────────
   const [selectedIncident, setSelectedIncident] = useState(null);
@@ -631,31 +692,16 @@ const AdminIncidentReports = () => {
               <tbody>
                 {paginatedData.length > 0 ? (
                   paginatedData.map((inc, index) => (
-                    <tr
+                    <TableRow
                       key={inc.id}
-                      onClick={() => setSelectedIncident(inc)}
-                      className={`border-b ${t.cardBorder} ${isDark ? "hover:bg-slate-600" : "hover:bg-gray-50"} transition-colors cursor-pointer`}
-                    >
-                      <td className={`text-center px-3 py-3 ${t.cardText}`}>
-                        {(currentPage - 1) * ROWS_PER_PAGE + index + 1}
-                      </td>
-                      <td className={`text-left px-4 py-3 ${t.cardText} truncate capitalize`}>
-                        {inc.type}
-                      </td>
-                      <td className={`text-left px-4 py-3 ${t.cardText} whitespace-nowrap`}>
-                        {new Date(inc.date).toLocaleDateString("en-US", {
-                          month: "2-digit",
-                          day: "2-digit",
-                          year: "numeric",
-                        })}
-                      </td>
-                      <td className={`text-left px-4 py-3 ${t.cardText} truncate`}>
-                        {inc.reportedBy}
-                      </td>
-                      <td className={`text-left px-4 py-3 font-bold ${t.cardText}`}>
-                        {inc.id}
-                      </td>
-                    </tr>
+                      inc={inc}
+                      index={index}
+                      currentPage={currentPage}
+                      ROWS_PER_PAGE={ROWS_PER_PAGE}
+                      onClick={setSelectedIncident}
+                      t={t}
+                      isDark={isDark}
+                    />
                   ))
                 ) : (
                   <tr>
@@ -1102,6 +1148,9 @@ const AdminIncidentReports = () => {
           );
         }}
       />
+
+      {/* Real-time toasts */}
+      <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
     </div>
   );
 };

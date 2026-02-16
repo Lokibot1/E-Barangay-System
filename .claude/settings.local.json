@@ -14,7 +14,18 @@
       "mcp__ide__getDiagnostics",
       "Bash(npm ls:*)",
       "Bash(npm uninstall:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(git -C \"C:\\\\Projects\\\\3rd Year\\\\E-Barangay-System\" log --all --oneline --graph)",
+      "Bash(git -C \"C:\\\\Projects\\\\3rd Year\\\\E-Barangay-System\" branch -a)",
+      "Bash(git -C \"C:\\\\Projects\\\\3rd Year\\\\E-Barangay-System\" log --name-status --oneline -20)",
+      "Bash(git -C \"C:\\\\Projects\\\\3rd Year\\\\E-Barangay-System\" log --all --name-status)",
+      "Bash(git -C \"C:\\\\Projects\\\\3rd Year\\\\E-Barangay-System\" log --all --pretty=format:\"%h %s\")",
+      "Bash(git -C \"C:\\\\Projects\\\\3rd Year\\\\E-Barangay-System\" show develop:composer.json)",
+      "Bash(git -C \"C:\\\\Projects\\\\3rd Year\\\\E-Barangay-System\" ls-tree:*)",
+      "Bash(git -C \"C:\\\\Projects\\\\3rd Year\\\\E-Barangay-System\" log --all --oneline --grep=\"backend\\\\|laravel\\\\|composer\\\\|api\\\\|backend-setup\" -i)",
+      "Bash(git -C \"C:\\\\Projects\\\\3rd Year\\\\E-Barangay-System\" log --all --name-only --pretty=format:%s)",
+      "Bash(git -C \"C:\\\\Projects\\\\3rd Year\\\\E-Barangay-System\" ls-tree -r --name-only HEAD)",
+      "Bash(git -C:*)"
     ]
   }
 }
