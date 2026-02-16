@@ -61,6 +61,8 @@ export const logout = async () => {
 export const clearAuth = () => {
   localStorage.removeItem("authToken");
   localStorage.removeItem("authUser");
+  localStorage.removeItem("userStatusSnapshot");
+  localStorage.removeItem("userNotifications");
 };
 
 /**

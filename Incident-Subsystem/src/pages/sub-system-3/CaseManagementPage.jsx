@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
 import TabsComponent from "../../components/sub-system-3/TabsComponent";
 import ReportCard from "../../components/sub-system-3/ReportCard";
@@ -7,6 +7,7 @@ import MapComponent from "../../components/shared/MapComponent";
 import themeTokens from "../../Themetokens";
 import { incidentService } from "../../services/sub-system-3/incidentService";
 import { getMyComplaints } from "../../services/sub-system-3/complaintService";
+import { useUserRealTime } from "../../context/UserRealTimeContext";
 
 const CaseManagementPage = () => {
   const [selectedReport, setSelectedReport] = useState(null);
@@ -129,6 +130,17 @@ const CaseManagementPage = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Auto-refresh when user receives status-change notifications
+  const { eventVersion } = useUserRealTime();
+  const prevEventVersionRef = useRef(0);
+
+  useEffect(() => {
+    if (eventVersion === 0 || eventVersion === prevEventVersionRef.current)
+      return;
+    prevEventVersionRef.current = eventVersion;
+    fetchData();
+  }, [eventVersion, fetchData]);
 
   const currentReports = activeTab === "complaints" ? complaints : incidents;
 

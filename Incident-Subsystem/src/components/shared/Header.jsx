@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef, useCallback, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import ThemeModal from "../../components/sub-system-3/ThemeModal";
 import LogoutModal from "./LogoutModal";
-import { logout, getUser } from "../../services/sub-system-3/loginService";
+import { logout, getUser, isAdmin } from "../../services/sub-system-3/loginService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useRealTime } from "../../context/RealTimeContext";
+import { useUserRealTime } from "../../context/UserRealTimeContext";
 import themeTokens from "../../Themetokens";
 import logo from "../../assets/images/logo.jpg";
 
@@ -61,6 +62,10 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead }) => {
   const statusLabel = notification.read ? "Read" : "New";
   const timeAgo = getRelativeTime(notification.timestamp);
   const isIncident = notification.source === "incident";
+  const isStatusChange = !!notification.oldStatus;
+
+  const capitalize = (str) =>
+    str ? str.replace(/\b\w/g, (c) => c.toUpperCase()) : str;
 
   return (
     <div
@@ -86,6 +91,13 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead }) => {
             >
               {statusLabel}
             </span>
+            {isStatusChange && (
+              <span
+                className={`text-xs font-medium px-2 py-0.5 rounded-full font-kumbh ${isDark ? "bg-slate-600 text-slate-300" : "bg-slate-200 text-slate-600"}`}
+              >
+                {capitalize(notification.oldStatus)} → {capitalize(notification.newStatus)}
+              </span>
+            )}
           </div>
           <p
             className={`font-semibold text-sm ${isDark ? "text-slate-100" : "text-slate-900"} font-kumbh mb-1`}
@@ -102,7 +114,7 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead }) => {
       <p
         className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"} font-kumbh mt-2`}
       >
-        {timeAgo} &middot; Reported by {notification.reportedBy}
+        {timeAgo}{notification.reportedBy ? ` · Reported by ${notification.reportedBy}` : ""}
       </p>
     </div>
   );
@@ -119,9 +131,12 @@ const Header = ({ currentTheme, onThemeChange }) => {
   const navigate = useNavigate();
   const { language, setLanguage, tr } = useLanguage();
 
-  // Real-time notifications (safe defaults when outside RealTimeProvider)
+  // Real-time notifications — merge admin and user contexts
+  const adminRT = useRealTime();
+  const userRT = useUserRealTime();
+  const isAdminUser = isAdmin();
   const { notifications, unreadCount, markAsRead, markAllAsRead } =
-    useRealTime();
+    isAdminUser ? adminRT : userRT;
 
   const user = getUser();
   const userName = user?.name || "User";

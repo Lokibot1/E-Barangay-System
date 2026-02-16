@@ -87,14 +87,16 @@ export const updateComplaint = async (id, updates) => {
     throw new Error("You must be logged in to update a complaint.");
   }
 
-  const response = await fetch(`${API_BASE}/complaints/${id}`, {
+  // Build query string from updates (e.g. ?status=resolved)
+  const params = new URLSearchParams(updates).toString();
+  const url = `${API_BASE}/complaints/${id}${params ? `?${params}` : ""}`;
+
+  const response = await fetch(url, {
     method: "PUT",
     headers: {
-      "Content-Type": "application/json",
       Accept: "application/json",
       Authorization: `Bearer ${getToken()}`,
     },
-    body: JSON.stringify(updates),
   });
 
   const data = await response.json();

@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { LanguageProvider } from "./context/LanguageContext";
 import { RealTimeProvider } from "./context/RealTimeContext";
+import { UserRealTimeProvider } from "./context/UserRealTimeContext";
 import Layout from "./components/shared/Layout";
 import ProtectedRoute, {
   AdminRoute,
@@ -34,7 +35,7 @@ function App() {
 
             {/* User-only routes — admins get redirected to /admin */}
             <Route element={<UserRoute />}>
-              <Route element={<Layout />}>
+              <Route element={<UserRealTimeProvider><Layout /></UserRealTimeProvider>}>
                 <Route
                   path="/"
                   element={

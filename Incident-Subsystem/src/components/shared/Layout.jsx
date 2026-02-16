@@ -5,6 +5,7 @@ import Sidebar from "../shared/Sidebar";
 import DateTimeBar from "./DateTimeBar";
 import FAQChatbot from "../../components/shared/FAQChatbot";
 import AdminNotificationToast from "./AdminNotificationToast";
+import UserNotificationToast from "./UserNotificationToast";
 import themeTokens from "../../Themetokens";
 import { isAdmin } from "../../services/sub-system-3/loginService";
 
@@ -54,8 +55,9 @@ const Layout = () => {
       {/* FAQ e-KAP Chatbot */}
       <FAQChatbot currentTheme={currentTheme} />
 
-      {/* Real-time notification toasts (admin only) */}
+      {/* Real-time notification toasts */}
       {isAdmin() && <AdminNotificationToast currentTheme={currentTheme} />}
+      {!isAdmin() && <UserNotificationToast currentTheme={currentTheme} />}
     </div>
   );
 };
