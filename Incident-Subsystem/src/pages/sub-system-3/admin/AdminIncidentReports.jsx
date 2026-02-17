@@ -236,7 +236,9 @@ const normalizeIncident = (item) => ({
   lastUpdated: item.updated_at || item.created_at || "",
   reportedBy: item.user
     ? `${item.user.last_name || ""}, ${item.user.first_name || ""} ${item.user.middle_name ? item.user.middle_name.charAt(0) + "." : ""}`.toUpperCase()
-    : "UNKNOWN",
+    : item.reported_by
+      ? item.reported_by.toUpperCase()
+      : "UNKNOWN",
   status: (item.status || "pending").toLowerCase(),
   lat: parseFloat(item.latitude) || 0,
   lng: parseFloat(item.longitude) || 0,
@@ -248,7 +250,7 @@ const normalizeIncident = (item) => ({
 
 const normalizeComplaint = (item) => ({
   id: String(item.id),
-  type: item.type || "Other",
+  type: COMPLAINT_TYPE_MAP[(item.type || "").toLowerCase()] || "Other",
   details: item.description || "",
   description: item.additional_notes || item.description || "",
   date: item.incident_date || (item.created_at || "").split("T")[0],
@@ -331,12 +333,28 @@ const INCIDENT_TYPES = [
 
 const COMPLAINT_TYPES = [
   "All Types",
-  "Noise Complaint",
-  "Neighbor Dispute",
-  "Public Disturbance",
-  "Illegal Activity",
-  "Property Damage",
+  "Noise",
+  "Property",
+  "Harassment",
+  "Trespassing",
+  "Parking",
+  "Garbage",
+  "Boundary",
+  "Unpaid",
+  "Other",
 ];
+
+const COMPLAINT_TYPE_MAP = {
+  noise: "Noise",
+  property: "Property",
+  harassment: "Harassment",
+  trespassing: "Trespassing",
+  parking: "Parking",
+  garbage: "Garbage",
+  boundary: "Boundary",
+  unpaid: "Unpaid",
+  other: "Other",
+};
 
 // ── Memoized table row ─────────────────────────────────────────────────
 const TableRow = memo(
@@ -402,8 +420,15 @@ const AdminIncidentReports = () => {
       ]);
       const incArray = Array.isArray(incData) ? incData : incData.data || [];
       const compArray = Array.isArray(compData) ? compData : compData.data || [];
+      console.log("[DEBUG] Raw complaint data sample:", compArray[0]);
+      console.log("[DEBUG] Raw complaint fields:", compArray[0] ? Object.keys(compArray[0]) : "no data");
+      console.log("[DEBUG] Raw incident data sample:", incArray[0]);
       setIncidents(incArray.map(normalizeIncident));
-      setComplaints(compArray.map(normalizeComplaint));
+      const normalizedComplaints = compArray.map(normalizeComplaint);
+      console.log("[DEBUG] Normalized complaint sample:", normalizedComplaints[0]);
+      console.log("[DEBUG] Complaint count:", normalizedComplaints.length);
+      console.log("[DEBUG] Complaints with valid coords:", normalizedComplaints.filter(c => c.lat && c.lng).length);
+      setComplaints(normalizedComplaints);
     } catch (err) {
       console.error("Failed to fetch reports:", err);
     } finally {
@@ -533,10 +558,13 @@ const AdminIncidentReports = () => {
   // ── Filtered data for map ──────────────────────────────────────────
   const filteredMapData = useMemo(() => {
     return dataSource.filter((inc) => {
-      if (!visibleStatuses[inc.status]) return false;
+      // For known statuses, respect the toggle; for unknown statuses, show by default
+      if (visibleStatuses[inc.status] === false) return false;
       if (mapType !== "All Types" && inc.type !== mapType) return false;
       if (mapStartDate && inc.date < mapStartDate) return false;
       if (mapEndDate && inc.date > mapEndDate) return false;
+      // Skip items without valid coordinates
+      if (!inc.lat || !inc.lng) return false;
       if (!isPointInPolygon([inc.lat, inc.lng], BARANGAY_BOUNDARY))
         return false;
       return true;
@@ -1126,9 +1154,9 @@ const AdminIncidentReports = () => {
                   }}
                 />
 
-                {/* Incident markers */}
+                {/* Incident/Complaint markers */}
                 {filteredMapData.map((inc) => {
-                  const cfg = STATUS_CONFIG[inc.status];
+                  const cfg = STATUS_CONFIG[inc.status] || STATUS_CONFIG.pending;
                   return (
                     <CircleMarker
                       key={inc.id}

@@ -19,10 +19,9 @@ const TwoStepIncidentForm = ({
   const handleLocationSelect = (lat, lng, address) => {
     onInputChange("latitude", lat);
     onInputChange("longitude", lng);
-    onInputChange(
-      "location",
-      address || `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-    );
+    const isCoordinateString =
+      address && /^-?\d+\.\d+,\s*-?\d+\.\d+$/.test(address.trim());
+    onInputChange("location", address && !isCoordinateString ? address : "");
   };
 
   const handleFileChange = (e) => {
@@ -68,7 +67,9 @@ const TwoStepIncidentForm = ({
           </label>
 
           {typesLoading ? (
-            <div className={`text-sm ${t.subtleText} font-kumbh py-4 text-center`}>
+            <div
+              className={`text-sm ${t.subtleText} font-kumbh py-4 text-center`}
+            >
               Loading incident types...
             </div>
           ) : (
@@ -86,9 +87,7 @@ const TwoStepIncidentForm = ({
                 >
                   <input
                     type="checkbox"
-                    checked={
-                      formData.incidentTypes?.includes(type.id) || false
-                    }
+                    checked={formData.incidentTypes?.includes(type.id) || false}
                     onChange={(e) => {
                       const currentTypes = formData.incidentTypes || [];
                       const newTypes = e.target.checked
@@ -98,11 +97,13 @@ const TwoStepIncidentForm = ({
                     }}
                     className={`w-4 h-4 ${t.checkboxAccent} rounded focus:ring-2 ${t.checkboxRing}`}
                   />
-                  <span className={`text-sm ${
-                    formData.incidentTypes?.includes(type.id) && isDark
-                      ? "text-slate-800"
-                      : t.cardText
-                  } font-kumbh`}>
+                  <span
+                    className={`text-sm ${
+                      formData.incidentTypes?.includes(type.id) && isDark
+                        ? "text-slate-800"
+                        : t.cardText
+                    } font-kumbh`}
+                  >
                     {type.name}
                   </span>
                 </label>
