@@ -55,7 +55,13 @@ const SEVERITY_STYLES = {
   },
 };
 
-const InsightsModal = ({ isOpen, onClose, incidents, complaints, context = "dashboard" }) => {
+const InsightsModal = ({
+  isOpen,
+  onClose,
+  incidents,
+  complaints,
+  context = "dashboard",
+}) => {
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem("appTheme") || "blue",
   );
@@ -92,14 +98,18 @@ const InsightsModal = ({ isOpen, onClose, incidents, complaints, context = "dash
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
-      return () => { document.body.style.overflow = ""; };
+      return () => {
+        document.body.style.overflow = "";
+      };
     }
   }, [isOpen]);
 
   // Close on ESC
   useEffect(() => {
     if (!isOpen) return;
-    const handler = (e) => { if (e.key === "Escape") onClose(); };
+    const handler = (e) => {
+      if (e.key === "Escape") onClose();
+    };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [isOpen, onClose]);
@@ -123,14 +133,23 @@ const InsightsModal = ({ isOpen, onClose, incidents, complaints, context = "dash
     }
     // Quezon City logo (right)
     if (qcLogo) {
-      doc.addImage(qcLogo, "PNG", pageWidth - margin - logoSize, 8, logoSize, logoSize);
+      doc.addImage(
+        qcLogo,
+        "PNG",
+        pageWidth - margin - logoSize,
+        8,
+        logoSize,
+        logoSize,
+      );
     }
 
     // Center text between logos
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(80);
-    doc.text("Republic of the Philippines", pageWidth / 2, 12, { align: "center" });
+    doc.text("Republic of the Philippines", pageWidth / 2, 12, {
+      align: "center",
+    });
     doc.text("Quezon City", pageWidth / 2, 17, { align: "center" });
 
     doc.setFontSize(14);
@@ -152,12 +171,16 @@ const InsightsModal = ({ isOpen, onClose, incidents, complaints, context = "dash
     doc.setFontSize(13);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0);
-    doc.text("Insights & Recommendations Report", pageWidth / 2, 40, { align: "center" });
+    doc.text("Insights & Recommendations Report", pageWidth / 2, 40, {
+      align: "center",
+    });
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100);
-    doc.text(`Generated: ${generatedAt}`, pageWidth / 2, 46, { align: "center" });
+    doc.text(`Generated: ${generatedAt}`, pageWidth / 2, 46, {
+      align: "center",
+    });
     doc.text(
       `Data: ${incidents?.length || 0} incidents, ${complaints?.length || 0} complaints`,
       pageWidth / 2,
@@ -167,8 +190,12 @@ const InsightsModal = ({ isOpen, onClose, incidents, complaints, context = "dash
     doc.setTextColor(0);
 
     // Summary counts
-    const criticalCount = insights.filter((i) => i.severity === "critical").length;
-    const warningCount = insights.filter((i) => i.severity === "warning").length;
+    const criticalCount = insights.filter(
+      (i) => i.severity === "critical",
+    ).length;
+    const warningCount = insights.filter(
+      (i) => i.severity === "warning",
+    ).length;
     const infoCount = insights.filter((i) => i.severity === "info").length;
 
     doc.setFontSize(10);
@@ -240,7 +267,9 @@ const InsightsModal = ({ isOpen, onClose, incidents, complaints, context = "dash
       { align: "center" },
     );
 
-    doc.save(`Barangay-Gulod-Insights-${new Date().toISOString().split("T")[0]}.pdf`);
+    doc.save(
+      `Barangay-Gulod-Insights-${new Date().toISOString().split("T")[0]}.pdf`,
+    );
   };
 
   if (!isOpen) return null;
@@ -257,8 +286,18 @@ const InsightsModal = ({ isOpen, onClose, incidents, complaints, context = "dash
         {/* Header */}
         <div className="bg-gray-800 text-white px-5 py-3.5 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            <svg
+              className="w-5 h-5 text-amber-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+              />
             </svg>
             <h2 className="text-sm font-bold font-spartan tracking-wide uppercase">
               Insights & Recommendations
@@ -269,22 +308,49 @@ const InsightsModal = ({ isOpen, onClose, incidents, complaints, context = "dash
               onClick={handleDownloadPDF}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold font-kumbh uppercase rounded-lg transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
               Download PDF
             </button>
-            <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white transition-colors"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
         </div>
 
         {/* Severity summary bar */}
-        <div className={`px-5 py-3 flex items-center gap-4 border-b ${isDark ? "border-slate-700 bg-slate-750" : "border-gray-200 bg-gray-50"}`}>
-          <span className={`text-xs font-kumbh ${isDark ? "text-slate-400" : "text-gray-500"}`}>
+        <div
+          className={`px-5 py-3 flex items-center gap-4 border-b ${isDark ? "border-slate-700 bg-slate-750" : "border-gray-200 bg-gray-50"}`}
+        >
+          <span
+            className={`text-xs font-kumbh ${isDark ? "text-slate-400" : "text-gray-500"}`}
+          >
             Generated: {generatedAt}
           </span>
           <div className="flex items-center gap-3 ml-auto">
@@ -295,7 +361,9 @@ const InsightsModal = ({ isOpen, onClose, incidents, complaints, context = "dash
               return (
                 <span key={sev} className="flex items-center gap-1.5">
                   <span className={`w-2.5 h-2.5 rounded-full ${style.badge}`} />
-                  <span className={`text-xs font-bold font-kumbh ${isDark ? style.darkText : style.text}`}>
+                  <span
+                    className={`text-xs font-bold font-kumbh ${isDark ? style.darkText : style.text}`}
+                  >
                     {count} {style.label}
                   </span>
                 </span>
@@ -308,10 +376,22 @@ const InsightsModal = ({ isOpen, onClose, incidents, complaints, context = "dash
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
           {insights.length === 0 ? (
             <div className="text-center py-16">
-              <svg className={`w-12 h-12 mx-auto mb-3 ${isDark ? "text-slate-600" : "text-gray-300"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className={`w-12 h-12 mx-auto mb-3 ${isDark ? "text-slate-600" : "text-gray-300"}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
-              <p className={`text-sm font-kumbh ${isDark ? "text-slate-400" : "text-gray-500"}`}>
+              <p
+                className={`text-sm font-kumbh ${isDark ? "text-slate-400" : "text-gray-500"}`}
+              >
                 No insights available. Add more data to generate insights.
               </p>
             </div>
@@ -325,35 +405,59 @@ const InsightsModal = ({ isOpen, onClose, incidents, complaints, context = "dash
                 >
                   {/* Top row: badge + category */}
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`${style.badge} text-white text-[10px] font-bold font-kumbh uppercase px-2 py-0.5 rounded`}>
+                    <span
+                      className={`${style.badge} text-white text-[10px] font-bold font-kumbh uppercase px-2 py-0.5 rounded`}
+                    >
                       {style.label}
                     </span>
-                    <span className={`text-xs font-bold font-kumbh uppercase ${isDark ? "text-slate-300" : "text-gray-600"}`}>
+                    <span
+                      className={`text-xs font-bold font-kumbh uppercase ${isDark ? "text-slate-300" : "text-gray-600"}`}
+                    >
                       {insight.category}
                     </span>
                   </div>
 
                   {/* Title */}
-                  <h4 className={`text-sm font-bold font-spartan ${isDark ? "text-slate-100" : "text-gray-900"} mb-1`}>
+                  <h4
+                    className={`text-sm font-bold font-spartan ${isDark ? "text-slate-100" : "text-gray-900"} mb-1`}
+                  >
                     {insight.title}
                   </h4>
 
                   {/* Description */}
-                  <p className={`text-xs font-kumbh leading-relaxed ${isDark ? "text-slate-300" : "text-gray-600"} mb-3`}>
+                  <p
+                    className={`text-xs font-kumbh leading-relaxed ${isDark ? "text-slate-300" : "text-gray-600"} mb-3`}
+                  >
                     {insight.description}
                   </p>
 
                   {/* Recommendation */}
-                  <div className={`rounded-lg p-3 ${isDark ? "bg-slate-700/50" : "bg-white/70"}`}>
+                  <div
+                    className={`rounded-lg p-3 ${isDark ? "bg-slate-700/50" : "bg-white/70"}`}
+                  >
                     <div className="flex items-start gap-2">
-                      <svg className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDark ? style.darkText : style.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDark ? style.darkText : style.text}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                       <div>
-                        <p className={`text-[10px] font-bold font-kumbh uppercase mb-1 ${isDark ? style.darkText : style.text}`}>
+                        <p
+                          className={`text-[10px] font-bold font-kumbh uppercase mb-1 ${isDark ? style.darkText : style.text}`}
+                        >
                           Recommended Action
                         </p>
-                        <p className={`text-xs font-kumbh leading-relaxed ${isDark ? "text-slate-200" : "text-gray-700"}`}>
+                        <p
+                          className={`text-xs font-kumbh leading-relaxed ${isDark ? "text-slate-200" : "text-gray-700"}`}
+                        >
                           {insight.recommendation}
                         </p>
                       </div>
@@ -366,11 +470,15 @@ const InsightsModal = ({ isOpen, onClose, incidents, complaints, context = "dash
         </div>
 
         {/* Footer */}
-        <div className={`flex-shrink-0 border-t px-5 py-3 flex items-center justify-between ${isDark ? "border-slate-700 bg-slate-800" : "border-gray-200 bg-gray-50"}`}>
-          <p className={`text-xs font-kumbh ${isDark ? "text-slate-500" : "text-gray-400"}`}>
+        <div
+          className={`flex-shrink-0 border-t px-5 py-3 flex items-center justify-between ${isDark ? "border-slate-700 bg-slate-800" : "border-gray-200 bg-gray-50"}`}
+        >
+          <p
+            className={`text-xs font-kumbh ${isDark ? "text-slate-500" : "text-gray-400"}`}
+          >
             E-Barangay Integrated Services Platform
           </p>
-          <button
+          {/* <button
             onClick={handleDownloadPDF}
             className={`flex items-center gap-1.5 text-xs font-bold font-kumbh uppercase ${isDark ? "text-green-400 hover:text-green-300" : "text-green-700 hover:text-green-800"} transition-colors`}
           >
@@ -378,7 +486,7 @@ const InsightsModal = ({ isOpen, onClose, incidents, complaints, context = "dash
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
             Download as PDF
-          </button>
+          </button> */}
         </div>
       </div>
     </div>

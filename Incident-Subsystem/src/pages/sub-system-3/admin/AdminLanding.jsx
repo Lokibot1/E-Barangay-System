@@ -58,11 +58,20 @@ const ChartCard = ({ title, className, isDark, children }) => {
 
   const captureChart = async () => {
     if (!cardRef.current) return null;
-    return html2canvas(cardRef.current, {
+    // Wait for dropdown to unmount after setOpen(false)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    // Hide the kebab button and any Recharts tooltips/popovers during capture
+    if (menuRef.current) menuRef.current.style.display = "none";
+    const tooltips = cardRef.current.querySelectorAll(".recharts-tooltip-wrapper, .recharts-active-dot");
+    tooltips.forEach((el) => { el.dataset.prevDisplay = el.style.display; el.style.display = "none"; });
+    const canvas = await html2canvas(cardRef.current, {
       backgroundColor: isDark ? "#1E293B" : "#FFFFFF",
       scale: 2,
       useCORS: true,
     });
+    if (menuRef.current) menuRef.current.style.display = "";
+    tooltips.forEach((el) => { el.style.display = el.dataset.prevDisplay || ""; delete el.dataset.prevDisplay; });
+    return canvas;
   };
 
   const handleSaveImage = async () => {
