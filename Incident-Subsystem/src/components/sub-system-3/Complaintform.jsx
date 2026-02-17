@@ -48,7 +48,7 @@ const ComplaintForm = ({
 
   const handleWitnessChange = (index, value) => {
     const newWitnesses = [...formData.witnesses];
-    newWitnesses[index] = value;
+    newWitnesses[index] = value.replace(/[0-9]/g, "");
     onInputChange("witnesses", newWitnesses);
   };
 
@@ -209,9 +209,10 @@ const ComplaintForm = ({
                   label={cf.fullName}
                   type="text"
                   value={formData.complainantName}
-                  onChange={(e) =>
-                    onInputChange("complainantName", e.target.value)
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[0-9]/g, "");
+                    onInputChange("complainantName", val);
+                  }}
                   placeholder={cf.yourFullName}
                   error={errors.complainantName}
                   required
@@ -221,9 +222,10 @@ const ComplaintForm = ({
                   label={cf.contactNumber}
                   type="tel"
                   value={formData.complainantContact}
-                  onChange={(e) =>
-                    onInputChange("complainantContact", e.target.value)
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9+ ]/g, "");
+                    onInputChange("complainantContact", val);
+                  }}
                   placeholder="09XX XXX XXXX"
                   currentTheme={currentTheme}
                 />
@@ -244,9 +246,10 @@ const ComplaintForm = ({
                   label={cf.fullName}
                   type="text"
                   value={formData.respondentName}
-                  onChange={(e) =>
-                    onInputChange("respondentName", e.target.value)
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[0-9]/g, "");
+                    onInputChange("respondentName", val);
+                  }}
                   placeholder={cf.respondentName}
                   error={errors.respondentName}
                   required

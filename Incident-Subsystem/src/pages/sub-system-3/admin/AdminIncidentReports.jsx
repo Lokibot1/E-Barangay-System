@@ -9,6 +9,7 @@ import {
 import "leaflet/dist/leaflet.css";
 import themeTokens from "../../../Themetokens";
 import AdminReportDetailsModal from "../../../components/sub-system-3/AdminReportDetailsModal";
+import InsightsModal from "../../../components/sub-system-3/InsightsModal";
 import Toast from "../../../components/shared/modals/Toast";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
 import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
@@ -448,6 +449,19 @@ const AdminIncidentReports = () => {
 
   // ── Modal state ─────────────────────────────────────────────────────
   const [selectedIncident, setSelectedIncident] = useState(null);
+  const [showKebab, setShowKebab] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
+  const kebabRef = useRef(null);
+
+  // Close kebab on outside click
+  useEffect(() => {
+    if (!showKebab) return;
+    const handler = (e) => {
+      if (kebabRef.current && !kebabRef.current.contains(e.target)) setShowKebab(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showKebab]);
 
   // ── Filter state ───────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState("all");
@@ -560,10 +574,35 @@ const AdminIncidentReports = () => {
             </svg>
           </div>
           <h1
-            className={`text-2xl sm:text-3xl font-bold ${t.cardText} font-spartan uppercase`}
+            className={`text-2xl sm:text-3xl font-bold ${t.cardText} font-spartan uppercase flex-1`}
           >
             Incident & Complaints Report Management
           </h1>
+          <div className="relative" ref={kebabRef}>
+            <button
+              onClick={() => setShowKebab((prev) => !prev)}
+              className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-slate-700 text-slate-300" : "hover:bg-gray-200 text-gray-600"}`}
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="5" r="2" />
+                <circle cx="12" cy="12" r="2" />
+                <circle cx="12" cy="19" r="2" />
+              </svg>
+            </button>
+            {showKebab && (
+              <div className={`absolute right-0 top-full mt-1 w-52 rounded-xl shadow-lg border z-20 overflow-hidden ${isDark ? "bg-slate-700 border-slate-600" : "bg-white border-gray-200"}`}>
+                <button
+                  onClick={() => { setShowKebab(false); setShowInsights(true); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-kumbh font-semibold transition-colors ${isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"}`}
+                >
+                  <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  Generate Insights
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ── Page Tabs (Incidents / Complaints) ─────────────────── */}
@@ -1151,6 +1190,15 @@ const AdminIncidentReports = () => {
 
       {/* Real-time toasts */}
       <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
+
+      {/* Insights Modal */}
+      <InsightsModal
+        isOpen={showInsights}
+        onClose={() => setShowInsights(false)}
+        incidents={incidents}
+        complaints={complaints}
+        context="management"
+      />
     </div>
   );
 };
