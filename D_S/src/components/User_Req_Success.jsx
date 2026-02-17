@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './User_Req_Success.css';
 
@@ -6,14 +6,29 @@ export default function User_Req_Success() {
   const navigate = useNavigate();
   const location = useLocation();
   const formType = location.state?.formType || 'Barangay ID';
+  
+  // Hardcoded resident_id = 15
+  const residentId = 15;
 
-  const handleReturnHome = () => {
-    navigate('/');
-  };
+  const [trackingNumber, setTrackingNumber] = useState('XXXX-XX99-619');
+  const [firstName, setFirstName] = useState('[Given Name]');
 
-  const handleTrackStatus = () => {
-    navigate('/request-tracking', { state: { formType } });
-  };
+  useEffect(() => {
+    fetch(`http://localhost/E-Barangay-System/D_S/getResidentInfo.php?resident_id=${residentId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) {
+          setTrackingNumber(data.tracking_number);
+          setFirstName(data.first_name);
+        } else {
+          console.error(data.error);
+        }
+      })
+      .catch(err => console.error('Error fetching resident info:', err));
+  }, [residentId]);
+
+  const handleReturnHome = () => navigate('/');
+  const handleTrackStatus = () => navigate('/request-tracking', { state: { formType, residentId } });
 
   return (
     <section className="request-success py-12 bg-gray-100">
@@ -28,7 +43,7 @@ export default function User_Req_Success() {
           <div className="md:col-span-2">
             <div className="card p-12 text-center">
               <div className="success-icon">
-                <svg viewBox="0 0 100 100" width="120" height="120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg viewBox="0 0 100 100" width="120" height="120" fill="none">
                   <circle cx="50" cy="50" r="50" fill="#22c55e" />
                   <path d="M35 50L45 60L65 40" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -41,19 +56,19 @@ export default function User_Req_Success() {
                 <h3 className="font-bold text-xl mb-4 text-left">Request Summary</h3>
                 <div className="summary-item">
                   <strong>Reference Number:</strong>
-                  <span>XXXX-XX99-619</span>
+                  <span>{trackingNumber}</span>
                 </div>
                 <div className="summary-item">
                   <strong>Date Submitted:</strong>
-                  <span>February 7, 2026</span>
+                  <span>{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                 </div>
                 <div className="summary-item">
                   <strong>Document Type:</strong>
                   <span>{formType}</span>
                 </div>
                 <div className="summary-item">
-                  <strong>Applicants Name:</strong>
-                  <span>[Given Name]</span>
+                  <strong>Applicant's Name:</strong>
+                  <span>{firstName}</span>
                 </div>
               </div>
 
@@ -74,14 +89,8 @@ export default function User_Req_Success() {
 
             <div className="card p-6">
               <h4 className="font-bold mb-3">Need Help?</h4>
-              <p className="text-sm mb-2">
-                <strong>Mobile:</strong><br />
-                0969-619-6767
-              </p>
-              <p className="text-sm">
-                <strong>Email:</strong><br />
-                helpdesk@barangaysanbartolome.gov.ph
-              </p>
+              <p className="text-sm mb-2"><strong>Mobile:</strong><br />0969-619-6767</p>
+              <p className="text-sm"><strong>Email:</strong><br />helpdesk@barangaysanbartolome.gov.ph</p>
             </div>
           </div>
         </div>

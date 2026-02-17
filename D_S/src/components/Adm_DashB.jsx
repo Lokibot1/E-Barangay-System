@@ -67,7 +67,7 @@ export default function AdminDashboard() {
 
           <div className="admin-actions-wrap">
             <button className="admin-actions" onClick={() => setMenuOpen((s) => !s)} aria-haspopup="true" aria-expanded={menuOpen}>
-              Admin: Juan Dela Cruz ▾
+              Admin: Aggabao▾
             </button>
 
             {menuOpen && (
@@ -86,10 +86,10 @@ export default function AdminDashboard() {
               <h2>Dashboard</h2>
 
               <div className="cards">
-                <div className="card">Pending Requests<br/><strong>49</strong></div>
-                <div className="card">Total Revenue<br/><strong>₱550.00</strong></div>
-                <div className="card">Processed Today<br/><strong>30</strong></div>
-                <div className="card">Registered ID's<br/><strong>14</strong></div>
+                <div className="card">Pending Requests<br/><strong>1</strong></div>
+                <div className="card">Total Revenue<br/><strong>₱500.00</strong></div>
+                <div className="card">Processed Today<br/><strong>1</strong></div>
+                <div className="card">Registered ID's<br/><strong>0</strong></div>
               </div>
 
               <Adm_Recent_DocReq />

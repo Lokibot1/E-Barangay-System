@@ -12,22 +12,36 @@ export default function LoginPage() {
 
   function handleSubmit(e) {
     e.preventDefault();
-    const uname = email.trim().toLowerCase();
+    const uname = email.trim();
+    const pass = password;
 
-    if (uname === 'admin' && password === 'password') {
-      localStorage.setItem('role', 'admin');
-      navigate('/admin');
-      return;
-    }
+    fetch('http://localhost/E-Barangay-System/D_S/login.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: uname, password: pass })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert(`Login Successful!`);
 
-    if (uname === 'user' && password === 'password') {
-      localStorage.setItem('role', 'user');
-      navigate('/');
-      return;
-    }
+          localStorage.setItem('role', data.role);
+          localStorage.setItem('username', data.username);
+          localStorage.setItem('resident_id', data.resident_id);
 
-    console.log('login attempt', { email, password });
-    alert('Invalid credentials');
+          if (data.role === 'admin') {
+            navigate('/admin'); 
+          } else {
+            navigate('/'); 
+          }
+        } else {
+          alert(data.message || 'Invalid credentials');
+        }
+      })
+      .catch(err => {
+        console.error('Login error:', err);
+        alert('Something went wrong.');
+      });
   }
 
   return (
@@ -37,7 +51,7 @@ export default function LoginPage() {
           <img src={logo} alt="logo" className="sblogo" />
         </div>
 
-        <h1 className="title">Barangay San Bartolome<br/>Office Services Portal</h1>
+        <h1 className="title">Barangay San Bartolome<br />Office Services Portal</h1>
 
         <form className="login-form" onSubmit={handleSubmit}>
           <label className="input-label">

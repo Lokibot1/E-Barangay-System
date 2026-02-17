@@ -9,19 +9,19 @@ export default function Adm_Analytics() {
       <div className="analytics-cards">
         <div className="metric-card">
           <div className="metric-label">Total Requests</div>
-          <div className="metric-value">267</div>
+          <div className="metric-value">1</div>
         </div>
         <div className="metric-card">
           <div className="metric-label">Total Revenue</div>
-          <div className="metric-value">₱1,000.00</div>
+          <div className="metric-value">₱0.00</div>
         </div>
         <div className="metric-card">
           <div className="metric-label">Avg. Processing Time</div>
-          <div className="metric-value">1.5 Days</div>
+          <div className="metric-value">0 Days</div>
         </div>
         <div className="metric-card">
           <div className="metric-label">Pending Requests</div>
-          <div className="metric-value">40</div>
+          <div className="metric-value">1</div>
         </div>
       </div>
 
@@ -34,26 +34,66 @@ export default function Adm_Analytics() {
           <h3>Requests by Document Type</h3>
           <div className="donut-chart">
             <svg viewBox="0 0 120 120" className="donut-svg">
-              {/* Indigency - 50% (green) */}
-              <circle cx="60" cy="60" r="45" fill="none" stroke="#15803d" strokeWidth="20" strokeDasharray="141.3 282.6" transform="rotate(-90 60 60)" />
-              {/* Residency - 30% (yellow) */}
-              <circle cx="60" cy="60" r="45" fill="none" stroke="#fbbf24" strokeWidth="20" strokeDasharray="84.78 282.6" strokeDashoffset="-141.3" transform="rotate(-90 60 60)" />
-              {/* Barangay ID - 20% (gray) */}
-              <circle cx="60" cy="60" r="45" fill="none" stroke="#d1d5db" strokeWidth="20" strokeDasharray="56.52 282.6" strokeDashoffset="-226.08" transform="rotate(-90 60 60)" />
-              <text x="60" y="65" textAnchor="middle" fontSize="16" fontWeight="700">50%</text>
+              
+              {/* Indigency - 0% (kept but invisible) */}
+              <circle 
+                cx="60" 
+                cy="60" 
+                r="45" 
+                fill="none" 
+                stroke="#15803d" 
+                strokeWidth="20" 
+                strokeDasharray="0 282.6" 
+                transform="rotate(-90 60 60)" 
+              />
+
+              {/* Residency - 0% (kept but invisible) */}
+              <circle 
+                cx="60" 
+                cy="60" 
+                r="45" 
+                fill="none" 
+                stroke="#fbbf24" 
+                strokeWidth="20" 
+                strokeDasharray="0 282.6" 
+                transform="rotate(-90 60 60)" 
+              />
+
+              {/* Barangay ID - 100% (gray) */}
+              <circle 
+                cx="60" 
+                cy="60" 
+                r="45" 
+                fill="none" 
+                stroke="#d1d5db" 
+                strokeWidth="20" 
+                strokeDasharray="282.6 282.6" 
+                transform="rotate(-90 60 60)" 
+              />
+
+              <text 
+                x="60" 
+                y="65" 
+                textAnchor="middle" 
+                fontSize="16" 
+                fontWeight="700"
+              >
+                100%
+              </text>
             </svg>
+
             <div className="donut-legend">
               <div className="legend-item">
                 <span className="legend-color" style={{ backgroundColor: '#15803d' }}></span>
-                <span>Certificate of Indigency</span>
+                <span>Certificate of Indigency (0%)</span>
               </div>
               <div className="legend-item">
                 <span className="legend-color" style={{ backgroundColor: '#fbbf24' }}></span>
-                <span>Certificate of Residency</span>
+                <span>Certificate of Residency (0%)</span>
               </div>
               <div className="legend-item">
                 <span className="legend-color" style={{ backgroundColor: '#d1d5db' }}></span>
-                <span>Barangay ID</span>
+                <span>Barangay ID (100%)</span>
               </div>
             </div>
           </div>
@@ -66,13 +106,19 @@ export default function Adm_Analytics() {
           <div className="bar-item">
             <label>Indigency</label>
             <div className="bar-container">
-              <div className="bar-fill" style={{ width: '85%' }}></div>
+              <div className="bar-fill" style={{ width: '0%' }}></div>
             </div>
           </div>
           <div className="bar-item">
             <label>Residency</label>
             <div className="bar-container">
-              <div className="bar-fill" style={{ width: '65%' }}></div>
+              <div className="bar-fill" style={{ width: '0%' }}></div>
+            </div>
+          </div>
+          <div className="bar-item">
+            <label>Barangay ID</label>
+            <div className="bar-container">
+              <div className="bar-fill" style={{ width: '100%' }}></div>
             </div>
           </div>
         </div>

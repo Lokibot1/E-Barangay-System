@@ -1,30 +1,53 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './User_Req_Track.css';
 
 export default function User_Req_Track() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Form type and residentId from previous page
+  const formType = location.state?.formType || 'Barangay ID';
+  const residentId = location.state?.residentId || 15; // default 15 for testing
+
   const [referenceNumber, setReferenceNumber] = useState('XXXX-XX99-619');
   const [trackingData, setTrackingData] = useState({
     status: 'Under Review',
     currentStep: 2,
-    dateSubmitted: 'February 3, 2026',
-    documentType: location.state?.formType || 'Barangay ID',
+    dateSubmitted: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+    documentType: formType,
     applicantName: '[Given Name]'
   });
 
+  useEffect(() => {
+    if (residentId) {
+      fetch(`http://localhost/E-Barangay-System/D_S/getResidentInfo.php?resident_id=${residentId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data.error) {
+            setReferenceNumber(data.tracking_number);
+            setTrackingData(prev => ({
+              ...prev,
+              documentType: formType,
+              applicantName: data.first_name
+            }));
+          } else {
+            console.error(data.error);
+          }
+        })
+        .catch(err => console.error('Error fetching resident info:', err));
+    }
+  }, [residentId, formType]);
+
   const handleTrack = () => {
-    // Placeholder for actual tracking logic
     console.log('Tracking reference:', referenceNumber);
+    // Optionally: Fetch timeline/status from backend
   };
 
-  const handleReturnHome = () => {
-    navigate('/');
-  };
+  const handleReturnHome = () => navigate('/');
 
   const steps = [
-    { number: 1, label: 'Request Submitted', status: 'completed', date: 'February 3, 2026' },
+    { number: 1, label: 'Request Submitted', status: 'completed', date: trackingData.dateSubmitted },
     { number: 2, label: 'Under Review', status: 'current', date: 'Current Step' },
     { number: 3, label: 'Ready for Pick-Up', status: 'pending', date: 'Pending' },
     { number: 4, label: 'Completed', status: 'pending', date: 'Pending' }
@@ -89,14 +112,14 @@ export default function User_Req_Track() {
                 </div>
               </div>
 
-              {/* Request Details - Inside same container */}
+              {/* Request Details */}
               <div className="request-details-section p-6 border-t border-gray-200">
                 <h3 className="font-bold text-xl mb-4">Request Details</h3>
                 <div className="space-y-3">
-                  <p><strong>Reference Number:</strong> {trackingData.referenceNumber || referenceNumber}</p>
+                  <p><strong>Reference Number:</strong> {referenceNumber}</p>
                   <p><strong>Date Submitted:</strong> {trackingData.dateSubmitted}</p>
                   <p><strong>Document Type:</strong> {trackingData.documentType}</p>
-                  <p><strong>Applicants Name:</strong> {trackingData.applicantName}</p>
+                  <p><strong>Applicant Name:</strong> {trackingData.applicantName}</p>
                 </div>
                 <button className="btn-return" onClick={handleReturnHome}>Return to Home</button>
               </div>
@@ -107,7 +130,9 @@ export default function User_Req_Track() {
           <div className="right-column">
             <div className="card">
               <h3 className="font-bold text-xl mb-3">Service Information</h3>
-              <p className="text-sm">The {trackingData.documentType} is an official identification document issued to residents. Your application for a {trackingData.documentType} has been received and is currently under review. If you have any questions or have lost your reference number, please contact our support desk.</p>
+              <p className="text-sm">
+                The {trackingData.documentType} is an official identification document issued to residents. Your application has been received and is currently under review. If you have any questions or lost your reference number, contact our support desk.
+              </p>
             </div>
 
             <div className="card">
