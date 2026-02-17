@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import themeTokens from "../../../Themetokens";
 import { getUser } from "../../../services/sub-system-3/loginService";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
 import { getMyComplaints } from "../../../services/sub-system-3/complaintService";
+import InsightsModal from "../../../components/sub-system-3/InsightsModal";
 import sanBartolomeImg from "../../../assets/css/images/SanBartolome.jpg";
 import {
   BarChart,
@@ -44,12 +45,25 @@ const AdminLanding = () => {
   const [incidents, setIncidents] = useState([]);
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showKebab, setShowKebab] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
+  const kebabRef = useRef(null);
 
   useEffect(() => {
     const handleThemeChange = (e) => setCurrentTheme(e.detail);
     window.addEventListener("themeChange", handleThemeChange);
     return () => window.removeEventListener("themeChange", handleThemeChange);
   }, []);
+
+  // Close kebab on outside click
+  useEffect(() => {
+    if (!showKebab) return;
+    const handler = (e) => {
+      if (kebabRef.current && !kebabRef.current.contains(e.target)) setShowKebab(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showKebab]);
 
   const t = themeTokens[currentTheme];
   const isDark = currentTheme === "dark";
@@ -297,11 +311,38 @@ const AdminLanding = () => {
       {/* ── Analytics Dashboard ─────────────────────────────────────── */}
       <div className={`${t.pageBg} px-6 sm:px-10 lg:px-16 py-6`}>
         <div className="max-w-7xl mx-auto w-full">
-          <h2
-            className={`text-2xl font-bold ${t.cardText} font-spartan mb-5 text-left`}
-          >
-            Analytics Dashboard
-          </h2>
+          <div className="flex items-center justify-between mb-5">
+            <h2
+              className={`text-2xl font-bold ${t.cardText} font-spartan text-left`}
+            >
+              Analytics Dashboard
+            </h2>
+            <div className="relative" ref={kebabRef}>
+              <button
+                onClick={() => setShowKebab((prev) => !prev)}
+                className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-slate-700 text-slate-300" : "hover:bg-gray-200 text-gray-600"}`}
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="5" r="2" />
+                  <circle cx="12" cy="12" r="2" />
+                  <circle cx="12" cy="19" r="2" />
+                </svg>
+              </button>
+              {showKebab && (
+                <div className={`absolute right-0 top-full mt-1 w-52 rounded-xl shadow-lg border z-20 overflow-hidden ${isDark ? "bg-slate-700 border-slate-600" : "bg-white border-gray-200"}`}>
+                  <button
+                    onClick={() => { setShowKebab(false); setShowInsights(true); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-kumbh font-semibold transition-colors ${isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"}`}
+                  >
+                    <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    Generate Insights
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Stat Cards - compact inline */}
           <div className="grid grid-cols-3 gap-4 mb-6">
@@ -573,6 +614,14 @@ const AdminLanding = () => {
           </div>
         </div>
       </div> */}
+
+      {/* Insights Modal */}
+      <InsightsModal
+        isOpen={showInsights}
+        onClose={() => setShowInsights(false)}
+        incidents={incidents}
+        complaints={complaints}
+      />
     </div>
   );
 };
