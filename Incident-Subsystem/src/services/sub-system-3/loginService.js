@@ -18,6 +18,7 @@ export const login = async (email, password) => {
   });
 
   const data = await response.json();
+  console.log("[DEBUG] Login API response:", data);
 
   if (!response.ok) {
     throw new Error(data.message || "Invalid email or password.");
@@ -30,11 +31,14 @@ export const login = async (email, password) => {
  * Persist auth data (token + user) to localStorage.
  */
 export const saveAuth = (data) => {
-  if (data.token) {
-    localStorage.setItem("authToken", data.token);
+  const token = data.token || data.access_token;
+  const user = data.user || data.data?.user;
+
+  if (token) {
+    localStorage.setItem("authToken", token);
   }
-  if (data.user) {
-    localStorage.setItem("authUser", JSON.stringify(data.user));
+  if (user) {
+    localStorage.setItem("authUser", JSON.stringify(user));
   }
 };
 

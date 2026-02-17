@@ -1,4 +1,4 @@
-import { getToken, isAuthenticated } from "./loginService";
+import { getToken, isAuthenticated, getUser } from "./loginService";
 
 const API_BASE = "http://localhost:8000/api";
 
@@ -43,6 +43,12 @@ const submitReport = async (formData) => {
   body.append("latitude", formData.latitude || "");
   body.append("longitude", formData.longitude || "");
   body.append("additional_notes", formData.additionalNotes || "");
+
+  const user = getUser();
+  if (user) {
+    const name = [user.first_name, user.middle_name, user.last_name].filter(Boolean).join(" ");
+    body.append("reported_by", name);
+  }
 
   // Append selected incident type IDs
   if (formData.incidentTypes && formData.incidentTypes.length > 0) {
