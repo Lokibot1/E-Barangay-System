@@ -25,7 +25,8 @@
       "Bash(git -C \"C:\\\\Projects\\\\3rd Year\\\\E-Barangay-System\" log --all --oneline --grep=\"backend\\\\|laravel\\\\|composer\\\\|api\\\\|backend-setup\" -i)",
       "Bash(git -C \"C:\\\\Projects\\\\3rd Year\\\\E-Barangay-System\" log --all --name-only --pretty=format:%s)",
       "Bash(git -C \"C:\\\\Projects\\\\3rd Year\\\\E-Barangay-System\" ls-tree -r --name-only HEAD)",
-      "Bash(git -C:*)"
+      "Bash(git -C:*)",
+      "Bash(node -e:*)"
     ]
   }
 }

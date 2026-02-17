@@ -6,6 +6,8 @@ import { incidentService } from "../../../services/sub-system-3/incidentService"
 import { getMyComplaints } from "../../../services/sub-system-3/complaintService";
 import InsightsModal from "../../../components/sub-system-3/InsightsModal";
 import sanBartolomeImg from "../../../assets/css/images/SanBartolome.jpg";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import {
   BarChart,
   Bar,
@@ -36,6 +38,131 @@ const STATUS_COLORS = {
   ongoing: "#3B82F6",
   resolved: "#10B981",
   rejected: "#EF4444",
+};
+
+// ── Reusable chart card with kebab export menu ───────────────────────
+const ChartCard = ({ title, className, isDark, children }) => {
+  const cardRef = useRef(null);
+  const menuRef = useRef(null);
+  const [open, setOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const captureChart = async () => {
+    if (!cardRef.current) return null;
+    return html2canvas(cardRef.current, {
+      backgroundColor: isDark ? "#1E293B" : "#FFFFFF",
+      scale: 2,
+      useCORS: true,
+    });
+  };
+
+  const handleSaveImage = async () => {
+    setOpen(false);
+    setExporting(true);
+    try {
+      const canvas = await captureChart();
+      if (!canvas) return;
+      const link = document.createElement("a");
+      link.download = `${title.replace(/[^a-zA-Z0-9]/g, "-")}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleSavePDF = async () => {
+    setOpen(false);
+    setExporting(true);
+    try {
+      const canvas = await captureChart();
+      if (!canvas) return;
+      const imgData = canvas.toDataURL("image/png");
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const isLandscape = imgWidth > imgHeight * 1.3;
+      const doc = new jsPDF({ orientation: isLandscape ? "landscape" : "portrait" });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 14;
+      const availW = pageWidth - margin * 2;
+      const ratio = imgHeight / imgWidth;
+      const drawW = availW;
+      const drawH = drawW * ratio;
+      const finalH = Math.min(drawH, pageHeight - margin * 2 - 20);
+      const finalW = finalH === drawH ? drawW : finalH / ratio;
+
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text(title, pageWidth / 2, margin + 4, { align: "center" });
+      doc.addImage(imgData, "PNG", (pageWidth - finalW) / 2, margin + 10, finalW, finalH);
+
+      doc.setFontSize(7);
+      doc.setTextColor(150);
+      doc.text("E-Barangay Integrated Services Platform", pageWidth / 2, pageHeight - 8, { align: "center" });
+
+      doc.save(`${title.replace(/[^a-zA-Z0-9]/g, "-")}.pdf`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  return (
+    <div className={className} ref={cardRef}>
+      <div className="flex items-center justify-between mb-4">
+        <h3
+          className={`text-sm font-bold ${isDark ? "text-slate-200" : "text-gray-900"} font-spartan uppercase tracking-wide`}
+        >
+          {title}
+        </h3>
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setOpen((p) => !p)}
+            disabled={exporting}
+            className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-slate-600 text-slate-400" : "hover:bg-gray-200 text-gray-400"} ${exporting ? "opacity-50 cursor-wait" : ""}`}
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="5" r="2" />
+              <circle cx="12" cy="12" r="2" />
+              <circle cx="12" cy="19" r="2" />
+            </svg>
+          </button>
+          {open && (
+            <div className={`absolute right-0 top-full mt-1 w-44 rounded-xl shadow-lg border z-20 overflow-hidden ${isDark ? "bg-slate-700 border-slate-600" : "bg-white border-gray-200"}`}>
+              <button
+                onClick={handleSaveImage}
+                className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-kumbh font-semibold transition-colors ${isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"}`}
+              >
+                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Save as Image
+              </button>
+              <button
+                onClick={handleSavePDF}
+                className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-kumbh font-semibold transition-colors ${isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"}`}
+              >
+                <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Save as PDF
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      {children}
+    </div>
+  );
 };
 
 const AdminLanding = () => {
@@ -391,13 +518,8 @@ const AdminLanding = () => {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Bar Chart — Monthly Reports */}
-              <div className={chartCardClass}>
-                <h3
-                  className={`text-sm font-bold ${t.cardText} font-spartan mb-4 uppercase tracking-wide`}
-                >
-                  Monthly Reports (Last 6 Months)
-                </h3>
-                <ResponsiveContainer width="100%" height={220}>
+              <ChartCard title="Monthly Reports (Last 6 Months)" className={chartCardClass} isDark={isDark}>
+                <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={monthlyData}>
                     <CartesianGrid
                       strokeDasharray="3 3"
@@ -438,24 +560,19 @@ const AdminLanding = () => {
                     />
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
+              </ChartCard>
 
               {/* Donut Chart — Status Distribution */}
-              <div className={chartCardClass}>
-                <h3
-                  className={`text-sm font-bold ${t.cardText} font-spartan mb-4 uppercase tracking-wide`}
-                >
-                  Status Distribution
-                </h3>
+              <ChartCard title="Status Distribution" className={chartCardClass} isDark={isDark}>
                 {statusData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={220}>
+                  <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
                         data={statusData}
                         cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
+                        cy="45%"
+                        innerRadius={50}
+                        outerRadius={85}
                         paddingAngle={4}
                         dataKey="value"
                         label={({ name, percent }) =>
@@ -474,25 +591,21 @@ const AdminLanding = () => {
                           fontSize: "13px",
                         }}
                       />
+                      <Legend wrapperStyle={{ fontSize: "12px" }} />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-[220px]">
+                  <div className="flex items-center justify-center h-[300px]">
                     <p className={`text-sm ${t.subtleText} font-kumbh`}>
                       No data available
                     </p>
                   </div>
                 )}
-              </div>
+              </ChartCard>
 
               {/* Line Chart — Daily Trend */}
-              <div className={chartCardClass}>
-                <h3
-                  className={`text-sm font-bold ${t.cardText} font-spartan mb-4 uppercase tracking-wide`}
-                >
-                  Report Trend (Last 14 Days)
-                </h3>
-                <ResponsiveContainer width="100%" height={220}>
+              <ChartCard title="Report Trend (Last 14 Days)" className={chartCardClass} isDark={isDark}>
+                <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={trendData}>
                     <CartesianGrid
                       strokeDasharray="3 3"
@@ -537,23 +650,18 @@ const AdminLanding = () => {
                     />
                   </LineChart>
                 </ResponsiveContainer>
-              </div>
+              </ChartCard>
 
               {/* Pie Chart — Category Breakdown */}
-              <div className={chartCardClass}>
-                <h3
-                  className={`text-sm font-bold ${t.cardText} font-spartan mb-4 uppercase tracking-wide`}
-                >
-                  Report Categories
-                </h3>
+              <ChartCard title="Report Categories" className={chartCardClass} isDark={isDark}>
                 {categoryData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={220}>
+                  <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
                         data={categoryData}
                         cx="50%"
-                        cy="50%"
-                        outerRadius={100}
+                        cy="45%"
+                        outerRadius={85}
                         paddingAngle={2}
                         dataKey="value"
                         label={({ name, percent }) =>
@@ -579,13 +687,13 @@ const AdminLanding = () => {
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-[220px]">
+                  <div className="flex items-center justify-center h-[300px]">
                     <p className={`text-sm ${t.subtleText} font-kumbh`}>
                       No data available
                     </p>
                   </div>
                 )}
-              </div>
+              </ChartCard>
             </div>
           )}
         </div>
