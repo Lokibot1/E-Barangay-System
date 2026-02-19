@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LoginPage.css';
-import bg from '../assets/sanbartolome.png';
-import logo from '../assets/sblogo.png';
+import bg from '../assets/gulodbg_hd.jpg';
+import logo from '../assets/gulod_logo1.jpeg';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -51,7 +51,7 @@ export default function LoginPage() {
           <img src={logo} alt="logo" className="sblogo" />
         </div>
 
-        <h1 className="title">Barangay San Bartolome<br />Office Services Portal</h1>
+        <h1 className="title">Barangay Gulod<br />Office Services Portal</h1>
 
         <form className="login-form" onSubmit={handleSubmit}>
           <label className="input-label">

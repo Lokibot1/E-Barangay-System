@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import ThemeModal from "../../components/sub-system-3/ThemeModal";
 import LogoutModal from "./LogoutModal";
 import { logout, getUser, isAdmin } from "../../services/sub-system-3/loginService";
@@ -129,7 +129,9 @@ const Header = ({ currentTheme, onThemeChange }) => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { language, setLanguage, tr } = useLanguage();
+  const isSubSystem2Route = location.pathname.startsWith("/sub-system-2");
 
   // Real-time notifications — merge admin and user contexts
   const adminRT = useRealTime();
@@ -232,7 +234,9 @@ const Header = ({ currentTheme, onThemeChange }) => {
                   Barangay Gulod
                 </h1>
                 <p className={`text-xs ${t.subtleText} font-kumbh`}>
-                  {tr.header.incidentReporting}
+                  {isSubSystem2Route
+                    ? "Document Services"
+                    : tr.header.incidentReporting}
                 </p>
               </div>
             </div>

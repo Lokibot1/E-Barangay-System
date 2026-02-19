@@ -15,6 +15,7 @@ import ProtectedRoute, {
 } from "./components/shared/ProtectedRoute";
 import LoginPage from "./pages/sub-system-3/LoginPage";
 import MainPage from "./pages/sub-system-3/MainPage";
+import SubSystem2MainPage from "./pages/sub-system-2/MainPage";
 import FileComplaintPage from "./pages/sub-system-3/FileComplaintPage";
 import IncidentReportPage from "./pages/sub-system-3/IncidentReportPage";
 import IncidentMapPage from "./pages/sub-system-3/IncidentMapPage";
@@ -46,6 +47,7 @@ function App() {
                     </div>
                   }
                 />
+                <Route path="/sub-system-2" element={<SubSystem2MainPage />} />
                 <Route path="/incident-complaint" element={<MainPage />} />
                 <Route
                   path="/incident-complaint/file-complaint"

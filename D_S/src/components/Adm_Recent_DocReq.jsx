@@ -7,6 +7,7 @@ export default function Adm_Recent_DocReq() {
   const [resident, setResident] = useState({
     first_name: '',
     tracking_number: '',
+    request_status: 'Not Approved',
     updated_at: ''
   });
 
@@ -39,7 +40,7 @@ export default function Adm_Recent_DocReq() {
           resident: resident.first_name,
           type: 'Barangay ID',
           date: formatDate(resident.updated_at),
-          status: 'Pending'
+          status: resident.request_status || 'Not Approved'
         }
       ]
     : [];
@@ -48,6 +49,7 @@ export default function Adm_Recent_DocReq() {
     switch (status) {
       case 'Pending': return 'badge-pending';
       case 'Approved': return 'badge-approved';
+      case 'Not Approved': return 'badge-not-approved';
       case 'For Pickup': return 'badge-pickup';
       case 'Completed': return 'badge-completed';
       case 'Declined': return 'badge-declined';
