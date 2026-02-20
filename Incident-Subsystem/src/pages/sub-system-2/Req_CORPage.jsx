@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import themeTokens from "../../Themetokens";
 
 const Req_CORPage = () => {
   const navigate = useNavigate();
-  const [showInfoModal, setShowInfoModal] = useState(true);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -23,6 +23,20 @@ const Req_CORPage = () => {
 
   const currentTheme = localStorage.getItem("appTheme") || "blue";
   const t = themeTokens[currentTheme];
+
+  useEffect(() => {
+    const hasShownInfoModal = sessionStorage.getItem("requestInfoModalShown") === "true";
+
+    if (hasShownInfoModal) {
+      return;
+    }
+
+    const timerId = setTimeout(() => {
+      setShowInfoModal(true);
+    }, 500);
+
+    return () => clearTimeout(timerId);
+  }, []);
 
   const handleFieldChange = (e) => {
     const { name, value } = e.target;
@@ -184,7 +198,10 @@ const Req_CORPage = () => {
               Please fill out the necessary or changeable information.
             </p>
             <button
-              onClick={() => setShowInfoModal(false)}
+              onClick={() => {
+                sessionStorage.setItem("requestInfoModalShown", "true");
+                setShowInfoModal(false);
+              }}
               className="mt-5 px-5 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-kumbh text-lg"
             >
               OK
