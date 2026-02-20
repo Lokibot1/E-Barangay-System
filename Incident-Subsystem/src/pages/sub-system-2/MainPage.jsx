@@ -36,7 +36,7 @@ const MainPage = () => {
         <h1
           className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${t.cardText} mb-2 sm:mb-3 font-spartan uppercase tracking-tight`}
         >
-          {tr.mainPage.title}
+          Document Services
         </h1>
       </div>
 
