@@ -25,6 +25,7 @@ import Req_Sub_COR from "./pages/sub-system-2/Req_Sub_COR";
 import Track_BID from "./pages/sub-system-2/Track_BID";
 import Track_COI from "./pages/sub-system-2/Track_COI";
 import Track_COR from "./pages/sub-system-2/Track_COR";
+import DocumentsInquiryPage from "./pages/sub-system-2/DocumentsInquiryPage";
 import FileComplaintPage from "./pages/sub-system-3/FileComplaintPage";
 import IncidentReportPage from "./pages/sub-system-3/IncidentReportPage";
 import IncidentMapPage from "./pages/sub-system-3/IncidentMapPage";
@@ -138,6 +139,10 @@ function App() {
                 <Route
                   path="/admin/reports"
                   element={<AdminPlaceholder title="Reports" />}
+                />
+                <Route
+                  path="/admin/documents-inquiry"
+                  element={<DocumentsInquiryPage />}
                 />
                 <Route
                   path="/admin/user-management"
