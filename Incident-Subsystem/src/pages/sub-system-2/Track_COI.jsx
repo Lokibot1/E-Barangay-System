@@ -92,7 +92,7 @@ const Track_COI = () => {
 
 const Step = ({ number, active = false, current = false }) => (
   <div
-    className={`w-16 h-16 rounded-full flex items-center justify-center font-spartan text-5xl font-bold ${
+    className={`w-20 h-20 rounded-full flex items-center justify-center font-spartan text-4xl font-bold ${
       active ? "bg-green-500 text-white" : current ? "bg-lime-200 text-black" : "bg-gray-400 text-white"
     }`}
   >

@@ -43,16 +43,16 @@ const Req_Sub_BID = () => {
               Please wait for an email notification regarding the status of your request. You may also track its progress.
             </p>
 
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center items-center">
               <button
                 onClick={() => navigate("/sub-system-2/track-bid")}
-                className="bg-green-500 hover:bg-green-600 text-white font-kumbh text-2xl px-6 py-2 rounded-full"
+                className="bg-green-500 hover:bg-green-600 text-white font-kumbh text-2xl px-6 py-2 rounded-full min-w-[260px] text-center"
               >
                 Track Request Status
               </button>
               <button
                 onClick={() => navigate("/sub-system-2")}
-                className={`font-kumbh text-2xl px-6 py-2 rounded-full ${t.inputBg} ${t.cardText}`}
+                className={`font-kumbh text-2xl px-6 py-2 rounded-full min-w-[260px] text-center ${t.inputBg} ${t.cardText}`}
               >
                 Return to Home
               </button>
