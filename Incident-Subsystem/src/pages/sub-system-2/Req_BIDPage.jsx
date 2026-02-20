@@ -23,7 +23,7 @@ const Req_BIDPage = () => {
               Personal Information
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 text-left">
               <Field label="Full Name:" t={t} />
               <Field label="Contact Number:" t={t} />
               <Field label="Date of Birth:" type="date" t={t} />
@@ -32,14 +32,14 @@ const Req_BIDPage = () => {
                 options={["Single", "Married", "Widowed", "Separated"]}
                 t={t}
               />
-              <Field label="Email Address:" className="md:col-span-2" t={t} />
+              <Field label="Email Address:" t={t} />
             </div>
 
             <h3 className={`font-spartan text-4xl font-bold ${t.cardText} mt-8 mb-4`}>
               Address Information
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 text-left">
               <SelectField
                 label="Purok/Zone:"
                 options={["Purok/Zone 1", "Purok/Zone 2", "Purok/Zone 3", "Purok/Zone 4"]}
@@ -52,7 +52,7 @@ const Req_BIDPage = () => {
               ID Details
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 text-left">
               <Field label="Emergency Contact Name:" t={t} />
               <Field label="Emergency Contact No.:" t={t} />
               <SelectField
@@ -123,24 +123,24 @@ const Req_BIDPage = () => {
 };
 
 const Field = ({ label, type = "text", className = "", t }) => (
-  <div className={className}>
-    <label className={`font-kumbh text-2xl font-medium ${t.cardText} block mb-1`}>
+  <div className={`${className} text-left`}>
+    <label className={`font-kumbh text-2xl font-medium ${t.cardText} block mb-1 text-left`}>
       {label}
     </label>
     <input
       type={type}
-      className={`w-full border ${t.cardBorder} rounded-xl px-3 py-2 text-xl font-kumbh ${t.inputBg} ${t.inputText}`}
+      className={`w-full border ${t.cardBorder} rounded-xl px-3 py-2 text-xl font-kumbh ${t.inputBg} ${t.inputText} text-left`}
     />
   </div>
 );
 
 const SelectField = ({ label, options, t }) => (
-  <div>
-    <label className={`font-kumbh text-2xl font-medium ${t.cardText} block mb-1`}>
+  <div className="text-left">
+    <label className={`font-kumbh text-2xl font-medium ${t.cardText} block mb-1 text-left`}>
       {label}
     </label>
     <select
-      className={`w-full border ${t.cardBorder} rounded-xl px-3 py-2 text-xl font-kumbh ${t.inputBg} ${t.inputText}`}
+      className={`w-full border ${t.cardBorder} rounded-xl px-3 py-2 text-xl font-kumbh ${t.inputBg} ${t.inputText} text-left`}
     >
       {options.map((option) => (
         <option key={option} value={option}>

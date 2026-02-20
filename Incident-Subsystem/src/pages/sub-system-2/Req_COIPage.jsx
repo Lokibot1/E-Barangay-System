@@ -23,7 +23,7 @@ const Req_COIPage = () => {
               Personal Information
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 text-left">
               <Field label="Full Name:" t={t} />
               <Field label="Contact Number:" t={t} />
               <Field label="Date of Birth:" type="date" t={t} />
@@ -32,14 +32,14 @@ const Req_COIPage = () => {
                 options={["Single", "Married", "Widowed", "Separated"]}
                 t={t}
               />
-              <Field label="Email Address:" className="md:col-span-2" t={t} />
+              <Field label="Email Address:" t={t} />
             </div>
 
             <h3 className={`font-spartan text-4xl font-bold ${t.cardText} mt-8 mb-4`}>
               Address Information
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 text-left">
               <SelectField
                 label="Purok/Zone:"
                 options={["Purok/Zone 1", "Purok/Zone 2", "Purok/Zone 3", "Purok/Zone 4"]}
@@ -52,7 +52,7 @@ const Req_COIPage = () => {
               Request Details
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 text-left">
               <SelectField
                 label="Purpose of Request:"
                 options={["Medical Assistance", "Scholarship", "Legal Aid", "Other"]}
@@ -100,7 +100,7 @@ const Req_COIPage = () => {
               </p>
 
               <p className={`font-kumbh text-3xl font-bold ${t.cardText} mt-4`}>Fees:</p>
-              <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>Free for indigent residents.</p>
+              <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>0.00</p>
 
               <p className={`font-kumbh text-3xl font-bold ${t.cardText} mt-4`}>Processing Time:</p>
               <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>1-3 Working Days.</p>
@@ -110,9 +110,9 @@ const Req_COIPage = () => {
               <h3 className={`font-spartan text-3xl font-bold ${t.cardText} mb-2`}>
                 Need Help?
               </h3>
-              <p className={`font-kumbh text-2xl ${t.cardText}`}>0912 345 6789</p>
-              <p className={`font-kumbh text-2xl ${t.cardText}`}>0915 345 6549</p>
-              <p className={`font-kumbh text-2xl ${t.cardText} mt-2`}>barangaysanbartolome@gmail.com</p>
+              <p className={`font-kumbh text-2xl ${t.cardText}`}>&nbsp;</p>
+              <p className={`font-kumbh text-2xl ${t.cardText}`}>&nbsp;</p>
+              <p className={`font-kumbh text-2xl ${t.cardText} mt-2`}>&nbsp;</p>
             </div>
           </div>
         </div>
@@ -122,24 +122,24 @@ const Req_COIPage = () => {
 };
 
 const Field = ({ label, type = "text", className = "", t }) => (
-  <div className={className}>
-    <label className={`font-kumbh text-2xl font-medium ${t.cardText} block mb-1`}>
+  <div className={`${className} text-left`}>
+    <label className={`font-kumbh text-2xl font-medium ${t.cardText} block mb-1 text-left`}>
       {label}
     </label>
     <input
       type={type}
-      className={`w-full border ${t.cardBorder} rounded-xl px-3 py-2 text-xl font-kumbh ${t.inputBg} ${t.inputText}`}
+      className={`w-full border ${t.cardBorder} rounded-xl px-3 py-2 text-xl font-kumbh ${t.inputBg} ${t.inputText} text-left`}
     />
   </div>
 );
 
 const SelectField = ({ label, options, t }) => (
-  <div>
-    <label className={`font-kumbh text-2xl font-medium ${t.cardText} block mb-1`}>
+  <div className="text-left">
+    <label className={`font-kumbh text-2xl font-medium ${t.cardText} block mb-1 text-left`}>
       {label}
     </label>
     <select
-      className={`w-full border ${t.cardBorder} rounded-xl px-3 py-2 text-xl font-kumbh ${t.inputBg} ${t.inputText}`}
+      className={`w-full border ${t.cardBorder} rounded-xl px-3 py-2 text-xl font-kumbh ${t.inputBg} ${t.inputText} text-left`}
     >
       {options.map((option) => (
         <option key={option} value={option}>
