@@ -10,19 +10,19 @@ const documentServiceChildren = [
     id: "request-barangay-id",
     label: "Request Barangay ID",
     icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
-    path: "/sub-system-2",
+    path: "/sub-system-2/req-bid",
   },
   {
     id: "request-indigency",
     label: "Request Certificate of Indigency",
     icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
-    path: "/sub-system-2",
+    path: "/sub-system-2/req-coi",
   },
   {
     id: "request-residency",
     label: "Request Certificate of Residency",
     icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
-    path: "/sub-system-2",
+    path: "/sub-system-2/req-cor",
   },
 ];
 

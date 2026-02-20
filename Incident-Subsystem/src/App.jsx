@@ -16,6 +16,9 @@ import ProtectedRoute, {
 import LoginPage from "./pages/sub-system-3/LoginPage";
 import MainPage from "./pages/sub-system-3/MainPage";
 import SubSystem2MainPage from "./pages/sub-system-2/MainPage";
+import Req_BIDPage from "./pages/sub-system-2/Req_BIDPage";
+import Req_COIPage from "./pages/sub-system-2/Req_COIPage";
+import Req_CORPage from "./pages/sub-system-2/Req_CORPage";
 import FileComplaintPage from "./pages/sub-system-3/FileComplaintPage";
 import IncidentReportPage from "./pages/sub-system-3/IncidentReportPage";
 import IncidentMapPage from "./pages/sub-system-3/IncidentMapPage";
@@ -48,6 +51,18 @@ function App() {
                   }
                 />
                 <Route path="/sub-system-2" element={<SubSystem2MainPage />} />
+                <Route
+                  path="/sub-system-2/req-bid"
+                  element={<Req_BIDPage />}
+                />
+                <Route
+                  path="/sub-system-2/req-coi"
+                  element={<Req_COIPage />}
+                />
+                <Route
+                  path="/sub-system-2/req-cor"
+                  element={<Req_CORPage />}
+                />
                 <Route path="/incident-complaint" element={<MainPage />} />
                 <Route
                   path="/incident-complaint/file-complaint"

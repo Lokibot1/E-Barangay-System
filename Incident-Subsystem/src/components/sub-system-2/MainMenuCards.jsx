@@ -13,7 +13,7 @@ const MainMenuCards = ({ currentTheme }) => {
       bgGradient: "from-amber-500 to-orange-500",
       image:
         "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&q=80",
-      path: "/sub-system-2",
+      path: "/sub-system-2/req-bid",
     },
     {
       id: "request-indigency",
@@ -21,7 +21,7 @@ const MainMenuCards = ({ currentTheme }) => {
       bgGradient: "from-blue-600 to-indigo-700",
       image:
         "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80",
-      path: "/sub-system-2",
+      path: "/sub-system-2/req-coi",
     },
     {
       id: "request-residency",
@@ -29,7 +29,7 @@ const MainMenuCards = ({ currentTheme }) => {
       bgGradient: "from-green-500 to-emerald-600",
       image:
         "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&q=80",
-      path: "/sub-system-2",
+      path: "/sub-system-2/req-cor",
     },
   ];
 
