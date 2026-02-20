@@ -1,9 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import themeTokens from "../../Themetokens";
 
 const Req_BIDPage = () => {
+  const navigate = useNavigate();
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const currentTheme = localStorage.getItem("appTheme") || "blue";
   const t = themeTokens[currentTheme];
+
+  const handleConfirmSubmit = () => {
+    setShowConfirmModal(false);
+    navigate("/sub-system-2/req-sub-bid");
+  };
 
   return (
     <div className={`${t.pageBg} min-h-full p-4 sm:p-6 lg:p-8`}>
@@ -79,7 +87,10 @@ const Req_BIDPage = () => {
             </div>
 
             <div className="mt-8 space-y-2">
-              <button className="w-full bg-green-500 hover:bg-green-600 text-white font-kumbh text-2xl py-3 rounded-full transition-colors">
+              <button
+                onClick={() => setShowConfirmModal(true)}
+                className="w-full bg-green-500 hover:bg-green-600 text-white font-kumbh text-2xl py-3 rounded-full transition-colors"
+              >
                 Submit Barangay ID Request
               </button>
               <button className={`w-full ${t.inputBg} ${t.cardText} font-kumbh text-2xl py-3 rounded-full`}>
@@ -118,6 +129,33 @@ const Req_BIDPage = () => {
           </div>
         </div>
       </div>
+
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4">
+          <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl w-full max-w-md p-6`}>
+            <h3 className={`font-spartan text-3xl font-bold ${t.cardText}`}>
+              Confirm Submission
+            </h3>
+            <p className={`font-kumbh text-xl ${t.subtleText} mt-2`}>
+              Please confirm that all information provided is correct.
+            </p>
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className={`px-4 py-2 rounded-lg ${t.inputBg} ${t.cardText} font-kumbh text-lg`}
+              >
+                Review
+              </button>
+              <button
+                onClick={handleConfirmSubmit}
+                className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-kumbh text-lg"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

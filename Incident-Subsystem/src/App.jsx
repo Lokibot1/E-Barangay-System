@@ -19,6 +19,9 @@ import SubSystem2MainPage from "./pages/sub-system-2/MainPage";
 import Req_BIDPage from "./pages/sub-system-2/Req_BIDPage";
 import Req_COIPage from "./pages/sub-system-2/Req_COIPage";
 import Req_CORPage from "./pages/sub-system-2/Req_CORPage";
+import Req_Sub_BID from "./pages/sub-system-2/Req_Sub_BID";
+import Req_Sub_COI from "./pages/sub-system-2/Req_Sub_COI";
+import Req_Sub_COR from "./pages/sub-system-2/Req_Sub_COR";
 import FileComplaintPage from "./pages/sub-system-3/FileComplaintPage";
 import IncidentReportPage from "./pages/sub-system-3/IncidentReportPage";
 import IncidentMapPage from "./pages/sub-system-3/IncidentMapPage";
@@ -62,6 +65,18 @@ function App() {
                 <Route
                   path="/sub-system-2/req-cor"
                   element={<Req_CORPage />}
+                />
+                <Route
+                  path="/sub-system-2/req-sub-bid"
+                  element={<Req_Sub_BID />}
+                />
+                <Route
+                  path="/sub-system-2/req-sub-coi"
+                  element={<Req_Sub_COI />}
+                />
+                <Route
+                  path="/sub-system-2/req-sub-cor"
+                  element={<Req_Sub_COR />}
                 />
                 <Route path="/incident-complaint" element={<MainPage />} />
                 <Route
