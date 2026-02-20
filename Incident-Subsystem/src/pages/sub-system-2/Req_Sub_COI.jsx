@@ -65,7 +65,7 @@ const Req_Sub_COI = () => {
               <p className={`font-kumbh text-3xl font-bold ${t.cardText}`}>Requirements:</p>
               <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>Valid ID, Personal Appearance (for pick-up).</p>
               <p className={`font-kumbh text-3xl font-bold ${t.cardText} mt-4`}>Fees:</p>
-              <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>0.00</p>
+              <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>₱0.00</p>
               <p className={`font-kumbh text-3xl font-bold ${t.cardText} mt-4`}>Processing Time:</p>
               <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>1-3 Working Days.</p>
             </div>

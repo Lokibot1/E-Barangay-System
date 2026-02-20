@@ -65,7 +65,8 @@ const Req_Sub_BID = () => {
               <p className={`font-kumbh text-3xl font-bold ${t.cardText}`}>Requirements:</p>
               <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>Valid ID, Proof of Billing, Personal Appearance.</p>
               <p className={`font-kumbh text-3xl font-bold ${t.cardText} mt-4`}>Fees:</p>
-              <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>0.00</p>
+              <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>₱20.00 (Voter)</p>
+              <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>₱30.00 (Non-voter)</p>
               <p className={`font-kumbh text-3xl font-bold ${t.cardText} mt-4`}>Validity:</p>
               <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>1 Year</p>
             </div>

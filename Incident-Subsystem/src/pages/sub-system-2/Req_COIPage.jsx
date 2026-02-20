@@ -4,6 +4,8 @@ import themeTokens from "../../Themetokens";
 
 const Req_COIPage = () => {
   const navigate = useNavigate();
+  const [showInfoModal, setShowInfoModal] = useState(true);
+  const [showExitModal, setShowExitModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -39,6 +41,11 @@ const Req_COIPage = () => {
   const handleSuccessContinue = () => {
     setShowSuccessModal(false);
     navigate("/sub-system-2/req-sub-coi");
+  };
+
+  const handleExitPage = () => {
+    setShowExitModal(false);
+    navigate("/sub-system-2");
   };
 
   return (
@@ -129,7 +136,10 @@ const Req_COIPage = () => {
               >
                 Submit Request
               </button>
-              <button className={`w-full ${t.inputBg} ${t.cardText} font-kumbh text-2xl py-3 rounded-full`}>
+              <button
+                onClick={() => setShowExitModal(true)}
+                className={`w-full ${t.inputBg} ${t.cardText} font-kumbh text-2xl py-3 rounded-full`}
+              >
                 Cancel
               </button>
             </div>
@@ -148,7 +158,7 @@ const Req_COIPage = () => {
               </p>
 
               <p className={`font-kumbh text-3xl font-bold ${t.cardText} mt-4`}>Fees:</p>
-              <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>0.00</p>
+              <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>₱0.00</p>
 
               <p className={`font-kumbh text-3xl font-bold ${t.cardText} mt-4`}>Processing Time:</p>
               <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>1-3 Working Days.</p>
@@ -164,6 +174,50 @@ const Req_COIPage = () => {
           </div>
         </div>
       </div>
+
+      {showInfoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4">
+          <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl w-full max-w-md p-6 text-center`}>
+            <div className="mx-auto mb-4 w-16 h-16 rounded-full border-4 border-amber-500 text-amber-500 flex items-center justify-center font-spartan text-4xl font-bold">
+              !
+            </div>
+            <p className={`font-kumbh text-xl ${t.cardText}`}>
+              Please fill out the necessary or changeable information.
+            </p>
+            <button
+              onClick={() => setShowInfoModal(false)}
+              className="mt-5 px-5 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-kumbh text-lg"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showExitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4">
+          <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl w-full max-w-md p-6 text-center`}>
+            <div className="mx-auto mb-4 w-16 h-16 rounded-full border-4 border-red-500 text-red-500 flex items-center justify-center font-spartan text-4xl font-bold">
+              ×
+            </div>
+            <h3 className={`font-spartan text-3xl font-bold ${t.cardText}`}>Do you want to exit?</h3>
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <button
+                onClick={() => setShowExitModal(false)}
+                className={`px-5 py-2 rounded-lg ${t.inputBg} ${t.cardText} font-kumbh text-lg`}
+              >
+                No
+              </button>
+              <button
+                onClick={handleExitPage}
+                className="px-5 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-kumbh text-lg"
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4">
