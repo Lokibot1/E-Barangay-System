@@ -5,11 +5,41 @@ import themeTokens from "../../Themetokens";
 const Req_BIDPage = () => {
   const navigate = useNavigate();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    contactNumber: "",
+    dateOfBirth: "",
+    civilStatus: "Single",
+    emailAddress: "",
+    purokZone: "Purok/Zone 1",
+    streetAddress: "",
+    emergencyContactName: "",
+    emergencyContactNumber: "",
+    bloodType: "A+",
+  });
+
   const currentTheme = localStorage.getItem("appTheme") || "blue";
   const t = themeTokens[currentTheme];
 
-  const handleConfirmSubmit = () => {
+  const handleFieldChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleOpenPreview = () => {
     setShowConfirmModal(false);
+    setShowPreviewModal(true);
+  };
+
+  const handleConfirmSubmit = () => {
+    setShowPreviewModal(false);
+    setShowSuccessModal(true);
+  };
+
+  const handleSuccessContinue = () => {
+    setShowSuccessModal(false);
     navigate("/sub-system-2/req-sub-bid");
   };
 
@@ -24,23 +54,24 @@ const Req_BIDPage = () => {
         </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div
-            className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-6 lg:col-span-2`}
-          >
+          <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-6 lg:col-span-2`}>
             <h2 className={`font-spartan text-4xl font-bold ${t.cardText} mb-4`}>
               Personal Information
             </h2>
 
             <div className="grid grid-cols-1 gap-4 text-left">
-              <Field label="Full Name:" t={t} />
-              <Field label="Contact Number:" t={t} />
-              <Field label="Date of Birth:" type="date" t={t} />
+              <Field label="Full Name:" name="fullName" value={formData.fullName} onChange={handleFieldChange} t={t} />
+              <Field label="Contact Number:" name="contactNumber" value={formData.contactNumber} onChange={handleFieldChange} t={t} />
+              <Field label="Date of Birth:" type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleFieldChange} t={t} />
               <SelectField
                 label="Civil Status:"
+                name="civilStatus"
                 options={["Single", "Married", "Widowed", "Separated"]}
+                value={formData.civilStatus}
+                onChange={handleFieldChange}
                 t={t}
               />
-              <Field label="Email Address:" t={t} />
+              <Field label="Email Address:" name="emailAddress" value={formData.emailAddress} onChange={handleFieldChange} t={t} />
             </div>
 
             <h3 className={`font-spartan text-4xl font-bold ${t.cardText} mt-8 mb-4`}>
@@ -50,10 +81,13 @@ const Req_BIDPage = () => {
             <div className="grid grid-cols-1 gap-4 text-left">
               <SelectField
                 label="Purok/Zone:"
+                name="purokZone"
                 options={["Purok/Zone 1", "Purok/Zone 2", "Purok/Zone 3", "Purok/Zone 4"]}
+                value={formData.purokZone}
+                onChange={handleFieldChange}
                 t={t}
               />
-              <Field label="Street Address:" t={t} />
+              <Field label="Street Address:" name="streetAddress" value={formData.streetAddress} onChange={handleFieldChange} t={t} />
             </div>
 
             <h3 className={`font-spartan text-4xl font-bold ${t.cardText} mt-8 mb-4`}>
@@ -61,11 +95,14 @@ const Req_BIDPage = () => {
             </h3>
 
             <div className="grid grid-cols-1 gap-4 text-left">
-              <Field label="Emergency Contact Name:" t={t} />
-              <Field label="Emergency Contact No.:" t={t} />
+              <Field label="Emergency Contact Name:" name="emergencyContactName" value={formData.emergencyContactName} onChange={handleFieldChange} t={t} />
+              <Field label="Emergency Contact No.:" name="emergencyContactNumber" value={formData.emergencyContactNumber} onChange={handleFieldChange} t={t} />
               <SelectField
                 label="Blood Type:"
+                name="bloodType"
                 options={["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]}
+                value={formData.bloodType}
+                onChange={handleFieldChange}
                 t={t}
               />
             </div>
@@ -122,9 +159,8 @@ const Req_BIDPage = () => {
               <h3 className={`font-spartan text-3xl font-bold ${t.cardText} mb-2`}>
                 Need Help?
               </h3>
-              <p className={`font-kumbh text-2xl ${t.cardText}`}>&nbsp;</p>
-              <p className={`font-kumbh text-2xl ${t.cardText}`}>&nbsp;</p>
-              <p className={`font-kumbh text-2xl ${t.cardText}`}>&nbsp;</p>
+              <p className={`font-kumbh text-2xl ${t.cardText}`}>8-3663-198</p>
+              <p className={`font-kumbh text-2xl ${t.cardText} mt-2`}>teamtolentino@gmail.com</p>
             </div>
           </div>
         </div>
@@ -144,7 +180,41 @@ const Req_BIDPage = () => {
                 onClick={() => setShowConfirmModal(false)}
                 className={`px-4 py-2 rounded-lg ${t.inputBg} ${t.cardText} font-kumbh text-lg`}
               >
+                Cancel
+              </button>
+              <button
+                onClick={handleOpenPreview}
+                className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-kumbh text-lg"
+              >
                 Review
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPreviewModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4">
+          <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl w-full max-w-2xl p-6 max-h-[85vh] overflow-y-auto`}>
+            <h3 className={`font-spartan text-3xl font-bold ${t.cardText}`}>Review Information</h3>
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <PreviewItem label="Full Name" value={formData.fullName} t={t} />
+              <PreviewItem label="Contact Number" value={formData.contactNumber} t={t} />
+              <PreviewItem label="Date of Birth" value={formData.dateOfBirth} t={t} />
+              <PreviewItem label="Civil Status" value={formData.civilStatus} t={t} />
+              <PreviewItem label="Email Address" value={formData.emailAddress} t={t} />
+              <PreviewItem label="Purok/Zone" value={formData.purokZone} t={t} />
+              <PreviewItem label="Street Address" value={formData.streetAddress} t={t} />
+              <PreviewItem label="Emergency Contact Name" value={formData.emergencyContactName} t={t} />
+              <PreviewItem label="Emergency Contact No." value={formData.emergencyContactNumber} t={t} />
+              <PreviewItem label="Blood Type" value={formData.bloodType} t={t} />
+            </div>
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowPreviewModal(false)}
+                className={`px-4 py-2 rounded-lg ${t.inputBg} ${t.cardText} font-kumbh text-lg`}
+              >
+                Cancel
               </button>
               <button
                 onClick={handleConfirmSubmit}
@@ -156,28 +226,56 @@ const Req_BIDPage = () => {
           </div>
         </div>
       )}
+
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4">
+          <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl w-full max-w-md p-6 text-center`}>
+            <div className="relative w-24 h-24 mx-auto mb-4">
+              <span className="absolute inset-0 rounded-full bg-green-400/40 animate-ping" />
+              <div className="relative w-24 h-24 rounded-full bg-green-500 flex items-center justify-center">
+                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <h3 className={`font-spartan text-3xl font-bold ${t.cardText}`}>Requested Successfully!</h3>
+            <button
+              onClick={handleSuccessContinue}
+              className="mt-5 px-5 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-kumbh text-lg"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-const Field = ({ label, type = "text", className = "", t }) => (
+const Field = ({ label, type = "text", className = "", name, value, onChange, t }) => (
   <div className={`${className} text-left`}>
     <label className={`font-kumbh text-2xl font-medium ${t.cardText} block mb-1 text-left`}>
       {label}
     </label>
     <input
       type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
       className={`w-full border ${t.cardBorder} rounded-xl px-3 py-2 text-xl font-kumbh ${t.inputBg} ${t.inputText} text-left`}
     />
   </div>
 );
 
-const SelectField = ({ label, options, t }) => (
+const SelectField = ({ label, options, name, value, onChange, t }) => (
   <div className="text-left">
     <label className={`font-kumbh text-2xl font-medium ${t.cardText} block mb-1 text-left`}>
       {label}
     </label>
     <select
+      name={name}
+      value={value}
+      onChange={onChange}
       className={`w-full border ${t.cardBorder} rounded-xl px-3 py-2 text-xl font-kumbh ${t.inputBg} ${t.inputText} text-left`}
     >
       {options.map((option) => (
@@ -186,6 +284,13 @@ const SelectField = ({ label, options, t }) => (
         </option>
       ))}
     </select>
+  </div>
+);
+
+const PreviewItem = ({ label, value, t }) => (
+  <div className={`border ${t.cardBorder} rounded-lg p-3 ${t.inputBg}`}>
+    <p className={`font-kumbh text-sm ${t.subtleText}`}>{label}</p>
+    <p className={`font-kumbh text-lg ${t.cardText}`}>{value || "-"}</p>
   </div>
 );
 

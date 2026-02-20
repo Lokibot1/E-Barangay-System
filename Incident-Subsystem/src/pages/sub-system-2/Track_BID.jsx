@@ -89,9 +89,8 @@ const Track_BID = () => {
             </div>
             <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-6 text-left`}>
               <h3 className={`font-spartan text-3xl font-bold ${t.cardText} mb-2`}>Need Help?</h3>
-              <p className={`font-kumbh text-2xl ${t.cardText}`}>&nbsp;</p>
-              <p className={`font-kumbh text-2xl ${t.cardText}`}>&nbsp;</p>
-              <p className={`font-kumbh text-2xl ${t.cardText}`}>&nbsp;</p>
+              <p className={`font-kumbh text-2xl ${t.cardText}`}>8-3663-198</p>
+              <p className={`font-kumbh text-2xl ${t.cardText} mt-2`}>teamtolentino@gmail.com</p>
             </div>
           </div>
         </div>
