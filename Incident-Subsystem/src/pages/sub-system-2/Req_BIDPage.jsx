@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useBlocker, useNavigate } from "react-router-dom";
 import themeTokens from "../../Themetokens";
 
 const Req_BIDPage = () => {
   const navigate = useNavigate();
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [showExitModal, setShowExitModal] = useState(false);
+  const [allowNavigation, setAllowNavigation] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -25,18 +25,21 @@ const Req_BIDPage = () => {
   const currentTheme = localStorage.getItem("appTheme") || "blue";
   const t = themeTokens[currentTheme];
 
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      !allowNavigation && currentLocation.pathname !== nextLocation.pathname
+  );
+
   useEffect(() => {
-    const hasShownInfoModal = sessionStorage.getItem("requestInfoModalShown") === "true";
+    const hasShownInfoModal = sessionStorage.getItem("req_bid_info_modal_shown") === "true";
+    if (hasShownInfoModal) return;
 
-    if (hasShownInfoModal) {
-      return;
-    }
-
-    const timerId = setTimeout(() => {
+    const timer = setTimeout(() => {
       setShowInfoModal(true);
-    }, 500);
+      sessionStorage.setItem("req_bid_info_modal_shown", "true");
+    }, 700);
 
-    return () => clearTimeout(timerId);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleFieldChange = (e) => {
@@ -55,13 +58,14 @@ const Req_BIDPage = () => {
   };
 
   const handleSuccessContinue = () => {
+    setAllowNavigation(true);
     setShowSuccessModal(false);
     navigate("/sub-system-2/req-sub-bid");
   };
 
   const handleExitPage = () => {
-    setShowExitModal(false);
-    navigate("/sub-system-2");
+    setAllowNavigation(true);
+    blocker.proceed();
   };
 
   return (
@@ -152,7 +156,7 @@ const Req_BIDPage = () => {
                 Submit Barangay ID Request
               </button>
               <button
-                onClick={() => setShowExitModal(true)}
+                onClick={() => navigate("/sub-system-2")}
                 className={`w-full ${t.inputBg} ${t.cardText} font-kumbh text-2xl py-3 rounded-full`}
               >
                 Cancel
@@ -201,10 +205,7 @@ const Req_BIDPage = () => {
               Please fill out the necessary or changeable information.
             </p>
             <button
-              onClick={() => {
-                sessionStorage.setItem("requestInfoModalShown", "true");
-                setShowInfoModal(false);
-              }}
+              onClick={() => setShowInfoModal(false)}
               className="mt-5 px-5 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-kumbh text-lg"
             >
               OK
@@ -213,7 +214,7 @@ const Req_BIDPage = () => {
         </div>
       )}
 
-      {showExitModal && (
+      {blocker.state === "blocked" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4">
           <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl w-full max-w-md p-6 text-center`}>
             <div className="mx-auto mb-4 w-16 h-16 rounded-full border-4 border-red-500 text-red-500 flex items-center justify-center font-spartan text-4xl font-bold">
@@ -222,7 +223,7 @@ const Req_BIDPage = () => {
             <h3 className={`font-spartan text-3xl font-bold ${t.cardText}`}>Do you want to exit?</h3>
             <div className="mt-6 flex items-center justify-center gap-3">
               <button
-                onClick={() => setShowExitModal(false)}
+                onClick={() => blocker.reset()}
                 className={`px-5 py-2 rounded-lg ${t.inputBg} ${t.cardText} font-kumbh text-lg`}
               >
                 No
