@@ -45,7 +45,7 @@ const Req_Sub_BID = () => {
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <button
-                onClick={() => navigate("/sub-system-2")}
+                onClick={() => navigate("/sub-system-2/track-bid")}
                 className="bg-green-500 hover:bg-green-600 text-white font-kumbh text-2xl px-6 py-2 rounded-full"
               >
                 Track Request Status
