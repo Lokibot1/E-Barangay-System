@@ -58,7 +58,7 @@ const Req_COIPage = () => {
                 options={["Medical Assistance", "Scholarship", "Legal Aid", "Other"]}
                 t={t}
               />
-              <Field label="Specific Purpose (If \"Other\"):" t={t} />
+              <Field label={'Specific Purpose (If "Other"):'} t={t} />
             </div>
 
             <h3 className={`font-spartan text-4xl font-bold ${t.cardText} mt-8 mb-4`}>
