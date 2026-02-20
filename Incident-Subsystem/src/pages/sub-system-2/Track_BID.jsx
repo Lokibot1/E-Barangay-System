@@ -23,7 +23,7 @@ const Track_BID = () => {
                 value="BID-XXXX-XX99-619"
                 className={`flex-1 px-4 py-4 text-3xl font-kumbh ${t.inputBg} ${t.inputText} outline-none`}
               />
-              <button className="px-8 bg-green-500 text-white font-kumbh text-5xl">Track</button>
+              <button className="px-8 bg-green-500 text-white font-kumbh text-4xl">Track</button>
             </div>
 
             <div className={`${t.cardBg} border-4 border-blue-500 rounded-3xl p-6`}>
@@ -33,23 +33,26 @@ const Track_BID = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l2.5 2.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h2 className="font-spartan text-5xl font-bold text-black">Status: Under Review</h2>
+                <h2 className="font-spartan text-4xl font-bold text-black">Status: Under Review</h2>
               </div>
 
               <div className="mt-6">
-                <div className="flex items-center justify-between">
+                <div className="grid grid-cols-[auto_1fr_auto_1fr_auto_1fr_auto] items-center gap-0">
                   <Step number="✓" active />
-                  <div className="flex-1 h-1 bg-green-500" />
+                  <div className="h-1 bg-green-500" />
                   <Step number="2" current />
-                  <div className="flex-1 h-1 bg-gray-300" />
+                  <div className="h-1 bg-gray-300" />
                   <Step number="3" />
-                  <div className="flex-1 h-1 bg-gray-300" />
+                  <div className="h-1 bg-gray-300" />
                   <Step number="4" />
                 </div>
-                <div className="grid grid-cols-4 gap-2 mt-2 text-center">
+                <div className="grid grid-cols-[auto_1fr_auto_1fr_auto_1fr_auto] gap-0 mt-2 items-start text-center">
                   <StepLabel title="Request Submitted" sub="Date: February 20, 2026" />
+                  <div />
                   <StepLabel title="Under Review" sub="Current Step" />
+                  <div />
                   <StepLabel title="Ready for Pick-Up" sub="Pending" />
+                  <div />
                   <StepLabel title="Completed" sub="Pending" />
                 </div>
               </div>
