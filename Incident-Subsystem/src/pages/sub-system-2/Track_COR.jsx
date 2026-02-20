@@ -33,23 +33,26 @@ const Track_COR = () => {
               </div>
 
               <div className="mt-6">
-                <div className="grid grid-cols-[auto_1fr_auto_1fr_auto_1fr_auto] items-center gap-0">
-                  <Step number="✓" active />
-                  <div className="h-1 bg-green-500" />
-                  <Step number="2" current />
-                  <div className="h-1 bg-gray-300" />
-                  <Step number="3" />
-                  <div className="h-1 bg-gray-300" />
-                  <Step number="4" />
-                </div>
-                <div className="grid grid-cols-[auto_1fr_auto_1fr_auto_1fr_auto] gap-0 mt-2 items-start text-center">
-                  <StepLabel title="Request Submitted" sub="Date: February 20, 2026" />
-                  <div />
-                  <StepLabel title="Under Review" sub="Current Step" />
-                  <div />
-                  <StepLabel title="Ready for Pick-Up" sub="Pending" />
-                  <div />
-                  <StepLabel title="Completed" sub="Pending" />
+                <div className="flex items-start">
+                  <div className="flex-1 flex flex-col items-center text-center">
+                    <Step number="✓" active />
+                    <StepLabel title="Request Submitted" sub="Date: February 20, 2026" />
+                  </div>
+                  <div className="flex-1 h-1 bg-green-500 mt-10" />
+                  <div className="flex-1 flex flex-col items-center text-center">
+                    <Step number="2" current />
+                    <StepLabel title="Under Review" sub="Current Step" />
+                  </div>
+                  <div className="flex-1 h-1 bg-gray-300 mt-10" />
+                  <div className="flex-1 flex flex-col items-center text-center">
+                    <Step number="3" />
+                    <StepLabel title="Ready for Pick-Up" sub="Pending" />
+                  </div>
+                  <div className="flex-1 h-1 bg-gray-300 mt-10" />
+                  <div className="flex-1 flex flex-col items-center text-center">
+                    <Step number="4" />
+                    <StepLabel title="Completed" sub="Pending" />
+                  </div>
                 </div>
               </div>
 
