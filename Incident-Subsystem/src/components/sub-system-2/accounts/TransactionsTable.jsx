@@ -59,12 +59,14 @@ const PaymentStatusBadge = ({ status }) => {
   );
 };
 
-const PreviewField = ({ label, value, isDark, t }) => (
+const PreviewField = ({ label, value, mono = false, t }) => (
   <div>
-    <p className={`text-[11px] font-spartan font-bold uppercase tracking-wide ${t.subtleText}`}>
+    <p className={`text-[10px] font-kumbh font-bold uppercase tracking-widest ${t.subtleText}`}>
       {label}
     </p>
-    <p className={`mt-1 text-sm font-kumbh ${t.cardText}`}>{value}</p>
+    <p className={`mt-0.5 text-sm font-kumbh font-medium ${t.cardText} ${mono ? "font-mono" : ""}`}>
+      {value}
+    </p>
   </div>
 );
 
@@ -153,7 +155,7 @@ const TransactionsTable = () => {
         {/* ── Page Header ─────────────────────────────────────────── */}
         <div className="flex items-center gap-4 mb-6">
           <div
-            className={`w-12 h-12 ${isDark ? "bg-slate-700" : "bg-gray-200"} rounded-lg flex items-center justify-center`}
+            className={`w-12 h-12 ${isDark ? "bg-slate-700" : "bg-gray-200"} rounded-lg flex items-center justify-center flex-shrink-0`}
           >
             <svg
               viewBox="0 0 24 24"
@@ -167,19 +169,17 @@ const TransactionsTable = () => {
             </svg>
           </div>
           <h1
-            className={`text-2xl sm:text-3xl font-bold ${t.cardText} font-spartan uppercase flex-1`}
+            className={`text-2xl sm:text-3xl font-bold ${t.cardText} font-spartan uppercase`}
           >
             Payments Management
           </h1>
         </div>
 
-        {/* ── Content Grid (table + optional preview pane) ─────────── */}
-        <div
-          className={`grid grid-cols-1 gap-6 ${selectedRow ? "lg:grid-cols-[minmax(0,1fr)_280px]" : ""}`}
-        >
+        {/* ── Content (table + slide-in preview pane) ──────────────── */}
+        <div className="flex items-start gap-6">
           {/* ── Table Card ─────────────────────────────────────────── */}
           <div
-            className={`${t.cardBg} border ${t.cardBorder} rounded-2xl shadow-lg overflow-hidden`}
+            className={`flex-1 min-w-0 ${t.cardBg} border ${t.cardBorder} rounded-2xl shadow-lg overflow-hidden`}
           >
             {/* Status Tabs */}
             <div className="flex flex-wrap gap-2 px-5 pt-5">
@@ -428,44 +428,71 @@ const TransactionsTable = () => {
             </div>
           </div>
 
-          {/* ── Preview Pane ──────────────────────────────────────────── */}
-          {selectedRow && (
-            <div
-              className={`${t.cardBg} border ${t.cardBorder} rounded-2xl shadow-lg p-5 self-start`}
-            >
-              <p
-                className={`mb-4 text-xs font-spartan font-bold uppercase tracking-wide ${t.subtleText} border-b ${t.cardBorder} pb-3`}
-              >
-                Preview
-              </p>
+          {/* ── Preview Pane (slide in/out) ───────────────────────────── */}
+          <div
+            className={`flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
+              selectedRow
+                ? "w-[300px] opacity-100"
+                : "w-0 opacity-0 pointer-events-none"
+            }`}
+          >
+            {/* Inner card — fixed width so content never reflows during animation */}
+            <div className={`w-[300px] ${t.cardBg} border ${t.cardBorder} rounded-2xl shadow-lg flex flex-col`}>
 
-              <div className="grid grid-cols-1 gap-4">
-                <div className="flex flex-col items-center text-center mb-1">
-                  <span
-                    className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-spartan font-bold text-white ${getAvatarClass(selectedRow.payee)}`}
-                  >
-                    {getInitials(selectedRow.payee)}
+              {/* Panel header */}
+              <div className={`flex items-center justify-between px-5 py-4 border-b ${t.cardBorder}`}>
+                <div className="flex items-center gap-2">
+                  <svg className={`w-4 h-4 ${t.subtleText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span className={`text-xs font-spartan font-bold uppercase tracking-widest ${t.subtleText}`}>
+                    Transaction Detail
                   </span>
-                  <p className={`mt-2 text-[11px] font-spartan font-bold uppercase tracking-wide ${t.subtleText}`}>
-                    Payer
-                  </p>
-                  <p className={`text-sm font-kumbh ${t.cardText}`}>{selectedRow.payee}</p>
                 </div>
-                <PreviewField label="Document Type" value={selectedRow.documentType} isDark={isDark} t={t} />
-                <PreviewField label="Date" value={selectedRow.date} isDark={isDark} t={t} />
-                <PreviewField label="Amount" value={selectedRow.amount ?? "—"} isDark={isDark} t={t} />
-                <PreviewField label="Payment ID" value={selectedRow.paymentId} isDark={isDark} t={t} />
-                <div>
-                  <p className={`text-[11px] font-spartan font-bold uppercase tracking-wide ${t.subtleText}`}>
-                    Payment Status
-                  </p>
-                  <div className="mt-1">
-                    <PaymentStatusBadge status={selectedRow.status} />
-                  </div>
+                <button
+                  onClick={() => setSelectedPaymentId(null)}
+                  className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-700" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"}`}
+                  aria-label="Close panel"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Avatar + name section */}
+              <div className={`flex flex-col items-center text-center px-5 py-6 border-b ${t.cardBorder}`}>
+                <span className={`inline-flex h-16 w-16 items-center justify-center rounded-full text-xl font-spartan font-bold text-white shadow-md ${getAvatarClass(selectedRow?.payee ?? "")}`}>
+                  {getInitials(selectedRow?.payee ?? "")}
+                </span>
+                <p className={`mt-3 text-base font-spartan font-bold ${t.cardText} leading-tight`}>
+                  {selectedRow?.payee}
+                </p>
+                <p className={`text-xs font-kumbh ${t.subtleText} mt-0.5`}>Payer</p>
+              </div>
+
+              {/* Amount highlight */}
+              <div className={`flex flex-col items-center py-5 border-b ${t.cardBorder} ${isDark ? "bg-slate-700/50" : "bg-gray-50"}`}>
+                <p className={`text-[10px] font-kumbh font-bold uppercase tracking-widest ${t.subtleText} mb-1`}>
+                  Amount
+                </p>
+                <p className={`text-3xl font-spartan font-bold ${t.cardText} leading-none`}>
+                  {selectedRow?.amount ?? "—"}
+                </p>
+                <div className="mt-3">
+                  <PaymentStatusBadge status={selectedRow?.status ?? ""} />
                 </div>
               </div>
+
+              {/* Detail fields */}
+              <div className="px-5 py-5 flex flex-col gap-4">
+                <PreviewField label="Document Type" value={selectedRow?.documentType ?? "—"} t={t} />
+                <PreviewField label="Date" value={selectedRow?.date ?? "—"} t={t} />
+                <PreviewField label="Payment ID" value={selectedRow?.paymentId ?? "—"} mono t={t} />
+              </div>
+
             </div>
-          )}
+          </div>
         </div>
 
       </div>

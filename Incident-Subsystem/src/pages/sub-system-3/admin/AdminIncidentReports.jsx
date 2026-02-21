@@ -586,7 +586,7 @@ const AdminIncidentReports = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* ── Page Header ─────────────────────────────────────────── */}
         <div className="flex items-center gap-4 mb-6">
-          <div className={`w-12 h-12 ${isDark ? "bg-slate-700" : "bg-gray-200"} rounded-lg flex items-center justify-center`}>
+          <div className={`w-12 h-12 ${isDark ? "bg-slate-700" : "bg-gray-200"} rounded-lg flex items-center justify-center flex-shrink-0`}>
             <svg
               className={`w-7 h-7 ${isDark ? "text-slate-300" : "text-gray-600"}`}
               fill="none"
@@ -602,11 +602,11 @@ const AdminIncidentReports = () => {
             </svg>
           </div>
           <h1
-            className={`text-2xl sm:text-3xl font-bold ${t.cardText} font-spartan uppercase flex-1`}
+            className={`text-2xl sm:text-3xl font-bold ${t.cardText} font-spartan uppercase`}
           >
             Incident & Complaints Report Management
           </h1>
-          <div className="relative" ref={kebabRef}>
+          <div className="relative ml-auto" ref={kebabRef}>
             <button
               onClick={() => setShowKebab((prev) => !prev)}
               className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-slate-700 text-slate-300" : "hover:bg-gray-200 text-gray-600"}`}

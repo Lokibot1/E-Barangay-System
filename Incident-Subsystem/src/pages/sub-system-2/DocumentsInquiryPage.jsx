@@ -10,8 +10,18 @@ const summaryCards = [
     subtitle: "Awaiting admin review",
     color: "amber",
     icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <svg
+        className="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
       </svg>
     ),
   },
@@ -22,8 +32,18 @@ const summaryCards = [
     subtitle: "Successfully processed",
     color: "green",
     icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <svg
+        className="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
       </svg>
     ),
   },
@@ -34,8 +54,18 @@ const summaryCards = [
     subtitle: "Declined or invalid",
     color: "red",
     icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <svg
+        className="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
       </svg>
     ),
   },
@@ -63,21 +93,71 @@ const STAT_COLOR = {
 };
 
 const documentCards = [
-  { id: 1, residentName: "Mateo Dela Cruz",  status: "Pending",   documentType: "Barangay ID",               referenceNumber: "1110-2364-7968", dateSubmitted: "January 31, 2026" },
-  { id: 2, residentName: "Brian Dajamco",    status: "Completed", documentType: "Certificate of Residency",   referenceNumber: "2210-1842-4471", dateSubmitted: "January 30, 2026" },
-  { id: 3, residentName: "Luna Reyes",       status: "Rejected",  documentType: "Certificate of Indigency",   referenceNumber: "3190-9084-2236", dateSubmitted: "January 29, 2026" },
-  { id: 4, residentName: "Ariel Santos",     status: "Pending",   documentType: "Barangay ID",               referenceNumber: "4441-2204-1109", dateSubmitted: "January 28, 2026" },
-  { id: 5, residentName: "Mia Flores",       status: "Completed", documentType: "Certificate of Residency",   referenceNumber: "5152-7712-3340", dateSubmitted: "January 28, 2026" },
-  { id: 6, residentName: "Kris Mendoza",     status: "Pending",   documentType: "Certificate of Indigency",   referenceNumber: "6891-3022-7745", dateSubmitted: "January 27, 2026" },
+  {
+    id: 1,
+    residentName: "Mateo Dela Cruz",
+    status: "Pending",
+    documentType: "Barangay ID",
+    referenceNumber: "1110-2364-7968",
+    dateSubmitted: "January 31, 2026",
+  },
+  {
+    id: 2,
+    residentName: "Brian Dajamco",
+    status: "Completed",
+    documentType: "Certificate of Residency",
+    referenceNumber: "2210-1842-4471",
+    dateSubmitted: "January 30, 2026",
+  },
+  {
+    id: 3,
+    residentName: "Luna Reyes",
+    status: "Rejected",
+    documentType: "Certificate of Indigency",
+    referenceNumber: "3190-9084-2236",
+    dateSubmitted: "January 29, 2026",
+  },
+  {
+    id: 4,
+    residentName: "Ariel Santos",
+    status: "Pending",
+    documentType: "Barangay ID",
+    referenceNumber: "4441-2204-1109",
+    dateSubmitted: "January 28, 2026",
+  },
+  {
+    id: 5,
+    residentName: "Mia Flores",
+    status: "Completed",
+    documentType: "Certificate of Residency",
+    referenceNumber: "5152-7712-3340",
+    dateSubmitted: "January 28, 2026",
+  },
+  {
+    id: 6,
+    residentName: "Kris Mendoza",
+    status: "Pending",
+    documentType: "Certificate of Indigency",
+    referenceNumber: "6891-3022-7745",
+    dateSubmitted: "January 27, 2026",
+  },
 ];
 
 const statusTabs = ["All", "Pending", "Completed", "Rejected"];
 
 const STATUS_TAB_CONFIG = {
-  All:       { bg: "bg-gray-700",    text: "text-white", border: "border-gray-700" },
-  Pending:   { bg: "bg-amber-500",   text: "text-white", border: "border-amber-500" },
-  Completed: { bg: "bg-emerald-600", text: "text-white", border: "border-emerald-600" },
-  Rejected:  { bg: "bg-red-600",     text: "text-white", border: "border-red-600" },
+  All: { bg: "bg-gray-700", text: "text-white", border: "border-gray-700" },
+  Pending: {
+    bg: "bg-amber-500",
+    text: "text-white",
+    border: "border-amber-500",
+  },
+  Completed: {
+    bg: "bg-emerald-600",
+    text: "text-white",
+    border: "border-emerald-600",
+  },
+  Rejected: { bg: "bg-red-600", text: "text-white", border: "border-red-600" },
 };
 
 const ROWS_PER_PAGE = 6;
@@ -92,12 +172,14 @@ const toStartOfDay = (dateText) => {
 // ── Sub-components ─────────────────────────────────────────────────────
 const StatusBadge = ({ status }) => {
   const styleMap = {
-    Pending:   "bg-amber-100 text-amber-700 border-amber-200",
+    Pending: "bg-amber-100 text-amber-700 border-amber-200",
     Completed: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    Rejected:  "bg-red-100 text-red-700 border-red-200",
+    Rejected: "bg-red-100 text-red-700 border-red-200",
   };
   return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-kumbh font-semibold ${styleMap[status] ?? "bg-gray-100 text-gray-600 border-gray-200"}`}>
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-kumbh font-semibold ${styleMap[status] ?? "bg-gray-100 text-gray-600 border-gray-200"}`}
+    >
       {status}
     </span>
   );
@@ -108,12 +190,98 @@ const ActionButtons = ({ isDark }) => (
     <button className="h-7 px-3 rounded-full bg-slate-700 text-white font-kumbh text-xs font-semibold hover:bg-slate-600 transition-colors">
       Accept
     </button>
-    <button className={`h-7 px-3 rounded-full border font-kumbh text-xs font-semibold transition-colors ${isDark ? "border-slate-500 text-slate-300 hover:bg-slate-600" : "border-gray-300 text-gray-600 bg-gray-50 hover:bg-gray-100"}`}>
+    <button
+      className={`h-7 px-3 rounded-full border font-kumbh text-xs font-semibold transition-colors ${isDark ? "border-slate-500 text-slate-300 hover:bg-slate-600" : "border-gray-300 text-gray-600 bg-gray-50 hover:bg-gray-100"}`}
+    >
       Preview
     </button>
     <button className="h-7 px-3 rounded-full border border-red-300 text-red-600 bg-red-50 font-kumbh text-xs font-semibold hover:bg-red-100 transition-colors">
       Decline
     </button>
+  </div>
+);
+
+const IconActionButtons = ({ isDark }) => (
+  <div className="flex items-center gap-1.5">
+    {/* Accept */}
+    <div className="relative group">
+      <button
+        className="w-7 h-7 rounded-lg flex items-center justify-center bg-slate-700 text-white hover:bg-slate-600 transition-colors"
+        aria-label="Accept"
+      >
+        <svg
+          className="w-3.5 h-3.5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          strokeWidth={2.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+      </button>
+      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md bg-gray-800 px-2 py-1 text-[10px] font-kumbh text-white opacity-0 group-hover:opacity-100 transition-opacity z-20">
+        Accept
+      </span>
+    </div>
+
+    {/* Preview */}
+    <div className="relative group">
+      <button
+        className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${isDark ? "bg-slate-600 text-slate-200 hover:bg-slate-500" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+        aria-label="Preview"
+      >
+        <svg
+          className="w-3.5 h-3.5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+          />
+        </svg>
+      </button>
+      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md bg-gray-800 px-2 py-1 text-[10px] font-kumbh text-white opacity-0 group-hover:opacity-100 transition-opacity z-20">
+        Preview
+      </span>
+    </div>
+
+    {/* Decline */}
+    <div className="relative group">
+      <button
+        className="w-7 h-7 rounded-lg flex items-center justify-center bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+        aria-label="Decline"
+      >
+        <svg
+          className="w-3.5 h-3.5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          strokeWidth={2.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md bg-gray-800 px-2 py-1 text-[10px] font-kumbh text-white opacity-0 group-hover:opacity-100 transition-opacity z-20">
+        Decline
+      </span>
+    </div>
   </div>
 );
 
@@ -139,7 +307,12 @@ const DocumentsInquiryPage = () => {
   const isDark = currentTheme === "dark";
 
   const statusCounts = useMemo(() => {
-    const counts = { All: documentCards.length, Pending: 0, Completed: 0, Rejected: 0 };
+    const counts = {
+      All: documentCards.length,
+      Pending: 0,
+      Completed: 0,
+      Rejected: 0,
+    };
     documentCards.forEach((item) => {
       if (counts[item.status] !== undefined) counts[item.status] += 1;
     });
@@ -152,7 +325,8 @@ const DocumentsInquiryPage = () => {
     const end = endDate ? toStartOfDay(endDate) : null;
 
     return documentCards.filter((card) => {
-      const matchesStatus = activeStatus === "All" || card.status === activeStatus;
+      const matchesStatus =
+        activeStatus === "All" || card.status === activeStatus;
       const matchesSearch =
         query.length === 0 ||
         card.residentName.toLowerCase().includes(query) ||
@@ -179,15 +353,28 @@ const DocumentsInquiryPage = () => {
   return (
     <div className={`min-h-full ${t.pageBg} pb-10`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-
         {/* ── Page Header ──────────────────────────────────────────── */}
         <div className="flex items-center gap-4">
-          <div className={`w-12 h-12 ${isDark ? "bg-slate-700" : "bg-gray-200"} rounded-lg flex items-center justify-center flex-shrink-0`}>
-            <svg className={`w-7 h-7 ${isDark ? "text-slate-300" : "text-gray-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <div
+            className={`w-12 h-12 ${isDark ? "bg-slate-700" : "bg-gray-200"} rounded-lg flex items-center justify-center flex-shrink-0`}
+          >
+            <svg
+              className={`w-7 h-7 ${isDark ? "text-slate-300" : "text-gray-600"}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
           </div>
-          <h1 className={`text-2xl sm:text-3xl font-bold ${t.cardText} font-spartan uppercase`}>
+          <h1
+            className={`text-2xl sm:text-3xl font-bold ${t.cardText} font-spartan uppercase`}
+          >
             Issuance Application
           </h1>
         </div>
@@ -201,14 +388,20 @@ const DocumentsInquiryPage = () => {
                 key={card.key}
                 className={`${t.cardBg} border ${t.cardBorder} border-l-4 ${col.accent} rounded-2xl shadow-lg p-5 flex items-start gap-4`}
               >
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? col.iconBgDark : col.iconBg}`}>
+                <div
+                  className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? col.iconBgDark : col.iconBg}`}
+                >
                   <span className={col.icon}>{card.icon}</span>
                 </div>
                 <div className="min-w-0">
-                  <p className={`text-xs font-bold font-kumbh uppercase tracking-wide ${t.subtleText}`}>
+                  <p
+                    className={`text-xs font-bold font-kumbh uppercase tracking-wide ${t.subtleText}`}
+                  >
                     {card.title}
                   </p>
-                  <p className={`text-4xl font-bold font-spartan ${t.cardText} mt-1 leading-none`}>
+                  <p
+                    className={`text-4xl font-bold font-spartan ${t.cardText} mt-1 leading-none`}
+                  >
                     {card.value}
                   </p>
                   <p className={`text-xs font-kumbh ${t.subtleText} mt-1`}>
@@ -221,8 +414,9 @@ const DocumentsInquiryPage = () => {
         </div>
 
         {/* ── Main Content Card ─────────────────────────────────────── */}
-        <div className={`${t.cardBg} border ${t.cardBorder} rounded-2xl shadow-lg overflow-hidden`}>
-
+        <div
+          className={`${t.cardBg} border ${t.cardBorder} rounded-2xl shadow-lg overflow-hidden`}
+        >
           {/* Status Tabs + View Toggle */}
           <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5">
             {/* Status tabs */}
@@ -249,17 +443,33 @@ const DocumentsInquiryPage = () => {
             </div>
 
             {/* View toggle */}
-            <div className={`flex items-center gap-1 p-1 rounded-lg ${isDark ? "bg-slate-700" : "bg-gray-100"}`}>
+            <div
+              className={`flex items-center gap-1 p-1 rounded-lg ${isDark ? "bg-slate-700" : "bg-gray-100"}`}
+            >
               <button
                 onClick={() => setViewMode("card")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold font-kumbh uppercase tracking-wide transition-all ${
                   viewMode === "card"
-                    ? isDark ? "bg-slate-500 text-white shadow" : "bg-white text-gray-800 shadow"
-                    : isDark ? "text-slate-400 hover:text-slate-200" : "text-gray-500 hover:text-gray-700"
+                    ? isDark
+                      ? "bg-slate-500 text-white shadow"
+                      : "bg-white text-gray-800 shadow"
+                    : isDark
+                      ? "text-slate-400 hover:text-slate-200"
+                      : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                  />
                 </svg>
                 Cards
               </button>
@@ -267,12 +477,26 @@ const DocumentsInquiryPage = () => {
                 onClick={() => setViewMode("table")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold font-kumbh uppercase tracking-wide transition-all ${
                   viewMode === "table"
-                    ? isDark ? "bg-slate-500 text-white shadow" : "bg-white text-gray-800 shadow"
-                    : isDark ? "text-slate-400 hover:text-slate-200" : "text-gray-500 hover:text-gray-700"
+                    ? isDark
+                      ? "bg-slate-500 text-white shadow"
+                      : "bg-white text-gray-800 shadow"
+                    : isDark
+                      ? "text-slate-400 hover:text-slate-200"
+                      : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18M3 6h18M3 18h18" />
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 10h18M3 14h18M3 6h18M3 18h18"
+                  />
                 </svg>
                 Table
               </button>
@@ -283,7 +507,9 @@ const DocumentsInquiryPage = () => {
           <div className="px-5 pt-5 pb-3">
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="flex-1">
-                <label className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}>
+                <label
+                  className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
+                >
                   Search
                 </label>
                 <input
@@ -295,7 +521,9 @@ const DocumentsInquiryPage = () => {
                 />
               </div>
               <div>
-                <label className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}>
+                <label
+                  className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
+                >
                   Start Date
                 </label>
                 <input
@@ -306,7 +534,9 @@ const DocumentsInquiryPage = () => {
                 />
               </div>
               <div>
-                <label className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}>
+                <label
+                  className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
+                >
                   End Date
                 </label>
                 <input
@@ -332,10 +562,14 @@ const DocumentsInquiryPage = () => {
                       {/* Card header */}
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className={`font-spartan text-sm font-bold ${t.cardText} truncate`}>
+                          <p
+                            className={`font-spartan text-sm font-bold ${t.cardText} truncate`}
+                          >
                             {card.residentName}
                           </p>
-                          <p className={`font-kumbh text-xs ${t.subtleText} mt-0.5`}>
+                          <p
+                            className={`font-kumbh text-xs ${t.subtleText} mt-0.5`}
+                          >
                             {card.documentType}
                           </p>
                         </div>
@@ -343,15 +577,27 @@ const DocumentsInquiryPage = () => {
                       </div>
 
                       {/* Card details */}
-                      <div className={`space-y-1.5 border-t ${isDark ? "border-slate-600" : "border-gray-200"} pt-3`}>
+                      <div
+                        className={`space-y-1.5 border-t ${isDark ? "border-slate-600" : "border-gray-200"} pt-3`}
+                      >
                         <div className="flex items-center justify-between gap-2">
-                          <span className={`text-xs font-kumbh ${t.subtleText}`}>Reference</span>
-                          <span className={`text-xs font-kumbh font-semibold ${t.cardText} font-mono`}>
+                          <span
+                            className={`text-xs font-kumbh ${t.subtleText}`}
+                          >
+                            Reference
+                          </span>
+                          <span
+                            className={`text-xs font-kumbh font-semibold ${t.cardText} font-mono`}
+                          >
                             {card.referenceNumber}
                           </span>
                         </div>
                         <div className="flex items-center justify-between gap-2">
-                          <span className={`text-xs font-kumbh ${t.subtleText}`}>Submitted</span>
+                          <span
+                            className={`text-xs font-kumbh ${t.subtleText}`}
+                          >
+                            Submitted
+                          </span>
                           <span className={`text-xs font-kumbh ${t.cardText}`}>
                             {card.dateSubmitted}
                           </span>
@@ -359,24 +605,34 @@ const DocumentsInquiryPage = () => {
                       </div>
 
                       {/* Actions */}
-                      <div className={`border-t ${isDark ? "border-slate-600" : "border-gray-200"} pt-3`}>
+                      <div
+                        className={`border-t ${isDark ? "border-slate-600" : "border-gray-200"} pt-3`}
+                      >
                         <ActionButtons isDark={isDark} />
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className={`rounded-xl border border-dashed ${isDark ? "border-slate-600 text-slate-400" : "border-gray-300 text-gray-500"} px-4 py-12 text-center text-sm font-kumbh`}>
+                <div
+                  className={`rounded-xl border border-dashed ${isDark ? "border-slate-600 text-slate-400" : "border-gray-300 text-gray-500"} px-4 py-12 text-center text-sm font-kumbh`}
+                >
                   No document inquiries found for the selected filters.
                 </div>
               )}
 
               {/* Card view pagination */}
               {totalPages > 1 && (
-                <div className={`flex items-center justify-between pt-4 mt-4 border-t ${isDark ? "border-slate-700" : "border-gray-100"}`}>
+                <div
+                  className={`flex items-center justify-between pt-4 mt-4 border-t ${isDark ? "border-slate-700" : "border-gray-100"}`}
+                >
                   <p className={`text-xs ${t.subtleText} font-kumbh`}>
                     Showing {(currentPage - 1) * ROWS_PER_PAGE + 1}–
-                    {Math.min(currentPage * ROWS_PER_PAGE, filteredCards.length)} of {filteredCards.length} results
+                    {Math.min(
+                      currentPage * ROWS_PER_PAGE,
+                      filteredCards.length,
+                    )}{" "}
+                    of {filteredCards.length} results
                   </p>
                   <div className="flex items-center gap-1">
                     <button
@@ -384,32 +640,46 @@ const DocumentsInquiryPage = () => {
                       disabled={currentPage === 1}
                       className={`px-3 py-1.5 rounded-lg text-xs font-kumbh font-semibold transition-colors ${
                         currentPage === 1
-                          ? isDark ? "text-slate-600 cursor-not-allowed" : "text-gray-300 cursor-not-allowed"
-                          : isDark ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800" : "text-gray-600 hover:bg-gray-100"
+                          ? isDark
+                            ? "text-slate-600 cursor-not-allowed"
+                            : "text-gray-300 cursor-not-allowed"
+                          : isDark
+                            ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800"
+                            : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
                       Prev
                     </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`w-8 h-8 rounded-lg text-xs font-kumbh font-bold transition-colors ${
-                          page === currentPage
-                            ? "bg-slate-700 text-white"
-                            : isDark ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800" : "text-gray-600 hover:bg-gray-100"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-8 h-8 rounded-lg text-xs font-kumbh font-bold transition-colors ${
+                            page === currentPage
+                              ? "bg-slate-700 text-white"
+                              : isDark
+                                ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800"
+                                : "text-gray-600 hover:bg-gray-100"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ),
+                    )}
                     <button
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={currentPage === totalPages}
                       className={`px-3 py-1.5 rounded-lg text-xs font-kumbh font-semibold transition-colors ${
                         currentPage === totalPages
-                          ? isDark ? "text-slate-600 cursor-not-allowed" : "text-gray-300 cursor-not-allowed"
-                          : isDark ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800" : "text-gray-600 hover:bg-gray-100"
+                          ? isDark
+                            ? "text-slate-600 cursor-not-allowed"
+                            : "text-gray-300 cursor-not-allowed"
+                          : isDark
+                            ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800"
+                            : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
                       Next
@@ -421,28 +691,44 @@ const DocumentsInquiryPage = () => {
           ) : (
             /* ── Table View ──────────────────────────────────────────── */
             <div className="overflow-x-auto px-5 pb-5">
-              <table className="w-full text-sm font-kumbh table-fixed">
+              <table className="w-full text-sm font-kumbh">
                 <thead>
-                  <tr className={`${isDark ? "bg-slate-700 border-y border-slate-600" : "bg-gray-100 border-y border-gray-200"}`}>
-                    <th className={`text-center px-3 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[5%]`}>
+                  <tr
+                    className={`${isDark ? "bg-slate-700 border-y border-slate-600" : "bg-gray-100 border-y border-gray-200"}`}
+                  >
+                    <th
+                      className={`text-center px-3 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase whitespace-nowrap`}
+                    >
                       #
                     </th>
-                    <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[20%]`}>
+                    <th
+                      className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase whitespace-nowrap`}
+                    >
                       Resident Name
                     </th>
-                    <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[22%]`}>
+                    <th
+                      className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase whitespace-nowrap`}
+                    >
                       Document Type
                     </th>
-                    <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[18%]`}>
+                    <th
+                      className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase whitespace-nowrap`}
+                    >
                       Reference No.
                     </th>
-                    <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[15%]`}>
+                    <th
+                      className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase whitespace-nowrap`}
+                    >
                       Date Submitted
                     </th>
-                    <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[10%]`}>
+                    <th
+                      className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase whitespace-nowrap`}
+                    >
                       Status
                     </th>
-                    <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[10%]`}>
+                    <th
+                      className={`text-center px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase whitespace-nowrap`}
+                    >
                       Actions
                     </th>
                   </tr>
@@ -454,26 +740,36 @@ const DocumentsInquiryPage = () => {
                         key={card.id}
                         className={`border-b ${t.cardBorder} ${isDark ? "hover:bg-slate-600" : "hover:bg-gray-50"} transition-colors`}
                       >
-                        <td className={`text-center px-3 py-3 ${t.cardText}`}>
+                        <td
+                          className={`text-center px-3 py-3 ${t.cardText} whitespace-nowrap`}
+                        >
                           {(currentPage - 1) * ROWS_PER_PAGE + index + 1}
                         </td>
-                        <td className={`px-4 py-3 ${t.cardText} truncate`}>
+                        <td
+                          className={`px-4 py-3 ${t.cardText} whitespace-nowrap`}
+                        >
                           {card.residentName}
                         </td>
-                        <td className={`px-4 py-3 ${t.cardText} truncate`}>
+                        <td
+                          className={`px-4 py-3 ${t.cardText} whitespace-nowrap`}
+                        >
                           {card.documentType}
                         </td>
-                        <td className={`px-4 py-3 ${t.cardText} font-mono text-xs`}>
+                        <td
+                          className={`px-4 py-3 ${t.cardText} font-mono text-xs whitespace-nowrap`}
+                        >
                           {card.referenceNumber}
                         </td>
-                        <td className={`px-4 py-3 ${t.cardText} whitespace-nowrap`}>
+                        <td
+                          className={`px-4 py-3 ${t.cardText} whitespace-nowrap`}
+                        >
                           {card.dateSubmitted}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <StatusBadge status={card.status} />
                         </td>
-                        <td className="px-4 py-3">
-                          <ActionButtons isDark={isDark} />
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <IconActionButtons isDark={isDark} />
                         </td>
                       </tr>
                     ))
@@ -492,10 +788,16 @@ const DocumentsInquiryPage = () => {
 
               {/* Table pagination */}
               {totalPages > 1 && (
-                <div className={`flex items-center justify-between pt-4 border-t ${isDark ? "border-slate-700" : "border-gray-100"} mt-2`}>
+                <div
+                  className={`flex items-center justify-between pt-4 border-t ${isDark ? "border-slate-700" : "border-gray-100"} mt-2`}
+                >
                   <p className={`text-xs ${t.subtleText} font-kumbh`}>
                     Showing {(currentPage - 1) * ROWS_PER_PAGE + 1}–
-                    {Math.min(currentPage * ROWS_PER_PAGE, filteredCards.length)} of {filteredCards.length} results
+                    {Math.min(
+                      currentPage * ROWS_PER_PAGE,
+                      filteredCards.length,
+                    )}{" "}
+                    of {filteredCards.length} results
                   </p>
                   <div className="flex items-center gap-1">
                     <button
@@ -503,32 +805,46 @@ const DocumentsInquiryPage = () => {
                       disabled={currentPage === 1}
                       className={`px-3 py-1.5 rounded-lg text-xs font-kumbh font-semibold transition-colors ${
                         currentPage === 1
-                          ? isDark ? "text-slate-600 cursor-not-allowed" : "text-gray-300 cursor-not-allowed"
-                          : isDark ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800" : "text-gray-600 hover:bg-gray-100"
+                          ? isDark
+                            ? "text-slate-600 cursor-not-allowed"
+                            : "text-gray-300 cursor-not-allowed"
+                          : isDark
+                            ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800"
+                            : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
                       Prev
                     </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`w-8 h-8 rounded-lg text-xs font-kumbh font-bold transition-colors ${
-                          page === currentPage
-                            ? "bg-slate-700 text-white"
-                            : isDark ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800" : "text-gray-600 hover:bg-gray-100"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-8 h-8 rounded-lg text-xs font-kumbh font-bold transition-colors ${
+                            page === currentPage
+                              ? "bg-slate-700 text-white"
+                              : isDark
+                                ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800"
+                                : "text-gray-600 hover:bg-gray-100"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ),
+                    )}
                     <button
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={currentPage === totalPages}
                       className={`px-3 py-1.5 rounded-lg text-xs font-kumbh font-semibold transition-colors ${
                         currentPage === totalPages
-                          ? isDark ? "text-slate-600 cursor-not-allowed" : "text-gray-300 cursor-not-allowed"
-                          : isDark ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800" : "text-gray-600 hover:bg-gray-100"
+                          ? isDark
+                            ? "text-slate-600 cursor-not-allowed"
+                            : "text-gray-300 cursor-not-allowed"
+                          : isDark
+                            ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800"
+                            : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
                       Next
@@ -539,7 +855,6 @@ const DocumentsInquiryPage = () => {
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
