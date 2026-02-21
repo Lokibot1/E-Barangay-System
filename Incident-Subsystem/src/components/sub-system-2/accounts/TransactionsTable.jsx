@@ -118,7 +118,7 @@ const TransactionsTable = () => {
 
   return (
     <div className="mx-auto max-w-6xl space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="mt-1 flex flex-wrap items-center gap-2">
         {statusTabs.map((tab) => {
           const active = tab === activeStatus;
           return (
@@ -184,7 +184,7 @@ const TransactionsTable = () => {
           </div>
 
           <div className="overflow-x-auto rounded-md border border-gray-200">
-            <table className="w-full min-w-[860px] table-fixed">
+            <table className="w-full table-fixed">
             <thead className="bg-gray-100">
               <tr>
                 <th className={`${headerClass} w-[7%]`}>#</th>
