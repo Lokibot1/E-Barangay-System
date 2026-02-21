@@ -117,15 +117,15 @@ const TransactionsTable = () => {
   }, [selectedPaymentId, visibleRows]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-3">
-      <div className="relative mb-1 py-1">
-        <span className="absolute left-0 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-lg bg-gray-100 text-slate-700">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-3">
+      <div className="mb-6 flex items-center gap-4 py-2">
+        <span className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-slate-700">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-7 w-7" strokeWidth="2">
             <path d="M8 7h8M8 11h8M8 15h5" />
             <rect x="4" y="3" width="16" height="18" rx="2" />
           </svg>
         </span>
-        <h2 className="text-center font-spartan text-2xl sm:text-3xl font-bold tracking-wide text-slate-800">PAYMENTS MANAGEMENT</h2>
+        <h2 className="font-spartan text-2xl sm:text-3xl font-bold tracking-wide text-slate-800">PAYMENTS MANAGEMENT</h2>
       </div>
 
       <div className={`grid grid-cols-1 gap-3 ${selectedRow ? "lg:grid-cols-[minmax(0,1fr)_260px]" : ""}`}>
