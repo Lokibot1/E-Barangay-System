@@ -1,88 +1,112 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { transactionRequests, totalTransactionCount } from "./data";
 
-const headerClass = "px-3 py-3 text-center text-sm font-spartan font-bold text-gray-700";
-const cellClass = "px-3 py-3 text-center text-sm font-kumbh text-gray-800 border-b border-gray-300";
+const headerClass = "px-4 py-2.5 text-left text-[11px] font-spartan font-bold uppercase tracking-wide text-gray-500";
+const cellClass = "px-4 py-2.5 text-left text-sm font-kumbh text-gray-700 border-b border-gray-200";
 
-const TransactionStatus = ({ status }) => {
-  const isSuccess = status === "Success";
+const statusTabs = ["All", "Pending", "Success", "Failed", "Refunded"];
+
+const TransactionsTable = () => {
+  const [activeStatus, setActiveStatus] = useState("All");
+
+  const statusCounts = useMemo(() => {
+    const counts = { All: transactionRequests.length, Pending: 0, Success: 0, Failed: 0, Refunded: 0 };
+    transactionRequests.forEach((item) => {
+      if (counts[item.status] !== undefined) {
+        counts[item.status] += 1;
+      }
+    });
+    return counts;
+  }, []);
+
+  const visibleRows = useMemo(() => {
+    if (activeStatus === "All") {
+      return transactionRequests;
+    }
+    return transactionRequests.filter((row) => row.status === activeStatus);
+  }, [activeStatus]);
+
   return (
-    <span
-      className={`inline-flex items-center gap-1 text-sm font-kumbh ${isSuccess ? "text-gray-600" : "text-amber-500"}`}
-    >
-      <span className={`inline-flex h-3 w-3 items-center justify-center rounded-full border text-[8px] ${isSuccess ? "border-gray-500" : "border-amber-500"}`}>
-        {isSuccess ? "✓" : "!"}
-      </span>
-      {status}
-    </span>
+    <div className="space-y-4">
+      <div className="rounded-xl border border-gray-200 bg-[#f8fafc] p-4 shadow-sm">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          {statusTabs.map((tab) => {
+            const active = tab === activeStatus;
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveStatus(tab)}
+                className={`rounded-md border px-3 py-1.5 text-[11px] font-spartan font-bold uppercase tracking-wide ${active ? "border-slate-700 bg-slate-700 text-white" : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"}`}
+              >
+                {tab} ({statusCounts[tab] ?? 0})
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mb-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+          <label className="block">
+            <span className="mb-1 block text-[10px] font-spartan font-bold uppercase tracking-wide text-gray-500">Search</span>
+            <input
+              type="text"
+              placeholder="Search by type, payee, payment ID..."
+              className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm font-kumbh text-gray-700 outline-none placeholder:text-gray-400 focus:border-gray-400"
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-[10px] font-spartan font-bold uppercase tracking-wide text-gray-500">Start Date</span>
+            <input
+              type="date"
+              className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm font-kumbh text-gray-700 outline-none focus:border-gray-400"
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-[10px] font-spartan font-bold uppercase tracking-wide text-gray-500">End Date</span>
+            <input
+              type="date"
+              className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm font-kumbh text-gray-700 outline-none focus:border-gray-400"
+            />
+          </label>
+        </div>
+
+        <div className="overflow-x-auto rounded-md border border-gray-200 bg-white">
+          <table className="w-full min-w-[760px] table-fixed">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className={`${headerClass} w-[8%]`}>#</th>
+                <th className={`${headerClass} w-[28%]`}>Document Type</th>
+                <th className={`${headerClass} w-[20%]`}>Date</th>
+                <th className={`${headerClass} w-[26%]`}>Payee</th>
+                <th className={`${headerClass} w-[18%]`}>Payment ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleRows.map((row, index) => (
+                <tr key={`${row.paymentId}-${index}`}>
+                  <td className={cellClass}>{index + 1}</td>
+                  <td className={cellClass}>{row.documentType}</td>
+                  <td className={cellClass}>{row.date}</td>
+                  <td className={cellClass}>{row.payee}</td>
+                  <td className={cellClass}>{row.paymentId}</td>
+                </tr>
+              ))}
+              {visibleRows.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-6 text-center text-sm font-kumbh text-gray-500">
+                    No transactions found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <p className="mt-3 text-xs font-kumbh text-gray-500">Showing {visibleRows.length} of {totalTransactionCount} entries</p>
+      </div>
+    </div>
   );
 };
-
-const PaginationButton = ({ label }) => (
-  <button className="h-7 min-w-[72px] rounded-full border border-gray-300 px-2.5 text-[11px] font-kumbh text-gray-600 hover:bg-gray-100">
-    {label}
-  </button>
-);
-
-const TransactionsTable = () => (
-  <div className="space-y-5">
-    <h2 className="font-spartan text-3xl font-bold text-gray-700">Document Services Transactions</h2>
-
-    <div className="bg-white rounded-xl border border-gray-300 shadow-sm overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-300">
-        <p className="font-spartan text-lg font-bold text-gray-700">Recent Transactions</p>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] table-fixed">
-        <colgroup>
-          <col className="w-[30%]" />
-          <col className="w-[22%]" />
-          <col className="w-[20%]" />
-          <col className="w-[13%]" />
-          <col className="w-[15%]" />
-        </colgroup>
-        <thead>
-          <tr className="bg-white border-b border-gray-300">
-            <th className={headerClass}>Name</th>
-            <th className={headerClass}>Document Type</th>
-            <th className={headerClass}>Payment Method</th>
-            <th className={headerClass}>Amount</th>
-            <th className={headerClass}>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {transactionRequests.map((row, index) => (
-            <tr key={`${row.name}-${index}`}>
-              <td className={cellClass}>{row.name}</td>
-              <td className={cellClass}>{row.documentType}</td>
-              <td className={cellClass}>{row.paymentMethod}</td>
-              <td className={cellClass}>{row.amount}</td>
-              <td className={cellClass}><TransactionStatus status={row.status} /></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5">
-        <p className="font-kumbh text-sm text-gray-600">Showing 1 to 6 of {totalTransactionCount} entries</p>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 font-kumbh text-[11px] text-gray-600">
-            <span className="inline-flex h-5 w-5 items-center justify-center rounded border border-gray-400 text-gray-700 bg-white">1</span>
-            <span>2</span>
-            <span>3</span>
-            <span>4</span>
-            <span>5</span>
-            <span>...</span>
-            <span>10</span>
-          </div>
-          <PaginationButton label="‹ Back" />
-          <PaginationButton label="Next ›" />
-        </div>
-      </div>
-    </div>
-  </div>
-);
 
 export default TransactionsTable;
