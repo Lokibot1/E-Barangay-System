@@ -1,361 +1,366 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import MainMenuCards from "../../components/sub-system-2/MainMenuCards";
+import COIRequestModal from "../../components/sub-system-2/COIRequestModal";
 import themeTokens from "../../Themetokens";
 
 const Req_COIPage = () => {
-  const navigate = useNavigate();
-  const [showInfoModal, setShowInfoModal] = useState(false);
-  const [showExitModal, setShowExitModal] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: "",
-    contactNumber: "",
-    dateOfBirth: "",
-    civilStatus: "Single",
-    emailAddress: "",
-    purokZone: "Purok/Zone 1",
-    streetAddress: "",
-    purposeOfRequest: "Medical Assistance",
-    specificPurpose: "",
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState(() => {
+    return localStorage.getItem("appTheme") || "blue";
   });
-  const currentTheme = localStorage.getItem("appTheme") || "blue";
-  const t = themeTokens[currentTheme];
 
   useEffect(() => {
-    const hasShownInfoModal = sessionStorage.getItem("req_coi_info_modal_shown") === "true";
-    if (hasShownInfoModal) return;
+    const handleStorageChange = () => {
+      setCurrentTheme(localStorage.getItem("appTheme") || "blue");
+    };
 
-    const timer = setTimeout(() => {
-      setShowInfoModal(true);
-      sessionStorage.setItem("req_coi_info_modal_shown", "true");
-    }, 700);
+    window.addEventListener("storage", handleStorageChange);
 
-    return () => clearTimeout(timer);
+    const handleThemeChange = (e) => {
+      setCurrentTheme(e.detail);
+    };
+    window.addEventListener("themeChange", handleThemeChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("themeChange", handleThemeChange);
+    };
   }, []);
 
-  const handleFieldChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const t = themeTokens[currentTheme];
 
-  const handleOpenPreview = () => {
-    setShowConfirmModal(false);
-    setShowPreviewModal(true);
-  };
-
-  const handleConfirmSubmit = () => {
-    setShowPreviewModal(false);
-    setShowSuccessModal(true);
-  };
-
-  const handleSuccessContinue = () => {
-    setShowSuccessModal(false);
-    navigate("/sub-system-2/req-sub-coi");
-  };
-
-  const handleExitPage = () => {
-    setShowExitModal(false);
-    navigate("/sub-system-2");
-  };
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
 
   return (
-    <div className={`${t.pageBg} min-h-full p-4 sm:p-6 lg:p-8`}>
-      <div className="max-w-7xl mx-auto">
-        <h1 className={`font-spartan text-4xl sm:text-5xl font-bold ${t.cardText}`}>
-          Request for Certificate of Indigency
-        </h1>
-        <p className={`font-kumbh text-lg ${t.subtleText} mt-2 mb-6`}>
-          Please fill out the form below to request a certificate.
-        </p>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div
-            className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-6 lg:col-span-2`}
+    <>
+      <div className="h-full flex flex-col overflow-y-auto">
+        {/* Header */}
+        <div className={`${t.pageBg} py-8 sm:py-10 text-center px-4`}>
+          <h1
+            className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${t.cardText} mb-2 sm:mb-3 font-spartan uppercase tracking-tight`}
           >
-            <h2 className={`font-spartan text-4xl font-bold ${t.cardText} mb-4`}>
-              Personal Information
-            </h2>
+            DOCUMENT SERVICES
+          </h1>
+        </div>
 
-            <div className="grid grid-cols-1 gap-4 text-left">
-              <Field label="Full Name:" name="fullName" value={formData.fullName} onChange={handleFieldChange} t={t} />
-              <Field label="Contact Number:" name="contactNumber" value={formData.contactNumber} onChange={handleFieldChange} t={t} />
-              <Field label="Date of Birth:" type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleFieldChange} t={t} />
-              <SelectField
-                label="Civil Status:"
-                name="civilStatus"
-                options={["Single", "Married", "Widowed", "Separated"]}
-                value={formData.civilStatus}
-                onChange={handleFieldChange}
-                t={t}
-              />
-              <Field label="Email Address:" name="emailAddress" value={formData.emailAddress} onChange={handleFieldChange} t={t} />
-            </div>
+        {/* Dynamic Theme Section with MainMenuCards */}
+        <div
+          className={`bg-gradient-to-r ${t.primaryGrad} py-12 sm:py-16 px-4`}
+        >
+          <div className="container mx-auto px-4 sm:px-6">
+            <MainMenuCards currentTheme={currentTheme} />
+          </div>
+        </div>
 
-            <h3 className={`font-spartan text-4xl font-bold ${t.cardText} mt-8 mb-4`}>
-              Address Information
-            </h3>
-
-            <div className="grid grid-cols-1 gap-4 text-left">
-              <SelectField
-                label="Purok/Zone:"
-                name="purokZone"
-                options={["Purok/Zone 1", "Purok/Zone 2", "Purok/Zone 3", "Purok/Zone 4"]}
-                value={formData.purokZone}
-                onChange={handleFieldChange}
-                t={t}
-              />
-              <Field label="Street Address:" name="streetAddress" value={formData.streetAddress} onChange={handleFieldChange} t={t} />
-            </div>
-
-            <h3 className={`font-spartan text-4xl font-bold ${t.cardText} mt-8 mb-4`}>
-              Request Details
-            </h3>
-
-            <div className="grid grid-cols-1 gap-4 text-left">
-              <SelectField
-                label="Purpose of Request:"
-                name="purposeOfRequest"
-                options={["Medical Assistance", "Scholarship", "Legal Aid", "Other"]}
-                value={formData.purposeOfRequest}
-                onChange={handleFieldChange}
-                t={t}
-              />
-              <Field label={'Specific Purpose (If "Other"):'} name="specificPurpose" value={formData.specificPurpose} onChange={handleFieldChange} t={t} />
-            </div>
-
-            <h3 className={`font-spartan text-4xl font-bold ${t.cardText} mt-8 mb-4`}>
-              Supporting Documents
-            </h3>
-
-            <div>
-              <label className={`font-kumbh text-2xl font-medium ${t.cardText} block mb-2`}>
-                Upload Valid ID (Government-issued):
-              </label>
-              <div className="flex items-center gap-2">
-                <button className="bg-green-500 hover:bg-green-600 text-white font-kumbh text-lg px-4 py-1.5 rounded-lg transition-colors">
-                  Upload file
-                </button>
-                <span className={`font-kumbh text-xl ${t.subtleText}`}>File list</span>
+        {/* Request Certificate of Indigency Content Section */}
+        <div id="main-content" className="flex-1 container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+          {/* Header with icon */}
+          <div className="mb-8 sm:mb-12">
+            <div className="flex items-start gap-4 mb-6">
+              <div className="w-12 h-12 flex-shrink-0">
+                <svg
+                  className="w-full h-full text-green-500"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h2
+                  className={`text-2xl sm:text-3xl font-bold ${t.cardText} mb-2 font-spartan`}
+                >
+                  REQUEST FOR CERTIFICATE OF INDIGENCY
+                </h2>
+                <div className="w-20 h-1 bg-green-500 rounded-full"></div>
               </div>
             </div>
 
-            <div className="mt-8 space-y-2">
-              <button
-                onClick={() => setShowConfirmModal(true)}
-                className="w-full bg-green-500 hover:bg-green-600 text-white font-kumbh text-2xl py-3 rounded-full transition-colors"
-              >
-                Submit Request
-              </button>
-              <button
-                onClick={() => setShowExitModal(true)}
-                className={`w-full ${t.inputBg} ${t.cardText} font-kumbh text-2xl py-3 rounded-full`}
-              >
-                Cancel
-              </button>
+            <div
+              className={`${t.cardBg} border ${t.cardBorder} rounded-2xl p-6 sm:p-8 shadow-lg`}
+            >
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-shrink-0 md:w-48">
+                  <img
+                    src="https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=400&q=80"
+                    alt="Certificate of Indigency Illustration"
+                    className="w-full h-auto rounded-lg"
+                  />
+                </div>
+                <div className="flex-1">
+                  <h3
+                    className={`text-lg font-bold ${t.cardText} mb-3 font-spartan text-green-500`}
+                  >
+                    WHAT IS A CERTIFICATE OF INDIGENCY?
+                  </h3>
+                  <p
+                    className={`text-sm ${t.subtleText} font-kumbh leading-relaxed`}
+                  >
+                    A Certificate of Indigency is an official document issued by
+                    the barangay certifying that a resident belongs to an
+                    indigent family or has a low income status. It is commonly
+                    used to avail free medical assistance, scholarship programs,
+                    legal aid, and other government social services and
+                    financial assistance programs.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-6`}>
-              <h3 className={`font-spartan text-4xl font-bold ${t.cardText} mb-4`}>
-                Service Information
+          {/* How the Process Works */}
+          <div className="mb-8 sm:mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+              <h3
+                className={`text-xl sm:text-2xl font-bold ${t.cardText} font-spartan`}
+              >
+                HOW THE PROCESS WORKS?
               </h3>
-              <p className={`font-kumbh text-3xl font-bold ${t.cardText}`}>Requirements:</p>
-              <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>
-                Valid ID, Personal Appearance
-                <br />
-                (for pick-up).
-              </p>
-
-              <p className={`font-kumbh text-3xl font-bold ${t.cardText} mt-4`}>Fees:</p>
-              <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>₱0.00</p>
-
-              <p className={`font-kumbh text-3xl font-bold ${t.cardText} mt-4`}>Processing Time:</p>
-              <p className={`font-kumbh text-2xl ${t.cardText} mt-1`}>1-3 Working Days.</p>
             </div>
 
-            <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-6`}>
-              <h3 className={`font-spartan text-3xl font-bold ${t.cardText} mb-2`}>
-                Need Help?
-              </h3>
-              <p className={`font-kumbh text-2xl ${t.cardText}`}>8-3663-198</p>
-              <p className={`font-kumbh text-2xl ${t.cardText} mt-2`}>teamtolentino@gmail.com</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Step 1 */}
+              <div
+                className={`${t.cardBg} border ${t.cardBorder} rounded-xl p-6 shadow-md`}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 flex-shrink-0 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-xl font-spartan">
+                    1
+                  </div>
+                  <div className="flex-1">
+                    <h4
+                      className={`text-lg font-bold ${t.cardText} mb-2 font-spartan`}
+                    >
+                      SUBMIT YOUR REQUEST
+                    </h4>
+                    <p className={`text-sm ${t.subtleText} font-kumbh`}>
+                      Fill out the online request form with your personal
+                      information, address, and the purpose for requesting the
+                      certificate. Make sure all details are accurate.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div
+                className={`${t.cardBg} border ${t.cardBorder} rounded-xl p-6 shadow-md`}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 flex-shrink-0 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-xl font-spartan">
+                    2
+                  </div>
+                  <div className="flex-1">
+                    <h4
+                      className={`text-lg font-bold ${t.cardText} mb-2 font-spartan`}
+                    >
+                      VERIFICATION
+                    </h4>
+                    <p className={`text-sm ${t.subtleText} font-kumbh`}>
+                      The barangay staff will verify your residency and
+                      indigency status based on their records. You may be asked
+                      to provide additional supporting documents if needed.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div
+                className={`${t.cardBg} border ${t.cardBorder} rounded-xl p-6 shadow-md`}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 flex-shrink-0 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-xl font-spartan">
+                    3
+                  </div>
+                  <div className="flex-1">
+                    <h4
+                      className={`text-lg font-bold ${t.cardText} mb-2 font-spartan`}
+                    >
+                      PROCESSING
+                    </h4>
+                    <p className={`text-sm ${t.subtleText} font-kumbh`}>
+                      Once your information is verified, the certificate will be
+                      prepared and signed by the Barangay Captain. Processing
+                      typically takes 1-3 business days.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 4 */}
+              <div
+                className={`${t.cardBg} border ${t.cardBorder} rounded-xl p-6 shadow-md`}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 flex-shrink-0 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-xl font-spartan">
+                    4
+                  </div>
+                  <div className="flex-1">
+                    <h4
+                      className={`text-lg font-bold ${t.cardText} mb-2 font-spartan`}
+                    >
+                      PICKUP YOUR CERTIFICATE
+                    </h4>
+                    <p className={`text-sm ${t.subtleText} font-kumbh`}>
+                      You will be notified once your certificate is ready.
+                      Visit the Barangay Hall during office hours and bring a
+                      valid ID for claiming. This certificate is issued free of
+                      charge.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
+
+          {/* What to Prepare */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <h3
+                className={`text-xl sm:text-2xl font-bold ${t.cardText} font-spartan`}
+              >
+                WHAT TO PREPARE?
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div
+                className={`${t.inlineBg} border-l-4 border-green-500 p-6 rounded-lg`}
+              >
+                <h4
+                  className={`text-lg font-bold ${t.cardText} mb-3 font-spartan`}
+                >
+                  VALID ID
+                </h4>
+                <p className={`text-sm ${t.subtleText} font-kumbh`}>
+                  Any government-issued ID such as a birth certificate, voter's
+                  ID, passport, driver's license, or school ID for verification.
+                </p>
+              </div>
+
+              <div
+                className={`${t.inlineBg} border-l-4 border-green-500 p-6 rounded-lg`}
+              >
+                <h4
+                  className={`text-lg font-bold ${t.cardText} mb-3 font-spartan`}
+                >
+                  PURPOSE DOCUMENTATION
+                </h4>
+                <p className={`text-sm ${t.subtleText} font-kumbh`}>
+                  Any supporting document related to your purpose such as
+                  hospital bills, school enrollment forms, or court documents.
+                </p>
+              </div>
+
+              <div
+                className={`${t.inlineBg} border-l-4 border-green-500 p-6 rounded-lg`}
+              >
+                <h4
+                  className={`text-lg font-bold ${t.cardText} mb-3 font-spartan`}
+                >
+                  FEES
+                </h4>
+                <p className={`text-sm ${t.subtleText} font-kumbh`}>
+                  This certificate is issued free of charge (P0.00). No payment
+                  is required for the Certificate of Indigency.
+                </p>
+              </div>
+
+              <div
+                className={`${t.inlineBg} border-l-4 border-green-500 p-6 rounded-lg`}
+              >
+                <h4
+                  className={`text-lg font-bold ${t.cardText} mb-3 font-spartan`}
+                >
+                  PERSONAL APPEARANCE
+                </h4>
+                <p className={`text-sm ${t.subtleText} font-kumbh`}>
+                  You must appear in person at the Barangay Hall for claiming
+                  the certificate. Representatives are not allowed unless
+                  authorized in writing.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA Button */}
+          <div className="text-center">
+            <button
+              onClick={openModal}
+              className="inline-flex items-center gap-3 px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-lg sm:text-xl font-bold rounded-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 font-spartan"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              REQUEST CERTIFICATE OF INDIGENCY
+            </button>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className={`pt-6 mt-8 border-t ${t.dividerBorder} text-center`}>
+            <p className={`text-sm ${t.subtleText} font-kumbh`}>
+              © {new Date().getFullYear()} Barangay Document Services System. All rights reserved.
+            </p>
           </div>
         </div>
       </div>
 
-      {showInfoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4">
-          <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl w-full max-w-md p-6 text-center`}>
-            <div className="mx-auto mb-4 w-16 h-16 rounded-full border-4 border-amber-500 text-amber-500 flex items-center justify-center font-spartan text-4xl font-bold">
-              !
-            </div>
-            <p className={`font-kumbh text-xl ${t.cardText}`}>
-              Please fill out the necessary or changeable information.
-            </p>
-            <button
-              onClick={() => setShowInfoModal(false)}
-              className="mt-5 px-5 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-kumbh text-lg"
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showExitModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4">
-          <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl w-full max-w-md p-6 text-center`}>
-            <div className="mx-auto mb-4 w-16 h-16 rounded-full border-4 border-red-500 text-red-500 flex items-center justify-center font-spartan text-4xl font-bold">
-              ×
-            </div>
-            <h3 className={`font-spartan text-3xl font-bold ${t.cardText}`}>Do you want to exit?</h3>
-            <div className="mt-6 flex items-center justify-center gap-3">
-              <button
-                onClick={() => setShowExitModal(false)}
-                className={`px-5 py-2 rounded-lg ${t.inputBg} ${t.cardText} font-kumbh text-lg`}
-              >
-                No
-              </button>
-              <button
-                onClick={handleExitPage}
-                className="px-5 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-kumbh text-lg"
-              >
-                Yes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4">
-          <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl w-full max-w-md p-6`}>
-            <h3 className={`font-spartan text-3xl font-bold ${t.cardText}`}>
-              Confirm Submission
-            </h3>
-            <p className={`font-kumbh text-xl ${t.subtleText} mt-2`}>
-              Please confirm that all information provided is correct.
-            </p>
-            <div className="mt-6 flex items-center justify-end gap-3">
-              <button
-                onClick={() => setShowConfirmModal(false)}
-                className={`px-4 py-2 rounded-lg ${t.inputBg} ${t.cardText} font-kumbh text-lg`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleOpenPreview}
-                className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-kumbh text-lg"
-              >
-                Review
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showPreviewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4">
-          <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl w-full max-w-2xl p-6 max-h-[85vh] overflow-y-auto`}>
-            <h3 className={`font-spartan text-3xl font-bold ${t.cardText}`}>Review Information</h3>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <PreviewItem label="Full Name" value={formData.fullName} t={t} />
-              <PreviewItem label="Contact Number" value={formData.contactNumber} t={t} />
-              <PreviewItem label="Date of Birth" value={formData.dateOfBirth} t={t} />
-              <PreviewItem label="Civil Status" value={formData.civilStatus} t={t} />
-              <PreviewItem label="Email Address" value={formData.emailAddress} t={t} />
-              <PreviewItem label="Purok/Zone" value={formData.purokZone} t={t} />
-              <PreviewItem label="Street Address" value={formData.streetAddress} t={t} />
-              <PreviewItem label="Purpose of Request" value={formData.purposeOfRequest} t={t} />
-              <PreviewItem label="Specific Purpose" value={formData.specificPurpose} t={t} />
-            </div>
-            <div className="mt-6 flex items-center justify-end gap-3">
-              <button
-                onClick={() => setShowPreviewModal(false)}
-                className={`px-4 py-2 rounded-lg ${t.inputBg} ${t.cardText} font-kumbh text-lg`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmSubmit}
-                className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-kumbh text-lg"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showSuccessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4">
-          <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl w-full max-w-md p-6 text-center`}>
-            <div className="relative w-24 h-24 mx-auto mb-4">
-              <span className="absolute inset-0 rounded-full bg-green-400/40 animate-ping" />
-              <div className="relative w-24 h-24 rounded-full bg-green-500 flex items-center justify-center">
-                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-            </div>
-            <h3 className={`font-spartan text-3xl font-bold ${t.cardText}`}>Requested Successfully!</h3>
-            <button
-              onClick={handleSuccessContinue}
-              className="mt-5 px-5 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-kumbh text-lg"
-            >
-              Continue
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+      {/* COI Request Modal */}
+      <COIRequestModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        currentTheme={currentTheme}
+      />
+    </>
   );
 };
-
-const Field = ({ label, type = "text", className = "", name, value, onChange, t }) => (
-  <div className={`${className} text-left`}>
-    <label className={`font-kumbh text-2xl font-medium ${t.cardText} block mb-1 text-left`}>
-      {label}
-    </label>
-    <input
-      type={type}
-      name={name}
-      value={value}
-      onChange={onChange}
-      className={`w-full border ${t.cardBorder} rounded-xl px-3 py-2 text-xl font-kumbh ${t.inputBg} ${t.inputText} text-left`}
-    />
-  </div>
-);
-
-const SelectField = ({ label, options, name, value, onChange, t }) => (
-  <div className="text-left">
-    <label className={`font-kumbh text-2xl font-medium ${t.cardText} block mb-1 text-left`}>
-      {label}
-    </label>
-    <select
-      name={name}
-      value={value}
-      onChange={onChange}
-      className={`w-full border ${t.cardBorder} rounded-xl px-3 py-2 text-xl font-kumbh ${t.inputBg} ${t.inputText} text-left`}
-    >
-      {options.map((option) => (
-        <option key={option} value={option}>
-          {option}
-        </option>
-      ))}
-    </select>
-  </div>
-);
-
-const PreviewItem = ({ label, value, t }) => (
-  <div className={`border ${t.cardBorder} rounded-lg p-3 ${t.inputBg}`}>
-    <p className={`font-kumbh text-sm ${t.subtleText}`}>{label}</p>
-    <p className={`font-kumbh text-lg ${t.cardText}`}>{value || "-"}</p>
-  </div>
-);
 
 export default Req_COIPage;
