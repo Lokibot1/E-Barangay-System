@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -9,6 +9,8 @@ import {
 import "leaflet/dist/leaflet.css";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
 import themeTokens from "../../Themetokens";
+import { incidentService } from "../../services/sub-system-3/incidentService";
+import { getMyComplaints } from "../../services/sub-system-3/complaintService";
 
 // Check if point is inside polygon (ray-casting algorithm)
 const isPointInPolygon = (point, polygon) => {
@@ -74,90 +76,6 @@ const ZONE_DATA = [
   },
 ];
 
-// ── Sample incident markers ────────────────────────────────────────────
-const INCIDENT_MARKERS = [
-  {
-    id: 1,
-    lat: 14.7180,
-    lng: 121.0410,
-    status: "active",
-    title: "Illegal Parking — Quirino Highway",
-    date: "2026-02-07",
-  },
-  {
-    id: 2,
-    lat: 14.7165,
-    lng: 121.0440,
-    status: "active",
-    title: "Road Obstruction — Near Gulod Proper",
-    date: "2026-02-07",
-  },
-  {
-    id: 3,
-    lat: 14.7095,
-    lng: 121.0360,
-    status: "active",
-    title: "Street Flooding — Purok 3",
-    date: "2026-02-06",
-  },
-  {
-    id: 4,
-    lat: 14.7085,
-    lng: 121.0390,
-    status: "in-progress",
-    title: "Clogged Sewer — Gulod Proper",
-    date: "2026-02-06",
-  },
-  {
-    id: 5,
-    lat: 14.7075,
-    lng: 121.0410,
-    status: "in-progress",
-    title: "Stray Dogs — Near Barangay Hall",
-    date: "2026-02-05",
-  },
-  {
-    id: 6,
-    lat: 14.7105,
-    lng: 121.0340,
-    status: "in-progress",
-    title: "Broken Street Light — Gulod Road",
-    date: "2026-02-05",
-  },
-  {
-    id: 7,
-    lat: 14.7060,
-    lng: 121.0450,
-    status: "resolved",
-    title: "Illegal Dumping — Near Geneva Gardens",
-    date: "2026-02-04",
-  },
-  {
-    id: 8,
-    lat: 14.7055,
-    lng: 121.0430,
-    status: "resolved",
-    title: "Standing Water — Southern Gulod",
-    date: "2026-02-04",
-  },
-  {
-    id: 9,
-    lat: 14.7080,
-    lng: 121.0465,
-    status: "resolved",
-    title: "Noise Complaint — Eastern Gulod",
-    date: "2026-02-03",
-  },
-  {
-    id: 10,
-    lat: 14.7150,
-    lng: 121.0375,
-    status: "active",
-    title: "Abandoned Vehicle — Near Novaliches Proper",
-    date: "2026-02-07",
-  },
-];
-
 // ── Color helpers ───────────────────────────────────────────────────────
 const STATUS_COLORS = {
   active: {
@@ -178,6 +96,35 @@ const STATUS_COLORS = {
     stroke: "#059669",
     marker: "#10b981",
   },
+};
+
+// ── Normalize backend status → map color key ────────────────────────────
+const normalizeMapStatus = (status) => {
+  if (!status) return "active";
+  const s = status.toLowerCase().replace(/\s/g, "_");
+  if (s === "pending") return "active";
+  if (s === "in_progress" || s === "ongoing") return "in-progress";
+  if (
+    s === "resolved" || s === "completed" || s === "closed" ||
+    s === "rejected" || s === "dismissed" || s === "denied"
+  ) return "resolved";
+  return "active";
+};
+
+// ── Extract a readable title from an incident record ────────────────────
+const getIncidentTitle = (item) => {
+  if (Array.isArray(item.types) && item.types.length > 0) {
+    return item.types.map((t) => t.name).join(", ");
+  }
+  if (item.type) {
+    try {
+      const parsed = JSON.parse(item.type);
+      return Array.isArray(parsed) ? parsed.join(", ") : String(parsed);
+    } catch {
+      return item.type;
+    }
+  }
+  return "Incident";
 };
 
 // Map center & bounds: Barangay Gulod, Novaliches, QC (OSM Relation 270990)
@@ -381,6 +328,8 @@ const IncidentMapPage = () => {
   const [currentTheme, setCurrentTheme] = useState(() => {
     return localStorage.getItem("appTheme") || "blue";
   });
+  const [markers, setMarkers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -399,6 +348,56 @@ const IncidentMapPage = () => {
       window.removeEventListener("themeChange", handleThemeChange);
     };
   }, []);
+
+  // ── Fetch the user's own incidents and complaints for the map ──────────
+  const fetchMarkers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [incData, compData] = await Promise.all([
+        incidentService.getMyIncidents(),
+        getMyComplaints(),
+      ]);
+
+      const incArray = Array.isArray(incData) ? incData : incData.data || [];
+      const compArray = Array.isArray(compData) ? compData : compData.data || [];
+
+      const incMarkers = incArray
+        .filter((i) => i.latitude && i.longitude)
+        .map((i) => ({
+          id: `inc-${i.id}`,
+          lat: parseFloat(i.latitude),
+          lng: parseFloat(i.longitude),
+          status: normalizeMapStatus(i.status),
+          title: getIncidentTitle(i),
+          description: i.description || "",
+          date: i.created_at?.split("T")[0] || "",
+          source: "Incident",
+        }));
+
+      const compMarkers = compArray
+        .filter((c) => c.latitude && c.longitude)
+        .map((c) => ({
+          id: `comp-${c.id}`,
+          lat: parseFloat(c.latitude),
+          lng: parseFloat(c.longitude),
+          status: normalizeMapStatus(c.status),
+          title: c.type || "Complaint",
+          description: c.description || "",
+          date: c.incident_date?.split("T")[0] || c.created_at?.split("T")[0] || "",
+          source: "Complaint",
+        }));
+
+      setMarkers([...incMarkers, ...compMarkers]);
+    } catch (err) {
+      console.error("Failed to load map markers:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchMarkers();
+  }, [fetchMarkers]);
 
   const t = themeTokens[currentTheme];
 
@@ -744,10 +743,12 @@ const IncidentMapPage = () => {
                   <p
                     className={`text-sm ${t.subtleText} font-kumbh leading-relaxed`}
                   >
-                    Stay informed and stay safe. View a real-time overview of
-                    public reports, road obstructions, and environmental alerts
-                    across our Barangay. Check which issues are currently being
-                    addressed by our response teams.
+                    See all the incidents and complaints you have filed, plotted
+                    directly on the Barangay Gulod map. Each pin reflects the
+                    current status of your report — <span className="font-semibold text-red-500">red</span> for newly
+                    submitted, <span className="font-semibold text-orange-400">orange</span> for in-progress, and{" "}
+                    <span className="font-semibold text-emerald-500">green</span> for resolved. Click any pin to
+                    view the report title, description, and date filed.
                   </p>
                 </div>
               </div>
@@ -843,7 +844,15 @@ const IncidentMapPage = () => {
             <div
               className={`${t.cardBg} border ${t.cardBorder} rounded-2xl overflow-hidden shadow-xl`}
             >
-              <div style={{ height: "520px" }}>
+              <div style={{ height: "520px" }} className="relative">
+                {/* Loading overlay */}
+                {loading && (
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/70 backdrop-blur-sm">
+                    <div className="animate-spin w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full mb-3" />
+                    <p className="text-sm font-kumbh text-slate-600">Loading your reports…</p>
+                  </div>
+                )}
+
                 <MapContainer
                   center={MAP_CENTER}
                   zoom={MAP_ZOOM}
@@ -924,40 +933,55 @@ const IncidentMapPage = () => {
                     );
                   })}
 
-                  {/* Incident markers (only render those within barangay boundary) */}
-                  {INCIDENT_MARKERS
-                    .filter((marker) =>
-                      isPointInPolygon([marker.lat, marker.lng], BARANGAY_BOUNDARY)
-                    )
-                    .map((marker) => {
-                      const colors = STATUS_COLORS[marker.status];
-                      return (
-                        <CircleMarker
-                          key={marker.id}
-                          center={[marker.lat, marker.lng]}
-                          radius={7}
-                          pathOptions={{
-                            color: "#fff",
-                            fillColor: colors.marker,
-                            fillOpacity: 1,
-                            weight: 2,
-                          }}
-                        >
-                          <Popup>
-                            <div className="font-kumbh">
-                              <p className="font-bold text-sm mb-1">
-                                {marker.title}
+                  {/* Live markers for the user's filed incidents and complaints */}
+                  {markers.map((marker) => {
+                    const colors = STATUS_COLORS[marker.status] || STATUS_COLORS.active;
+                    return (
+                      <CircleMarker
+                        key={marker.id}
+                        center={[marker.lat, marker.lng]}
+                        radius={8}
+                        pathOptions={{
+                          color: "#fff",
+                          fillColor: colors.marker,
+                          fillOpacity: 1,
+                          weight: 2,
+                        }}
+                      >
+                        <Popup>
+                          <div className="font-kumbh" style={{ minWidth: "160px" }}>
+                            <p
+                              className="text-xs font-bold uppercase mb-1"
+                              style={{ color: colors.marker }}
+                            >
+                              {marker.source}
+                            </p>
+                            <p className="font-bold text-sm mb-1">{marker.title}</p>
+                            {marker.description && (
+                              <p className="text-xs text-slate-600 mb-1" style={{
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                              }}>
+                                {marker.description}
                               </p>
-                              <p className="text-xs text-slate-500">
-                                {marker.date}
-                              </p>
-                            </div>
-                          </Popup>
-                        </CircleMarker>
-                      );
-                    })}
+                            )}
+                            <p className="text-xs text-slate-500">{marker.date}</p>
+                          </div>
+                        </Popup>
+                      </CircleMarker>
+                    );
+                  })}
                 </MapContainer>
               </div>
+
+              {/* No location data notice */}
+              {!loading && markers.length === 0 && (
+                <p className="text-center text-sm font-kumbh text-slate-500 mt-3">
+                  None of your submitted reports include location data, so no pins are shown.
+                </p>
+              )}
             </div>
           </div>
 
