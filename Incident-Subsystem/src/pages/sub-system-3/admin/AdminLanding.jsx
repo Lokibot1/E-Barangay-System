@@ -714,7 +714,7 @@ const AdminLanding = () => {
       <div className={`${t.pageBg} px-6 sm:px-10 lg:px-16 pb-6`}>
         <div className="max-w-7xl mx-auto w-full space-y-6">
           <h2 className={`text-2xl font-bold ${t.cardText} font-spartan text-left`}>
-            Documents Inquiry Factors
+            Issuance Application Factors
           </h2>
 
           <h3 className={`text-xl font-bold ${t.cardText} font-spartan text-left`}>
