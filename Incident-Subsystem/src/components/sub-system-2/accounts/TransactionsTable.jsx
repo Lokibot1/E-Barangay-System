@@ -119,13 +119,13 @@ const TransactionsTable = () => {
   return (
     <div className="mx-auto max-w-6xl space-y-3">
       <div className="relative mb-1 py-1">
-        <span className="absolute left-0 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md bg-gray-100 text-slate-700">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4" strokeWidth="2">
+        <span className="absolute left-0 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md bg-gray-100 text-slate-700">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-5 w-5" strokeWidth="2">
             <path d="M8 7h8M8 11h8M8 15h5" />
             <rect x="4" y="3" width="16" height="18" rx="2" />
           </svg>
         </span>
-        <h2 className="text-center font-spartan text-xl font-bold tracking-wide text-slate-800">PAYMENTS MANAGEMENT</h2>
+        <h2 className="text-center font-spartan text-2xl font-bold tracking-wide text-slate-800">PAYMENTS MANAGEMENT</h2>
       </div>
 
       <div className={`grid grid-cols-1 gap-3 ${selectedRow ? "lg:grid-cols-[minmax(0,1fr)_260px]" : ""}`}>
@@ -137,7 +137,7 @@ const TransactionsTable = () => {
                 <button
                   key={tab}
                   onClick={() => setActiveStatus(tab)}
-                  className={`rounded-md border px-3 py-1.5 text-[11px] font-spartan font-bold uppercase tracking-wide ${active ? "border-slate-700 bg-slate-700 text-white" : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"}`}
+                  className={`rounded-md border px-4 py-2 text-xs font-spartan font-bold uppercase tracking-wide ${active ? "border-slate-700 bg-slate-700 text-white" : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"}`}
                 >
                   {tab} ({statusCounts[tab] ?? 0})
                 </button>
