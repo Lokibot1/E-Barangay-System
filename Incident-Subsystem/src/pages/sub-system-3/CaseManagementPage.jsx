@@ -58,6 +58,20 @@ const CaseManagementPage = () => {
   const capitalize = (str) =>
     str.replace(/\b\w/g, (c) => c.toUpperCase());
 
+  // Format a YYYY-MM-DD (or ISO) date string into a readable form, e.g. "February 21, 2026"
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "N/A";
+    // Append time to avoid UTC-to-local timezone shift when parsing date-only strings
+    const raw = dateStr.includes("T") ? dateStr : `${dateStr}T00:00:00`;
+    const d = new Date(raw);
+    if (isNaN(d)) return dateStr;
+    return d.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
   // Parse incident type which comes as a JSON string e.g. "[\"waste\",\"draining\"]"
   const parseIncidentType = (type) => {
     if (!type) return "Incident";
@@ -81,7 +95,7 @@ const CaseManagementPage = () => {
       status: normalizeStatus(c.status),
       location: c.location || "N/A",
       description: c.description || "",
-      date: c.incident_date || c.created_at?.split("T")[0] || "",
+      date: formatDate(c.incident_date || c.created_at?.split("T")[0]),
       severity: c.severity ? capitalize(c.severity) : "N/A",
       image: c.evidence || null,
       submittedBy: c.complainant_name || "",
@@ -99,7 +113,7 @@ const CaseManagementPage = () => {
       status: normalizeStatus(i.status),
       location: i.location || "N/A",
       description: i.description || "",
-      date: i.created_at?.split("T")[0] || "",
+      date: formatDate(i.created_at?.split("T")[0]),
       severity: i.severity || "N/A",
       image: i.evidence || null,
       latitude: i.latitude,
@@ -487,6 +501,7 @@ const CaseManagementPage = () => {
                       report={report}
                       currentTheme={currentTheme}
                       onClick={() => handleReportClick(report)}
+                      showSeverity={activeTab !== "incidents"}
                     />
                   ))}
                 </div>

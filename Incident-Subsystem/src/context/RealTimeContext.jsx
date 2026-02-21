@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useContext,
   useState,
@@ -8,8 +8,11 @@ import React, {
   useRef,
 } from "react";
 import useRealTimeEvents from "../hooks/shared/useRealTimeEvents";
+import { fetchNotifications } from "../services/sub-system-3/notificationService";
 
 const RealTimeContext = createContext(null);
+
+const LS_ADMIN_NOTIFICATIONS_KEY = "adminNotifications";
 
 // ── Safe defaults returned when outside the provider (user routes) ──────
 const SAFE_DEFAULTS = {
@@ -24,6 +27,31 @@ const SAFE_DEFAULTS = {
   clearNotifications: () => {},
 };
 
+/**
+ * Convert a backend notification (from /api/notifications) into the
+ * local notification shape used by this context.
+ */
+const mapBackendNotification = (n) => ({
+  id: `api-${n.id}`,
+  backendId: n.id,
+  source: n.type?.includes("complaint") ? "complaint" : "incident",
+  type:
+    n.type === "incident_created"
+      ? "New Incident Report"
+      : n.type === "complaint_created"
+        ? "New Complaint"
+        : n.type || "Notification",
+  description: n.message || "No description",
+  reportedBy:
+    n.data?.complainant_name ||
+    (n.data?.user
+      ? `${n.data.user.last_name || ""}, ${n.data.user.first_name || ""}`
+      : ""),
+  timestamp: n.created_at,
+  read: n.is_read,
+  data: n.data,
+});
+
 // ── Provider ────────────────────────────────────────────────────────────
 export const RealTimeProvider = ({ children }) => {
   const { newEvents, clearEvents, isPolling, lastUpdated } =
@@ -32,10 +60,46 @@ export const RealTimeProvider = ({ children }) => {
       batchDelay: 2000,
     });
 
-  const [notifications, setNotifications] = useState([]);
+  // Initialize from localStorage so notifications survive refreshes and logouts
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS_ADMIN_NOTIFICATIONS_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [latestBatch, setLatestBatch] = useState([]);
   const [eventVersion, setEventVersion] = useState(0);
   const prevEventsLengthRef = useRef(0);
+
+  // Persist notifications to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(
+      LS_ADMIN_NOTIFICATIONS_KEY,
+      JSON.stringify(notifications),
+    );
+  }, [notifications]);
+
+  // On mount: fetch backend notifications to hydrate any that arrived while offline.
+  // These are merged with the localStorage cache — deduplicated by id.
+  useEffect(() => {
+    fetchNotifications({ perPage: 50 }).then((response) => {
+      if (!response?.data) return;
+
+      const backendItems = response.data.map(mapBackendNotification);
+
+      setNotifications((prev) => {
+        const existingIds = new Set(prev.map((n) => n.id));
+        const newOnes = backendItems.filter((n) => !existingIds.has(n.id));
+        if (newOnes.length === 0) return prev;
+        // Prepend new backend notifications (they are already sorted latest-first by the API)
+        return [...newOnes, ...prev];
+      });
+    });
+    // Run once on mount only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Convert flushed events into notification objects — fires ONCE per batch
   useEffect(() => {
@@ -100,6 +164,7 @@ export const RealTimeProvider = ({ children }) => {
     setLatestBatch([]);
     clearEvents();
     prevEventsLengthRef.current = 0;
+    localStorage.removeItem(LS_ADMIN_NOTIFICATIONS_KEY);
   }, [clearEvents]);
 
   // Memoize to prevent unnecessary re-renders in consumers

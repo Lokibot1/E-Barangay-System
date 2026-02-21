@@ -2,7 +2,7 @@ import React from "react";
 import themeTokens from "../../Themetokens";
 import defaultImage from "../../assets/images/defaultImage.png";
 
-const ReportCard = ({ report, currentTheme, onClick }) => {
+const ReportCard = ({ report, currentTheme, onClick, showSeverity = true }) => {
   const t = themeTokens[currentTheme];
   const isDark = currentTheme === "dark";
 
@@ -41,11 +41,6 @@ const ReportCard = ({ report, currentTheme, onClick }) => {
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <span
-              className={`text-xs font-bold ${isDark ? "text-slate-300" : "text-slate-600"} font-kumbh`}
-            >
-              {report.id}
-            </span>
             <span
               className={`${config.badge} text-white text-xs font-semibold px-2 py-0.5 rounded-full font-kumbh capitalize`}
             >
@@ -144,11 +139,13 @@ const ReportCard = ({ report, currentTheme, onClick }) => {
             {report.date}
           </span>
         </div>
-        <div
-          className={`px-2 py-1 ${isDark ? config.darkBg : config.bg} ${isDark ? config.darkText : config.text} text-xs font-semibold rounded-full font-kumbh`}
-        >
-          {report.severity}
-        </div>
+        {showSeverity && (
+          <div
+            className={`px-2 py-1 ${isDark ? config.darkBg : config.bg} ${isDark ? config.darkText : config.text} text-xs font-semibold rounded-full font-kumbh`}
+          >
+            {report.severity}
+          </div>
+        )}
       </div>
     </div>
   );
