@@ -183,7 +183,7 @@ const TransactionsTable = () => {
         </label>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1.7fr_1fr]">
+      <div className={`grid grid-cols-1 gap-3 ${selectedRow ? "lg:grid-cols-[minmax(0,1fr)_260px]" : ""}`}>
         <div className="overflow-x-auto rounded-md border border-gray-200 bg-white">
           <table className="w-full min-w-[860px] table-fixed">
             <thead className="bg-gray-100">
@@ -202,7 +202,7 @@ const TransactionsTable = () => {
                 return (
                   <tr
                     key={`${row.paymentId}-${index}`}
-                    onClick={() => setSelectedPaymentId(row.paymentId)}
+                    onClick={() => setSelectedPaymentId((prev) => (prev === row.paymentId ? null : row.paymentId))}
                     className={`cursor-pointer ${isActive ? "bg-slate-50" : "hover:bg-gray-100"}`}
                   >
                     <td className={cellClass}>{index + 1}</td>
@@ -225,12 +225,12 @@ const TransactionsTable = () => {
           </table>
         </div>
 
-        <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="mb-3 text-sm font-spartan font-bold uppercase tracking-wide text-gray-500">Preview Pane</p>
+        {selectedRow && (
+          <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
+            <p className="mb-3 text-sm font-spartan font-bold uppercase tracking-wide text-gray-500">Preview Pane</p>
 
-          {selectedRow ? (
             <div className="grid grid-cols-1 gap-3">
-              <div className="mb-1 flex items-center gap-3">
+              <div className="mb-1 flex items-center justify-center gap-3 text-left">
                 <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-spartan font-bold text-white ${getAvatarClass(selectedRow.payee)}`}>
                   {getInitials(selectedRow.payee)}
                 </span>
@@ -248,10 +248,8 @@ const TransactionsTable = () => {
                 <div className="mt-1"><PaymentStatusBadge status={selectedRow.status} /></div>
               </div>
             </div>
-          ) : (
-            <p className="text-sm font-kumbh text-gray-500">Select a row to preview transaction details.</p>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <p className="text-xs font-kumbh text-gray-500">Showing {visibleRows.length} of {totalTransactionCount} entries</p>
