@@ -133,59 +133,58 @@ const TransactionsTable = () => {
         })}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <label className="block md:col-span-2">
-          <span className="mb-1 block text-[10px] font-spartan font-bold uppercase tracking-wide text-gray-500">Search</span>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by type, payee, payment ID..."
-            className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm font-kumbh text-gray-700 outline-none placeholder:text-gray-400 focus:border-gray-400"
-          />
-        </label>
-
-        <label className="block">
-          <span className="mb-1 block text-[10px] font-spartan font-bold uppercase tracking-wide text-gray-500">Start Date</span>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm font-kumbh text-gray-700 outline-none focus:border-gray-400"
-          />
-        </label>
-
-        <label className="block">
-          <span className="mb-1 block text-[10px] font-spartan font-bold uppercase tracking-wide text-gray-500">End Date</span>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm font-kumbh text-gray-700 outline-none focus:border-gray-400"
-          />
-        </label>
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <label className="block md:col-span-1">
-          <span className="mb-1 block text-[10px] font-spartan font-bold uppercase tracking-wide text-gray-500">Sort</span>
-          <select
-            value={sortByDate}
-            onChange={(e) => setSortByDate(e.target.value)}
-            className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm font-kumbh text-gray-700 outline-none focus:border-gray-400"
-          >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="amount-desc">Highest Amount to Lowest</option>
-            <option value="type-asc">Document Type (A-Z)</option>
-            <option value="type-desc">Document Type (Z-A)</option>
-          </select>
-        </label>
-      </div>
-
       <div className={`grid grid-cols-1 gap-3 ${selectedRow ? "lg:grid-cols-[minmax(0,1fr)_260px]" : ""}`}>
-        <div className="overflow-x-auto rounded-md border border-gray-200 bg-white">
-          <table className="w-full min-w-[860px] table-fixed">
+        <div className="rounded-md border border-gray-200 bg-white p-3">
+          <div className="mb-3 grid grid-cols-1 gap-3 xl:grid-cols-12">
+            <label className="block xl:col-span-5">
+              <span className="mb-1 block text-[10px] font-spartan font-bold uppercase tracking-wide text-gray-500">Search</span>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by type, payee, payment ID..."
+                className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm font-kumbh text-gray-700 outline-none placeholder:text-gray-400 focus:border-gray-400"
+              />
+            </label>
+
+            <label className="block xl:col-span-3">
+              <span className="mb-1 block text-[10px] font-spartan font-bold uppercase tracking-wide text-gray-500">Sort</span>
+              <select
+                value={sortByDate}
+                onChange={(e) => setSortByDate(e.target.value)}
+                className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm font-kumbh text-gray-700 outline-none focus:border-gray-400"
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="amount-desc">Highest Amount to Lowest</option>
+                <option value="type-asc">Document Type (A-Z)</option>
+                <option value="type-desc">Document Type (Z-A)</option>
+              </select>
+            </label>
+
+            <label className="block xl:col-span-2">
+              <span className="mb-1 block text-[10px] font-spartan font-bold uppercase tracking-wide text-gray-500">Start Date</span>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm font-kumbh text-gray-700 outline-none focus:border-gray-400"
+              />
+            </label>
+
+            <label className="block xl:col-span-2">
+              <span className="mb-1 block text-[10px] font-spartan font-bold uppercase tracking-wide text-gray-500">End Date</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm font-kumbh text-gray-700 outline-none focus:border-gray-400"
+              />
+            </label>
+          </div>
+
+          <div className="overflow-x-auto rounded-md border border-gray-200">
+            <table className="w-full min-w-[860px] table-fixed">
             <thead className="bg-gray-100">
               <tr>
                 <th className={`${headerClass} w-[7%]`}>#</th>
@@ -222,7 +221,8 @@ const TransactionsTable = () => {
                 </tr>
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
 
         {selectedRow && (
@@ -230,14 +230,12 @@ const TransactionsTable = () => {
             <p className="mb-3 text-sm font-spartan font-bold uppercase tracking-wide text-gray-500">Preview Pane</p>
 
             <div className="grid grid-cols-1 gap-3">
-              <div className="mb-1 flex items-center justify-center gap-3 text-left">
+              <div className="mb-1 flex flex-col items-center justify-center text-center">
                 <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-spartan font-bold text-white ${getAvatarClass(selectedRow.payee)}`}>
                   {getInitials(selectedRow.payee)}
                 </span>
-                <div>
-                  <p className="text-[11px] font-spartan font-bold uppercase tracking-wide text-gray-500">Payer</p>
-                  <p className="text-sm font-kumbh text-gray-700">{selectedRow.payee}</p>
-                </div>
+                <p className="mt-2 text-[11px] font-spartan font-bold uppercase tracking-wide text-gray-500">Payer</p>
+                <p className="text-sm font-kumbh text-gray-700">{selectedRow.payee}</p>
               </div>
               <PreviewField label="Document Type" value={selectedRow.documentType} />
               <PreviewField label="Date" value={selectedRow.date} />
