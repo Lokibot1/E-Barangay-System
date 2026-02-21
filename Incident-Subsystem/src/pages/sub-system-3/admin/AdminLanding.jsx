@@ -5,6 +5,9 @@ import { getUser } from "../../../services/sub-system-3/loginService";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
 import { getMyComplaints } from "../../../services/sub-system-3/complaintService";
 import InsightsModal from "../../../components/sub-system-3/InsightsModal";
+import VolumesFactors from "../../../components/sub-system-2/factors/VolumesFactors";
+import OperationsFactors from "../../../components/sub-system-2/factors/OperationsFactors";
+import SocioEconomyFactors from "../../../components/sub-system-2/factors/SocioEconomyFactors";
 import sanBartolomeImg from "../../../assets/css/images/SanBartolome.jpg";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -705,6 +708,29 @@ const AdminLanding = () => {
               </ChartCard>
             </div>
           )}
+        </div>
+      </div>
+
+      <div className={`${t.pageBg} px-6 sm:px-10 lg:px-16 pb-6`}>
+        <div className="max-w-7xl mx-auto w-full space-y-6">
+          <h2 className={`text-2xl font-bold ${t.cardText} font-spartan text-left`}>
+            Documents Inquiry Factors
+          </h2>
+
+          <h3 className={`text-xl font-bold ${t.cardText} font-spartan text-left`}>
+            Volumes
+          </h3>
+          <VolumesFactors t={t} isDark={isDark} />
+
+          <h3 className={`text-xl font-bold ${t.cardText} font-spartan text-left`}>
+            Operations
+          </h3>
+          <OperationsFactors t={t} isDark={isDark} />
+
+          <h3 className={`text-xl font-bold ${t.cardText} font-spartan text-left`}>
+            Socio-Economy
+          </h3>
+          <SocioEconomyFactors t={t} isDark={isDark} />
         </div>
       </div>
 

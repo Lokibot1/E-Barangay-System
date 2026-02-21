@@ -26,6 +26,7 @@ import Track_BID from "./pages/sub-system-2/Track_BID";
 import Track_COI from "./pages/sub-system-2/Track_COI";
 import Track_COR from "./pages/sub-system-2/Track_COR";
 import DocumentsInquiryPage from "./pages/sub-system-2/DocumentsInquiryPage";
+import AccountsSection from "./components/sub-system-2/accounts/AccountsSection";
 import FileComplaintPage from "./pages/sub-system-3/FileComplaintPage";
 import IncidentReportPage from "./pages/sub-system-3/IncidentReportPage";
 import IncidentMapPage from "./pages/sub-system-3/IncidentMapPage";
@@ -134,7 +135,7 @@ function App() {
                 />
                 <Route
                   path="/admin/payments"
-                  element={<AdminPlaceholder title="Payments" />}
+                  element={<AccountsSection />}
                 />
                 <Route
                   path="/admin/reports"
