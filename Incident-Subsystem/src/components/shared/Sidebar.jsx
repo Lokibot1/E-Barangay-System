@@ -161,10 +161,12 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const adminMode = isAdmin();
   const isSubSystem2Route = location.pathname.startsWith("/sub-system-2");
+  const isIncidentRoute = location.pathname.startsWith("/incident-complaint");
+  const showDocumentServices = isSubSystem2Route || isIncidentRoute;
   const userNavItems = getUserNavItems(tr.sidebar);
   const NAV_ITEMS = adminMode
     ? getAdminNavItems(tr.sidebar)
-    : isSubSystem2Route
+    : showDocumentServices
       ? userNavItems.map((item) => {
           if (item.id === "subsystem-2") {
             return {
@@ -174,7 +176,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
             };
           }
 
-          if (item.id === "incident-complaint") {
+          if (item.id === "incident-complaint" && isSubSystem2Route) {
             return {
               ...item,
               children: [],
@@ -185,11 +187,11 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
         })
       : userNavItems;
 
-  // Initialize expanded state based on current path
-  const [expandedItems, setExpandedItems] = useState(() => {
+  // Auto-expand the active parent based on current route
+  const getExpandedFromPath = () => {
     const expanded = {};
     NAV_ITEMS.forEach((item) => {
-      if (item.children) {
+      if (item.children && item.children.length > 0) {
         const isChildActive = item.children.some(
           (child) => location.pathname === child.path,
         );
@@ -199,18 +201,32 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
       }
     });
     return expanded;
-  });
-
-  const toggleExpand = (itemId) => {
-    setExpandedItems((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
   };
 
+  const [expandedItems, setExpandedItems] = useState(getExpandedFromPath);
+
+  // Update expanded state when route changes
+  React.useEffect(() => {
+    setExpandedItems(getExpandedFromPath());
+  }, [location.pathname]);
+
   const handleItemClick = (item) => {
-    if (item.children) {
+    if (item.children && item.children.length > 0) {
       if (item.path) navigate(item.path);
-      toggleExpand(item.id);
+      // Expand clicked item, collapse others
+      setExpandedItems((prev) => {
+        const next = {};
+        NAV_ITEMS.forEach((navItem) => {
+          if (navItem.children && navItem.children.length > 0) {
+            next[navItem.id] = navItem.id === item.id ? !prev[item.id] : false;
+          }
+        });
+        return next;
+      });
     } else if (item.path) {
       navigate(item.path);
+      // Collapse all dropdowns when clicking a non-parent link
+      setExpandedItems({});
     }
     setIsMobileMenuOpen(false);
   };
@@ -321,7 +337,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
             >
               {adminMode
                 ? tr.sidebar.eBarangaySystem
-                : isSubSystem2Route
+                : showDocumentServices
                   ? "Document Services"
                   : tr.sidebar.incidentReporting}
             </p>

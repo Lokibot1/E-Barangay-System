@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import MainMenuCards from "../../components/sub-system-2/MainMenuCards";
-import Footer from "../../components/sub-system-3/Footer";
+import Footer from "../../components/sub-system-2/Footer";
 import { useLanguage } from "../../context/LanguageContext";
 import themeTokens from "../../Themetokens";
 

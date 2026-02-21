@@ -29,7 +29,7 @@ const MainMenuCards = ({ currentTheme }) => {
       ),
       bgGradient: "from-amber-500 to-orange-500",
       image:
-        "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&q=80",
+        "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80",
       path: "/incident-complaint/file-complaint",
     },
     {
@@ -52,7 +52,7 @@ const MainMenuCards = ({ currentTheme }) => {
       ),
       bgGradient: "from-blue-600 to-indigo-700",
       image:
-        "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80",
+        "https://images.unsplash.com/photo-1582139329536-e7284fece509?w=800&q=80",
       path: "/incident-complaint/incident-report",
     },
     {
@@ -75,7 +75,7 @@ const MainMenuCards = ({ currentTheme }) => {
       ),
       bgGradient: "from-green-500 to-emerald-600",
       image:
-        "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&q=80",
+        "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=80",
       path: "/incident-complaint/incident-map",
     },
     {
@@ -98,7 +98,7 @@ const MainMenuCards = ({ currentTheme }) => {
       ),
       bgGradient: "from-slate-500 to-slate-700",
       image:
-        "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
+        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
       path: "/incident-complaint/case-management",
     },
   ];

@@ -131,7 +131,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { language, setLanguage, tr } = useLanguage();
-  const isSubSystem2Route = location.pathname.startsWith("/sub-system-2");
+  const isSubSystem2Route = location.pathname.startsWith("/sub-system-2") || location.pathname.startsWith("/incident-complaint");
 
   // Real-time notifications — merge admin and user contexts
   const adminRT = useRealTime();
