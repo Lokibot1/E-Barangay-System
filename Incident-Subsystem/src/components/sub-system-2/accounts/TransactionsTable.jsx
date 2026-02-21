@@ -118,23 +118,33 @@ const TransactionsTable = () => {
 
   return (
     <div className="mx-auto max-w-6xl space-y-3">
-      <div className="mt-1 flex flex-wrap items-center gap-2">
-        {statusTabs.map((tab) => {
-          const active = tab === activeStatus;
-          return (
-            <button
-              key={tab}
-              onClick={() => setActiveStatus(tab)}
-              className={`rounded-md border px-3 py-1.5 text-[11px] font-spartan font-bold uppercase tracking-wide ${active ? "border-slate-700 bg-slate-700 text-white" : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"}`}
-            >
-              {tab} ({statusCounts[tab] ?? 0})
-            </button>
-          );
-        })}
+      <div className="mb-1 flex items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-2">
+        <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 text-slate-700">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4" strokeWidth="2">
+            <path d="M8 7h8M8 11h8M8 15h5" />
+            <rect x="4" y="3" width="16" height="18" rx="2" />
+          </svg>
+        </span>
+        <h2 className="font-spartan text-xl font-bold tracking-wide text-slate-800">PAYMENTS MANAGEMENT</h2>
       </div>
 
       <div className={`grid grid-cols-1 gap-3 ${selectedRow ? "lg:grid-cols-[minmax(0,1fr)_260px]" : ""}`}>
         <div className="rounded-md border border-gray-200 bg-white p-3">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {statusTabs.map((tab) => {
+              const active = tab === activeStatus;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveStatus(tab)}
+                  className={`rounded-md border px-3 py-1.5 text-[11px] font-spartan font-bold uppercase tracking-wide ${active ? "border-slate-700 bg-slate-700 text-white" : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"}`}
+                >
+                  {tab} ({statusCounts[tab] ?? 0})
+                </button>
+              );
+            })}
+          </div>
+
           <div className="mb-3 grid grid-cols-1 gap-3 xl:grid-cols-12">
             <label className="block xl:col-span-5">
               <span className="mb-1 block text-[10px] font-spartan font-bold uppercase tracking-wide text-gray-500">Search</span>
