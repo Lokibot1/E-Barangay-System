@@ -14,6 +14,29 @@ const toDate = (dateText) => {
 
 const toAmount = (amountText) => Number(String(amountText || "0").replace(/[^\d.]/g, ""));
 
+const avatarPalette = [
+  "bg-indigo-500",
+  "bg-emerald-500",
+  "bg-rose-500",
+  "bg-amber-500",
+  "bg-sky-500",
+  "bg-violet-500",
+  "bg-teal-500",
+  "bg-fuchsia-500",
+];
+
+const getInitials = (fullName) => {
+  const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "--";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+};
+
+const getAvatarClass = (fullName) => {
+  const seed = Array.from(String(fullName || "")).reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+  return avatarPalette[seed % avatarPalette.length];
+};
+
 const PaymentStatusBadge = ({ status }) => {
   const styleMap = {
     Pending: "bg-amber-100 text-amber-700 border-amber-200",
@@ -72,6 +95,12 @@ const TransactionsTable = () => {
       if (sortByDate === "amount-desc") {
         return toAmount(b.amount) - toAmount(a.amount);
       }
+      if (sortByDate === "type-asc") {
+        return a.documentType.localeCompare(b.documentType);
+      }
+      if (sortByDate === "type-desc") {
+        return b.documentType.localeCompare(a.documentType);
+      }
       const dateA = toDate(a.date)?.getTime() ?? 0;
       const dateB = toDate(b.date)?.getTime() ?? 0;
       return sortByDate === "oldest" ? dateA - dateB : dateB - dateA;
@@ -82,9 +111,9 @@ const TransactionsTable = () => {
 
   const selectedRow = useMemo(() => {
     if (!selectedPaymentId) {
-      return visibleRows[0] ?? null;
+      return null;
     }
-    return visibleRows.find((row) => row.paymentId === selectedPaymentId) ?? visibleRows[0] ?? null;
+    return visibleRows.find((row) => row.paymentId === selectedPaymentId) ?? null;
   }, [selectedPaymentId, visibleRows]);
 
   return (
@@ -148,67 +177,82 @@ const TransactionsTable = () => {
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>
             <option value="amount-desc">Highest Amount to Lowest</option>
+            <option value="type-asc">Document Type (A-Z)</option>
+            <option value="type-desc">Document Type (Z-A)</option>
           </select>
         </label>
       </div>
 
-      <div className="overflow-x-auto rounded-md border border-gray-200 bg-white">
-        <table className="w-full min-w-[860px] table-fixed">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className={`${headerClass} w-[7%]`}>#</th>
-              <th className={`${headerClass} w-[22%]`}>Document Type</th>
-              <th className={`${headerClass} w-[15%]`}>Date</th>
-              <th className={`${headerClass} w-[22%]`}>Payer</th>
-              <th className={`${headerClass} w-[16%]`}>Payment Status</th>
-              <th className={`${headerClass} w-[18%]`}>Payment ID</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleRows.map((row, index) => {
-              const isActive = selectedRow?.paymentId === row.paymentId;
-              return (
-                <tr
-                  key={`${row.paymentId}-${index}`}
-                  onClick={() => setSelectedPaymentId(row.paymentId)}
-                  className={`cursor-pointer ${isActive ? "bg-slate-50" : "hover:bg-gray-50"}`}
-                >
-                  <td className={cellClass}>{index + 1}</td>
-                  <td className={cellClass}>{row.documentType}</td>
-                  <td className={cellClass}>{row.date}</td>
-                  <td className={cellClass}>{row.payee}</td>
-                  <td className={cellClass}><PaymentStatusBadge status={row.status} /></td>
-                  <td className={cellClass}>{row.paymentId}</td>
-                </tr>
-              );
-            })}
-            {visibleRows.length === 0 && (
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1.7fr_1fr]">
+        <div className="overflow-x-auto rounded-md border border-gray-200 bg-white">
+          <table className="w-full min-w-[860px] table-fixed">
+            <thead className="bg-gray-100">
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-sm font-kumbh text-gray-500">
-                  No transactions found.
-                </td>
+                <th className={`${headerClass} w-[7%]`}>#</th>
+                <th className={`${headerClass} w-[22%]`}>Document Type</th>
+                <th className={`${headerClass} w-[15%]`}>Date</th>
+                <th className={`${headerClass} w-[22%]`}>Payer</th>
+                <th className={`${headerClass} w-[16%]`}>Payment Status</th>
+                <th className={`${headerClass} w-[18%]`}>Payment ID</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {visibleRows.map((row, index) => {
+                const isActive = selectedRow?.paymentId === row.paymentId;
+                return (
+                  <tr
+                    key={`${row.paymentId}-${index}`}
+                    onClick={() => setSelectedPaymentId(row.paymentId)}
+                    className={`cursor-pointer ${isActive ? "bg-slate-50" : "hover:bg-gray-100"}`}
+                  >
+                    <td className={cellClass}>{index + 1}</td>
+                    <td className={cellClass}>{row.documentType}</td>
+                    <td className={cellClass}>{row.date}</td>
+                    <td className={cellClass}>{row.payee}</td>
+                    <td className={cellClass}><PaymentStatusBadge status={row.status} /></td>
+                    <td className={cellClass}>{row.paymentId}</td>
+                  </tr>
+                );
+              })}
+              {visibleRows.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-6 text-center text-sm font-kumbh text-gray-500">
+                    No transactions found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      {selectedRow && (
         <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
           <p className="mb-3 text-sm font-spartan font-bold uppercase tracking-wide text-gray-500">Preview Pane</p>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <PreviewField label="Payer" value={selectedRow.payee} />
-            <PreviewField label="Document Type" value={selectedRow.documentType} />
-            <PreviewField label="Date" value={selectedRow.date} />
-            <PreviewField label="Amount" value={selectedRow.amount ?? "—"} />
-            <PreviewField label="Payment ID" value={selectedRow.paymentId} />
-            <div>
-              <p className="text-[11px] font-spartan font-bold uppercase tracking-wide text-gray-500">Payment Status</p>
-              <div className="mt-1"><PaymentStatusBadge status={selectedRow.status} /></div>
+
+          {selectedRow ? (
+            <div className="grid grid-cols-1 gap-3">
+              <div className="mb-1 flex items-center gap-3">
+                <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-spartan font-bold text-white ${getAvatarClass(selectedRow.payee)}`}>
+                  {getInitials(selectedRow.payee)}
+                </span>
+                <div>
+                  <p className="text-[11px] font-spartan font-bold uppercase tracking-wide text-gray-500">Payer</p>
+                  <p className="text-sm font-kumbh text-gray-700">{selectedRow.payee}</p>
+                </div>
+              </div>
+              <PreviewField label="Document Type" value={selectedRow.documentType} />
+              <PreviewField label="Date" value={selectedRow.date} />
+              <PreviewField label="Amount" value={selectedRow.amount ?? "—"} />
+              <PreviewField label="Payment ID" value={selectedRow.paymentId} />
+              <div>
+                <p className="text-[11px] font-spartan font-bold uppercase tracking-wide text-gray-500">Payment Status</p>
+                <div className="mt-1"><PaymentStatusBadge status={selectedRow.status} /></div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <p className="text-sm font-kumbh text-gray-500">Select a row to preview transaction details.</p>
+          )}
         </div>
-      )}
+      </div>
 
       <p className="text-xs font-kumbh text-gray-500">Showing {visibleRows.length} of {totalTransactionCount} entries</p>
     </div>
