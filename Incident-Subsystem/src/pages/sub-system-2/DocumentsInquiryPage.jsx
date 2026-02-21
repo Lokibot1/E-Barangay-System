@@ -49,19 +49,19 @@ const DocumentsInquiryPage = () => {
 
   return (
     <div className={`${t.pageBg} min-h-full p-4 sm:p-6 lg:p-8`}>
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-5">
         <h1 className={`font-spartan text-4xl sm:text-5xl font-bold ${t.cardText}`}>
           Documents Inquiry
         </h1>
 
-        <div className={`${t.cardBg} border ${t.cardBorder} rounded-2xl p-4 sm:p-6 space-y-6`}>
+        <div className={`${t.cardBg} border ${t.cardBorder} rounded-2xl p-3 sm:p-4 space-y-4`}>
           <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>
             Document Submission
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {summaryCards.map((card) => (
-              <div key={card.title} className={`${t.cardBg} border ${t.cardBorder} rounded-2xl p-5 shadow-sm`}>
+              <div key={card.title} className={`${t.cardBg} border ${t.cardBorder} rounded-2xl p-4 shadow-sm`}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className={`font-spartan text-sm font-semibold ${t.cardText}`}>{card.title}</p>
@@ -77,10 +77,10 @@ const DocumentsInquiryPage = () => {
           </div>
 
           <div className="border-b border-slate-300">
-            <div className="flex items-center gap-6 -mb-px">
-              <button className={`font-kumbh text-2xl pb-2 border-b-2 border-blue-500 ${t.cardText}`}>Pending</button>
-              <button className={`font-kumbh text-2xl pb-2 border-b-2 border-transparent ${t.subtleText}`}>Completed</button>
-              <button className={`font-kumbh text-2xl pb-2 border-b-2 border-transparent ${t.subtleText}`}>Rejected</button>
+            <div className="flex items-center gap-4 -mb-px">
+              <button className={`font-kumbh text-xl pb-2 border-b-2 border-blue-500 ${t.cardText}`}>Pending</button>
+              <button className={`font-kumbh text-xl pb-2 border-b-2 border-transparent ${t.subtleText}`}>Completed</button>
+              <button className={`font-kumbh text-xl pb-2 border-b-2 border-transparent ${t.subtleText}`}>Rejected</button>
             </div>
           </div>
 
