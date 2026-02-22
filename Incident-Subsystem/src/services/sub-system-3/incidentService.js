@@ -154,10 +154,58 @@ const updateIncident = async (id, updates) => {
   return data;
 };
 
+const getIncidentUpdates = async (id) => {
+  if (!isAuthenticated()) {
+    throw new Error("You must be logged in to view updates.");
+  }
+
+  const response = await fetch(`${API_BASE}/incidents/${id}/updates`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to fetch incident updates.");
+  }
+
+  return data;
+};
+
+const addIncidentUpdate = async (id, updateData) => {
+  if (!isAuthenticated()) {
+    throw new Error("You must be logged in to add an update.");
+  }
+
+  const response = await fetch(`${API_BASE}/incidents/${id}/updates`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify(updateData),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to add incident update.");
+  }
+
+  return data;
+};
+
 export const incidentService = {
   getIncidentTypes,
   submitReport,
   getMyIncidents,
   getAllIncidents,
   updateIncident,
+  getIncidentUpdates,
+  addIncidentUpdate,
 };

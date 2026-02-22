@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { incidentService } from "../../services/sub-system-3/incidentService";
-import { updateComplaint } from "../../services/sub-system-3/complaintService";
+import {
+  updateComplaint,
+  getComplaintUpdates,
+  addComplaintUpdate,
+} from "../../services/sub-system-3/complaintService";
 
 const STATUS_CONFIG = {
   all: { label: "ALL", color: "#374151" },
@@ -30,8 +34,10 @@ const AdminReportDetailsModal = ({
   const [showUpdate, setShowUpdate] = useState(false);
   const [updateText, setUpdateText] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [localUpdates, setLocalUpdates] = useState([]);
+  const [loadingUpdates, setLoadingUpdates] = useState(false);
 
-  // Reset all state when a different incident is opened
+  // Reset all state and load updates when a different incident is opened
   useEffect(() => {
     if (!incident) return;
     setCurrentStatus(incident.status || "pending");
@@ -44,7 +50,34 @@ const AdminReportDetailsModal = ({
     setNoteText("");
     setUpdateText("");
     setDispatchedTeam(null);
-  }, [incident?.id]);
+    setLocalUpdates([]);
+
+    const loadUpdates = async () => {
+      setLoadingUpdates(true);
+      try {
+        const data =
+          reportType === "complaints"
+            ? await getComplaintUpdates(incident.id)
+            : await incidentService.getIncidentUpdates(incident.id);
+        const arr = Array.isArray(data) ? data : data?.data || [];
+        setLocalUpdates(
+          arr.map((u) => ({
+            timestamp: u.created_at || u.timestamp || new Date().toISOString(),
+            text: u.text || u.description || u.notes || "",
+            type: u.type || "update",
+            author: u.author || u.admin_name || "",
+          })),
+        );
+      } catch {
+        // Endpoint may not exist yet; fail silently
+        setLocalUpdates([]);
+      } finally {
+        setLoadingUpdates(false);
+      }
+    };
+
+    loadUpdates();
+  }, [incident?.id, reportType]);
 
   if (!incident) return null;
 
@@ -63,6 +96,21 @@ const AdminReportDetailsModal = ({
     return incidentService.updateIncident(incident.id, updates);
   };
 
+  // Optimistically add an update entry to local state, then persist to backend
+  const pushUpdate = async (entry) => {
+    const newUpdate = { ...entry, timestamp: new Date().toISOString() };
+    setLocalUpdates((prev) => [newUpdate, ...prev]);
+    try {
+      if (reportType === "complaints") {
+        await addComplaintUpdate(incident.id, entry);
+      } else {
+        await incidentService.addIncidentUpdate(incident.id, entry);
+      }
+    } catch (err) {
+      console.error("Failed to persist update entry:", err);
+    }
+  };
+
   // Handle status change via API
   const handleStatusChange = async (newStatus) => {
     setIsUpdating(true);
@@ -70,6 +118,11 @@ const AdminReportDetailsModal = ({
       await updateReport({ status: newStatus });
       setCurrentStatus(newStatus);
       if (onStatusUpdate) onStatusUpdate(incident.id, newStatus);
+      await pushUpdate({
+        text: `Status updated to: ${STATUS_CONFIG[newStatus]?.label || newStatus.toUpperCase()}`,
+        type: "status",
+        author: "Admin",
+      });
     } catch (err) {
       console.error("Failed to update status:", err);
       alert(err.message || "Failed to update status.");
@@ -96,6 +149,11 @@ const AdminReportDetailsModal = ({
       setCurrentStatus("dispatched");
       setShowDispatch(false);
       if (onStatusUpdate) onStatusUpdate(incident.id, "dispatched");
+      await pushUpdate({
+        text: `Dispatch Team assigned: ${filled.join(", ")}`,
+        type: "dispatch",
+        author: "Admin",
+      });
     } catch (err) {
       console.error("Failed to dispatch:", err);
       alert(err.message || "Failed to save dispatch.");
@@ -110,6 +168,11 @@ const AdminReportDetailsModal = ({
     setIsUpdating(true);
     try {
       await updateReport({ additional_notes: noteText.trim() });
+      await pushUpdate({
+        text: noteText.trim(),
+        type: "note",
+        author: "Admin",
+      });
       setShowNotes(false);
       setNoteText("");
     } catch (err) {
@@ -126,6 +189,11 @@ const AdminReportDetailsModal = ({
     setIsUpdating(true);
     try {
       await updateReport({ additional_notes: updateText.trim() });
+      await pushUpdate({
+        text: updateText.trim(),
+        type: "update",
+        author: "Admin",
+      });
       setShowUpdate(false);
       setUpdateText("");
     } catch (err) {
@@ -610,9 +678,26 @@ const AdminReportDetailsModal = ({
             ) : (
               /* ── Updates Tab ── */
               <div className="px-5 pb-5 animate-fadeIn">
-                {incident.updates && incident.updates.length > 0 ? (
+                {loadingUpdates ? (
+                  <div className="text-center py-8 text-gray-400">
+                    <svg
+                      className="w-6 h-6 mx-auto mb-2 animate-spin"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                    <p className="text-xs font-kumbh">Loading updates...</p>
+                  </div>
+                ) : localUpdates.length > 0 ? (
                   <div className="space-y-0 divide-y divide-gray-200">
-                    {incident.updates.map((update, idx) => {
+                    {localUpdates.map((update, idx) => {
                       const dt = new Date(update.timestamp);
                       const dateStr = dt.toLocaleDateString("en-US", {
                         month: "2-digit",
@@ -653,8 +738,18 @@ const AdminReportDetailsModal = ({
                               </span>
                             </div>
                             {update.type === "note" && (
-                              <span className="text-xs font-bold text-gray-700 font-kumbh uppercase">
-                                Notes
+                              <span className="text-xs font-bold text-gray-700 font-kumbh uppercase px-2 py-0.5 bg-gray-100 rounded">
+                                Note
+                              </span>
+                            )}
+                            {update.type === "dispatch" && (
+                              <span className="text-xs font-bold text-amber-700 font-kumbh uppercase px-2 py-0.5 bg-amber-50 rounded">
+                                Dispatch
+                              </span>
+                            )}
+                            {update.type === "status" && (
+                              <span className="text-xs font-bold text-blue-700 font-kumbh uppercase px-2 py-0.5 bg-blue-50 rounded">
+                                Status
                               </span>
                             )}
                           </div>
