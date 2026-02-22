@@ -10,6 +10,7 @@ const TwoStepIncidentForm = ({
   currentTheme,
   incidentTypeOptions = [],
   typesLoading = false,
+  customFieldDefs = [],
 }) => {
   const t = themeTokens[currentTheme] || themeTokens.blue;
   const isDark = currentTheme === "dark";
@@ -48,6 +49,117 @@ const TwoStepIncidentForm = ({
     if (e.key === "Enter") {
       e.preventDefault();
       handleAddCustomType();
+    }
+  };
+
+  const handleCustomFieldChange = (fieldName, value) => {
+    onInputChange("customFieldValues", {
+      ...(formData.customFieldValues || {}),
+      [fieldName]: value,
+    });
+  };
+
+  const renderCustomField = (field) => {
+    const value = (formData.customFieldValues || {})[field.field_name];
+    const baseInput = `w-full px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-kumbh text-sm`;
+
+    switch (field.field_type) {
+      case "textarea":
+        return (
+          <textarea
+            value={value || ""}
+            onChange={(e) => handleCustomFieldChange(field.field_name, e.target.value)}
+            placeholder={field.field_description || ""}
+            rows={3}
+            className={`${baseInput} resize-none`}
+          />
+        );
+      case "select":
+        return (
+          <select
+            value={value || ""}
+            onChange={(e) => handleCustomFieldChange(field.field_name, e.target.value)}
+            className={baseInput}
+          >
+            <option value="">Select an option</option>
+            {(field.field_options || []).map((opt) => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        );
+      case "radio":
+        return (
+          <div className="flex flex-wrap gap-4 mt-1">
+            {(field.field_options || []).map((opt) => (
+              <label key={opt} className={`flex items-center gap-2 text-sm font-kumbh ${t.cardText} cursor-pointer`}>
+                <input
+                  type="radio"
+                  name={field.field_name}
+                  value={opt}
+                  checked={value === opt}
+                  onChange={() => handleCustomFieldChange(field.field_name, opt)}
+                  className="w-4 h-4 accent-blue-600"
+                />
+                {opt}
+              </label>
+            ))}
+          </div>
+        );
+      case "checkbox":
+        if (field.field_options && field.field_options.length > 0) {
+          const checked = Array.isArray(value) ? value : [];
+          return (
+            <div className="flex flex-wrap gap-3 mt-1">
+              {field.field_options.map((opt) => (
+                <label key={opt} className={`flex items-center gap-2 text-sm font-kumbh ${t.cardText} cursor-pointer`}>
+                  <input
+                    type="checkbox"
+                    checked={checked.includes(opt)}
+                    onChange={(e) => {
+                      const next = e.target.checked
+                        ? [...checked, opt]
+                        : checked.filter((v) => v !== opt);
+                      handleCustomFieldChange(field.field_name, next);
+                    }}
+                    className="w-4 h-4 accent-blue-600 rounded"
+                  />
+                  {opt}
+                </label>
+              ))}
+            </div>
+          );
+        }
+        return (
+          <label className={`flex items-center gap-2 text-sm font-kumbh ${t.cardText} cursor-pointer mt-1`}>
+            <input
+              type="checkbox"
+              checked={!!value}
+              onChange={(e) => handleCustomFieldChange(field.field_name, e.target.checked)}
+              className="w-4 h-4 accent-blue-600 rounded"
+            />
+            {field.field_description || field.field_label}
+          </label>
+        );
+      case "number":
+        return (
+          <input
+            type="number"
+            value={value || ""}
+            onChange={(e) => handleCustomFieldChange(field.field_name, e.target.value)}
+            placeholder={field.field_description || ""}
+            className={baseInput}
+          />
+        );
+      default:
+        return (
+          <input
+            type={field.field_type || "text"}
+            value={value || ""}
+            onChange={(e) => handleCustomFieldChange(field.field_name, e.target.value)}
+            placeholder={field.field_description || ""}
+            className={baseInput}
+          />
+        );
     }
   };
 
@@ -316,6 +428,17 @@ const TwoStepIncidentForm = ({
             </p>
           )}
         </div>
+
+        {/* Custom Fields */}
+        {customFieldDefs.length > 0 && customFieldDefs.map((field) => (
+          <div key={field.id}>
+            <label className={`block text-sm font-semibold ${t.cardText} mb-3 font-kumbh`}>
+              {field.field_label}
+              {field.field_rules === "required" && <span className="text-red-500 ml-1">*</span>}
+            </label>
+            {renderCustomField(field)}
+          </div>
+        ))}
       </div>
     );
   }

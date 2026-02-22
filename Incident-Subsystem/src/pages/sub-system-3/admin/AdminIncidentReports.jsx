@@ -10,6 +10,7 @@ import "leaflet/dist/leaflet.css";
 import themeTokens from "../../../Themetokens";
 import AdminReportDetailsModal from "../../../components/sub-system-3/AdminReportDetailsModal";
 import InsightsModal from "../../../components/sub-system-3/InsightsModal";
+import UpdateFormModal from "../../../components/sub-system-3/UpdateFormModal";
 import Toast from "../../../components/shared/modals/Toast";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
 import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
@@ -476,6 +477,8 @@ const AdminIncidentReports = () => {
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [showKebab, setShowKebab] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
+  const [showUpdateForm, setShowUpdateForm] = useState(false);
+  const [updateFormType, setUpdateFormType] = useState("incident");
   const kebabRef = useRef(null);
 
   // Close kebab on outside click
@@ -627,6 +630,25 @@ const AdminIncidentReports = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
                   Generate Insights
+                </button>
+                <div className={`border-t ${isDark ? "border-slate-600" : "border-gray-100"}`} />
+                <button
+                  onClick={() => { setShowKebab(false); setUpdateFormType("incident"); setShowUpdateForm(true); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-kumbh font-semibold transition-colors ${isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"}`}
+                >
+                  <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Update Incident Form
+                </button>
+                <button
+                  onClick={() => { setShowKebab(false); setUpdateFormType("complaint"); setShowUpdateForm(true); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-kumbh font-semibold transition-colors ${isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"}`}
+                >
+                  <svg className="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Update Complaint Form
                 </button>
               </div>
             )}
@@ -1226,6 +1248,14 @@ const AdminIncidentReports = () => {
         incidents={incidents}
         complaints={complaints}
         context="management"
+      />
+
+      {/* Update Form Modal */}
+      <UpdateFormModal
+        isOpen={showUpdateForm}
+        onClose={() => setShowUpdateForm(false)}
+        formType={updateFormType}
+        currentTheme={currentTheme}
       />
     </div>
   );

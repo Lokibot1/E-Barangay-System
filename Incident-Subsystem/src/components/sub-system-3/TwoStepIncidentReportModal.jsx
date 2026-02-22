@@ -4,6 +4,7 @@ import ProgressIndicator from "../../components/sub-system-3/ProgressIndicator";
 import Toast from "../../components/shared/modals/Toast";
 import themeTokens from "../../Themetokens";
 import { incidentService } from "../../services/sub-system-3/incidentService";
+import { getAllCustomFields } from "../../services/sub-system-3/customFieldService";
 import { useLanguage } from "../../context/LanguageContext";
 
 const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
@@ -21,6 +22,7 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     longitude: null,
     location: "",
     additionalNotes: "",
+    customFieldValues: {},
   });
 
   const [errors, setErrors] = useState({});
@@ -28,6 +30,7 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
   const [toasts, setToasts] = useState([]);
   const [incidentTypeOptions, setIncidentTypeOptions] = useState([]);
   const [typesLoading, setTypesLoading] = useState(false);
+  const [customFieldDefs, setCustomFieldDefs] = useState([]);
 
   const totalSteps = 2;
 
@@ -40,7 +43,7 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     setToasts((prev) => prev.filter((x) => x.id !== id));
   }, []);
 
-  // ─── Fetch incident types from backend ─────────────────────────────────────
+  // ─── Fetch incident types and custom fields from backend ───────────────────
   useEffect(() => {
     if (isOpen) {
       setTypesLoading(true);
@@ -59,6 +62,15 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
           });
         })
         .finally(() => setTypesLoading(false));
+
+      getAllCustomFields()
+        .then((res) => {
+          const all = Array.isArray(res) ? res : res.data || [];
+          setCustomFieldDefs(all.filter((f) => f.field_for === "incident" && f.is_active));
+        })
+        .catch((err) => {
+          console.error("Failed to fetch custom fields:", err);
+        });
     }
   }, [isOpen, addToast]);
 
@@ -77,6 +89,7 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
           longitude: null,
           location: "",
           additionalNotes: "",
+          customFieldValues: {},
         });
       }, 300);
     }
@@ -289,6 +302,7 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
               currentTheme={currentTheme}
               incidentTypeOptions={incidentTypeOptions}
               typesLoading={typesLoading}
+              customFieldDefs={customFieldDefs}
             />
           </div>
 
