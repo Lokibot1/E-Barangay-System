@@ -2,6 +2,12 @@ import React from "react";
 import themeTokens from "../../Themetokens";
 import defaultImage from "../../assets/images/defaultImage.png";
 
+const isVideoUrl = (url) => {
+  if (!url) return false;
+  const ext = url.split("?")[0].split(".").pop().toLowerCase();
+  return ["mp4", "mov", "webm", "avi", "mkv", "ogg", "m4v"].includes(ext);
+};
+
 const ReportCard = ({ report, currentTheme, onClick, showSeverity = true }) => {
   const t = themeTokens[currentTheme];
   const isDark = currentTheme === "dark";
@@ -73,11 +79,30 @@ const ReportCard = ({ report, currentTheme, onClick, showSeverity = true }) => {
 
       {/* Image/Thumbnail */}
       <div className="mb-3 rounded-md overflow-hidden bg-slate-100">
-        <img
-          src={report.image || defaultImage}
-          alt={report.title}
-          className="w-full h-44 object-contain"
-        />
+        {isVideoUrl(report.image) ? (
+          <div className="relative w-full h-44 bg-gray-900 flex items-center justify-center">
+            <video
+              src={report.image}
+              className="w-full h-44 object-cover opacity-60"
+              muted
+              preload="metadata"
+              onLoadedMetadata={(e) => { e.currentTarget.currentTime = 0.1; }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-black/50 rounded-full p-3 group-hover:bg-black/70 transition-colors">
+                <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <img
+            src={report.image || defaultImage}
+            alt={report.title}
+            className="w-full h-44 object-contain"
+          />
+        )}
       </div>
 
       {/* Details */}
