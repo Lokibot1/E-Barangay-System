@@ -469,11 +469,11 @@ const AdminReportDetailsModal = ({
         onClick={onClose}
       >
       <div
-        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden"
+        className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="bg-gray-800 text-white px-5 py-3 flex items-center justify-between flex-shrink-0">
+        <div className="bg-gray-800 dark:bg-gray-950 text-white px-5 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
@@ -620,8 +620,8 @@ const AdminReportDetailsModal = ({
               )}
             </div>
           ) : (
-            <div className="bg-gray-100 h-40 flex items-center justify-center">
-              <div className="text-center text-gray-400">
+            <div className="bg-gray-100 dark:bg-gray-800 h-40 flex items-center justify-center">
+              <div className="text-center text-gray-400 dark:text-gray-500">
                 <svg
                   className="w-10 h-10 mx-auto mb-2"
                   fill="none"
@@ -642,7 +642,7 @@ const AdminReportDetailsModal = ({
 
           {/* Type + Status Badge */}
           <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-            <h3 className="text-base font-bold text-gray-900 font-spartan uppercase">
+            <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 font-spartan uppercase">
               {incident.type}
             </h3>
             <span
@@ -654,7 +654,7 @@ const AdminReportDetailsModal = ({
           </div>
 
           {/* Last Updated */}
-          <div className="px-5 pb-3 flex items-center gap-2 text-xs text-gray-500 font-kumbh">
+          <div className="px-5 pb-3 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 font-kumbh">
             <svg
               className="w-4 h-4"
               fill="none"
@@ -697,8 +697,8 @@ const AdminReportDetailsModal = ({
                 !showDispatch &&
                 !showNotes &&
                 !showUpdate
-                  ? "bg-gray-700 text-white"
-                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  ? "bg-gray-700 dark:bg-gray-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
               }`}
             >
               Details
@@ -715,8 +715,8 @@ const AdminReportDetailsModal = ({
                 !showDispatch &&
                 !showNotes &&
                 !showUpdate
-                  ? "bg-gray-700 text-white"
-                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  ? "bg-gray-700 dark:bg-gray-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
               }`}
             >
               Updates
@@ -728,18 +728,18 @@ const AdminReportDetailsModal = ({
             {showUpdate ? (
               /* ── Add Update Form ── */
               <div className="px-5 pb-5 animate-fadeIn">
-                <h3 className="text-sm font-bold text-gray-800 font-kumbh uppercase text-center mb-3">
+                <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 font-kumbh uppercase text-center mb-3">
                   Add Update
                 </h3>
-                <hr className="border-gray-300 mb-4" />
+                <hr className="border-gray-300 dark:border-gray-700 mb-4" />
                 <textarea
                   value={updateText}
                   onChange={(e) => setUpdateText(e.target.value)}
                   placeholder="Enter update details here ..."
                   rows={6}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm font-kumbh text-gray-700 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-kumbh text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200"
                 />
-                <button className="w-full mt-3 py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh hover:bg-gray-100 active:scale-[0.98] transition-all duration-200">
+                <button className="w-full mt-3 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200">
                   + Add Attachment
                 </button>
                 <button
@@ -753,16 +753,16 @@ const AdminReportDetailsModal = ({
             ) : showNotes ? (
               /* ── Add Notes Form ── */
               <div className="px-5 pb-5 animate-fadeIn">
-                <h3 className="text-sm font-bold text-gray-800 font-kumbh uppercase text-center mb-3">
+                <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 font-kumbh uppercase text-center mb-3">
                   Add Notes
                 </h3>
-                <hr className="border-gray-300 mb-4" />
+                <hr className="border-gray-300 dark:border-gray-700 mb-4" />
                 <textarea
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value)}
                   placeholder="Enter your notes here ..."
                   rows={6}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm font-kumbh text-gray-700 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-kumbh text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200"
                 />
                 <div className="flex gap-3 mt-3">
                   <button
@@ -770,14 +770,14 @@ const AdminReportDetailsModal = ({
                       setShowNotes(false);
                       setNoteText("");
                     }}
-                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh uppercase hover:bg-gray-100 active:scale-[0.98] transition-all duration-200"
+                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh uppercase hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveNotes}
                     disabled={isUpdating}
-                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh uppercase hover:bg-gray-100 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
+                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh uppercase hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
                   >
                     {isUpdating ? "Saving..." : "Save"}
                   </button>
@@ -786,10 +786,10 @@ const AdminReportDetailsModal = ({
             ) : showDispatch ? (
               /* ── Dispatch Team Form ── */
               <div className="px-5 pb-5 animate-fadeIn">
-                <h3 className="text-sm font-bold text-gray-800 font-kumbh uppercase text-center mb-3">
+                <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 font-kumbh uppercase text-center mb-3">
                   Dispatch Team
                 </h3>
-                <hr className="border-gray-300 mb-4" />
+                <hr className="border-gray-300 dark:border-gray-700 mb-4" />
                 <div className="space-y-3">
                   {officials.map((official, idx) => (
                     <input
@@ -802,7 +802,7 @@ const AdminReportDetailsModal = ({
                         setOfficials(updated);
                       }}
                       placeholder="+ Add Official"
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm font-kumbh text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all duration-200"
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-kumbh text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all duration-200"
                     />
                   ))}
                 </div>
@@ -813,7 +813,7 @@ const AdminReportDetailsModal = ({
                       if (!dispatchedTeam) setOfficials(["", "", ""]);
                       else setOfficials([...dispatchedTeam.officials]);
                     }}
-                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh uppercase hover:bg-gray-100 active:scale-[0.98] transition-all duration-200"
+                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh uppercase hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200"
                   >
                     Cancel
                   </button>
@@ -833,7 +833,7 @@ const AdminReportDetailsModal = ({
                 <div className="space-y-2">
                   <div className="flex items-start gap-2">
                     <svg
-                      className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0"
+                      className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -851,14 +851,14 @@ const AdminReportDetailsModal = ({
                         d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                       />
                     </svg>
-                    <p className="text-xs text-gray-700 font-kumbh uppercase leading-relaxed">
+                    <p className="text-xs text-gray-700 dark:text-gray-300 font-kumbh uppercase leading-relaxed">
                       {incident.address}
                     </p>
                   </div>
                   {incident.plusCode && (
                     <div className="flex items-start gap-2">
                       <svg
-                        className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0"
+                        className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -870,7 +870,7 @@ const AdminReportDetailsModal = ({
                           d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
                         />
                       </svg>
-                      <p className="text-xs text-gray-500 font-kumbh uppercase">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-kumbh uppercase">
                         {incident.plusCode}
                       </p>
                     </div>
@@ -879,13 +879,13 @@ const AdminReportDetailsModal = ({
 
                 {/* Reported By */}
                 <div>
-                  <p className="text-xs font-bold text-gray-900 font-kumbh uppercase mb-1.5">
+                  <p className="text-xs font-bold text-gray-900 dark:text-gray-100 font-kumbh uppercase mb-1.5">
                     {reportType === "complaints" ? "Complaint" : "Incident"}{" "}
                     Reported By:
                   </p>
                   <div className="flex items-center gap-2">
                     <svg
-                      className="w-4 h-4 text-gray-400"
+                      className="w-4 h-4 text-gray-400 dark:text-gray-500"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -897,7 +897,7 @@ const AdminReportDetailsModal = ({
                         d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                       />
                     </svg>
-                    <p className="text-xs text-gray-700 font-kumbh">
+                    <p className="text-xs text-gray-700 dark:text-gray-300 font-kumbh">
                       {incident.reportedBy}
                     </p>
                   </div>
@@ -905,11 +905,11 @@ const AdminReportDetailsModal = ({
 
                 {/* Description */}
                 <div>
-                  <p className="text-xs font-bold text-gray-900 font-kumbh uppercase mb-1.5">
+                  <p className="text-xs font-bold text-gray-900 dark:text-gray-100 font-kumbh uppercase mb-1.5">
                     {reportType === "complaints" ? "Complaint" : "Incident"}{" "}
                     Description:
                   </p>
-                  <p className="text-xs text-gray-600 font-kumbh leading-relaxed">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 font-kumbh leading-relaxed">
                     {incident.description}
                   </p>
                 </div>
@@ -924,13 +924,13 @@ const AdminReportDetailsModal = ({
                       setShowDispatch(true);
                       setShowNotes(false);
                     }}
-                    className="border-t border-gray-200 pt-4 cursor-pointer hover:bg-gray-50 -mx-5 px-5 pb-1 transition-colors duration-200"
+                    className="border-t border-gray-200 dark:border-gray-700 pt-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60 -mx-5 px-5 pb-1 transition-colors duration-200"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-bold text-gray-900 font-kumbh uppercase">
+                      <p className="text-xs font-bold text-gray-900 dark:text-gray-100 font-kumbh uppercase">
                         Dispatch Team
                       </p>
-                      <span className="text-xs text-gray-500 font-kumbh">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 font-kumbh">
                         {new Date(dispatchedTeam.timestamp).toLocaleDateString(
                           "en-US",
                           {
@@ -953,7 +953,7 @@ const AdminReportDetailsModal = ({
                       {dispatchedTeam.officials.map((name, idx) => (
                         <p
                           key={idx}
-                          className="text-xs text-gray-700 font-kumbh uppercase"
+                          className="text-xs text-gray-700 dark:text-gray-300 font-kumbh uppercase"
                         >
                           {name}
                         </p>
@@ -966,7 +966,7 @@ const AdminReportDetailsModal = ({
               /* ── Updates Tab ── */
               <div className="px-5 pb-5 animate-fadeIn">
                 {loadingUpdates ? (
-                  <div className="text-center py-8 text-gray-400">
+                  <div className="text-center py-8 text-gray-400 dark:text-gray-500">
                     <svg
                       className="w-6 h-6 mx-auto mb-2 animate-spin"
                       fill="none"
@@ -983,7 +983,7 @@ const AdminReportDetailsModal = ({
                     <p className="text-xs font-kumbh">Loading updates...</p>
                   </div>
                 ) : localUpdates.length > 0 ? (
-                  <div className="space-y-0 divide-y divide-gray-200">
+                  <div className="space-y-0 divide-y divide-gray-200 dark:divide-gray-700">
                     {localUpdates.map((update, idx) => {
                       const dt = new Date(update.timestamp);
                       const dateStr = dt.toLocaleDateString("en-US", {
@@ -1006,7 +1006,7 @@ const AdminReportDetailsModal = ({
                         <div key={idx} className="py-3">
                           {/* Date row */}
                           <div className="flex items-center justify-between mb-1.5">
-                            <div className="flex items-center gap-2 text-xs text-gray-500 font-kumbh">
+                            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 font-kumbh">
                               <svg
                                 className="w-4 h-4 flex-shrink-0"
                                 fill="none"
@@ -1025,30 +1025,30 @@ const AdminReportDetailsModal = ({
                               </span>
                             </div>
                             {update.type === "note" && (
-                              <span className="text-xs font-bold text-gray-700 font-kumbh uppercase px-2 py-0.5 bg-gray-100 rounded">
+                              <span className="text-xs font-bold text-gray-700 dark:text-gray-300 font-kumbh uppercase px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
                                 Note
                               </span>
                             )}
                             {update.type === "dispatch" && (
-                              <span className="text-xs font-bold text-amber-700 font-kumbh uppercase px-2 py-0.5 bg-amber-50 rounded">
+                              <span className="text-xs font-bold text-amber-700 dark:text-amber-400 font-kumbh uppercase px-2 py-0.5 bg-amber-50 dark:bg-amber-900/30 rounded">
                                 Dispatch
                               </span>
                             )}
                             {update.type === "status" && (
-                              <span className="text-xs font-bold text-blue-700 font-kumbh uppercase px-2 py-0.5 bg-blue-50 rounded">
+                              <span className="text-xs font-bold text-blue-700 dark:text-blue-400 font-kumbh uppercase px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 rounded">
                                 Status
                               </span>
                             )}
                           </div>
                           {/* Description */}
-                          <p className="text-xs text-gray-700 font-kumbh uppercase leading-relaxed">
+                          <p className="text-xs text-gray-700 dark:text-gray-300 font-kumbh uppercase leading-relaxed">
                             {update.text}
                           </p>
                           {/* Author */}
                           {update.author && (
                             <div className="flex items-center gap-1.5 mt-2">
-                              <span className="w-1.5 h-1.5 rounded-full bg-gray-700 flex-shrink-0" />
-                              <p className="text-xs text-gray-600 font-kumbh uppercase">
+                              <span className="w-1.5 h-1.5 rounded-full bg-gray-700 dark:bg-gray-400 flex-shrink-0" />
+                              <p className="text-xs text-gray-600 dark:text-gray-400 font-kumbh uppercase">
                                 {update.author}
                               </p>
                             </div>
@@ -1058,7 +1058,7 @@ const AdminReportDetailsModal = ({
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-400">
+                  <div className="text-center py-8 text-gray-400 dark:text-gray-500">
                     <svg
                       className="w-10 h-10 mx-auto mb-2"
                       fill="none"
@@ -1081,7 +1081,7 @@ const AdminReportDetailsModal = ({
         </div>
 
         {/* Modal Footer / Actions */}
-        <div className="flex-shrink-0 border-t border-gray-200 px-5 py-4 space-y-3 bg-gray-50">
+        <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 px-5 py-4 space-y-3 bg-gray-50 dark:bg-gray-800">
           {/* Add Notes – hidden when notes form is open */}
           {!showNotes && (
             <button
@@ -1091,7 +1091,7 @@ const AdminReportDetailsModal = ({
                 setShowUpdate(false);
               }}
               disabled={isUpdating}
-              className="w-full py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh hover:bg-gray-100 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
+              className="w-full py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
             >
               + Add Notes
             </button>
