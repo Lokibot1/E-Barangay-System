@@ -195,7 +195,7 @@ const TwoStepIncidentForm = ({
                         ? "bg-slate-200 border-slate-400"
                         : "bg-blue-50 border-blue-500"
                       : `${t.cardBorder} ${t.cardBg}`
-                  } cursor-pointer ${isDark ? "hover:bg-slate-200 hover:text-slate-800" : "hover:shadow-md"} transition-all`}
+                  } cursor-pointer ${isDark ? "hover:bg-slate-700" : "hover:shadow-md"} transition-all`}
                 >
                   <input
                     type="checkbox"
