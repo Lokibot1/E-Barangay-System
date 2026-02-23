@@ -1,10 +1,222 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { incidentService } from "../../services/sub-system-3/incidentService";
 import {
   updateComplaint,
   getComplaintUpdates,
   addComplaintUpdate,
 } from "../../services/sub-system-3/complaintService";
+
+// ─── Media helpers ────────────────────────────────────────────────────────────
+const isVideoUrl = (url) => {
+  if (!url) return false;
+  const ext = url.split("?")[0].split(".").pop().toLowerCase();
+  return ["mp4", "mov", "webm", "avi", "mkv", "ogg", "m4v"].includes(ext);
+};
+
+const VideoPlayer = ({ url }) => {
+  const videoRef = useRef(null);
+  const containerRef = useRef(null);
+  const hideTimer = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+
+  const fmt = (s) => {
+    if (isNaN(s) || s < 0) return "0:00";
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const resetHideTimer = () => {
+    setShowControls(true);
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => {
+      if (videoRef.current && !videoRef.current.paused) setShowControls(false);
+    }, 3000);
+  };
+
+  useEffect(() => () => { if (hideTimer.current) clearTimeout(hideTimer.current); }, []);
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play().catch(console.error);
+    } else {
+      videoRef.current.pause();
+      setShowControls(true);
+    }
+    resetHideTimer();
+  };
+
+  const handleSeek = (e) => {
+    if (!videoRef.current || !duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    videoRef.current.currentTime = pos * duration;
+    setCurrentTime(pos * duration);
+    resetHideTimer();
+  };
+
+  const handleVolumeChange = (e) => {
+    const vol = parseFloat(e.target.value);
+    setVolume(vol);
+    if (videoRef.current) videoRef.current.volume = vol;
+    setIsMuted(vol === 0);
+  };
+
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+    if (isMuted) {
+      const v = volume > 0 ? volume : 0.5;
+      videoRef.current.volume = v;
+      setVolume(v);
+      setIsMuted(false);
+    } else {
+      videoRef.current.volume = 0;
+      setIsMuted(true);
+    }
+  };
+
+  const toggleFullscreen = () => {
+    if (!containerRef.current) return;
+    if (!document.fullscreenElement) {
+      containerRef.current.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  };
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative bg-black rounded-xl overflow-hidden w-full select-none"
+      onMouseMove={resetHideTimer}
+      onMouseEnter={resetHideTimer}
+    >
+      <video
+        ref={videoRef}
+        src={url}
+        className="w-full max-h-[65vh] object-contain"
+        preload="metadata"
+        playsInline
+        onPlay={() => { setIsPlaying(true); setIsLoading(false); }}
+        onPause={() => { setIsPlaying(false); setIsLoading(false); }}
+        onWaiting={() => setIsLoading(true)}
+        onCanPlay={() => setIsLoading(false)}
+        onCanPlayThrough={() => setIsLoading(false)}
+        onTimeUpdate={() => setCurrentTime(videoRef.current?.currentTime || 0)}
+        onLoadedMetadata={() => setDuration(videoRef.current?.duration || 0)}
+        onEnded={() => { setIsPlaying(false); setShowControls(true); }}
+        onClick={togglePlay}
+      />
+
+      {/* Loading spinner */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
+          <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+        </div>
+      )}
+
+      {/* Center play overlay when paused */}
+      {!isPlaying && !isLoading && (
+        <div
+          className="absolute inset-0 flex items-center justify-center cursor-pointer"
+          onClick={togglePlay}
+        >
+          <div className="bg-black/50 rounded-full p-4 hover:bg-black/70 transition-colors">
+            <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        </div>
+      )}
+
+      {/* Controls bar */}
+      <div
+        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-4 pb-4 pt-10 transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+      >
+        {/* Progress bar */}
+        <div
+          className="w-full h-1.5 bg-white/30 rounded-full cursor-pointer mb-3 relative group/progress"
+          onClick={handleSeek}
+        >
+          <div
+            className="absolute top-0 left-0 h-full bg-white rounded-full transition-all"
+            style={{ width: `${progress}%` }}
+          />
+          <div
+            className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-white rounded-full -translate-x-1/2 shadow opacity-0 group-hover/progress:opacity-100 transition-opacity"
+            style={{ left: `${progress}%` }}
+          />
+        </div>
+
+        <div className="flex items-center gap-3 text-white">
+          {/* Play/Pause */}
+          <button onClick={togglePlay} className="hover:text-white/70 transition-colors flex-shrink-0">
+            {isPlaying ? (
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            )}
+          </button>
+
+          {/* Time */}
+          <span className="text-xs font-mono text-white/80 flex-shrink-0 tabular-nums">
+            {fmt(currentTime)} / {fmt(duration)}
+          </span>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Volume */}
+          <button onClick={toggleMute} className="hover:text-white/70 transition-colors flex-shrink-0">
+            {isMuted || volume === 0 ? (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+              </svg>
+            ) : volume < 0.5 ? (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+              </svg>
+            )}
+          </button>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.02"
+            value={isMuted ? 0 : volume}
+            onChange={handleVolumeChange}
+            className="w-16 h-1 accent-white cursor-pointer"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {/* Fullscreen */}
+          <button onClick={toggleFullscreen} className="hover:text-white/70 transition-colors flex-shrink-0">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const STATUS_CONFIG = {
   all: { label: "ALL", color: "#374151" },
@@ -36,6 +248,9 @@ const AdminReportDetailsModal = ({
   const [isUpdating, setIsUpdating] = useState(false);
   const [localUpdates, setLocalUpdates] = useState([]);
   const [loadingUpdates, setLoadingUpdates] = useState(false);
+  const [mediaViewerOpen, setMediaViewerOpen] = useState(false);
+  const [mediaViewerUrl, setMediaViewerUrl] = useState("");
+  const [mediaViewerType, setMediaViewerType] = useState("image");
 
   // Reset all state and load updates when a different incident is opened
   useEffect(() => {
@@ -109,6 +324,12 @@ const AdminReportDetailsModal = ({
     } catch (err) {
       console.error("Failed to persist update entry:", err);
     }
+  };
+
+  const openMediaViewer = (url) => {
+    setMediaViewerUrl(url);
+    setMediaViewerType(isVideoUrl(url) ? "video" : "image");
+    setMediaViewerOpen(true);
   };
 
   // Handle status change via API
@@ -205,10 +426,48 @@ const AdminReportDetailsModal = ({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
-    >
+    <>
+      {/* ── Media Viewer Overlay ── */}
+      {mediaViewerOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setMediaViewerOpen(false)}
+        >
+          {/* Close button */}
+          <button
+            className="absolute top-4 right-4 z-10 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-colors"
+            onClick={() => setMediaViewerOpen(false)}
+            aria-label="Close viewer"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <div
+            className="relative w-full max-w-3xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {mediaViewerType === "video" ? (
+              <VideoPlayer url={mediaViewerUrl} />
+            ) : (
+              <div className="flex items-center justify-center">
+                <img
+                  src={mediaViewerUrl}
+                  alt="Evidence full view"
+                  className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Main Modal ── */}
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      >
       <div
         className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
@@ -258,14 +517,42 @@ const AdminReportDetailsModal = ({
 
         {/* Scrollable Body */}
         <div className="flex-1 overflow-y-auto">
-          {/* Photo Section */}
+          {/* Photo / Video Section */}
           {incident.photos && incident.photos.length > 0 ? (
             <div className="relative bg-gray-900">
-              <img
-                src={incident.photos[photoIndex]}
-                alt={`Evidence ${photoIndex + 1}`}
-                className="w-full h-56 object-cover"
-              />
+              {isVideoUrl(incident.photos[photoIndex]) ? (
+                /* Video thumbnail with play overlay */
+                <div
+                  className="relative w-full h-56 bg-gray-900 flex items-center justify-center cursor-pointer group"
+                  onClick={() => openMediaViewer(incident.photos[photoIndex])}
+                >
+                  <video
+                    src={incident.photos[photoIndex]}
+                    className="w-full h-56 object-cover opacity-60"
+                    muted
+                    preload="metadata"
+                    onLoadedMetadata={(e) => { e.currentTarget.currentTime = 0.1; }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="bg-black/50 rounded-full p-4 group-hover:bg-black/70 transition-colors">
+                      <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <span className="absolute bottom-3 left-3 bg-black/60 text-white text-xs font-bold px-2 py-1 rounded font-kumbh uppercase tracking-wide">
+                    VIDEO — Click to play
+                  </span>
+                </div>
+              ) : (
+                /* Clickable image */
+                <img
+                  src={incident.photos[photoIndex]}
+                  alt={`Evidence ${photoIndex + 1}`}
+                  className="w-full h-56 object-cover cursor-zoom-in hover:opacity-90 transition-opacity"
+                  onClick={() => openMediaViewer(incident.photos[photoIndex])}
+                />
+              )}
               {/* View Edit History badge */}
               <button className="absolute top-3 right-3 bg-gray-800/80 text-white text-xs font-bold px-3 py-1.5 rounded font-kumbh uppercase hover:bg-gray-800 transition-colors">
                 View Edit History
@@ -880,6 +1167,7 @@ const AdminReportDetailsModal = ({
         </div>
       </div>
     </div>
+    </>
   );
 };
 
