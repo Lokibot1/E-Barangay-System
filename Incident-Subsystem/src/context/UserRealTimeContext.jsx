@@ -8,10 +8,11 @@ import React, {
   useRef,
 } from "react";
 import useUserRealTimeEvents from "../hooks/shared/useUserRealTimeEvents";
+import { fetchNotifications } from "../services/sub-system-3/notificationService";
 
 const UserRealTimeContext = createContext(null);
 
-const LS_NOTIFICATIONS_KEY = "userNotifications";
+const LS_USER_NOTIFICATIONS_KEY = "userNotifications";
 
 // ── Safe defaults returned when outside the provider (admin routes) ──────
 const SAFE_DEFAULTS = {
@@ -29,6 +30,23 @@ const SAFE_DEFAULTS = {
 const capitalize = (str) =>
   str ? str.replace(/\b\w/g, (c) => c.toUpperCase()) : str;
 
+/**
+ * Convert a backend notification (from /api/notifications) into the
+ * local user notification shape used by this context.
+ */
+const mapUserBackendNotification = (n) => ({
+  id: `api-${n.id}`,
+  backendId: n.id,
+  source: n.type?.includes("complaint") ? "complaint" : "incident",
+  type: n.type || "Notification",
+  description: n.message || "No description",
+  oldStatus: n.data?.old_status || n.data?.previous_status || "",
+  newStatus: n.data?.new_status || n.data?.status || "",
+  timestamp: n.created_at,
+  read: n.is_read,
+  data: n.data,
+});
+
 // ── Provider ────────────────────────────────────────────────────────────
 export const UserRealTimeProvider = ({ children }) => {
   const { newEvents, clearEvents, isPolling, lastUpdated } =
@@ -37,9 +55,10 @@ export const UserRealTimeProvider = ({ children }) => {
       batchDelay: 2000,
     });
 
+  // Initialize from localStorage so notifications survive refreshes and logouts
   const [notifications, setNotifications] = useState(() => {
     try {
-      const saved = localStorage.getItem(LS_NOTIFICATIONS_KEY);
+      const saved = localStorage.getItem(LS_USER_NOTIFICATIONS_KEY);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -51,10 +70,33 @@ export const UserRealTimeProvider = ({ children }) => {
 
   // Persist notifications to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem(LS_NOTIFICATIONS_KEY, JSON.stringify(notifications));
+    localStorage.setItem(
+      LS_USER_NOTIFICATIONS_KEY,
+      JSON.stringify(notifications),
+    );
   }, [notifications]);
 
-  // Convert flushed events into notification objects
+  // On mount: fetch backend notifications to hydrate any that arrived while offline.
+  // These are merged with the localStorage cache — deduplicated by id.
+  useEffect(() => {
+    fetchNotifications({ perPage: 50 }).then((response) => {
+      if (!response?.data) return;
+
+      const backendItems = response.data.map(mapUserBackendNotification);
+
+      setNotifications((prev) => {
+        const existingIds = new Set(prev.map((n) => n.id));
+        const newOnes = backendItems.filter((n) => !existingIds.has(n.id));
+        if (newOnes.length === 0) return prev;
+        // Prepend new backend notifications (sorted latest-first by the API)
+        return [...newOnes, ...prev];
+      });
+    });
+    // Run once on mount only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Convert flushed real-time events into notification objects — fires ONCE per batch
   useEffect(() => {
     if (
       newEvents.length === 0 ||
@@ -82,12 +124,14 @@ export const UserRealTimeProvider = ({ children }) => {
       data: event.data,
     }));
 
+    // Update persistent notification list (for bell dropdown)
     setNotifications((prev) => {
       const existingIds = new Set(prev.map((n) => n.id));
       const unique = fresh.filter((n) => !existingIds.has(n.id));
       return [...unique, ...prev];
     });
 
+    // Set the latest batch — consumers read this ONCE then ignore
     setLatestBatch(fresh);
     setEventVersion((v) => v + 1);
   }, [newEvents]);
@@ -112,7 +156,7 @@ export const UserRealTimeProvider = ({ children }) => {
     setLatestBatch([]);
     clearEvents();
     prevEventsLengthRef.current = 0;
-    localStorage.removeItem(LS_NOTIFICATIONS_KEY);
+    localStorage.removeItem(LS_USER_NOTIFICATIONS_KEY);
   }, [clearEvents]);
 
   const value = useMemo(
