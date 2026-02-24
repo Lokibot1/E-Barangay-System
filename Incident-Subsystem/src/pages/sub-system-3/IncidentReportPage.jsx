@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
 import TwoStepIncidentReportModal from "../../components/sub-system-3/TwoStepIncidentReportModal";
 import themeTokens from "../../Themetokens";
@@ -27,25 +27,37 @@ const IncidentReportPage = () => {
     };
   }, []);
 
-  // ── Scroll reveal ──────────────────────────────────────────────────────────
+  // ── Bidirectional scroll reveal ────────────────────────────────────────────
+  const containerRef = useRef(null);
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let lastScrollY = container.scrollTop;
+    const handleScroll = () => {
+      const currentScrollY = container.scrollTop;
+      container.classList.toggle("scrolling-up", currentScrollY < lastScrollY);
+      lastScrollY = currentScrollY;
+    };
+    container.addEventListener("scroll", handleScroll, { passive: true });
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("in-view");
-            observer.unobserve(entry.target);
-          }
+          entry.target.classList.toggle("visible", entry.isIntersecting);
         });
       },
-      { threshold: 0.1 }
+      { root: container, threshold: 0.1 }
     );
 
-    document
-      .querySelectorAll(".scroll-reveal, .scroll-reveal-left, .scroll-reveal-scale")
+    container
+      .querySelectorAll(".sr-elem, .sr-elem-left, .sr-elem-scale")
       .forEach((el) => observer.observe(el));
 
-    return () => observer.disconnect();
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+      observer.disconnect();
+    };
   }, []);
 
   const t = themeTokens[currentTheme];
@@ -55,7 +67,7 @@ const IncidentReportPage = () => {
 
   return (
     <>
-      <div className="h-full flex flex-col overflow-y-auto">
+      <div ref={containerRef} className="h-full flex flex-col overflow-y-auto">
         {/* White Space */}
         <div className={`${t.pageBg} py-8 sm:py-10 text-center px-4`}>
           <h1
@@ -81,7 +93,7 @@ const IncidentReportPage = () => {
         >
           {/* Header with illustration */}
           <div className="mb-8 sm:mb-12">
-            <div className="scroll-reveal flex items-start gap-4 mb-6">
+            <div className="sr-elem flex items-start gap-4 mb-6">
               <div className="w-12 h-12 flex-shrink-0">
                 <svg
                   className="w-full h-full text-blue-600"
@@ -108,7 +120,7 @@ const IncidentReportPage = () => {
             </div>
 
             <div
-              className={`scroll-reveal ${t.cardBg} border ${t.cardBorder} rounded-2xl p-6 sm:p-8 shadow-lg`}
+              className={`sr-elem ${t.cardBg} border ${t.cardBorder} rounded-2xl p-6 sm:p-8 shadow-lg`}
               style={{ transitionDelay: "0.15s" }}
             >
               <div className="flex flex-col md:flex-row gap-6">
@@ -140,7 +152,7 @@ const IncidentReportPage = () => {
 
           {/* What to Report */}
           <div className="mb-8 sm:mb-12">
-            <div className="scroll-reveal-left flex items-center gap-3 mb-6">
+            <div className="sr-elem-left flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                 <svg
                   className="w-6 h-6 text-white"
@@ -166,7 +178,7 @@ const IncidentReportPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Public Safety & Traffic */}
               <div
-                className={`scroll-reveal ${t.cardBg} border ${t.cardBorder} rounded-xl p-6 shadow-md`}
+                className={`sr-elem ${t.cardBg} border ${t.cardBorder} rounded-xl p-6 shadow-md`}
               >
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 flex-shrink-0 bg-blue-100 rounded-full flex items-center justify-center">
@@ -200,7 +212,7 @@ const IncidentReportPage = () => {
 
               {/* Public Nuisance */}
               <div
-                className={`scroll-reveal ${t.cardBg} border ${t.cardBorder} rounded-xl p-6 shadow-md`}
+                className={`sr-elem ${t.cardBg} border ${t.cardBorder} rounded-xl p-6 shadow-md`}
                 style={{ transitionDelay: "0.1s" }}
               >
                 <div className="flex items-start gap-4">
@@ -235,7 +247,7 @@ const IncidentReportPage = () => {
 
               {/* Environmental Hazards */}
               <div
-                className={`scroll-reveal ${t.cardBg} border ${t.cardBorder} rounded-xl p-6 shadow-md`}
+                className={`sr-elem ${t.cardBg} border ${t.cardBorder} rounded-xl p-6 shadow-md`}
                 style={{ transitionDelay: "0.2s" }}
               >
                 <div className="flex items-start gap-4">
@@ -270,7 +282,7 @@ const IncidentReportPage = () => {
 
               {/* Health Hazards */}
               <div
-                className={`scroll-reveal ${t.cardBg} border ${t.cardBorder} rounded-xl p-6 shadow-md`}
+                className={`sr-elem ${t.cardBg} border ${t.cardBorder} rounded-xl p-6 shadow-md`}
                 style={{ transitionDelay: "0.3s" }}
               >
                 <div className="flex items-start gap-4">
@@ -306,7 +318,7 @@ const IncidentReportPage = () => {
 
           {/* How to File */}
           <div className="mb-8">
-            <div className="scroll-reveal-left flex items-center gap-3 mb-6">
+            <div className="sr-elem-left flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                 <svg
                   className="w-6 h-6 text-white"
@@ -331,7 +343,7 @@ const IncidentReportPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div
-                className={`scroll-reveal ${t.inlineBg} border-l-4 border-blue-600 p-6 rounded-lg`}
+                className={`sr-elem ${t.inlineBg} border-l-4 border-blue-600 p-6 rounded-lg`}
               >
                 <div className="flex items-start gap-3 mb-3">
                   <div className="w-10 h-10 flex-shrink-0 bg-red-100 rounded-full flex items-center justify-center">
@@ -370,7 +382,7 @@ const IncidentReportPage = () => {
               </div>
 
               <div
-                className={`scroll-reveal ${t.inlineBg} border-l-4 border-blue-600 p-6 rounded-lg`}
+                className={`sr-elem ${t.inlineBg} border-l-4 border-blue-600 p-6 rounded-lg`}
                 style={{ transitionDelay: "0.1s" }}
               >
                 <div className="flex items-start gap-3 mb-3">
@@ -404,7 +416,7 @@ const IncidentReportPage = () => {
               </div>
 
               <div
-                className={`scroll-reveal ${t.inlineBg} border-l-4 border-blue-600 p-6 rounded-lg`}
+                className={`sr-elem ${t.inlineBg} border-l-4 border-blue-600 p-6 rounded-lg`}
                 style={{ transitionDelay: "0.2s" }}
               >
                 <div className="flex items-start gap-3 mb-3">
@@ -440,7 +452,7 @@ const IncidentReportPage = () => {
           </div>
 
           {/* CTA Button */}
-          <div className="scroll-reveal-scale text-center">
+          <div className="sr-elem-scale text-center">
             <button
               onClick={openModal}
               className="inline-flex items-center gap-3 px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-blue-600 to-indigo-700 text-white text-lg sm:text-xl font-bold rounded-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 font-spartan"
@@ -479,33 +491,36 @@ const IncidentReportPage = () => {
       />
 
       <style>{`
-        .scroll-reveal {
+        .sr-elem {
           opacity: 0;
-          transform: translateY(30px);
-          transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-                      transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+          transform: translateY(36px);
+          transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                      transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .scroll-reveal.in-view {
+        .sr-elem.visible {
           opacity: 1;
           transform: translateY(0);
         }
-        .scroll-reveal-left {
-          opacity: 0;
-          transform: translateX(-30px);
-          transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-                      transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        .scrolling-up .sr-elem:not(.visible) {
+          transform: translateY(-36px);
         }
-        .scroll-reveal-left.in-view {
+        .sr-elem-left {
+          opacity: 0;
+          transform: translateX(-36px);
+          transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                      transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sr-elem-left.visible {
           opacity: 1;
           transform: translateX(0);
         }
-        .scroll-reveal-scale {
+        .sr-elem-scale {
           opacity: 0;
-          transform: scale(0.9);
-          transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-                      transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+          transform: scale(0.92);
+          transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                      transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .scroll-reveal-scale.in-view {
+        .sr-elem-scale.visible {
           opacity: 1;
           transform: scale(1);
         }
