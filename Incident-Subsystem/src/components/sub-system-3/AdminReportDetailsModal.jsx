@@ -301,6 +301,8 @@ const AdminReportDetailsModal = ({
     currentStatus === "active" ||
     currentStatus === "resolved" ||
     dispatchedTeam;
+  const isTerminal =
+    currentStatus === "resolved" || currentStatus === "rejected";
   const statusCfg = STATUS_CONFIG[currentStatus];
 
   // Call the correct update API based on report type
@@ -1106,8 +1108,8 @@ const AdminReportDetailsModal = ({
                   setShowNotes(false);
                   setShowDispatch(false);
                 }}
-                disabled={isUpdating}
-                className="w-full py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
+                disabled={isUpdating || isTerminal}
+                className="w-full py-2.5 rounded-lg bg-blue-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-blue-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 + Add Update
               </button>
@@ -1115,15 +1117,15 @@ const AdminReportDetailsModal = ({
               {/* Bottom row – post-dispatch */}
               <button
                 onClick={() => handleStatusChange("active")}
-                disabled={isUpdating || currentStatus === "active"}
-                className="w-full py-2.5 rounded-lg bg-gray-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-gray-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isUpdating || currentStatus === "active" || isTerminal}
+                className="w-full py-2.5 rounded-lg bg-amber-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-amber-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isUpdating ? "Updating..." : "Mark as In-Progress"}
               </button>
               <button
                 onClick={() => handleStatusChange("resolved")}
                 disabled={isUpdating || currentStatus === "resolved"}
-                className="w-full py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-red-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isUpdating ? "Updating..." : "Mark as Resolved"}
               </button>
@@ -1138,8 +1140,8 @@ const AdminReportDetailsModal = ({
                     setShowNotes(false);
                     setShowUpdate(false);
                   }}
-                  disabled={isUpdating}
-                  className="w-full py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
+                  disabled={isUpdating || isTerminal}
+                  className="w-full py-2.5 rounded-lg bg-amber-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-amber-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Dispatch Team
                 </button>
@@ -1149,15 +1151,15 @@ const AdminReportDetailsModal = ({
               <div className="flex gap-3">
                 <button
                   onClick={() => handleStatusChange("rejected")}
-                  disabled={isUpdating}
-                  className="flex-1 py-2.5 rounded-lg bg-gray-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-gray-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
+                  disabled={isUpdating || isTerminal}
+                  className="flex-1 py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-red-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isUpdating ? "Updating..." : "Mark as Invalid"}
                 </button>
                 <button
                   onClick={() => handleStatusChange("resolved")}
-                  disabled={isUpdating}
-                  className="flex-1 py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-red-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
+                  disabled={isUpdating || isTerminal}
+                  className="flex-1 py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isUpdating ? "Updating..." : "Mark as Resolved"}
                 </button>
