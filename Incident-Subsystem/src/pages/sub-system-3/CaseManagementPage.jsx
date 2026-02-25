@@ -242,7 +242,7 @@ const CaseManagementPage = () => {
           <h1
             className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${t.cardText} mb-2 sm:mb-3 font-spartan uppercase tracking-tight`}
           >
-            INCIDENT & COMPLAINT MANAGEMENT
+            CASE TRACKER
           </h1>
         </div>
 
@@ -277,8 +277,8 @@ const CaseManagementPage = () => {
                 className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}
               >
                 {activeTab === "complaints"
-                  ? "Complaint Management"
-                  : "Incident Management"}
+                  ? "Complaint Tracker"
+                  : "Incident Tracker"}
               </h2>
               <button
                 onClick={() => setShowMap(!showMap)}

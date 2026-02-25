@@ -43,7 +43,7 @@ const FAQChatbot = ({ currentTheme }) => {
         "paano mag report",
       ],
       response:
-        "To report an incident:\n1. Click 'Report New Incident' button\n2. Fill out the multi-step form with incident details\n3. Upload photos/videos if available\n4. Submit for review\n\nYour report will be reviewed within 24 hours. You can track its status in the Case Management page.",
+        "To report an incident:\n1. Click 'Report New Incident' button\n2. Fill out the multi-step form with incident details\n3. Upload photos/videos if available\n4. Submit for review\n\nYour report will be reviewed within 24 hours. You can track its status in the Case Tracker page.",
     },
     "barangay-clearance": {
       keywords: ["clearance", "barangay clearance", "certificate", "cedula"],
