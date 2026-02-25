@@ -1,8 +1,8 @@
 # E-Barangay System
 
-A web-based barangay management platform for Philippine local government units (LGUs). The system integrates document services, incident and complaint management, case tracking, and map-based incident visualization into a unified interface.
+A web-based barangay management platform for Brngy. Bagbag here in Novaliches, Quezon City. The system integrates document services, incident and complaint management, case tracking, and map-based incident visualization into a unified interface.
 
-> **Note:** The `Incident-Subsystem/` folder is the main project structure for the entire E-Barangay System — not just for incident management. All subsystems are developed and consolidated inside it. The `D_S/` folder is a separate standalone prototype for Document Services that is actively being integrated into `Incident-Subsystem/`.
+> **Note:** The `Incident-Subsystem/` folder is the main project structure for the entire E-Barangay System — not just for incident management. All subsystems are developed and consolidated inside it. The `D_S/` folder is a separate, standalone prototype for Document Services that is actively being integrated into `Incident-Subsystem/`.
 
 ## Tech Stack
 
