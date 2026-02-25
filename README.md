@@ -63,7 +63,7 @@ E-Barangay-System/
 - Request status tracking per document type
 - Admin document request management and analytics
 
-### Complaint Filing (Blotter)
+### Complaint Filing
 - Multi-step form for filing formal barangay complaints
 - File upload support for evidence and attachments
 
