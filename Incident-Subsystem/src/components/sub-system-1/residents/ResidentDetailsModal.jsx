@@ -15,14 +15,14 @@ const formatDateForInput = (dateString) => {
     return dateString.split('T')[0];
 };
 
-const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode }) => {
+const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t }) => {
     const [formData, setFormData] = useState({});
     const [isEdit, setIsEdit] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState('basic'); 
+    const [activeTab, setActiveTab] = useState('basic');
     const today = new Date().toISOString().split("T")[0];
 
-    const [refs, setRefs] = useState({ 
+    const [refs, setRefs] = useState({
         puroks: [], streets: [], marital_statuses: [], sectors: [],
         genders: [], birth_registrations: [], residency_statuses: [],
         educational_statuses: [], school_types: [], school_levels: [],
@@ -97,36 +97,37 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode }) => {
     };
 
     const TabButton = ({ id, label, icon: Icon }) => (
-        <button 
-            type="button" 
+        <button
+            type="button"
             onClick={() => setActiveTab(id)}
             className={`flex-1 flex items-center justify-center gap-2 py-4 text-[11px] font-bold uppercase tracking-widest transition-all relative ${
-                activeTab === id 
-                ? 'text-blue-600 bg-white dark:bg-slate-900 dark:text-blue-400' 
-                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                activeTab === id
+                ? `text-blue-600 ${t.cardBg}`
+                : `text-slate-500 hover:text-slate-700`
             }`}
         >
             <Icon size={14} /> {label}
             {activeTab === id && (
-                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 dark:bg-blue-500" />
+                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600" />
             )}
         </button>
     );
 
     return (
-        <ModalWrapper 
-            isOpen={isOpen} 
-            onClose={onClose} 
+        <ModalWrapper
+            isOpen={isOpen}
+            onClose={onClose}
             maxWidth="max-w-5xl"
+            t={t}
             title={
                 <div className="flex items-center gap-4">
-                    <div className={`h-12 w-12 rounded-xl flex items-center justify-center font-black text-white shadow-inner ring-2 ring-white dark:ring-slate-800 ${getAvatarColor(resident?.name || '')}`}>
+                    <div className={`h-12 w-12 rounded-xl flex items-center justify-center font-black text-white shadow-inner ring-2 ring-white ${getAvatarColor(resident?.name || '')}`}>
                         <span className="text-lg tracking-tighter">
                             {getInitials(resident?.name || '')}
                         </span>
                     </div>
                     <div className="flex flex-col justify-center">
-                        <h2 className="text-base font-black text-slate-800 dark:text-white uppercase tracking-tight leading-none">
+                        <h2 className={`text-base font-black ${t.cardText} uppercase tracking-tight leading-none`}>
                             {resident?.name || 'Resident Profile'}
                         </h2>
                         <span className="text-[10px] font-black text-slate-400 mt-1 uppercase tracking-wider font-mono">
@@ -138,40 +139,39 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode }) => {
         >
             <div className="flex flex-col -m-6 h-full">
                 {/* Compact Navigation */}
-                <div className="flex bg-slate-50/50 dark:bg-slate-800/30 border-b dark:border-slate-800 px-6">
+                <div className={`flex ${t.inlineBg} border-b ${t.cardBorder} px-6`}>
                     <TabButton id="basic" label="Identity" icon={IdCard} />
                     <TabButton id="address" label="Address" icon={MapPin} />
                     <TabButton id="socio" label="Socio-Eco" icon={Briefcase} />
                 </div>
 
                 {/* Main Content Area */}
-                <div className="flex-1 overflow-y-auto p-6 md:p-10 bg-white dark:bg-slate-900 min-h-[50vh] max-h-[60vh]">
+                <div className={`flex-1 overflow-y-auto p-6 md:p-10 ${t.cardBg} min-h-[50vh] max-h-[60vh]`}>
                     <div className="max-w-4xl mx-auto">
-                        {activeTab === 'basic' && <IdentityTab isEdit={isEdit} formData={formData} handleChange={handleChange} refs={refs} today={today} />}
-                        {activeTab === 'address' && <AddressTab isEdit={isEdit} formData={formData} handleChange={handleChange} refs={refs} getFullHardcodedAddress={getFullHardcodedAddress} filteredStreets={(refs.streets || []).filter(s => String(s.purok_id) === String(formData.temp_purok_id))} />}
-                        {activeTab === 'socio' && <SocioEcoTab isEdit={isEdit} formData={formData} handleChange={handleChange} refs={refs} />}
+                        {activeTab === 'basic' && <IdentityTab isEdit={isEdit} formData={formData} handleChange={handleChange} refs={refs} today={today} t={t} />}
+                        {activeTab === 'address' && <AddressTab isEdit={isEdit} formData={formData} handleChange={handleChange} refs={refs} getFullHardcodedAddress={getFullHardcodedAddress} filteredStreets={(refs.streets || []).filter(s => String(s.purok_id) === String(formData.temp_purok_id))} t={t} />}
+                        {activeTab === 'socio' && <SocioEcoTab isEdit={isEdit} formData={formData} handleChange={handleChange} refs={refs} t={t} />}
                     </div>
                 </div>
 
-              
-                <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-t dark:border-slate-800 flex justify-between items-center px-10">
-                    <button 
-                        type="button" 
-                        onClick={onClose} 
+                <div className={`p-6 ${t.inlineBg} border-t ${t.cardBorder} flex justify-between items-center px-10`}>
+                    <button
+                        type="button"
+                        onClick={onClose}
                         className="text-[11px] font-black uppercase text-slate-400 hover:text-slate-600 transition-colors tracking-widest"
                     >
                         Close Profile
                     </button>
-                    
+
                     <div className="flex items-center gap-3">
                         {/* Edit / Cancel Toggle Button */}
-                        <button 
-                            type="button" 
-                            onClick={() => setIsEdit(!isEdit)} 
+                        <button
+                            type="button"
+                            onClick={() => setIsEdit(!isEdit)}
                             className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border ${
-                                isEdit 
-                                ? 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50' 
-                                : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50 dark:bg-slate-800 dark:border-slate-700'
+                                isEdit
+                                ? 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50'
+                                : `${t.cardBg} text-blue-600 border-blue-200 hover:bg-blue-50`
                             }`}
                         >
                             {isEdit ? <><XCircle size={14} /> Cancel Edit</> : <><Edit3 size={14} /> Edit Record</>}
@@ -179,10 +179,10 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode }) => {
 
                         {/* Save Button (Visible only when in edit mode) */}
                         {isEdit && (
-                            <button 
-                                type="button" 
-                                onClick={handleSave} 
-                                disabled={loading} 
+                            <button
+                                type="button"
+                                onClick={handleSave}
+                                disabled={loading}
                                 className="flex items-center gap-2 px-10 py-3 bg-emerald-600 text-white text-[11px] font-black uppercase rounded-xl shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 transition-all active:scale-95 disabled:opacity-50"
                             >
                                 <Save size={16} />

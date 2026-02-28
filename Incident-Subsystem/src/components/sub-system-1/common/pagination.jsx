@@ -1,7 +1,7 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage }) => {
+const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage, t }) => {
   if (totalPages <= 1) return null;
 
   const startIdx = (currentPage - 1) * itemsPerPage + 1;
@@ -21,17 +21,22 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
     (_, index) => startPage + index
   );
 
+  const cardBg = t?.cardBg ?? 'bg-white';
+  const cardBorder = t?.cardBorder ?? 'border-gray-200';
+  const subtleText = t?.subtleText ?? 'text-gray-400';
+  const inlineBg = t?.inlineBg ?? 'bg-gray-50';
+
   return (
-    <div className="p-4 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 transition-colors duration-300">
-      <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[2px]">
+    <div className={`p-4 ${cardBg} border-t ${cardBorder} flex flex-col md:flex-row items-center justify-between gap-4 transition-colors duration-300`}>
+      <span className={`text-[10px] font-bold ${subtleText} uppercase tracking-[2px]`}>
         Showing {startIdx} to {endIdx} of {totalItems} records
       </span>
-      
+
       <div className="flex items-center">
-        <button 
+        <button
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
-          className="p-2 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-30 text-gray-600 dark:text-gray-400 transition-all rounded-l-lg"
+          className={`p-2 border ${cardBorder} hover:${inlineBg} disabled:opacity-30 ${subtleText} transition-all rounded-l-lg`}
         >
           <ChevronLeft size={18} />
         </button>
@@ -41,10 +46,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
             <button
               key={page}
               onClick={() => onPageChange(page)}
-              className={`w-9 h-9 text-[11px] font-black border-y border-r border-gray-200 dark:border-slate-700 transition-all ${
-                currentPage === page 
-                ? 'bg-emerald-600 text-white border-emerald-600 z-10' 
-                : 'bg-white dark:bg-slate-900 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800'
+              className={`w-9 h-9 text-[11px] font-black border-y border-r ${cardBorder} transition-all ${
+                currentPage === page
+                ? 'bg-emerald-600 text-white border-emerald-600 z-10'
+                : `${cardBg} ${subtleText} hover:${inlineBg}`
               }`}
             >
               {page}
@@ -52,10 +57,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
           ))}
         </div>
 
-        <button 
+        <button
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          className="p-2 border border-r border-y border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-30 text-gray-600 dark:text-gray-400 transition-all rounded-r-lg"
+          className={`p-2 border border-r border-y ${cardBorder} hover:${inlineBg} disabled:opacity-30 ${subtleText} transition-all rounded-r-lg`}
         >
           <ChevronRight size={18} />
         </button>

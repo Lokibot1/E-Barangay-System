@@ -29,6 +29,15 @@ const Layout = () => {
 
   const t = themeTokens[currentTheme];
 
+  // Sync <html> dark class so Tailwind dark: utilities match the app theme
+  useEffect(() => {
+    if (currentTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [currentTheme]);
+
   const handleThemeChange = (theme) => {
     setCurrentTheme(theme);
     localStorage.setItem("appTheme", theme);

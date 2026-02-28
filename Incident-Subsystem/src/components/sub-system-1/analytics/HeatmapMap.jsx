@@ -7,7 +7,7 @@ import { BARANGAY_BOUNDARY, BARANGAY_CENTER, PUROK_CENTERS } from './analyticsCo
 import { getHeatColor } from './analyticsConfig';
 import { HEATMAP_METRICS } from './analyticsConfig';
 
-export default function HeatmapMap({ purokData, metric }) {
+export default function HeatmapMap({ purokData, metric, t }) {
   const mapRef     = useRef(null);
   const leafletRef = useRef(null);
   const circlesRef = useRef([]);
@@ -162,7 +162,7 @@ export default function HeatmapMap({ purokData, metric }) {
   return (
     <div
       ref={mapRef}
-      className="w-full rounded-xl overflow-hidden shadow border border-gray-200 dark:border-slate-700"
+      className={`w-full rounded-xl overflow-hidden shadow border ${t ? t.cardBorder : 'border-gray-200'}`}
       style={{ height: 480 }}
     />
   );

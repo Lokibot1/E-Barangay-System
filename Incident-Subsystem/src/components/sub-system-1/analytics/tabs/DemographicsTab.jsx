@@ -10,7 +10,7 @@ import {
 import {Card, SectionHeader} from '../AnalyticsInterface';
 import { COLORS, AGE_ORDER } from '../analyticsConfig';
 
-export default function DemographicsTab({ raw }) {
+export default function DemographicsTab({ raw, t }) {
   const demo = raw?.demographics ?? {};
   const hm   = raw?.heatmap?.puroks ?? [];
 
@@ -43,9 +43,10 @@ export default function DemographicsTab({ raw }) {
       <SectionHeader
         title="Demographic Analysis"
         subtitle="Age groups, gender, marital status, household positions"
+        t={t}
       />
 
-      <Card title="Age Group Distribution">
+      <Card title="Age Group Distribution" t={t}>
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={ageData} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -63,7 +64,7 @@ export default function DemographicsTab({ raw }) {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <Card title="Marital Status">
+        <Card title="Marital Status" t={t}>
           <ResponsiveContainer width="100%" height={240}>
             <PieChart>
               <Pie data={maritalData} cx="50%" cy="50%" outerRadius={90}
@@ -76,7 +77,7 @@ export default function DemographicsTab({ raw }) {
           </ResponsiveContainer>
         </Card>
 
-        <Card title="Voter Status">
+        <Card title="Voter Status" t={t}>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie data={voterChart} cx="50%" cy="50%" outerRadius={80} dataKey="value"
@@ -98,7 +99,7 @@ export default function DemographicsTab({ raw }) {
           </div>
         </Card>
 
-        <Card title="Household Position Breakdown">
+        <Card title="Household Position Breakdown" t={t}>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={housePos} layout="vertical" margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
@@ -110,7 +111,7 @@ export default function DemographicsTab({ raw }) {
           </ResponsiveContainer>
         </Card>
 
-        <Card title="Residents per Purok — Status Stacked">
+        <Card title="Residents per Purok — Status Stacked" t={t}>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={hm} layout="vertical" margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
@@ -127,7 +128,7 @@ export default function DemographicsTab({ raw }) {
         </Card>
 
         {birthReg.length > 0 && (
-          <Card title="Birth Registration Status">
+          <Card title="Birth Registration Status" t={t}>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie data={birthReg} cx="50%" cy="50%" outerRadius={80} dataKey="value"

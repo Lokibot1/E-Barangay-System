@@ -1,20 +1,15 @@
-// ============================================================
-// pages/Analytics.jsx
-// Main analytics page. Route: /analytics
-// Fetches: GET /api/analytics/all
-// ============================================================
-
 import { useState, useEffect } from 'react';
-import { Spinner }        from '../../components/sub-system-1/analytics/AnalyticsInterface';
-import { TABS }           from '../../components/sub-system-1/analytics/analyticsConfig';
-import OverviewTab        from '../../components/sub-system-1/analytics/tabs/OverviewTab';
-import HeatmapTab         from '../../components/sub-system-1/analytics/tabs/HeatmapTab';
-import DemographicsTab    from '../../components/sub-system-1/analytics/tabs/DemographicsTab';
-import SectorsTab         from '../../components/sub-system-1/analytics/tabs/SectorsTab';
-import RegistrationTab    from '../../components/sub-system-1/analytics/tabs/RegistrationTab';
-import LivelihoodTab      from '../../components/sub-system-1/analytics/tabs/LivelihoodTab';
-import DecisionGuideTab   from '../../components/sub-system-1/analytics/tabs/DecisionguideTab';
+import { Spinner } from '../../components/sub-system-1/analytics/AnalyticsInterface';
+import { TABS } from '../../components/sub-system-1/analytics/analyticsConfig';
+import OverviewTab from '../../components/sub-system-1/analytics/tabs/OverviewTab';
+import HeatmapTab from '../../components/sub-system-1/analytics/tabs/HeatmapTab';
+import DemographicsTab from '../../components/sub-system-1/analytics/tabs/DemographicsTab';
+import SectorsTab from '../../components/sub-system-1/analytics/tabs/SectorsTab';
+import RegistrationTab from '../../components/sub-system-1/analytics/tabs/RegistrationTab';
+import LivelihoodTab from '../../components/sub-system-1/analytics/tabs/LivelihoodTab';
+import DecisionGuideTab from '../../components/sub-system-1/analytics/tabs/DecisionguideTab';
 import { API_BASE_URL } from '../../config/api';
+import themeTokens from '../../Themetokens';
 
 const API_BASE = import.meta.env.VITE_API_URL || API_BASE_URL;
 
@@ -32,11 +27,24 @@ function renderTab(id, data) {
 }
 
 export default function Dashboard() {
-  const [activeTab,    setActiveTab]    = useState('overview');
-  const [data,         setData]         = useState(null);
-  const [loading,      setLoading]      = useState(true);
-  const [error,        setError]        = useState(null);
-  const [lastUpdated,  setLastUpdated]  = useState(null);
+  const [currentTheme, setCurrentTheme] = useState(
+    () => localStorage.getItem('appTheme') || 'blue'
+  );
+
+  useEffect(() => {
+    const handler = (e) => setCurrentTheme(e.detail);
+    window.addEventListener('themeChange', handler);
+    return () => window.removeEventListener('themeChange', handler);
+  }, []);
+
+  const t = themeTokens[currentTheme];
+  const isDark = currentTheme === 'dark';
+
+  const [activeTab, setActiveTab]   = useState('overview');
+  const [data, setData]             = useState(null);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -55,76 +63,82 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
-  
 
   useEffect(() => { fetchData(); }, []);
 
-  const tabMeta = TABS.find(t => t.id === activeTab);
+  const tabMeta = TABS.find(tb => tb.id === activeTab);
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-900/40 transition-colors duration-300">
-
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-white dark:bg-slate-900 shadow-sm border-b border-gray-200 dark:border-slate-800 px-4 sm:px-6 py-3 flex items-center justify-between">
-        <div>
-          <h1 className="text-base font-black text-[#0d2b4e] dark:text-slate-100">
-            {tabMeta?.icon} Analytics — {tabMeta?.label}
-          </h1>
-          <p className="text-xs text-gray-400 dark:text-slate-400">
-            {lastUpdated
-              ? `Updated: ${lastUpdated.toLocaleTimeString('en-PH')} · Barangay Gulod`
-              : 'Barangay Gulod, Novaliches, Quezon City'}
-          </p>
+    <div className="flex flex-col min-h-full">
+      {/* Tab header bar */}
+      <div className={`sticky top-0 z-20 ${t.cardBg} border-b ${t.cardBorder} shadow-sm`}>
+        {/* Title row */}
+        <div className="flex items-center justify-between px-6 sm:px-8 py-3">
+          <div>
+            <h1 className={`text-base font-spartan font-bold ${t.cardText}`}>
+              {tabMeta?.icon} Analytics — {tabMeta?.label}
+            </h1>
+            <p className={`text-xs font-kumbh ${t.subtleText}`}>
+              {lastUpdated
+                ? `Updated: ${lastUpdated.toLocaleTimeString('en-PH')} · Barangay Gulod`
+                : 'Barangay Gulod, Novaliches, Quezon City'}
+            </p>
+          </div>
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className={`text-xs font-kumbh font-bold bg-gradient-to-r ${t.primaryGrad} text-white px-3 py-1.5 rounded-lg hover:opacity-90 disabled:opacity-50 transition-all`}
+          >
+            {loading ? '⟳ Loading…' : '⟳ Refresh'}
+          </button>
         </div>
-        <button
-          onClick={fetchData}
-          disabled={loading}
-          className="text-xs font-bold bg-[#1a5276] text-white px-3 py-1.5 rounded-lg
-            hover:bg-[#154360] disabled:opacity-50 transition-colors"
-        >
-          {loading ? '⟳ Loading…' : '⟳ Refresh'}
-        </button>
-      </header>
 
-      {/* Tabs */}
-      <div className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-4 sm:px-6 overflow-x-auto">
-        <div className="flex gap-1 min-w-max">
-          {TABS.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-3 text-sm font-bold whitespace-nowrap border-b-2 transition-colors ${
-                activeTab === tab.id
-                  ? 'border-[#1a5276] text-[#1a5276] dark:border-emerald-400 dark:text-emerald-400'
-                  : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-[#1a5276] dark:hover:text-emerald-300 hover:border-gray-300 dark:hover:border-slate-600'
-              }`}
-            >
-              {tab.icon} {tab.label}
-            </button>
-          ))}
+        {/* Tabs scroll row */}
+        <div className={`px-6 sm:px-8 overflow-x-auto`}>
+          <div className="flex gap-1 min-w-max">
+            {TABS.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-3 py-3 text-sm font-kumbh font-bold whitespace-nowrap border-b-2 transition-colors ${
+                  activeTab === tab.id
+                    ? `${t.sidebarActiveBorder} ${t.sidebarActiveText}`
+                    : `border-transparent ${t.subtleText} hover:${t.sidebarActiveText}`
+                }`}
+              >
+                {tab.icon} {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Content */}
-      <main className="p-4 sm:p-6 max-w-7xl mx-auto">
+      <main className="p-6 sm:p-8 max-w-7xl mx-auto w-full">
         {loading && (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <div className="w-12 h-12 border-4 border-[#1a5276] border-t-transparent rounded-full animate-spin" />
-            <p className="text-gray-500 dark:text-slate-400 text-sm font-medium">Loading analytics data…</p>
+            <div className={`w-12 h-12 border-4 ${t.primaryText} border-t-transparent rounded-full animate-spin`}
+              style={{ borderColor: isDark ? '#64748b' : '#3b82f6', borderTopColor: 'transparent' }}
+            />
+            <p className={`${t.subtleText} font-kumbh text-sm font-medium`}>
+              Loading analytics data…
+            </p>
           </div>
         )}
 
         {!loading && error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+          <div className={`${t.cardBg} border ${t.cardBorder} rounded-xl p-6 text-center shadow-sm`}>
             <div className="text-3xl mb-2">⚠️</div>
-            <h3 className="font-black text-red-700 dark:text-red-300 text-lg mb-1">Cannot load data</h3>
-            <p className="text-red-600 dark:text-red-300 text-sm mb-4">{error}</p>
-            <p className="text-xs text-red-500 dark:text-red-300 bg-red-100 dark:bg-red-900/40 rounded p-3 mb-4 font-mono text-left">
+            <h3 className={`font-spartan font-bold ${t.cardText} text-lg mb-1`}>
+              Cannot load data
+            </h3>
+            <p className={`${t.subtleText} font-kumbh text-sm mb-4`}>{error}</p>
+            <p className={`text-xs ${t.subtleText} font-kumbh ${t.inlineBg} rounded p-3 mb-4 text-left font-mono`}>
               Endpoint: GET {API_BASE}/analytics/all
             </p>
             <button
               onClick={fetchData}
-              className="bg-red-600 text-white font-bold px-4 py-2 rounded-lg text-sm hover:bg-red-700"
+              className="bg-red-600 text-white font-kumbh font-bold px-4 py-2 rounded-lg text-sm hover:bg-red-700"
             >
               Retry
             </button>

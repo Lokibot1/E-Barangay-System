@@ -1,39 +1,37 @@
 import React from 'react';
 
-const DetailField = ({ label, name, val, isEdit, onChange, type = "text", options = [], max, className = "" }) => {
+const DetailField = ({ label, name, val, isEdit, onChange, type = "text", options = [], max, className = "", t }) => {
     const getDisplayLabel = () => {
         if (val === undefined || val === null || val === '') return '---';
         if (name === 'is_voter') return (val == 1 || val === 'Yes') ? 'Yes' : 'No';
-        
+
         const found = (options || []).find(o => String(o.id) === String(val));
         if (found) return found.name || found.number || found;
         return val;
     };
 
-    // Binawasan ang padding at font size para hindi magmukhang "OA" sa laki
     const inputBaseClass = `
-        w-full bg-white dark:bg-slate-900 
-        border border-slate-300 dark:border-slate-700 
-        rounded-xl px-4 py-2.5 
-        text-sm font-semibold text-slate-700 dark:text-slate-200 
-        outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 
+        w-full ${t ? t.inputBg : 'bg-white'}
+        border ${t ? t.inputBorder : 'border-slate-300'}
+        rounded-xl px-4 py-2.5
+        text-sm font-semibold ${t ? t.inputText : 'text-slate-700'}
+        outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10
         transition-all shadow-sm
     `;
 
     return (
         <div className={`flex flex-col gap-1.5 ${className}`}>
-            {/* Label: text-[11px] para malinis tingnan */}
-            <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">
+            <p className={`text-[11px] font-bold ${t ? t.subtleText : 'text-slate-400'} uppercase tracking-widest ml-1`}>
                 {label}
             </p>
-            
+
             {isEdit ? (
                 type === "select" ? (
                     <div className="relative">
-                        <select 
-                            name={name} 
-                            value={val || ''} 
-                            onChange={onChange} 
+                        <select
+                            name={name}
+                            value={val || ''}
+                            onChange={onChange}
                             className={`${inputBaseClass} appearance-none cursor-pointer`}
                         >
                             <option value="">Select...</option>
@@ -48,19 +46,18 @@ const DetailField = ({ label, name, val, isEdit, onChange, type = "text", option
                         </div>
                     </div>
                 ) : (
-                    <input 
-                        type={type} 
-                        name={name} 
-                        value={val || ''} 
-                        onChange={onChange} 
-                        max={max} 
-                        className={inputBaseClass} 
+                    <input
+                        type={type}
+                        name={name}
+                        value={val || ''}
+                        onChange={onChange}
+                        max={max}
+                        className={inputBaseClass}
                     />
                 )
             ) : (
-                /* Display Mode: text-base (16px) */
                 <div className="min-h-[32px] flex items-center px-1">
-                    <p className="text-base font-bold text-slate-800 dark:text-slate-100 break-words leading-snug">
+                    <p className={`text-base font-bold ${t ? t.cardText : 'text-slate-800'} break-words leading-snug`}>
                         {getDisplayLabel()}
                     </p>
                 </div>

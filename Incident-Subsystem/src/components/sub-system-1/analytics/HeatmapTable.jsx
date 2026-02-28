@@ -18,9 +18,9 @@ const ROWS = [
   { key: 'solo_parent',  label: 'Solo Parent',     icon: '👩‍👦', colorFn: (v,mx) => `rgba(22,160,133,${0.1 + 0.75*(v/mx)})`,   textDark: true  },
 ];
 
-export default function HeatmapTable({ purokData }) {
+export default function HeatmapTable({ purokData, t }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+    <div className={`overflow-x-auto rounded-xl border ${t ? t.cardBorder : 'border-gray-200'} shadow-sm`}>
       <table className="w-full min-w-max text-sm border-collapse">
         <thead>
           <tr className="bg-[#1a5276] text-white">
@@ -38,8 +38,8 @@ export default function HeatmapTable({ purokData }) {
           {ROWS.map((row, ri) => {
             const rowMax = Math.max(...purokData.map(p => Number(p[row.key] ?? 0)), 1);
             return (
-              <tr key={row.key} className={ri % 2 === 0 ? 'bg-gray-50 dark:bg-slate-800/40' : 'bg-white dark:bg-slate-900'}>
-                <td className="px-5 py-3 font-bold text-gray-700 dark:text-gray-300 whitespace-nowrap sticky left-0 bg-inherit border-r border-gray-100 dark:border-slate-700">
+              <tr key={row.key} className={ri % 2 === 0 ? (t ? t.inlineBg : 'bg-gray-50') : (t ? t.cardBg : 'bg-white')}>
+                <td className={`px-5 py-3 font-bold ${t ? t.cardText : 'text-gray-700'} whitespace-nowrap sticky left-0 bg-inherit border-r ${t ? t.cardBorder : 'border-gray-100'}`}>
                   <span className="mr-2">{row.icon}</span>{row.label}
                 </td>
                 {purokData.map(p => {
@@ -60,8 +60,8 @@ export default function HeatmapTable({ purokData }) {
           })}
 
           {/* Verification Rate row — uses submitted-only denominator */}
-          <tr className="bg-blue-50 dark:bg-blue-950/30 border-t-2 border-[#1a5276]">
-            <td className="px-5 py-3 font-black text-[#1a5276] dark:text-blue-300 whitespace-nowrap sticky left-0 bg-blue-50 dark:bg-blue-950/30 border-r border-blue-100 dark:border-blue-900">
+          <tr className="bg-blue-50 border-t-2 border-[#1a5276]">
+            <td className="px-5 py-3 font-black text-[#1a5276] whitespace-nowrap sticky left-0 bg-blue-50 border-r border-blue-100">
               <span className="mr-2">📈</span>Verif. Rate*
             </td>
             {purokData.map(p => {
@@ -78,8 +78,8 @@ export default function HeatmapTable({ purokData }) {
       </table>
 
       {/* Footer note */}
-      <div className="px-5 py-3 bg-blue-50 dark:bg-blue-950/20 border-t border-blue-100 dark:border-blue-900">
-        <p className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold">
+      <div className="px-5 py-3 bg-blue-50 border-t border-blue-100">
+        <p className="text-[11px] text-blue-600 font-semibold">
           * Verification Rate = Verified ÷ (Verified + Pending + Rejected). Excludes unregistered residents since they haven't submitted.
         </p>
       </div>

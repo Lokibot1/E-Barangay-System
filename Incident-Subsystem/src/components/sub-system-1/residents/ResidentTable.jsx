@@ -3,7 +3,7 @@ import Table from '../common/table';
 import ResidentRow from './ResidentRow';
 import ResidentDetailsModal from './ResidentDetailsModal';
 
-const ResidentTable = ({ residents, onUpdate, onDelete }) => {
+const ResidentTable = ({ residents, onUpdate, onDelete, t }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedResident, setSelectedResident] = useState(null);
   const [modalMode, setModalMode] = useState('view');
@@ -34,15 +34,16 @@ const ResidentTable = ({ residents, onUpdate, onDelete }) => {
 
   return (
     <>
-      <Table headers={headers}>
+      <Table headers={headers} t={t}>
         {residents.length > 0 ? (
           residents.map((r) => (
-            <ResidentRow 
-              key={r.id} 
-              r={r} 
-              onView={handleView} 
-              onEdit={handleEdit} 
-              onDelete={() => handleDelete(r.id, r.name)} 
+            <ResidentRow
+              key={r.id}
+              r={r}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={() => handleDelete(r.id, r.name)}
+              t={t}
             />
           ))
         ) : (
@@ -54,13 +55,13 @@ const ResidentTable = ({ residents, onUpdate, onDelete }) => {
         )}
       </Table>
 
-
       {isModalOpen && (
-        <ResidentDetailsModal 
-          isOpen={isModalOpen} 
-          onClose={() => setIsModalOpen(false)} 
+        <ResidentDetailsModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
           resident={selectedResident}
           mode={modalMode}
+          t={t}
           onSave={async (data) => {
             const success = await onUpdate(data);
             if (success) {

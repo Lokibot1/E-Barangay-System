@@ -11,7 +11,7 @@ import {
 import { StatCard, Card, SectionHeader } from '../AnalyticsInterface';
 import { COLORS, pct, calcVerifRate } from '../analyticsConfig';
 
-export default function RegistrationTab({ raw }) {
+export default function RegistrationTab({ raw, t }) {
   const ov  = raw?.overview   ?? {};
   const reg = raw?.registration ?? {};
   const hm  = raw?.heatmap?.puroks ?? [];
@@ -46,18 +46,19 @@ export default function RegistrationTab({ raw }) {
       <SectionHeader
         title="Registration & Verification"
         subtitle="Submissions, verification progress, and unregistered residents"
+        t={t}
       />
 
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard icon="📋" label="Total Submitted"  value={totalSubmitted}
-          sub="With barangay ID application"         color="primary"   />
+          sub="With barangay ID application"         color="primary"   t={t} />
         <StatCard icon="✅" label="Verified"          value={ov.verified ?? 0}
-          sub={`${pct(ov.verified, totalSubmitted)}% of submitted`} color="success" />
+          sub={`${pct(ov.verified, totalSubmitted)}% of submitted`} color="success" t={t} />
         <StatCard icon="⏳" label="Pending"           value={ov.pending ?? 0}
-          sub="Needs staff action"                   color="warning"   />
+          sub="Needs staff action"                   color="warning"   t={t} />
         <StatCard icon="❌" label="Rejected"          value={ov.rejected ?? 0}
-          sub="Resubmission needed"                  color="danger"    />
+          sub="Resubmission needed"                  color="danger"    t={t} />
       </div>
 
       {/* Unregistered alert */}
@@ -79,7 +80,7 @@ export default function RegistrationTab({ raw }) {
             { label: 'Fastest',                val: avgTime.min_hours, color: 'text-[#27ae60]' },
             { label: 'Slowest',                val: avgTime.max_hours, color: 'text-[#e74c3c]' },
           ].map(({ label, val, color }) => (
-            <Card key={label}>
+            <Card key={label} t={t}>
               <div className="text-center">
                 <div className={`text-2xl font-black ${color}`}>
                   {val != null ? `${Math.round(val)}h` : '—'}
@@ -93,7 +94,7 @@ export default function RegistrationTab({ raw }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Daily registration */}
-        <Card title="Daily Registration Submissions">
+        <Card title="Daily Registration Submissions" t={t}>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={trend} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -106,7 +107,7 @@ export default function RegistrationTab({ raw }) {
         </Card>
 
         {/* Unregistered per purok */}
-        <Card title="Unregistered Residents per Purok">
+        <Card title="Unregistered Residents per Purok" t={t}>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={unregByPurok} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -124,7 +125,7 @@ export default function RegistrationTab({ raw }) {
         </Card>
 
         {/* Stacked status per purok */}
-        <Card title="Submission Status per Purok">
+        <Card title="Submission Status per Purok" t={t}>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={purokVerif} layout="vertical" margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
@@ -139,7 +140,7 @@ export default function RegistrationTab({ raw }) {
         </Card>
 
         {/* Verification rate — submitted only */}
-        <Card title="Verification Rate per Purok (Submitted Only)">
+        <Card title="Verification Rate per Purok (Submitted Only)" t={t}>
           <p className="text-[11px] text-gray-400 mb-3">
             Rate = Verified ÷ (Verified + Pending + Rejected). Unregistered residents are excluded.
           </p>

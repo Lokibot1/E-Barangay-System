@@ -189,10 +189,10 @@ function App() {
                   }
                 >
                   <Route path="/admin" element={<AdminLanding />} />
-                  <Route
-                    path="/admin/residents"
-                    element={<AdminPlaceholder title="Residents" />}
-                  />
+                  <Route path="/admin/residents" element={<Residents />} />
+                  <Route path="/admin/households" element={<Households />} />
+                  <Route path="/admin/scanner" element={<Scanner />} />
+                  <Route path="/admin/user-management" element={<Verification />} />
                   <Route
                     path="/admin/requests"
                     element={<AdminPlaceholder title="Requests" />}
@@ -206,22 +206,14 @@ function App() {
                     element={<AdminAppointments />}
                   />
                   <Route path="/admin/payments" element={<AccountsSection />} />
-                  <Route
-                    path="/admin/reports"
-                    element={<AdminPlaceholder title="Reports" />}
-                  />
+                  <Route path="/admin/reports" element={<Dashboard />} />
                   <Route
                     path="/admin/documents-inquiry"
                     element={<DocumentsInquiryPage />}
                   />
-                  <Route
-                    path="/admin/user-management"
-                    element={<AdminPlaceholder title="User Management" />}
-                  />
-                  <Route
-                    path="/admin/settings"
-                    element={<AdminPlaceholder title="Settings" />}
-                  />
+                  <Route path="/admin/certificates" element={<Certificates />} />
+                  <Route path="/admin/settings" element={<Settings />} />
+                  <Route path="/admin/support" element={<Support />} />
                 </Route>
               </Route>
 

@@ -1,13 +1,14 @@
 import React from 'react';
-import { Search, } from 'lucide-react';
+import { Search } from 'lucide-react';
 import FilterSelect from '../common/FilterSelect';
 
-const HouseholdFilters = ({ 
-  searchTerm, setSearchTerm, 
+const HouseholdFilters = ({
+  searchTerm, setSearchTerm,
   purokFilter, setPurokFilter,
   statusFilter, setStatusFilter,
   materialFilter, setMaterialFilter,
-  totalResults 
+  totalResults,
+  t
 }) => {
 
   const handleReset = () => {
@@ -42,13 +43,13 @@ const HouseholdFilters = ({
   ];
 
   return (
-    <div className="flex flex-col bg-white dark:bg-slate-900">
+    <div className={`flex flex-col ${t.cardBg}`}>
       {/* Upper Section: Search and Dropdowns */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between p-6 gap-6 border-b border-slate-100 dark:border-slate-800">
-        
+      <div className={`flex flex-col lg:flex-row lg:items-end justify-between p-6 gap-6 border-b ${t.cardBorder}`}>
+
         {/* Search Bar */}
         <div className="flex-1 w-full lg:max-w-md">
-          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 ml-1 block">
+          <span className={`text-[10px] font-black ${t.subtleText} uppercase tracking-widest mb-1.5 ml-1 block`}>
             Search Household
           </span>
           <div className="relative w-full">
@@ -58,27 +59,27 @@ const HouseholdFilters = ({
               placeholder="Search by ID or Head..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none dark:text-white focus:ring-4 ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm"
+              className={`w-full pl-11 pr-4 py-3 ${t.inputBg} border-2 ${t.inputBorder} rounded-2xl text-sm font-bold outline-none ${t.inputText} focus:ring-4 ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm`}
             />
           </div>
         </div>
 
         {/* Filters Group */}
         <div className="flex flex-wrap md:flex-nowrap gap-4 items-end">
-          <FilterSelect label="Purok" value={purokFilter} onChange={setPurokFilter} options={puroks} />
-          <FilterSelect label="Status" value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
-          <FilterSelect label="Wall Material" value={materialFilter} onChange={setMaterialFilter} options={materialOptions} />
+          <FilterSelect label="Purok" value={purokFilter} onChange={setPurokFilter} options={puroks} t={t} />
+          <FilterSelect label="Status" value={statusFilter} onChange={setStatusFilter} options={statusOptions} t={t} />
+          <FilterSelect label="Wall Material" value={materialFilter} onChange={setMaterialFilter} options={materialOptions} t={t} />
         </div>
       </div>
 
-      <div className="px-8 py-4 bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-        <span className="text-slate-500 text-sm">
+      <div className={`px-8 py-4 ${t.inlineBg} border-b ${t.cardBorder} flex justify-between items-center text-[10px] font-black uppercase tracking-widest`}>
+        <span className={`${t.subtleText} text-sm`}>
           Results: <span className="text-emerald-600 text">{totalResults} Households Found</span>
         </span>
-        
+
         {hasActiveFilters && (
-          <button 
-            onClick={handleReset} 
+          <button
+            onClick={handleReset}
             className="flex items-center text-sm gap-1.5 text-rose-500 hover:text-rose-600 transition-colors group"
           >
             Clear Filters ✕

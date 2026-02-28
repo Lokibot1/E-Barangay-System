@@ -4,7 +4,7 @@ import { ShieldCheck, Smartphone, Camera, User, Key, IdCard, AlertTriangle, Down
 import ModalWrapper from '../common/ModalWrapper';
 import { VERIFY_URL } from '../../../config/api';
 
-const VerificationSuccessModal = ({ isOpen, onClose, data }) => {
+const VerificationSuccessModal = ({ isOpen, onClose, data, t }) => {
     if (!data) return null;
 
     // Construct the external verification URL
@@ -21,11 +21,11 @@ const VerificationSuccessModal = ({ isOpen, onClose, data }) => {
             canvas.height = 1000;
             ctx.fillStyle = "white";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
+
             const qrSize = 800;
             const margin = (1000 - qrSize) / 2;
             ctx.drawImage(img, margin, margin, qrSize, qrSize);
-            
+
             const pngFile = canvas.toDataURL("image/png");
             const downloadLink = document.createElement("a");
             downloadLink.download = `QR-${data.id}-${data.name}.png`;
@@ -42,48 +42,48 @@ const VerificationSuccessModal = ({ isOpen, onClose, data }) => {
     };
 
     return (
-        <ModalWrapper 
-            isOpen={isOpen} 
-            onClose={handleClose} 
+        <ModalWrapper
+            isOpen={isOpen}
+            onClose={handleClose}
+            t={t}
             title={
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-emerald-600 rounded-xl shadow-lg">
                         <ShieldCheck className="text-white" size={20} />
                     </div>
-                    <h2 className="text-sm font-black uppercase tracking-widest dark:text-white text-emerald-600">Verification Success</h2>
+                    <h2 className={`text-sm font-black uppercase tracking-widest ${t.cardText} text-emerald-600`}>Verification Success</h2>
                 </div>
             }
         >
             <div className="flex flex-col md:flex-row gap-8 items-stretch p-2">
-                
+
                 {/* LEFT: QR CODE SECTION */}
-                <div className="w-full md:w-2/5 flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-800/50 rounded-[2.5rem] border-2 border-slate-200 dark:border-slate-700 shadow-inner">
+                <div className={`w-full md:w-2/5 flex flex-col items-center justify-center p-6 ${t.inlineBg} rounded-[2.5rem] border-2 ${t.cardBorder} shadow-inner`}>
                     <div className="bg-white p-4 rounded-3xl shadow-2xl mb-4 border border-slate-100">
-                        {/* QR Code is now clickable to open the verification link */}
-                        <a 
-                            href={qrUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
+                        <a
+                            href={qrUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="block cursor-pointer hover:opacity-80 transition-opacity"
                             title="Click to preview verification page"
                         >
-                            <QRCodeSVG 
+                            <QRCodeSVG
                                 id="resident-qr"
                                 value={qrUrl}
-                                size={200} 
-                                level="H" 
+                                size={200}
+                                level="H"
                                 includeMargin={true}
                             />
                         </a>
                     </div>
-                    
-                    <button 
+
+                    <button
                         onClick={downloadQR}
-                        className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white dark:bg-white dark:text-black rounded-2xl text-[10px] font-black uppercase hover:scale-105 transition-all shadow-lg mb-4 w-full justify-center"
+                        className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase hover:scale-105 transition-all shadow-lg mb-4 w-full justify-center"
                     >
                         <Download size={14} /> Download QR File
                     </button>
-                    
+
                     <div className="text-center">
                         <p className="text-[11px] font-black text-emerald-600 uppercase tracking-widest">Official Resident ID</p>
                         <p className="text-[9px] text-slate-400 font-mono mt-1 font-bold">SCAN TO VERIFY IDENTITY</p>
@@ -92,15 +92,15 @@ const VerificationSuccessModal = ({ isOpen, onClose, data }) => {
 
                 {/* RIGHT: CREDENTIALS */}
                 <div className="w-full md:w-3/5 space-y-3">
-                    <CredentialBox label="FULL LEGAL NAME" value={data.name} icon={User} />
-                    <CredentialBox label="UNIQUE BARANGAY ID" value={data.id} icon={IdCard} highlight />
-                    <CredentialBox label="LOGIN USERNAME" value={data.user} icon={Smartphone} />
-                    <CredentialBox label="TEMPORARY PASSWORD" value={data.pass} icon={Key} isSecret />
+                    <CredentialBox label="FULL LEGAL NAME" value={data.name} icon={User} t={t} />
+                    <CredentialBox label="UNIQUE BARANGAY ID" value={data.id} icon={IdCard} highlight t={t} />
+                    <CredentialBox label="LOGIN USERNAME" value={data.user} icon={Smartphone} t={t} />
+                    <CredentialBox label="TEMPORARY PASSWORD" value={data.pass} icon={Key} isSecret t={t} />
 
                     <div className="mt-6 space-y-2">
-                        <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-200 dark:border-amber-700">
+                        <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-200">
                             <AlertTriangle className="text-amber-600 shrink-0" size={16} />
-                            <p className="text-[10px] font-bold text-amber-900 dark:text-amber-300 leading-snug uppercase">
+                            <p className="text-[10px] font-bold text-amber-900 leading-snug uppercase">
                                 REMINDER: Change password immediately after first login.
                             </p>
                         </div>
@@ -118,13 +118,13 @@ const VerificationSuccessModal = ({ isOpen, onClose, data }) => {
     );
 };
 
-const CredentialBox = ({ label, value, icon: Icon, highlight, isSecret }) => (
-    <div className={`p-3 rounded-xl border ${highlight ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900'} shadow-sm`}>
+const CredentialBox = ({ label, value, icon: Icon, highlight, isSecret, t }) => (
+    <div className={`p-3 rounded-xl border ${highlight ? 'border-emerald-500 bg-emerald-50/30' : `${t.cardBorder} ${t.cardBg}`} shadow-sm`}>
         <div className="flex items-center gap-2 mb-1">
             {Icon && <Icon size={12} className={highlight ? "text-emerald-500" : "text-slate-400"} />}
             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
         </div>
-        <p className={`text-sm font-mono font-bold ${highlight ? 'text-emerald-600' : 'dark:text-white'} ${isSecret ? 'bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800' : ''}`}>
+        <p className={`text-sm font-mono font-bold ${highlight ? 'text-emerald-600' : t.cardText} ${isSecret ? 'bg-amber-100 px-2 py-0.5 rounded text-amber-700 border border-amber-200' : ''}`}>
             {value || '---'}
         </p>
     </div>

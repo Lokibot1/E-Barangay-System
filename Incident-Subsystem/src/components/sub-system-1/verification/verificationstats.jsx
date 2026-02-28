@@ -2,20 +2,20 @@ import React, { useMemo } from 'react';
 import { Clock, MapPin, CheckCircle2, XCircle } from 'lucide-react';
 import StatCard from '../common/statcard';
 
-const VerificationStats = ({ submissions = [] }) => {
+const VerificationStats = ({ submissions = [], t }) => {
   const stats = useMemo(() => {
-  const counts = { pending: 0, forVerification: 0, verified: 0, rejected: 0 };
+    const counts = { pending: 0, forVerification: 0, verified: 0, rejected: 0 };
 
-  submissions.forEach(s => {
-    const status = s.status?.toLowerCase();
-    if (status === 'pending') counts.pending++;
-    else if (status === 'for verification') counts.forVerification++;
-    else if (status === 'verified') counts.verified++; 
-    else if (status === 'rejected') counts.rejected++;
-  });
+    submissions.forEach(s => {
+      const status = s.status?.toLowerCase();
+      if (status === 'pending') counts.pending++;
+      else if (status === 'for verification') counts.forVerification++;
+      else if (status === 'verified') counts.verified++;
+      else if (status === 'rejected') counts.rejected++;
+    });
 
-  return counts;
-}, [submissions]);
+    return counts;
+  }, [submissions]);
 
   const statsConfig = [
     {
@@ -23,7 +23,7 @@ const VerificationStats = ({ submissions = [] }) => {
       value: stats.pending,
       subtitle: 'Awaiting Review',
       icon: Clock,
-      color: 'amber' 
+      color: 'amber'
     },
     {
       title: 'For Verification',
@@ -58,6 +58,7 @@ const VerificationStats = ({ submissions = [] }) => {
           subtitle={stat.subtitle}
           icon={stat.icon}
           color={stat.color}
+          t={t}
         />
       ))}
     </div>

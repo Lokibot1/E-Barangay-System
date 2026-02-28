@@ -13,7 +13,7 @@ import { COLORS, INCOME_ORDER, pct } from '../analyticsConfig';
 const LOW_INCOME = ['No Income', 'Below 5,000', '0'];
 const MID_INCOME = ['5,001-10,000', '10,001-20,000', '20,001-30,000', '20,001-40,000'];
 
-export default function LivelihoodTab({ raw }) {
+export default function LivelihoodTab({ raw, t }) {
   const lv = raw?.livelihood ?? {};
 
   const incomeData = [...(lv.income_distribution ?? [])]
@@ -45,9 +45,10 @@ export default function LivelihoodTab({ raw }) {
       <SectionHeader
         title="Livelihood & Socioeconomic Profile"
         subtitle="Income, employment, education, occupations"
+        t={t}
       />
 
-      <Card title="Monthly Income Distribution">
+      <Card title="Monthly Income Distribution" t={t}>
         <ResponsiveContainer width="100%" height={240}>
           <BarChart data={incomeData} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -70,7 +71,7 @@ export default function LivelihoodTab({ raw }) {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <Card title="Employment Status">
+        <Card title="Employment Status" t={t}>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={employData} layout="vertical" margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
@@ -82,7 +83,7 @@ export default function LivelihoodTab({ raw }) {
           </ResponsiveContainer>
         </Card>
 
-        <Card title="Educational Attainment">
+        <Card title="Educational Attainment" t={t}>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={eduData} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -95,7 +96,7 @@ export default function LivelihoodTab({ raw }) {
         </Card>
 
         {eduStatus.length > 0 && (
-          <Card title="Educational Status">
+          <Card title="Educational Status" t={t}>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={eduStatus} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -109,7 +110,7 @@ export default function LivelihoodTab({ raw }) {
         )}
 
         {srcData.length > 0 && (
-          <Card title="Income Source">
+          <Card title="Income Source" t={t}>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie data={srcData} cx="50%" cy="50%" outerRadius={85} dataKey="value" paddingAngle={2}>
@@ -123,7 +124,7 @@ export default function LivelihoodTab({ raw }) {
         )}
 
         {schoolType.length > 1 && (
-          <Card title="School Type (Public vs Private)">
+          <Card title="School Type (Public vs Private)" t={t}>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie data={schoolType} cx="50%" cy="50%" outerRadius={80} dataKey="value"
@@ -137,7 +138,7 @@ export default function LivelihoodTab({ raw }) {
         )}
 
         {topOcc.length > 0 && (
-          <Card title="Top Occupations" className="lg:col-span-2">
+          <Card title="Top Occupations" className="lg:col-span-2" t={t}>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={topOcc} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />

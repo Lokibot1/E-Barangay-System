@@ -9,7 +9,7 @@ import {
   calcVerifRate,
 } from '../analyticsConfig';
 
-function HeatmapMap({ purokData, metric }) {
+function HeatmapMap({ purokData, metric, t }) {
   const mapRef = useRef(null);
   const leafletRef = useRef(null);
   const layersRef = useRef([]);
@@ -127,7 +127,7 @@ function HeatmapMap({ purokData, metric }) {
   return (
     <div
       ref={mapRef}
-      className="w-full rounded-xl overflow-hidden shadow border border-gray-200"
+      className={`w-full rounded-xl overflow-hidden shadow border ${t ? t.cardBorder : 'border-gray-200'}`}
       style={{ height: 480 }}
     />
   );
@@ -148,9 +148,9 @@ const TABLE_ROWS = [
   { key: 'kasambahay', label: 'Kasambahay' },
 ];
 
-function HeatmapTable({ purokData }) {
+function HeatmapTable({ purokData, t }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-300 shadow-sm bg-white">
+    <div className={`overflow-x-auto rounded-xl border ${t ? t.cardBorder : 'border-gray-300'} shadow-sm ${t ? t.cardBg : 'bg-white'}`}>
       <table className="w-full min-w-max text-base border-collapse">
         <thead>
           <tr className="bg-[#1a5276] text-white">
@@ -166,14 +166,14 @@ function HeatmapTable({ purokData }) {
         </thead>
         <tbody>
           {TABLE_ROWS.map((row, index) => (
-            <tr key={row.key} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-              <td className="px-5 py-3 font-bold text-gray-800 whitespace-nowrap sticky left-0 bg-inherit border-r border-gray-200">
+            <tr key={row.key} className={index % 2 === 0 ? (t ? t.inlineBg : 'bg-gray-50') : (t ? t.cardBg : 'bg-white')}>
+              <td className={`px-5 py-3 font-bold ${t ? t.cardText : 'text-gray-800'} whitespace-nowrap sticky left-0 bg-inherit border-r ${t ? t.cardBorder : 'border-gray-200'}`}>
                 {row.label}
               </td>
               {purokData.map((p) => {
                 const val = Number(p[row.key] ?? 0);
                 return (
-                  <td key={`${p.purok}-${row.key}`} className="px-4 py-3 text-center font-black text-gray-900 border-b border-gray-100">
+                  <td key={`${p.purok}-${row.key}`} className={`px-4 py-3 text-center font-black ${t ? t.cardText : 'text-gray-900'} border-b ${t ? t.cardBorder : 'border-gray-100'}`}>
                     {val}
                   </td>
                 );
@@ -181,15 +181,15 @@ function HeatmapTable({ purokData }) {
             </tr>
           ))}
 
-          <tr className="bg-gray-100 border-t-2 border-[#1a5276]">
-            <td className="px-5 py-3 font-black text-[#1a5276] whitespace-nowrap sticky left-0 bg-gray-100 border-r border-gray-200">
+          <tr className={`${t ? t.inlineBg : 'bg-gray-100'} border-t-2 border-[#1a5276]`}>
+            <td className={`px-5 py-3 font-black text-[#1a5276] whitespace-nowrap sticky left-0 ${t ? t.inlineBg : 'bg-gray-100'} border-r ${t ? t.cardBorder : 'border-gray-200'}`}>
               Verif. Rate*
             </td>
             {purokData.map((p) => {
               const rate = calcVerifRate(p);
               const status = rate >= 80 ? 'Good' : rate >= 50 ? 'Fair' : 'Needs attention';
               return (
-                <td key={`rate-${p.purok}`} className="px-4 py-3 text-center font-black text-gray-900">
+                <td key={`rate-${p.purok}`} className={`px-4 py-3 text-center font-black ${t ? t.cardText : 'text-gray-900'}`}>
                   {rate}% ({status})
                 </td>
               );
@@ -198,14 +198,14 @@ function HeatmapTable({ purokData }) {
         </tbody>
       </table>
 
-      <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 text-sm text-gray-700 font-semibold">
+      <div className={`px-5 py-3 ${t ? t.inlineBg : 'bg-gray-50'} border-t ${t ? t.cardBorder : 'border-gray-200'} text-sm ${t ? t.cardText : 'text-gray-700'} font-semibold`}>
         * Verif. Rate = Verified / (Verified + Pending + Rejected). Unregistered excluded.
       </div>
     </div>
   );
 }
 
-export default function HeatmapTab({ raw }) {
+export default function HeatmapTab({ raw, t }) {
   const purokData = raw?.heatmap?.puroks ?? [];
   const [metric, setMetric] = useState('verified');
   const [view, setView] = useState('map');
@@ -236,6 +236,7 @@ export default function HeatmapTab({ raw }) {
       <SectionHeader
         title="Purok Heatmap"
         subtitle="Barangay Gulod, Novaliches, Quezon City - click a purok for details"
+        t={t}
       />
 
       <div className="flex items-center gap-3 flex-wrap">
@@ -250,7 +251,7 @@ export default function HeatmapTab({ raw }) {
               className={`px-4 py-2 text-sm font-bold rounded-lg border transition-all ${
                 view === v.key
                   ? 'bg-[#1a5276] text-white border-[#1a5276]'
-                  : 'bg-white text-[#1a5276] border-[#1a5276] hover:bg-blue-50'
+                  : `${t ? t.cardBg : 'bg-white'} text-[#1a5276] border-[#1a5276] hover:bg-blue-50`
               }`}
             >
               {v.label}
@@ -280,7 +281,7 @@ export default function HeatmapTab({ raw }) {
               className={`px-3 py-1.5 text-sm font-bold rounded-lg border transition-all flex items-center gap-1 ${
                 metric === m.key
                   ? 'bg-[#1a5276] text-white border-[#1a5276]'
-                  : 'bg-white text-[#1a5276] border-[#1a5276] hover:bg-blue-50'
+                  : `${t ? t.cardBg : 'bg-white'} text-[#1a5276] border-[#1a5276] hover:bg-blue-50`
               }`}
             >
               {m.label}
@@ -291,7 +292,7 @@ export default function HeatmapTab({ raw }) {
 
       {view === 'map' ? (
         leafletReady ? (
-          <HeatmapMap purokData={purokData} metric={metric} />
+          <HeatmapMap purokData={purokData} metric={metric} t={t} />
         ) : (
           <div className="flex items-center justify-center h-64 gap-3 text-gray-400">
             <div className="w-8 h-8 border-4 border-[#1a5276] border-t-transparent rounded-full animate-spin" />
@@ -299,7 +300,7 @@ export default function HeatmapTab({ raw }) {
           </div>
         )
       ) : (
-        <HeatmapTable purokData={purokData} />
+        <HeatmapTable purokData={purokData} t={t} />
       )}
 
       {view === 'map' && (
@@ -309,22 +310,22 @@ export default function HeatmapTab({ raw }) {
             const rate = calcVerifRate(p);
             const status = rate >= 80 ? 'Good' : rate >= 50 ? 'Fair' : 'Needs attention';
             return (
-              <div key={p.purok} className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 text-center">
+              <div key={p.purok} className={`${t ? t.cardBg : 'bg-white'} rounded-xl border ${t ? t.cardBorder : 'border-gray-100'} shadow-sm p-3 text-center`}>
                 <div className="font-bold text-[#1a5276] text-xs mb-1">{p.purok}</div>
                 <div className="text-2xl font-black" style={{ color: getHeatColor(val, maxVal, 1) }}>
                   {val}
                 </div>
-                <div className="text-[10px] text-gray-400 uppercase">
+                <div className={`text-[10px] ${t ? t.subtleText : 'text-gray-400'} uppercase`}>
                   {HEATMAP_METRICS.find((m) => m.key === metric)?.label}
                 </div>
-                <div className="text-xs font-bold mt-1 text-gray-700">{rate}% ({status})</div>
+                <div className={`text-xs font-bold mt-1 ${t ? t.cardText : 'text-gray-700'}`}>{rate}% ({status})</div>
               </div>
             );
           })}
         </div>
       )}
 
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-700">
+      <div className={`${t ? t.inlineBg : 'bg-gray-50'} border ${t ? t.cardBorder : 'border-gray-200'} rounded-xl p-4 text-sm ${t ? t.cardText : 'text-gray-700'}`}>
         <span className="font-bold">Note:</span> Circle size scales with the selected metric value.
         Verification rate counts only submitted residents - unregistered are excluded.
       </div>

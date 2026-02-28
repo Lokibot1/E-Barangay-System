@@ -10,11 +10,11 @@ export const sectorStyles = {
   'GENERAL POPULATION': 'bg-slate-100 text-slate-600 border-slate-200 ring-slate-400',
 };
 
-const SectorLegend = ({ activeFilter, onFilterChange, counts = {} }) => {
+const SectorLegend = ({ activeFilter, onFilterChange, counts = {}, t }) => {
   const totalCount = Object.values(counts).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="flex flex-col gap-4 p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm mb-4">
+    <div className={`flex flex-col gap-4 p-5 ${t.cardBg} border ${t.cardBorder} rounded-3xl shadow-sm mb-4`}>
       {/* Header Info */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -24,7 +24,7 @@ const SectorLegend = ({ activeFilter, onFilterChange, counts = {} }) => {
           </span>
         </div>
         {activeFilter !== 'All' && (
-          <button 
+          <button
             onClick={() => onFilterChange('All')}
             className="text-[11px] font-black text-rose-500 uppercase hover:bg-rose-50 px-3 py-1 rounded-full transition-all"
           >
@@ -39,9 +39,9 @@ const SectorLegend = ({ activeFilter, onFilterChange, counts = {} }) => {
         <button
           onClick={() => onFilterChange('All')}
           className={`flex flex-col items-start px-4 py-3 rounded-2xl border-2 transition-all shadow-sm ${
-            activeFilter === 'All' 
-            ? 'bg-slate-900 text-white border-slate-900 shadow-md dark:bg-slate-800 dark:border-slate-600' 
-            : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-100 dark:border-slate-700 hover:border-slate-300'
+            activeFilter === 'All'
+            ? 'bg-slate-900 text-white border-slate-900 shadow-md'
+            : `${t.cardBg} text-slate-500 border-slate-100 hover:border-slate-300`
           }`}
         >
           <span className="text-[8px] font-black uppercase tracking-wider opacity-60 mb-1">Total</span>
@@ -52,15 +52,15 @@ const SectorLegend = ({ activeFilter, onFilterChange, counts = {} }) => {
         {Object.entries(sectorStyles).map(([name, style]) => {
           const isActive = activeFilter === name;
           const count = counts[name] || 0;
-          const baseStyles = style.split(' ring-')[0]; 
+          const baseStyles = style.split(' ring-')[0];
 
           return (
             <button
               key={name}
               onClick={() => onFilterChange(name)}
               className={`flex flex-col items-start px-4 py-3 rounded-2xl border-2 transition-all shadow-sm ${baseStyles} ${
-                isActive 
-                  ? 'ring-4 ring-slate-900/10 dark:ring-white/10 !border-slate-900 dark:!border-white' 
+                isActive
+                  ? 'ring-4 ring-slate-900/10 !border-slate-900'
                   : 'border-transparent opacity-85 hover:opacity-100'
               }`}
             >

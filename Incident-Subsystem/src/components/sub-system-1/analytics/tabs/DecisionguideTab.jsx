@@ -48,11 +48,11 @@ function buildRecommendedAction(insight) {
   return 'Keep this item under monitoring and review trend movement during the next reporting cycle.';
 }
 
-function PriorityInsightCard({ insight }) {
+function PriorityInsightCard({ insight, t }) {
   const autoAction = buildRecommendedAction(insight);
 
   return (
-    <Card className="mb-3">
+    <Card className="mb-3" t={t}>
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-start gap-3 min-w-0">
           <div className="h-10 w-10 rounded-xl bg-[#1a5276]/10 text-[#1a5276] flex items-center justify-center text-lg font-bold">
@@ -80,7 +80,7 @@ function PriorityInsightCard({ insight }) {
   );
 }
 
-export default function DecisionGuideTab({ raw }) {
+export default function DecisionGuideTab({ raw, t }) {
   const ins = raw?.insights ?? {};
   const insights = ins.insights ?? [];
   const summary = ins.summary ?? {};
@@ -96,6 +96,7 @@ export default function DecisionGuideTab({ raw }) {
       <SectionHeader
         title="Decision Guide & Actionable Insights"
         subtitle="Data-driven analysis and recommended actions for barangay officials"
+        t={t}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -109,6 +110,7 @@ export default function DecisionGuideTab({ raw }) {
               value={count}
               sub="Current insights"
               color={pg.color}
+              t={t}
             />
           );
         })}
@@ -118,9 +120,9 @@ export default function DecisionGuideTab({ raw }) {
         const filtered = insights.filter((i) => i.priority === pg.key);
         if (!filtered.length) return null;
         return (
-          <Card key={pg.key} title={pg.label}>
+          <Card key={pg.key} title={pg.label} t={t}>
             {filtered.map((insight, idx) => (
-              <PriorityInsightCard key={`${pg.key}-${idx}`} insight={insight} />
+              <PriorityInsightCard key={`${pg.key}-${idx}`} insight={insight} t={t} />
             ))}
           </Card>
         );
@@ -138,4 +140,3 @@ export default function DecisionGuideTab({ raw }) {
     </div>
   );
 }
-
