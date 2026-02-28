@@ -1,0 +1,141 @@
+import { AlertTriangle, Eye, Siren } from 'lucide-react';
+import { StatCard, Card, SectionHeader, EmptyState } from '../AnalyticsInterface';
+
+function detectPurok(text = '') {
+  const m = String(text).match(/purok\s*\d+/i);
+  return m ? m[0] : 'the affected purok';
+}
+
+function buildRecommendedAction(insight) {
+  const title = String(insight?.title ?? '').toLowerCase();
+  const description = String(insight?.description ?? '').toLowerCase();
+  const metricLabel = String(insight?.metric_label ?? '').toLowerCase();
+  const metric = Number(insight?.metric ?? 0);
+  const priority = String(insight?.priority ?? '').toUpperCase();
+  const text = `${title} ${description} ${metricLabel}`;
+  const purok = detectPurok(insight?.title);
+
+  if (text.includes('unregistered') || text.includes('registration') || text.includes('no barangay id')) {
+    return `Run a 2-day registration drive in ${purok}, including door-to-door validation for seniors and PWD. Assign one queue desk and one encoder lane until backlog is reduced.`;
+  }
+  if (text.includes('senior')) {
+    return `Coordinate with OSCA and the health center for ${purok}. Schedule weekly senior profiling and home visits, then publish the updated senior priority masterlist.`;
+  }
+  if (text.includes('pending') || text.includes('verification')) {
+    return `Open a dedicated verification queue and process at least ${Math.max(10, Math.ceil(metric / 5))} applications per day until pending cases are cleared.`;
+  }
+  if (text.includes('pwd')) {
+    return `Conduct a PWD facility and records audit this month. Validate IDs, mark accessibility gaps, and submit the compliance checklist to barangay leadership.`;
+  }
+  if (text.includes('indigent') || text.includes('low income') || text.includes('4ps') || text.includes('dswd')) {
+    return `Validate household eligibility and endorse qualified families to DSWD programs. Prioritize cases without active assistance and track referrals weekly.`;
+  }
+  if (text.includes('rejected')) {
+    return `Send rejection follow-ups with a document checklist and set a resubmission clinic day within 7 days for faster reprocessing.`;
+  }
+  if (text.includes('education') || text.includes('incomplete')) {
+    return `Add education record correction in monthly data cleanup. Require missing fields during clearance and certificate transactions.`;
+  }
+  if (text.includes('new resident') || text.includes('population growth')) {
+    return `Update purok-level population mapping and adjust service allocation for new residents in the next barangay planning cycle.`;
+  }
+  if (text.includes('verified')) {
+    return 'Maintain current workflow and set a weekly quality review to keep verification output stable while minimizing rejections.';
+  }
+
+  if (priority === 'HIGH') return 'Assign a lead focal person and execute an immediate 7-day intervention plan with daily progress checks.';
+  if (priority === 'MEDIUM') return 'Plan a targeted intervention this week and track completion in the barangay operations meeting.';
+  return 'Keep this item under monitoring and review trend movement during the next reporting cycle.';
+}
+
+function PriorityInsightCard({ insight }) {
+  const autoAction = buildRecommendedAction(insight);
+
+  return (
+    <Card className="mb-3">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="flex items-start gap-3 min-w-0">
+          <div className="h-10 w-10 rounded-xl bg-[#1a5276]/10 text-[#1a5276] flex items-center justify-center text-lg font-bold">
+            {insight.icon ?? '!'}
+          </div>
+          <div className="min-w-0">
+            <h4 className="text-base font-black text-slate-900">{insight.title}</h4>
+            <p className="text-sm text-slate-600 mt-1">
+              {insight.metric ?? 0} {insight.metric_label ?? 'items'} | Priority: {insight.priority ?? 'N/A'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-gray-200 p-3 bg-gray-50">
+        <p className="text-xs font-black uppercase tracking-wider text-[#1a5276] mb-1">Actionable Reason</p>
+        <p className="text-sm text-slate-700">{insight.description}</p>
+      </div>
+
+      <div className="mt-3 rounded-lg border border-[#1a5276]/20 p-3 bg-[#1a5276]/5">
+        <p className="text-xs font-black uppercase tracking-wider text-[#1a5276] mb-1">Recommended Action (Auto-Generated)</p>
+        <p className="text-sm font-semibold text-[#1a5276]">{autoAction}</p>
+      </div>
+    </Card>
+  );
+}
+
+export default function DecisionGuideTab({ raw }) {
+  const ins = raw?.insights ?? {};
+  const insights = ins.insights ?? [];
+  const summary = ins.summary ?? {};
+
+  const priorityGroups = [
+    { key: 'HIGH', label: 'High Priority', icon: Siren, color: 'danger' },
+    { key: 'MEDIUM', label: 'Medium', icon: AlertTriangle, color: 'warning' },
+    { key: 'LOW', label: 'Monitoring', icon: Eye, color: 'secondary' },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <SectionHeader
+        title="Decision Guide & Actionable Insights"
+        subtitle="Data-driven analysis and recommended actions for barangay officials"
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {priorityGroups.map((pg) => {
+          const count = summary[`${pg.key.toLowerCase()}_priority`] ?? insights.filter((i) => i.priority === pg.key).length;
+          return (
+            <StatCard
+              key={pg.key}
+              icon={pg.icon}
+              label={pg.label}
+              value={count}
+              sub="Current insights"
+              color={pg.color}
+            />
+          );
+        })}
+      </div>
+
+      {priorityGroups.map((pg) => {
+        const filtered = insights.filter((i) => i.priority === pg.key);
+        if (!filtered.length) return null;
+        return (
+          <Card key={pg.key} title={pg.label}>
+            {filtered.map((insight, idx) => (
+              <PriorityInsightCard key={`${pg.key}-${idx}`} insight={insight} />
+            ))}
+          </Card>
+        );
+      })}
+
+      {insights.length === 0 && (
+        <EmptyState icon="*" message="No insights generated yet. Check that the backend is returning data." />
+      )}
+
+      {summary.computed_at && (
+        <p className="text-xs text-gray-400 text-right mt-4">
+          Computed: {new Date(summary.computed_at).toLocaleString('en-PH')}
+        </p>
+      )}
+    </div>
+  );
+}
+
