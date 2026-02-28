@@ -38,6 +38,7 @@ import AdminAppointments from "./pages/sub-system-3/admin/AdminAppointments";
 // RS Routes Imports
 import HomePage from "./homepage/HomePage";
 import AuthPage from "./homepage/AuthPage";
+import LoginPage from "./pages/sub-system-3/LoginPage";
 import Dashboard from "./pages/sub-system-1/dashboard";
 import Residents from "./pages/sub-system-1/residents";
 import Scanner from "./pages/sub-system-1/qr";
@@ -87,7 +88,7 @@ function App() {
             <Routes>
             {/* PUBLIC ROUTES - HomePage as starting point */}
             <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<AuthPage />} />
+            <Route path="/login" element={<LoginPage />} />
             <Route path="/auth" element={<Navigate to="/login" replace />} />
 
             {/* User-only routes — admins get redirected to /admin */}
