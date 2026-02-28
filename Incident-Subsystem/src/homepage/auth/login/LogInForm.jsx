@@ -7,7 +7,9 @@ const LoginForm = ({ formData, handleChange, isDarkMode }) => {
   return (
     <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="space-y-2">
-        <label className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+        <label
+          className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
+        >
           Username
         </label>
         <div className="relative">
@@ -31,7 +33,9 @@ const LoginForm = ({ formData, handleChange, isDarkMode }) => {
         </div>
       </div>
       <div className="space-y-2">
-        <label className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+        <label
+          className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
+        >
           Password
         </label>
         <div className="relative">
@@ -56,7 +60,9 @@ const LoginForm = ({ formData, handleChange, isDarkMode }) => {
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
             className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors ${
-              isDarkMode ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-700"
+              isDarkMode
+                ? "text-slate-400 hover:text-slate-200"
+                : "text-slate-500 hover:text-slate-700"
             }`}
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
