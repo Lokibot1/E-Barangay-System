@@ -97,3 +97,31 @@ export const isAdmin = () => {
   const user = getUser();
   return user?.role === "admin";
 };
+
+/**
+ * Request a password-reset email for the given address.
+ */
+export const forgotPassword = async (email) => {
+  const response = await fetch(`http://localhost:8000/api/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "Failed to send reset email.");
+  return data;
+};
+
+/**
+ * Submit a new password using the reset token from the email link.
+ */
+export const resetPassword = async ({ token, email, password, password_confirmation }) => {
+  const response = await fetch(`${API_BASE}/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ token, email, password, password_confirmation }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "Failed to reset password.");
+  return data;
+};

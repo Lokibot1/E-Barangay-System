@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import themeTokens from "../../Themetokens";
 import InputField from "../../components/shared/InputField";
+import ForgotPasswordModal from "../../components/shared/ForgotPasswordModal";
+import Toast from "../../components/shared/modals/Toast";
 import { login, saveAuth, isAuthenticated, isAdmin } from "../../services/sub-system-3/loginService";
 import { useAuthLogic } from "../../homepage/auth/hooks/useAuthLogic";
 import SignupForm from "../../homepage/auth/signup/SignUpForm";
@@ -45,6 +47,13 @@ const LoginPage = () => {
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = (toast) =>
+    setToasts((prev) => [...prev, { ...toast, id: Date.now() }]);
+  const removeToast = (id) =>
+    setToasts((prev) => prev.filter((t) => t.id !== id));
 
   // ── Signup state (useAuthLogic handles form data + registration) ──
   const {
@@ -122,6 +131,19 @@ const LoginPage = () => {
         isDarkMode ? "bg-slate-950" : t.pageBg
       }`}
     >
+      {/* ── Toast notifications ───────────────────────────────────── */}
+      <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
+
+      {/* ── Forgot password modal ──────────────────────────────────── */}
+      <ForgotPasswordModal
+        isOpen={showForgotModal}
+        onClose={() => setShowForgotModal(false)}
+        email={email}
+        currentTheme={currentTheme}
+        isDarkMode={isDarkMode}
+        onToast={addToast}
+      />
+
       {/* ── Background image ──────────────────────────────────────── */}
       <div className="fixed inset-0 z-0">
         <img
@@ -477,6 +499,7 @@ const LoginPage = () => {
                         </label>
                         <button
                           type="button"
+                          onClick={() => setShowForgotModal(true)}
                           className={`text-xs font-black uppercase tracking-wide font-kumbh ${t.primaryText}`}
                         >
                           Forgot password?

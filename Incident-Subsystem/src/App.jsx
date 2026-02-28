@@ -39,6 +39,7 @@ import AdminAppointments from "./pages/sub-system-3/admin/AdminAppointments";
 import HomePage from "./homepage/HomePage";
 import AuthPage from "./homepage/AuthPage";
 import LoginPage from "./pages/sub-system-3/LoginPage";
+import ResetPasswordPage from "./pages/sub-system-3/ResetPasswordPage";
 import Dashboard from "./pages/sub-system-1/dashboard";
 import Residents from "./pages/sub-system-1/residents";
 import Scanner from "./pages/sub-system-1/qr";
@@ -50,7 +51,6 @@ import Settings from "./pages/sub-system-1/settings";
 import Logout from "./pages/sub-system-1/logout";
 import "./App.css";
 import "leaflet/dist/leaflet.css";
-
 
 function ScrollToTop() {
   const { pathname, key } = useLocation();
@@ -86,71 +86,147 @@ function App() {
           <ScrollToTop />
           <div className="App">
             <Routes>
-            {/* PUBLIC ROUTES - HomePage as starting point */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/auth" element={<Navigate to="/login" replace />} />
+              {/* PUBLIC ROUTES - HomePage as starting point */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/auth" element={<Navigate to="/login" replace />} />
 
-            {/* User-only routes — admins get redirected to /admin */}
-            <Route element={<UserRoute />}>
-              <Route element={<UserRealTimeProvider><Layout /></UserRealTimeProvider>}>
-                {/* Sub-System 2 Routes */}
-                <Route path="/sub-system-2" element={<SubSystem2MainPage />} />
-                <Route path="/sub-system-2/req-bid" element={<Req_BIDPage />} />
-                <Route path="/sub-system-2/req-coi" element={<Req_COIPage />} />
-                <Route path="/sub-system-2/req-cor" element={<Req_CORPage />} />
-                <Route path="/sub-system-2/req-sub-bid" element={<Req_Sub_BID />} />
-                <Route path="/sub-system-2/req-sub-coi" element={<Req_Sub_COI />} />
-                <Route path="/sub-system-2/req-sub-cor" element={<Req_Sub_COR />} />
-                <Route path="/sub-system-2/track-bid" element={<Track_BID />} />
-                <Route path="/sub-system-2/track-coi" element={<Track_COI />} />
-                <Route path="/sub-system-2/track-cor" element={<Track_COR />} />
-                
-                {/* Sub-System 3 Routes */}
-                <Route path="/incident-complaint" element={<MainPage />} />
-                <Route path="/incident-complaint/file-complaint" element={<FileComplaintPage />} />
-                <Route path="/incident-complaint/incident-report" element={<IncidentReportPage />} />
-                <Route path="/incident-complaint/incident-map" element={<IncidentMapPage />} />
-                <Route path="/incident-complaint/case-management" element={<CaseManagementPage />} />
-                
-                {/* RS Dashboard Routes */}
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/residents" element={<Residents />} />
-                <Route path="/scanner" element={<Scanner />} />
-                <Route path="/verification" element={<Verification />} />
-                <Route path="/households" element={<Households />} />
-                <Route path="/certificates" element={<Certificates />} />
-                <Route path="/support" element={<Support />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/logout" element={<Logout />} />
-                <Route path="/documents-inquiry" element={<DocumentsInquiryPage />} />
+              {/* User-only routes — admins get redirected to /admin */}
+              <Route element={<UserRoute />}>
+                <Route
+                  element={
+                    <UserRealTimeProvider>
+                      <Layout />
+                    </UserRealTimeProvider>
+                  }
+                >
+                  {/* Sub-System 2 Routes */}
+                  <Route
+                    path="/sub-system-2"
+                    element={<SubSystem2MainPage />}
+                  />
+                  <Route
+                    path="/sub-system-2/req-bid"
+                    element={<Req_BIDPage />}
+                  />
+                  <Route
+                    path="/sub-system-2/req-coi"
+                    element={<Req_COIPage />}
+                  />
+                  <Route
+                    path="/sub-system-2/req-cor"
+                    element={<Req_CORPage />}
+                  />
+                  <Route
+                    path="/sub-system-2/req-sub-bid"
+                    element={<Req_Sub_BID />}
+                  />
+                  <Route
+                    path="/sub-system-2/req-sub-coi"
+                    element={<Req_Sub_COI />}
+                  />
+                  <Route
+                    path="/sub-system-2/req-sub-cor"
+                    element={<Req_Sub_COR />}
+                  />
+                  <Route
+                    path="/sub-system-2/track-bid"
+                    element={<Track_BID />}
+                  />
+                  <Route
+                    path="/sub-system-2/track-coi"
+                    element={<Track_COI />}
+                  />
+                  <Route
+                    path="/sub-system-2/track-cor"
+                    element={<Track_COR />}
+                  />
+
+                  {/* Sub-System 3 Routes */}
+                  <Route path="/incident-complaint" element={<MainPage />} />
+                  <Route
+                    path="/incident-complaint/file-complaint"
+                    element={<FileComplaintPage />}
+                  />
+                  <Route
+                    path="/incident-complaint/incident-report"
+                    element={<IncidentReportPage />}
+                  />
+                  <Route
+                    path="/incident-complaint/incident-map"
+                    element={<IncidentMapPage />}
+                  />
+                  <Route
+                    path="/incident-complaint/case-management"
+                    element={<CaseManagementPage />}
+                  />
+
+                  {/* RS Dashboard Routes */}
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/residents" element={<Residents />} />
+                  <Route path="/scanner" element={<Scanner />} />
+                  <Route path="/verification" element={<Verification />} />
+                  <Route path="/households" element={<Households />} />
+                  <Route path="/certificates" element={<Certificates />} />
+                  <Route path="/support" element={<Support />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/logout" element={<Logout />} />
+                  <Route
+                    path="/documents-inquiry"
+                    element={<DocumentsInquiryPage />}
+                  />
+                </Route>
               </Route>
-            </Route>
 
-            {/* Admin-only routes — regular users get redirected to / */}
-            <Route element={<AdminRoute />}>
-              <Route
-                element={
-                  <RealTimeProvider>
-                    <Layout />
-                  </RealTimeProvider>
-                }
-              >
-                <Route path="/admin" element={<AdminLanding />} />
-                <Route path="/admin/residents" element={<AdminPlaceholder title="Residents" />} />
-                <Route path="/admin/requests" element={<AdminPlaceholder title="Requests" />} />
-                <Route path="/admin/incidents" element={<AdminIncidentReports />} />
-                <Route path="/admin/appointments" element={<AdminAppointments />} />
-                <Route path="/admin/payments" element={<AccountsSection />} />
-                <Route path="/admin/reports" element={<AdminPlaceholder title="Reports" />} />
-                <Route path="/admin/documents-inquiry" element={<DocumentsInquiryPage />} />
-                <Route path="/admin/user-management" element={<AdminPlaceholder title="User Management" />} />
-                <Route path="/admin/settings" element={<AdminPlaceholder title="Settings" />} />
+              {/* Admin-only routes — regular users get redirected to / */}
+              <Route element={<AdminRoute />}>
+                <Route
+                  element={
+                    <RealTimeProvider>
+                      <Layout />
+                    </RealTimeProvider>
+                  }
+                >
+                  <Route path="/admin" element={<AdminLanding />} />
+                  <Route
+                    path="/admin/residents"
+                    element={<AdminPlaceholder title="Residents" />}
+                  />
+                  <Route
+                    path="/admin/requests"
+                    element={<AdminPlaceholder title="Requests" />}
+                  />
+                  <Route
+                    path="/admin/incidents"
+                    element={<AdminIncidentReports />}
+                  />
+                  <Route
+                    path="/admin/appointments"
+                    element={<AdminAppointments />}
+                  />
+                  <Route path="/admin/payments" element={<AccountsSection />} />
+                  <Route
+                    path="/admin/reports"
+                    element={<AdminPlaceholder title="Reports" />}
+                  />
+                  <Route
+                    path="/admin/documents-inquiry"
+                    element={<DocumentsInquiryPage />}
+                  />
+                  <Route
+                    path="/admin/user-management"
+                    element={<AdminPlaceholder title="User Management" />}
+                  />
+                  <Route
+                    path="/admin/settings"
+                    element={<AdminPlaceholder title="Settings" />}
+                  />
+                </Route>
               </Route>
-            </Route>
 
-            {/* Catch-all — send unknown paths to home */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+              {/* Catch-all — send unknown paths to home */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
         </Router>
