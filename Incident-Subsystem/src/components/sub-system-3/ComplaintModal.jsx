@@ -4,6 +4,11 @@ import ComplaintForm from "../../components/sub-system-3/Complaintform";
 import ProgressIndicator from "../../components/sub-system-3/ProgressIndicator";
 import Toast from "../../components/shared/modals/Toast";
 import { fileComplaint } from "../../services/sub-system-3/complaintService";
+import {
+  getAllAppointments,
+  createAppointment,
+  findNextAvailableSlot,
+} from "../../services/sub-system-3/appointmentService";
 import { getUser } from "../../services/sub-system-3/loginService";
 import { getAllCustomFields } from "../../services/sub-system-3/customFieldService";
 import themeTokens from "../../Themetokens";
@@ -190,7 +195,26 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      await fileComplaint(formData);
+      const result = await fileComplaint(formData);
+
+      // Auto-generate appointment for the complaint (best-effort, non-blocking)
+      try {
+        const complaintId = result?.data?.id ?? result?.id ?? null;
+        const existingAppts = await getAllAppointments();
+        const slot = findNextAvailableSlot(existingAppts);
+        if (slot) {
+          await createAppointment({
+            complaint_id: complaintId,
+            date: slot.date,
+            time: slot.time,
+            status: "pending",
+            complainant_name: formData.complainantName,
+          });
+        }
+      } catch (apptErr) {
+        // Do not fail the whole submission if appointment creation fails
+        console.warn("Auto-appointment generation failed:", apptErr);
+      }
 
       addToast({
         type: "success",

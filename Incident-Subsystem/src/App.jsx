@@ -33,6 +33,7 @@ import IncidentMapPage from "./pages/sub-system-3/IncidentMapPage";
 import CaseManagementPage from "./pages/sub-system-3/CaseManagementPage";
 import AdminLanding from "./pages/sub-system-3/admin/AdminLanding";
 import AdminIncidentReports from "./pages/sub-system-3/admin/AdminIncidentReports";
+import AdminAppointments from "./pages/sub-system-3/admin/AdminAppointments";
 import "./App.css";
 import "leaflet/dist/leaflet.css";
 
@@ -131,7 +132,7 @@ function App() {
                 />
                 <Route
                   path="/admin/appointments"
-                  element={<AdminPlaceholder title="Appointments" />}
+                  element={<AdminAppointments />}
                 />
                 <Route
                   path="/admin/payments"
