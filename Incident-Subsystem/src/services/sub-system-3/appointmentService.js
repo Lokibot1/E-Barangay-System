@@ -1,5 +1,6 @@
 import { getToken, isAuthenticated } from "./loginService";
-import { API_BASE_URL as API_BASE } from "../../config/api";
+
+const API_BASE = "http://localhost:8000/api";
 
 // ── Business hours config ─────────────────────────────────────────────────────
 export const BUSINESS_DAYS = [1, 2, 3, 4, 5]; // Mon–Fri (0=Sun, 6=Sat)

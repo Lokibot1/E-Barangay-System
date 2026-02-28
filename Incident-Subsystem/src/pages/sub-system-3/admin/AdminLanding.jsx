@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import themeTokens from "../../../Themetokens";
 import { getUser } from "../../../services/sub-system-3/loginService";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
-import { getMyComplaints } from "../../../services/sub-system-3/complaintService";
+import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
 import { getAllAppointments } from "../../../services/sub-system-3/appointmentService";
 import InsightsModal from "../../../components/sub-system-3/InsightsModal";
 import VolumesFactors from "../../../components/sub-system-2/factors/VolumesFactors";
@@ -186,9 +186,12 @@ const AdminLanding = () => {
   const [complaints, setComplaints] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isLive, setIsLive] = useState(true);
+  const [polling, setPolling] = useState(false);
   const [showKebab, setShowKebab] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
   const kebabRef = useRef(null);
+  const pollIntervalRef = useRef(null);
 
   useEffect(() => {
     const handleThemeChange = (e) => setCurrentTheme(e.detail);
@@ -212,28 +215,46 @@ const AdminLanding = () => {
   const firstName = user?.name?.split(" ")[0] || "Admin";
   const navigate = useNavigate();
 
-  // Fetch data
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  // Fetch data for the 6 chart cards only (incidents, complaints, appointments)
+  const fetchData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    else setPolling(true);
     try {
-      const [incData, compData, apptData] = await Promise.all([
-        incidentService.getMyIncidents(),
-        getMyComplaints(),
-        getAllAppointments(),
+      // Incidents + complaints fetched together — same as the working case tracker
+      const [incData, compData] = await Promise.all([
+        incidentService.getAllIncidents(),
+        getAllComplaints(),
       ]);
       setIncidents(Array.isArray(incData) ? incData : incData.data || []);
       setComplaints(Array.isArray(compData) ? compData : compData.data || []);
+    } catch (err) {
+      console.error("Failed to fetch incidents/complaints:", err);
+    }
+
+    // Appointments fetched separately so a failure here never blocks the charts above
+    try {
+      const apptData = await getAllAppointments();
       setAppointments(Array.isArray(apptData) ? apptData : apptData?.data || []);
     } catch (err) {
-      console.error("Failed to fetch dashboard data:", err);
-    } finally {
-      setLoading(false);
+      console.error("Failed to fetch appointments:", err);
     }
+
+    if (!silent) setLoading(false);
+    else setPolling(false);
   }, []);
 
+  // Initial load
+  useEffect(() => { fetchData(false); }, [fetchData]);
+
+  // Auto-polling every 30 s (silent — no full loading spinner)
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!isLive) {
+      clearInterval(pollIntervalRef.current);
+      return;
+    }
+    pollIntervalRef.current = setInterval(() => fetchData(true), 30_000);
+    return () => clearInterval(pollIntervalRef.current);
+  }, [isLive, fetchData]);
 
   // ── Normalize status ──
   const normalizeStatus = (status) => {
@@ -523,11 +544,23 @@ const AdminLanding = () => {
       <div className={`${t.pageBg} px-6 sm:px-10 lg:px-16 py-6`}>
         <div className="max-w-7xl mx-auto w-full">
           <div className="flex items-center justify-between mb-5">
-            <h2
-              className={`text-2xl font-bold ${t.cardText} font-spartan text-left`}
-            >
-              Analytics Dashboard
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className={`text-2xl font-bold ${t.cardText} font-spartan text-left`}>
+                Analytics Dashboard
+              </h2>
+              <button
+                onClick={() => setIsLive(v => !v)}
+                title={isLive ? "Pause auto-refresh" : "Resume auto-refresh"}
+                className={`flex items-center gap-1.5 text-xs font-bold font-kumbh px-2.5 py-1 rounded-lg transition-colors ${
+                  isLive
+                    ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                    : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                } ${isDark ? (isLive ? "bg-emerald-900/40 text-emerald-400 hover:bg-emerald-800/50" : "bg-slate-700 text-slate-400 hover:bg-slate-600") : ""}`}
+              >
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isLive ? "bg-emerald-500 animate-pulse" : "bg-gray-400"}`} />
+                {isLive ? (polling ? "Updating…" : "Live") : "Paused"}
+              </button>
+            </div>
             <div className="relative" ref={kebabRef}>
               <button
                 onClick={() => setShowKebab((prev) => !prev)}
