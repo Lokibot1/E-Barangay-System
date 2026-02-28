@@ -1,5 +1,5 @@
 import axios from "axios";
-import { API_BASE_URL } from "../../config/apiNilaHeaven";
+import { API_BASE_URL } from "../../config/api";
 
 const transformResident = (r) => {
   if (!r) return null;

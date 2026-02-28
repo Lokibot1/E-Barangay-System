@@ -46,7 +46,9 @@ const submitReport = async (formData) => {
 
   const user = getUser();
   if (user) {
-    const name = [user.first_name, user.middle_name, user.last_name].filter(Boolean).join(" ");
+    const name = [user.first_name, user.middle_name, user.last_name]
+      .filter(Boolean)
+      .join(" ");
     body.append("reported_by", name);
   }
 
@@ -69,7 +71,10 @@ const submitReport = async (formData) => {
   }
 
   // Append custom field values as custom_fields[field_name]
-  if (formData.customFieldValues && typeof formData.customFieldValues === "object") {
+  if (
+    formData.customFieldValues &&
+    typeof formData.customFieldValues === "object"
+  ) {
     Object.entries(formData.customFieldValues).forEach(([fieldName, value]) => {
       if (Array.isArray(value)) {
         value.forEach((v) => body.append(`custom_fields[${fieldName}][]`, v));

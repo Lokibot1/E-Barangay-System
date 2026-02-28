@@ -1,4 +1,4 @@
-import { API_BASE_URL as API_BASE } from "../../config/apiNilaHeaven";
+const API_BASE = "http://localhost:8000/api";
 
 /**
  * Authenticate a user with email and password.
