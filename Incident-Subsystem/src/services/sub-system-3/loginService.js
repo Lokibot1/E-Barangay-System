@@ -1,4 +1,4 @@
-import { API_BASE_URL as API_BASE } from "../../config/api";
+import { API_BASE_URL as API_BASE } from "../../config/apiNilaHeaven";
 
 /**
  * Authenticate a user with email and password.
@@ -108,20 +108,27 @@ export const forgotPassword = async (email) => {
     body: JSON.stringify({ email }),
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Failed to send reset email.");
+  if (!response.ok)
+    throw new Error(data.message || "Failed to send reset email.");
   return data;
 };
 
 /**
  * Submit a new password using the reset token from the email link.
  */
-export const resetPassword = async ({ token, email, password, password_confirmation }) => {
+export const resetPassword = async ({
+  token,
+  email,
+  password,
+  password_confirmation,
+}) => {
   const response = await fetch(`${API_BASE}/reset-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ token, email, password, password_confirmation }),
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Failed to reset password.");
+  if (!response.ok)
+    throw new Error(data.message || "Failed to reset password.");
   return data;
 };
