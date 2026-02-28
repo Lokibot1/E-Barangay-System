@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -399,11 +399,44 @@ const IncidentMapPage = () => {
     fetchMarkers();
   }, [fetchMarkers]);
 
+  // ── Bidirectional scroll reveal ────────────────────────────────────────────
+  const containerRef = useRef(null);
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let lastScrollY = container.scrollTop;
+    const handleScroll = () => {
+      const currentScrollY = container.scrollTop;
+      container.classList.toggle("scrolling-up", currentScrollY < lastScrollY);
+      lastScrollY = currentScrollY;
+    };
+    container.addEventListener("scroll", handleScroll, { passive: true });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          entry.target.classList.toggle("visible", entry.isIntersecting);
+        });
+      },
+      { root: container, threshold: 0.1 }
+    );
+
+    container
+      .querySelectorAll(".sr-elem, .sr-elem-left, .sr-elem-scale")
+      .forEach((el) => observer.observe(el));
+
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+      observer.disconnect();
+    };
+  }, []);
+
   const t = themeTokens[currentTheme];
 
   return (
     <>
-      <div className="h-full flex flex-col overflow-y-auto">
+      <div ref={containerRef} className="h-full flex flex-col overflow-y-auto">
         {/* White Space */}
         <div className={`${t.pageBg} py-8 sm:py-10 text-center px-4`}>
           <h1
@@ -426,7 +459,7 @@ const IncidentMapPage = () => {
         <div id="main-content" className="flex-1 container mx-auto px-4 sm:px-6 py-8 sm:py-12">
           {/* Header with illustration */}
           <div className="mb-8 sm:mb-12">
-            <div className="flex items-start gap-4 mb-6">
+            <div className="sr-elem flex items-start gap-4 mb-6">
               <div className="w-12 h-12 flex-shrink-0">
                 <svg
                   viewBox="0 0 64 64"
@@ -453,7 +486,8 @@ const IncidentMapPage = () => {
             </div>
 
             <div
-              className={`${t.cardBg} border ${t.cardBorder} rounded-2xl p-6 sm:p-8 shadow-lg`}
+              className={`sr-elem ${t.cardBg} border ${t.cardBorder} rounded-2xl p-6 sm:p-8 shadow-lg`}
+              style={{ transitionDelay: "0.1s" }}
             >
               <div className="flex flex-col md:flex-row gap-6">
                 {/* Illustration */}
@@ -757,7 +791,7 @@ const IncidentMapPage = () => {
 
           {/* Map Legend */}
           <div className="mb-8 sm:mb-12">
-            <div className="flex items-center gap-3 mb-6">
+            <div className="sr-elem-left flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
                 <svg
                   className="w-6 h-6 text-white"
@@ -781,7 +815,8 @@ const IncidentMapPage = () => {
             </div>
 
             <div
-              className={`${t.cardBg} border ${t.cardBorder} rounded-xl p-5 sm:p-6 shadow-md`}
+              className={`sr-elem ${t.cardBg} border ${t.cardBorder} rounded-xl p-5 sm:p-6 shadow-md`}
+              style={{ transitionDelay: "0.1s" }}
             >
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 {/* NEW/ACTIVE */}
@@ -842,7 +877,7 @@ const IncidentMapPage = () => {
           {/* Interactive Map */}
           <div className="mb-8">
             <div
-              className={`${t.cardBg} border ${t.cardBorder} rounded-2xl overflow-hidden shadow-xl`}
+              className={`sr-elem ${t.cardBg} border ${t.cardBorder} rounded-2xl overflow-hidden shadow-xl`}
             >
               <div style={{ height: "520px" }} className="relative">
                 {/* Loading overlay */}
@@ -993,6 +1028,32 @@ const IncidentMapPage = () => {
           </div>
         </div>
       </div>
+
+      <style>{`
+        .sr-elem {
+          opacity: 0;
+          transform: translateY(36px);
+          transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                      transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sr-elem.visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .scrolling-up .sr-elem:not(.visible) {
+          transform: translateY(-36px);
+        }
+        .sr-elem-left {
+          opacity: 0;
+          transform: translateX(-36px);
+          transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                      transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sr-elem-left.visible {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      `}</style>
     </>
   );
 };

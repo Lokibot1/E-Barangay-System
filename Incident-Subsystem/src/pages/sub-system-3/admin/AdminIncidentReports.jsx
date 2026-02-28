@@ -1,4 +1,12 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useCallback,
+  useRef,
+  memo,
+} from "react";
 import {
   MapContainer,
   TileLayer,
@@ -367,9 +375,7 @@ const TableRow = memo(
       <td className={`text-center px-3 py-3 ${t.cardText}`}>
         {(currentPage - 1) * ROWS_PER_PAGE + index + 1}
       </td>
-      <td
-        className={`text-left px-4 py-3 ${t.cardText} truncate capitalize`}
-      >
+      <td className={`text-left px-4 py-3 ${t.cardText} truncate capitalize`}>
         {inc.type}
       </td>
       <td className={`text-left px-4 py-3 ${t.cardText} whitespace-nowrap`}>
@@ -406,6 +412,13 @@ const AdminIncidentReports = () => {
 
   // ── Page tab state (Incidents vs Complaints) ───────────────────────
   const [pageTab, setPageTab] = useState("incidents");
+  const [slideDir, setSlideDir] = useState("right");
+
+  const handlePageTab = (tab) => {
+    if (tab === pageTab) return;
+    setSlideDir(tab === "complaints" ? "left" : "right");
+    setPageTab(tab);
+  };
 
   // ── API data state ────────────────────────────────────────────────
   const [incidents, setIncidents] = useState([]);
@@ -420,15 +433,26 @@ const AdminIncidentReports = () => {
         getAllComplaints(),
       ]);
       const incArray = Array.isArray(incData) ? incData : incData.data || [];
-      const compArray = Array.isArray(compData) ? compData : compData.data || [];
+      const compArray = Array.isArray(compData)
+        ? compData
+        : compData.data || [];
       console.log("[DEBUG] Raw complaint data sample:", compArray[0]);
-      console.log("[DEBUG] Raw complaint fields:", compArray[0] ? Object.keys(compArray[0]) : "no data");
+      console.log(
+        "[DEBUG] Raw complaint fields:",
+        compArray[0] ? Object.keys(compArray[0]) : "no data",
+      );
       console.log("[DEBUG] Raw incident data sample:", incArray[0]);
       setIncidents(incArray.map(normalizeIncident));
       const normalizedComplaints = compArray.map(normalizeComplaint);
-      console.log("[DEBUG] Normalized complaint sample:", normalizedComplaints[0]);
+      console.log(
+        "[DEBUG] Normalized complaint sample:",
+        normalizedComplaints[0],
+      );
       console.log("[DEBUG] Complaint count:", normalizedComplaints.length);
-      console.log("[DEBUG] Complaints with valid coords:", normalizedComplaints.filter(c => c.lat && c.lng).length);
+      console.log(
+        "[DEBUG] Complaints with valid coords:",
+        normalizedComplaints.filter((c) => c.lat && c.lng).length,
+      );
       setComplaints(normalizedComplaints);
     } catch (err) {
       console.error("Failed to fetch reports:", err);
@@ -485,7 +509,8 @@ const AdminIncidentReports = () => {
   useEffect(() => {
     if (!showKebab) return;
     const handler = (e) => {
-      if (kebabRef.current && !kebabRef.current.contains(e.target)) setShowKebab(false);
+      if (kebabRef.current && !kebabRef.current.contains(e.target))
+        setShowKebab(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -498,6 +523,26 @@ const AdminIncidentReports = () => {
   const [endDate, setEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const ROWS_PER_PAGE = 10;
+
+  // ── Status tab sliding indicator ────────────────────────────────────
+  const statusTabsContainerRef = useRef(null);
+  const [tabIndicator, setTabIndicator] = useState({ left: 0, top: 0, width: 0, height: 0, initialized: false });
+
+  useLayoutEffect(() => {
+    const container = statusTabsContainerRef.current;
+    if (!container) return;
+    const activeBtn = container.querySelector(`[data-tab="${activeTab}"]`);
+    if (!activeBtn) return;
+    const cRect = container.getBoundingClientRect();
+    const bRect = activeBtn.getBoundingClientRect();
+    setTabIndicator({
+      left: bRect.left - cRect.left,
+      top: bRect.top - cRect.top,
+      width: bRect.width,
+      height: bRect.height,
+      initialized: true,
+    });
+  }, [activeTab, pageTab]);
 
   // ── Map legend filter state ────────────────────────────────────────
   const [mapType, setMapType] = useState("All Types");
@@ -517,7 +562,8 @@ const AdminIncidentReports = () => {
 
   // ── Dynamic data source based on page tab ─────────────────────────
   const dataSource = pageTab === "incidents" ? incidents : complaints;
-  const typeOptions = pageTab === "incidents" ? INCIDENT_TYPES : COMPLAINT_TYPES;
+  const typeOptions =
+    pageTab === "incidents" ? INCIDENT_TYPES : COMPLAINT_TYPES;
 
   // Reset filters when switching page tabs
   useEffect(() => {
@@ -576,7 +622,14 @@ const AdminIncidentReports = () => {
 
   // ── Status tab counts ──────────────────────────────────────────────
   const statusCounts = useMemo(() => {
-    const counts = { all: 0, pending: 0, dispatched: 0, active: 0, resolved: 0, rejected: 0 };
+    const counts = {
+      all: 0,
+      pending: 0,
+      dispatched: 0,
+      active: 0,
+      resolved: 0,
+      rejected: 0,
+    };
     dataSource.forEach((inc) => {
       counts.all++;
       if (counts[inc.status] !== undefined) counts[inc.status]++;
@@ -589,7 +642,9 @@ const AdminIncidentReports = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* ── Page Header ─────────────────────────────────────────── */}
         <div className="flex items-center gap-4 mb-6">
-          <div className={`w-12 h-12 ${isDark ? "bg-slate-700" : "bg-gray-200"} rounded-lg flex items-center justify-center flex-shrink-0`}>
+          <div
+            className={`w-12 h-12 ${isDark ? "bg-slate-700" : "bg-gray-200"} rounded-lg flex items-center justify-center flex-shrink-0`}
+          >
             <svg
               className={`w-7 h-7 ${isDark ? "text-slate-300" : "text-gray-600"}`}
               fill="none"
@@ -621,32 +676,77 @@ const AdminIncidentReports = () => {
               </svg>
             </button>
             {showKebab && (
-              <div className={`absolute right-0 top-full mt-1 w-52 rounded-xl shadow-lg border z-20 overflow-hidden ${isDark ? "bg-slate-700 border-slate-600" : "bg-white border-gray-200"}`}>
+              <div
+                className={`absolute right-0 top-full mt-1 w-52 rounded-xl shadow-lg border z-20 overflow-hidden ${isDark ? "bg-slate-700 border-slate-600" : "bg-white border-gray-200"}`}
+              >
                 <button
-                  onClick={() => { setShowKebab(false); setShowInsights(true); }}
+                  onClick={() => {
+                    setShowKebab(false);
+                    setShowInsights(true);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-kumbh font-semibold transition-colors ${isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"}`}
                 >
-                  <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  <svg
+                    className="w-4 h-4 text-amber-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                    />
                   </svg>
                   Generate Insights
                 </button>
-                <div className={`border-t ${isDark ? "border-slate-600" : "border-gray-100"}`} />
+                <div
+                  className={`border-t ${isDark ? "border-slate-600" : "border-gray-100"}`}
+                />
                 <button
-                  onClick={() => { setShowKebab(false); setUpdateFormType("incident"); setShowUpdateForm(true); }}
+                  onClick={() => {
+                    setShowKebab(false);
+                    setUpdateFormType("incident");
+                    setShowUpdateForm(true);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-kumbh font-semibold transition-colors ${isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"}`}
                 >
-                  <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  <svg
+                    className="w-4 h-4 text-blue-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
                   </svg>
                   Update Incident Form
                 </button>
                 <button
-                  onClick={() => { setShowKebab(false); setUpdateFormType("complaint"); setShowUpdateForm(true); }}
+                  onClick={() => {
+                    setShowKebab(false);
+                    setUpdateFormType("complaint");
+                    setShowUpdateForm(true);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-kumbh font-semibold transition-colors ${isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"}`}
                 >
-                  <svg className="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  <svg
+                    className="w-4 h-4 text-rose-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
                   </svg>
                   Update Complaint Form
                 </button>
@@ -656,568 +756,689 @@ const AdminIncidentReports = () => {
         </div>
 
         {/* ── Page Tabs (Incidents / Complaints) ─────────────────── */}
-        <div className="flex gap-3 mb-6">
+        <div
+          className={`relative flex p-1 rounded-2xl mb-6 w-fit ${isDark ? "bg-slate-800" : "bg-gray-100"}`}
+        >
+          {/* Sliding pill indicator */}
+          <div
+            className={`absolute top-1 bottom-1 rounded-xl shadow-md transition-all duration-300 ease-in-out ${isDark ? "bg-slate-600" : "bg-gray-800"}`}
+            style={{
+              left:
+                pageTab === "incidents" ? "0.25rem" : "calc(50% + 0.125rem)",
+              right:
+                pageTab === "incidents" ? "calc(50% + 0.125rem)" : "0.25rem",
+            }}
+          />
           <button
-            onClick={() => setPageTab("incidents")}
-            className={`px-6 py-2.5 rounded-xl text-sm font-bold font-kumbh uppercase tracking-wide transition-all duration-200 ${
+            onClick={() => handlePageTab("incidents")}
+            className={`relative z-10 flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold font-kumbh uppercase tracking-wide transition-colors duration-200 ${
               pageTab === "incidents"
-                ? isDark
-                  ? "bg-green-600 text-white shadow-md"
-                  : "bg-gray-800 text-white shadow-md"
+                ? "text-white"
                 : isDark
-                  ? "bg-slate-700 text-slate-300 border border-slate-600 hover:bg-slate-600"
-                  : "bg-white text-gray-500 border border-gray-300 hover:bg-gray-100"
+                  ? "text-slate-400 hover:text-slate-200"
+                  : "text-gray-500 hover:text-gray-700"
             }`}
           >
+            <svg
+              className="w-4 h-4 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
             Incidents
           </button>
           <button
-            onClick={() => setPageTab("complaints")}
-            className={`px-6 py-2.5 rounded-xl text-sm font-bold font-kumbh uppercase tracking-wide transition-all duration-200 ${
+            onClick={() => handlePageTab("complaints")}
+            className={`relative z-10 flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold font-kumbh uppercase tracking-wide transition-colors duration-200 ${
               pageTab === "complaints"
-                ? isDark
-                  ? "bg-green-600 text-white shadow-md"
-                  : "bg-gray-800 text-white shadow-md"
+                ? "text-white"
                 : isDark
-                  ? "bg-slate-700 text-slate-300 border border-slate-600 hover:bg-slate-600"
-                  : "bg-white text-gray-500 border border-gray-300 hover:bg-gray-100"
+                  ? "text-slate-400 hover:text-slate-200"
+                  : "text-gray-500 hover:text-gray-700"
             }`}
           >
+            <svg
+              className="w-4 h-4 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
             Complaints
           </button>
         </div>
 
-        {/* ── Table Section ────────────────────────────────────────── */}
+        {/* ── Animated content area ────────────────────────────────── */}
         <div
-          className={`${t.cardBg} border ${t.cardBorder} rounded-2xl shadow-lg mb-8 overflow-hidden`}
+          key={pageTab}
+          style={{
+            animation: `${slideDir === "left" ? "slideInFromRight" : "slideInFromLeft"} 0.3s ease-out`,
+          }}
         >
-          {/* Status Tabs */}
-          <div className="flex flex-wrap gap-2 px-5 pt-5">
-            {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={`px-4 py-2 rounded-lg text-xs font-bold font-kumbh uppercase tracking-wide border-2 transition-all ${
-                  activeTab === key
-                    ? `${cfg.tabBg} ${cfg.tabText} ${cfg.tabBorder} shadow-md`
-                    : isDark
-                      ? "bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-200 hover:text-slate-800 hover:border-slate-400"
-                      : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
-                }`}
-              >
-                {cfg.label} ({statusCounts[key]})
-              </button>
-            ))}
-          </div>
+          <div
+            className={`${t.cardBg} border ${t.cardBorder} rounded-2xl shadow-lg mb-8 overflow-hidden`}
+          >
+            {/* Status Tabs */}
+            <div ref={statusTabsContainerRef} className="relative flex flex-wrap gap-2 px-5 pt-5">
+              {/* Sliding indicator */}
+              <div
+                className={`absolute rounded-lg pointer-events-none shadow-md ${STATUS_CONFIG[activeTab]?.tabBg || "bg-gray-700"}`}
+                style={{
+                  left: tabIndicator.left,
+                  top: tabIndicator.top,
+                  width: tabIndicator.width,
+                  height: tabIndicator.height,
+                  opacity: tabIndicator.initialized ? 1 : 0,
+                  transition: tabIndicator.initialized
+                    ? "left 0.28s ease, top 0.28s ease, width 0.28s ease, background-color 0.28s ease"
+                    : "none",
+                }}
+              />
+              {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+                <button
+                  key={key}
+                  data-tab={key}
+                  onClick={() => setActiveTab(key)}
+                  className={`relative z-10 px-4 py-2 rounded-lg text-xs font-bold font-kumbh uppercase tracking-wide border-2 transition-colors duration-200 ${
+                    activeTab === key
+                      ? `text-white border-transparent`
+                      : isDark
+                        ? "bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-200 hover:text-slate-800 hover:border-slate-400"
+                        : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  {cfg.label} ({statusCounts[key]})
+                </button>
+              ))}
+            </div>
 
-          {/* Search + Date Filters */}
-          <div className="px-5 pt-5 pb-3">
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1">
-                <label
-                  className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
-                >
-                  Search
-                </label>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by type, details, reporter..."
-                  className={`w-full px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
-                />
-              </div>
-              <div>
-                <label
-                  className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
-                >
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
-                />
-              </div>
-              <div>
-                <label
-                  className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
-                >
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
-                />
+            {/* Search + Date Filters */}
+            <div className="px-5 pt-5 pb-3">
+              <div className="flex flex-col lg:flex-row gap-4">
+                <div className="flex-1">
+                  <label
+                    className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
+                  >
+                    Search
+                  </label>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by type, details, reporter..."
+                    className={`w-full px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
+                  />
+                </div>
+                <div>
+                  <label
+                    className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
+                  >
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
+                  />
+                </div>
+                <div>
+                  <label
+                    className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
+                  >
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto px-5 pb-5">
-            <table className="w-full text-sm font-kumbh table-fixed">
-              <thead>
-                <tr className={`${isDark ? "bg-slate-700 border-y border-slate-600" : "bg-gray-100 border-y border-gray-200"}`}>
-                  <th className={`text-center px-3 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[6%]`}>
-                    #
-                  </th>
-                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[24%]`}>
-                    {pageTab === "incidents" ? "Type of Incident" : "Type of Complaint"}
-                  </th>
-                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[18%]`}>
-                    Date
-                  </th>
-                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[28%]`}>
-                    Reported By
-                  </th>
-                  <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[24%]`}>
-                    {pageTab === "incidents" ? "Incident ID" : "Complaint ID"}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedData.length > 0 ? (
-                  paginatedData.map((inc, index) => (
-                    <TableRow
-                      key={inc.id}
-                      inc={inc}
-                      index={index}
-                      currentPage={currentPage}
-                      ROWS_PER_PAGE={ROWS_PER_PAGE}
-                      onClick={setSelectedIncident}
-                      t={t}
-                      isDark={isDark}
-                    />
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className={`px-4 py-8 text-center ${t.subtleText}`}
+            {/* Table */}
+            <div className="overflow-x-auto px-5 pb-5">
+              <table className="w-full text-sm font-kumbh table-fixed">
+                <thead>
+                  <tr
+                    className={`${isDark ? "bg-slate-700 border-y border-slate-600" : "bg-gray-100 border-y border-gray-200"}`}
+                  >
+                    <th
+                      className={`text-center px-3 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[6%]`}
                     >
-                      {loading ? "Loading reports..." : "No reports found for the selected filters."}
-                    </td>
+                      #
+                    </th>
+                    <th
+                      className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[24%]`}
+                    >
+                      {pageTab === "incidents"
+                        ? "Type of Incident"
+                        : "Type of Complaint"}
+                    </th>
+                    <th
+                      className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[18%]`}
+                    >
+                      Date
+                    </th>
+                    <th
+                      className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[28%]`}
+                    >
+                      Reported By
+                    </th>
+                    <th
+                      className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[24%]`}
+                    >
+                      {pageTab === "incidents" ? "Incident ID" : "Complaint ID"}
+                    </th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className={`flex items-center justify-between pt-4 border-t ${isDark ? "border-slate-700" : "border-gray-100"} mt-2`}>
-                <p className={`text-xs ${t.subtleText} font-kumbh`}>
-                  Showing {(currentPage - 1) * ROWS_PER_PAGE + 1}–
-                  {Math.min(currentPage * ROWS_PER_PAGE, filteredTableData.length)}{" "}
-                  of {filteredTableData.length} results
-                </p>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-kumbh font-semibold transition-colors ${
-                      currentPage === 1
-                        ? isDark ? "text-slate-600 cursor-not-allowed" : "text-gray-300 cursor-not-allowed"
-                        : isDark ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800" : "text-gray-600 hover:bg-gray-100"
-                    }`}
-                  >
-                    Prev
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (page) => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`w-8 h-8 rounded-lg text-xs font-kumbh font-bold transition-colors ${
-                          page === currentPage
-                            ? "bg-green-700 text-white"
-                            : isDark ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800" : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                </thead>
+                <tbody>
+                  {paginatedData.length > 0 ? (
+                    paginatedData.map((inc, index) => (
+                      <TableRow
+                        key={inc.id}
+                        inc={inc}
+                        index={index}
+                        currentPage={currentPage}
+                        ROWS_PER_PAGE={ROWS_PER_PAGE}
+                        onClick={setSelectedIncident}
+                        t={t}
+                        isDark={isDark}
+                      />
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className={`px-4 py-8 text-center ${t.subtleText}`}
                       >
-                        {page}
-                      </button>
-                    ),
+                        {loading
+                          ? "Loading reports..."
+                          : "No reports found for the selected filters."}
+                      </td>
+                    </tr>
                   )}
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-kumbh font-semibold transition-colors ${
-                      currentPage === totalPages
-                        ? isDark ? "text-slate-600 cursor-not-allowed" : "text-gray-300 cursor-not-allowed"
-                        : isDark ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800" : "text-gray-600 hover:bg-gray-100"
-                    }`}
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+                </tbody>
+              </table>
 
-        {/* ── Map Section ──────────────────────────────────────────── */}
-        <div
-          className={`${t.cardBg} border ${t.cardBorder} rounded-2xl shadow-lg overflow-hidden`}
-        >
-          <div className="flex flex-col lg:flex-row">
-            {/* Map Legend / Filters */}
-            <div className={`lg:w-[300px] flex-shrink-0 p-5 border-b lg:border-b-0 lg:border-r ${isDark ? "border-slate-700" : "border-gray-200"} relative z-10`}>
-              {/* Legend header */}
-              <div className="flex items-center gap-2 mb-5">
-                <svg
-                  className={`w-6 h-6 ${isDark ? "text-green-400" : "text-green-600"}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                  />
-                </svg>
-                <h3 className={`text-lg font-bold ${isDark ? "text-green-400" : "text-green-700"} font-spartan uppercase`}>
-                  Map Legend
-                </h3>
-              </div>
-
-              {/* Type Filter */}
-              <div className="mb-4">
-                <label className={`block text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} mb-1.5 font-kumbh uppercase`}>
-                  {pageTab === "incidents" ? "Type of Incident" : "Type of Complaint"}
-                </label>
-                <select
-                  value={mapType}
-                  onChange={(e) => setMapType(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg border ${t.cardBorder} ${isDark ? "bg-slate-700 text-slate-200" : "bg-white text-gray-800"} text-sm font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500`}
-                >
-                  {typeOptions.map((type) => (
-                    <option key={type} value={type}>
-                      {type.toUpperCase()}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Date Range */}
-              <div className="mb-6">
-                <label className={`block text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} mb-1.5 font-kumbh uppercase`}>
-                  Date
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="date"
-                    value={mapStartDate}
-                    onChange={(e) => setMapStartDate(e.target.value)}
-                    className={`flex-1 px-2 py-2 rounded-lg border ${t.cardBorder} ${isDark ? "bg-slate-700 text-slate-200" : "bg-white text-gray-800"} text-xs font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500`}
-                  />
-                  <span className={`text-xs ${t.subtleText}`}>-</span>
-                  <input
-                    type="date"
-                    value={mapEndDate}
-                    onChange={(e) => setMapEndDate(e.target.value)}
-                    className={`flex-1 px-2 py-2 rounded-lg border ${t.cardBorder} ${isDark ? "bg-slate-700 text-slate-200" : "bg-white text-gray-800"} text-xs font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500`}
-                  />
-                </div>
-              </div>
-
-              {/* Status toggles */}
-              <div className="space-y-3">
-                {/* Resolved */}
+              {/* Pagination */}
+              {totalPages > 1 && (
                 <div
-                  className={`p-3 rounded-lg border ${visibleStatuses.resolved ? (isDark ? "border-green-500 bg-green-900/30" : "border-green-300 bg-green-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
+                  className={`flex items-center justify-between pt-4 border-t ${isDark ? "border-slate-700" : "border-gray-100"} mt-2`}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-green-500" />
-                      <span className={`text-sm font-bold ${isDark ? "text-green-400" : "text-green-700"} font-kumbh`}>
-                        RESOLVED
-                      </span>
-                    </div>
+                  <p className={`text-xs ${t.subtleText} font-kumbh`}>
+                    Showing {(currentPage - 1) * ROWS_PER_PAGE + 1}–
+                    {Math.min(
+                      currentPage * ROWS_PER_PAGE,
+                      filteredTableData.length,
+                    )}{" "}
+                    of {filteredTableData.length} results
+                  </p>
+                  <div className="flex items-center gap-1">
                     <button
-                      onClick={() => toggleStatus("resolved")}
-                      className={`${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-600" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-kumbh font-semibold transition-colors ${
+                        currentPage === 1
+                          ? isDark
+                            ? "text-slate-600 cursor-not-allowed"
+                            : "text-gray-300 cursor-not-allowed"
+                          : isDark
+                            ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800"
+                            : "text-gray-600 hover:bg-gray-100"
+                      }`}
                     >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        {visibleStatuses.resolved ? (
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        ) : (
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18"
-                          />
-                        )}
-                      </svg>
+                      Prev
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-8 h-8 rounded-lg text-xs font-kumbh font-bold transition-colors ${
+                            page === currentPage
+                              ? "bg-green-700 text-white"
+                              : isDark
+                                ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800"
+                                : "text-gray-600 hover:bg-gray-100"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ),
+                    )}
+                    <button
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      disabled={currentPage === totalPages}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-kumbh font-semibold transition-colors ${
+                        currentPage === totalPages
+                          ? isDark
+                            ? "text-slate-600 cursor-not-allowed"
+                            : "text-gray-300 cursor-not-allowed"
+                          : isDark
+                            ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800"
+                            : "text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      Next
                     </button>
                   </div>
-                  <p className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}>
-                    Issue has been cleared or fixed
-                  </p>
                 </div>
-
-                {/* Dispatched */}
-                <div
-                  className={`p-3 rounded-lg border ${visibleStatuses.dispatched ? (isDark ? "border-amber-500 bg-amber-900/30" : "border-amber-300 bg-amber-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-amber-400" />
-                      <span className={`text-sm font-bold ${isDark ? "text-amber-400" : "text-amber-700"} font-kumbh`}>
-                        DISPATCHED
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => toggleStatus("dispatched")}
-                      className={`${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-600" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        {visibleStatuses.dispatched ? (
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        ) : (
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18"
-                          />
-                        )}
-                      </svg>
-                    </button>
-                  </div>
-                  <p className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}>
-                    Barangay officials dispatched on the site to check.
-                  </p>
-                </div>
-
-                {/* In-Progress / Active */}
-                <div
-                  className={`p-3 rounded-lg border ${visibleStatuses.active ? (isDark ? "border-blue-500 bg-blue-900/30" : "border-blue-300 bg-blue-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-blue-600" />
-                      <span className={`text-sm font-bold ${isDark ? "text-blue-400" : "text-blue-700"} font-kumbh`}>
-                        IN-PROGRESS
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => toggleStatus("active")}
-                      className={`${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-600" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        {visibleStatuses.active ? (
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        ) : (
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18"
-                          />
-                        )}
-                      </svg>
-                    </button>
-                  </div>
-                  <p className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}>
-                    Barangay officials or maintenance teams are on-site.
-                  </p>
-                </div>
-
-                {/* New / Active (pending) */}
-                <div
-                  className={`p-3 rounded-lg border ${visibleStatuses.pending ? (isDark ? "border-red-500 bg-red-900/30" : "border-red-300 bg-red-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-red-500" />
-                      <span className={`text-sm font-bold ${isDark ? "text-red-400" : "text-red-700"} font-kumbh`}>
-                        NEW/ACTIVE
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => toggleStatus("pending")}
-                      className={`${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-600" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        {visibleStatuses.pending ? (
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        ) : (
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18"
-                          />
-                        )}
-                      </svg>
-                    </button>
-                  </div>
-                  <p className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}>
-                    Issue recently reported and awaiting dispatch.
-                  </p>
-                </div>
-
-                {/* Rejected */}
-                <div
-                  className={`p-3 rounded-lg border ${visibleStatuses.rejected ? (isDark ? "border-gray-500 bg-gray-700/50" : "border-gray-300 bg-gray-50") : (isDark ? "border-slate-600" : "border-gray-200")} transition-colors`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-gray-500" />
-                      <span className={`text-sm font-bold ${isDark ? "text-gray-300" : "text-gray-700"} font-kumbh`}>
-                        REJECTED
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => toggleStatus("rejected")}
-                      className={`${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-600" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        {visibleStatuses.rejected ? (
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        ) : (
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18"
-                          />
-                        )}
-                      </svg>
-                    </button>
-                  </div>
-                  <p className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}>
-                    Report was rejected or deemed invalid.
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
+          </div>
 
-            {/* Map */}
-            <div className="flex-1 min-h-[450px]">
-              <MapContainer
-                center={MAP_CENTER}
-                zoom={15}
-                minZoom={13}
-                maxZoom={18}
-                scrollWheelZoom={true}
-                style={{ height: "100%", width: "100%", minHeight: "450px" }}
-                className="z-0"
+          {/* ── Map Section ──────────────────────────────────────────── */}
+          <div
+            className={`${t.cardBg} border ${t.cardBorder} rounded-2xl shadow-lg overflow-hidden`}
+          >
+            <div className="flex flex-col lg:flex-row">
+              {/* Map Legend / Filters */}
+              <div
+                className={`lg:w-[300px] flex-shrink-0 p-5 border-b lg:border-b-0 lg:border-r ${isDark ? "border-slate-700" : "border-gray-200"} relative z-10`}
               >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
+                {/* Legend header */}
+                <div className="flex items-center gap-2 mb-5">
+                  <svg
+                    className={`w-6 h-6 ${isDark ? "text-green-400" : "text-green-600"}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                    />
+                  </svg>
+                  <h3
+                    className={`text-lg font-bold ${isDark ? "text-green-400" : "text-green-700"} font-spartan uppercase`}
+                  >
+                    Map Legend
+                  </h3>
+                </div>
 
-                {/* Barangay boundary */}
-                <Polygon
-                  positions={BARANGAY_BOUNDARY}
-                  pathOptions={{
-                    color: "#1d4ed8",
-                    fillColor: "#3b82f6",
-                    fillOpacity: 0.05,
-                    weight: 3,
-                    dashArray: "8 4",
-                  }}
-                />
+                {/* Type Filter */}
+                <div className="mb-4">
+                  <label
+                    className={`block text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} mb-1.5 font-kumbh uppercase`}
+                  >
+                    {pageTab === "incidents"
+                      ? "Type of Incident"
+                      : "Type of Complaint"}
+                  </label>
+                  <select
+                    value={mapType}
+                    onChange={(e) => setMapType(e.target.value)}
+                    className={`w-full px-3 py-2 rounded-lg border ${t.cardBorder} ${isDark ? "bg-slate-700 text-slate-200" : "bg-white text-gray-800"} text-sm font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500`}
+                  >
+                    {typeOptions.map((type) => (
+                      <option key={type} value={type}>
+                        {type.toUpperCase()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                {/* Incident/Complaint markers */}
-                {filteredMapData.map((inc) => {
-                  const cfg = STATUS_CONFIG[inc.status] || STATUS_CONFIG.pending;
-                  return (
-                    <CircleMarker
-                      key={inc.id}
-                      center={[inc.lat, inc.lng]}
-                      radius={8}
-                      pathOptions={{
-                        color: "#fff",
-                        fillColor: cfg.color,
-                        fillOpacity: 1,
-                        weight: 2,
-                      }}
+                {/* Date Range */}
+                <div className="mb-6">
+                  <label
+                    className={`block text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} mb-1.5 font-kumbh uppercase`}
+                  >
+                    Date
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={mapStartDate}
+                      onChange={(e) => setMapStartDate(e.target.value)}
+                      className={`flex-1 px-2 py-2 rounded-lg border ${t.cardBorder} ${isDark ? "bg-slate-700 text-slate-200" : "bg-white text-gray-800"} text-xs font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500`}
+                    />
+                    <span className={`text-xs ${t.subtleText}`}>-</span>
+                    <input
+                      type="date"
+                      value={mapEndDate}
+                      onChange={(e) => setMapEndDate(e.target.value)}
+                      className={`flex-1 px-2 py-2 rounded-lg border ${t.cardBorder} ${isDark ? "bg-slate-700 text-slate-200" : "bg-white text-gray-800"} text-xs font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500`}
+                    />
+                  </div>
+                </div>
+
+                {/* Status toggles */}
+                <div className="space-y-3">
+                  {/* Resolved */}
+                  <div
+                    className={`p-3 rounded-lg border ${visibleStatuses.resolved ? (isDark ? "border-green-500 bg-green-900/30" : "border-green-300 bg-green-50") : isDark ? "border-slate-600" : "border-gray-200"} transition-colors`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded-full bg-green-500" />
+                        <span
+                          className={`text-sm font-bold ${isDark ? "text-green-400" : "text-green-700"} font-kumbh`}
+                        >
+                          RESOLVED
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => toggleStatus("resolved")}
+                        className={`${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-600" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          {visibleStatuses.resolved ? (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          ) : (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18"
+                            />
+                          )}
+                        </svg>
+                      </button>
+                    </div>
+                    <p
+                      className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}
                     >
-                      <Popup>
-                        <div className="font-kumbh" style={{ minWidth: 180 }}>
-                          <p className="font-bold text-sm mb-1">{inc.type}</p>
-                          <p className="text-xs text-gray-600 mb-1">
-                            {inc.details}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {inc.date} &middot;{" "}
-                            <span
-                              className="font-semibold"
-                              style={{ color: cfg.color }}
-                            >
-                              {cfg.label}
-                            </span>
-                          </p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            ID: {inc.id}
-                          </p>
-                        </div>
-                      </Popup>
-                    </CircleMarker>
-                  );
-                })}
-              </MapContainer>
+                      Issue has been cleared or fixed
+                    </p>
+                  </div>
+
+                  {/* Dispatched */}
+                  <div
+                    className={`p-3 rounded-lg border ${visibleStatuses.dispatched ? (isDark ? "border-amber-500 bg-amber-900/30" : "border-amber-300 bg-amber-50") : isDark ? "border-slate-600" : "border-gray-200"} transition-colors`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded-full bg-amber-400" />
+                        <span
+                          className={`text-sm font-bold ${isDark ? "text-amber-400" : "text-amber-700"} font-kumbh`}
+                        >
+                          DISPATCHED
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => toggleStatus("dispatched")}
+                        className={`${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-600" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          {visibleStatuses.dispatched ? (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          ) : (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18"
+                            />
+                          )}
+                        </svg>
+                      </button>
+                    </div>
+                    <p
+                      className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}
+                    >
+                      Barangay officials dispatched on the site to check.
+                    </p>
+                  </div>
+
+                  {/* In-Progress / Active */}
+                  <div
+                    className={`p-3 rounded-lg border ${visibleStatuses.active ? (isDark ? "border-blue-500 bg-blue-900/30" : "border-blue-300 bg-blue-50") : isDark ? "border-slate-600" : "border-gray-200"} transition-colors`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded-full bg-blue-600" />
+                        <span
+                          className={`text-sm font-bold ${isDark ? "text-blue-400" : "text-blue-700"} font-kumbh`}
+                        >
+                          IN-PROGRESS
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => toggleStatus("active")}
+                        className={`${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-600" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          {visibleStatuses.active ? (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          ) : (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18"
+                            />
+                          )}
+                        </svg>
+                      </button>
+                    </div>
+                    <p
+                      className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}
+                    >
+                      Barangay officials or maintenance teams are on-site.
+                    </p>
+                  </div>
+
+                  {/* New / Active (pending) */}
+                  <div
+                    className={`p-3 rounded-lg border ${visibleStatuses.pending ? (isDark ? "border-red-500 bg-red-900/30" : "border-red-300 bg-red-50") : isDark ? "border-slate-600" : "border-gray-200"} transition-colors`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded-full bg-red-500" />
+                        <span
+                          className={`text-sm font-bold ${isDark ? "text-red-400" : "text-red-700"} font-kumbh`}
+                        >
+                          NEW/ACTIVE
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => toggleStatus("pending")}
+                        className={`${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-600" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          {visibleStatuses.pending ? (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          ) : (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18"
+                            />
+                          )}
+                        </svg>
+                      </button>
+                    </div>
+                    <p
+                      className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}
+                    >
+                      Issue recently reported and awaiting dispatch.
+                    </p>
+                  </div>
+
+                  {/* Rejected */}
+                  <div
+                    className={`p-3 rounded-lg border ${visibleStatuses.rejected ? (isDark ? "border-gray-500 bg-gray-700/50" : "border-gray-300 bg-gray-50") : isDark ? "border-slate-600" : "border-gray-200"} transition-colors`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded-full bg-gray-500" />
+                        <span
+                          className={`text-sm font-bold ${isDark ? "text-gray-300" : "text-gray-700"} font-kumbh`}
+                        >
+                          REJECTED
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => toggleStatus("rejected")}
+                        className={`${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-600" : "text-gray-400 hover:text-gray-600"} rounded p-0.5 transition-colors`}
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          {visibleStatuses.rejected ? (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          ) : (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18"
+                            />
+                          )}
+                        </svg>
+                      </button>
+                    </div>
+                    <p
+                      className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}
+                    >
+                      Report was rejected or deemed invalid.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Map */}
+              <div className="flex-1 min-h-[450px]">
+                <MapContainer
+                  center={MAP_CENTER}
+                  zoom={15}
+                  minZoom={13}
+                  maxZoom={18}
+                  scrollWheelZoom={true}
+                  style={{ height: "100%", width: "100%", minHeight: "450px" }}
+                  className="z-0"
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+
+                  {/* Barangay boundary */}
+                  <Polygon
+                    positions={BARANGAY_BOUNDARY}
+                    pathOptions={{
+                      color: "#1d4ed8",
+                      fillColor: "#3b82f6",
+                      fillOpacity: 0.05,
+                      weight: 3,
+                      dashArray: "8 4",
+                    }}
+                  />
+
+                  {/* Incident/Complaint markers */}
+                  {filteredMapData.map((inc) => {
+                    const cfg =
+                      STATUS_CONFIG[inc.status] || STATUS_CONFIG.pending;
+                    return (
+                      <CircleMarker
+                        key={inc.id}
+                        center={[inc.lat, inc.lng]}
+                        radius={8}
+                        pathOptions={{
+                          color: "#fff",
+                          fillColor: cfg.color,
+                          fillOpacity: 1,
+                          weight: 2,
+                        }}
+                      >
+                        <Popup>
+                          <div className="font-kumbh" style={{ minWidth: 180 }}>
+                            <p className="font-bold text-sm mb-1">{inc.type}</p>
+                            <p className="text-xs text-gray-600 mb-1">
+                              {inc.details}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {inc.date} &middot;{" "}
+                              <span
+                                className="font-semibold"
+                                style={{ color: cfg.color }}
+                              >
+                                {cfg.label}
+                              </span>
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              ID: {inc.id}
+                            </p>
+                          </div>
+                        </Popup>
+                      </CircleMarker>
+                    );
+                  })}
+                </MapContainer>
+              </div>
             </div>
           </div>
         </div>
+        {/* end animated content area */}
       </div>
 
       {/* ── Incident Detail Modal ───────────────────────────────────── */}
@@ -1227,19 +1448,27 @@ const AdminIncidentReports = () => {
         reportType={pageTab}
         onStatusUpdate={(id, newStatus) => {
           const updateList = (list, setList) =>
-            setList(list.map((item) =>
-              item.id === String(id) ? { ...item, status: newStatus } : item
-            ));
+            setList(
+              list.map((item) =>
+                item.id === String(id) ? { ...item, status: newStatus } : item,
+              ),
+            );
           if (pageTab === "incidents") updateList(incidents, setIncidents);
           else updateList(complaints, setComplaints);
           setSelectedIncident((prev) =>
-            prev && prev.id === String(id) ? { ...prev, status: newStatus } : prev
+            prev && prev.id === String(id)
+              ? { ...prev, status: newStatus }
+              : prev,
           );
         }}
       />
 
       {/* Real-time toasts */}
-      <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
+      <Toast
+        toasts={toasts}
+        onRemove={removeToast}
+        currentTheme={currentTheme}
+      />
 
       {/* Insights Modal */}
       <InsightsModal
@@ -1257,6 +1486,17 @@ const AdminIncidentReports = () => {
         formType={updateFormType}
         currentTheme={currentTheme}
       />
+
+      <style>{`
+        @keyframes slideInFromRight {
+          from { opacity: 0; transform: translateX(40px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInFromLeft {
+          from { opacity: 0; transform: translateX(-40px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+      `}</style>
     </div>
   );
 };

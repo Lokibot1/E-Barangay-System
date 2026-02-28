@@ -1,10 +1,222 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { incidentService } from "../../services/sub-system-3/incidentService";
 import {
   updateComplaint,
   getComplaintUpdates,
   addComplaintUpdate,
 } from "../../services/sub-system-3/complaintService";
+
+// ─── Media helpers ────────────────────────────────────────────────────────────
+const isVideoUrl = (url) => {
+  if (!url) return false;
+  const ext = url.split("?")[0].split(".").pop().toLowerCase();
+  return ["mp4", "mov", "webm", "avi", "mkv", "ogg", "m4v"].includes(ext);
+};
+
+const VideoPlayer = ({ url }) => {
+  const videoRef = useRef(null);
+  const containerRef = useRef(null);
+  const hideTimer = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+
+  const fmt = (s) => {
+    if (isNaN(s) || s < 0) return "0:00";
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const resetHideTimer = () => {
+    setShowControls(true);
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => {
+      if (videoRef.current && !videoRef.current.paused) setShowControls(false);
+    }, 3000);
+  };
+
+  useEffect(() => () => { if (hideTimer.current) clearTimeout(hideTimer.current); }, []);
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play().catch(console.error);
+    } else {
+      videoRef.current.pause();
+      setShowControls(true);
+    }
+    resetHideTimer();
+  };
+
+  const handleSeek = (e) => {
+    if (!videoRef.current || !duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    videoRef.current.currentTime = pos * duration;
+    setCurrentTime(pos * duration);
+    resetHideTimer();
+  };
+
+  const handleVolumeChange = (e) => {
+    const vol = parseFloat(e.target.value);
+    setVolume(vol);
+    if (videoRef.current) videoRef.current.volume = vol;
+    setIsMuted(vol === 0);
+  };
+
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+    if (isMuted) {
+      const v = volume > 0 ? volume : 0.5;
+      videoRef.current.volume = v;
+      setVolume(v);
+      setIsMuted(false);
+    } else {
+      videoRef.current.volume = 0;
+      setIsMuted(true);
+    }
+  };
+
+  const toggleFullscreen = () => {
+    if (!containerRef.current) return;
+    if (!document.fullscreenElement) {
+      containerRef.current.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  };
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative bg-black rounded-xl overflow-hidden w-full select-none"
+      onMouseMove={resetHideTimer}
+      onMouseEnter={resetHideTimer}
+    >
+      <video
+        ref={videoRef}
+        src={url}
+        className="w-full max-h-[65vh] object-contain"
+        preload="metadata"
+        playsInline
+        onPlay={() => { setIsPlaying(true); setIsLoading(false); }}
+        onPause={() => { setIsPlaying(false); setIsLoading(false); }}
+        onWaiting={() => setIsLoading(true)}
+        onCanPlay={() => setIsLoading(false)}
+        onCanPlayThrough={() => setIsLoading(false)}
+        onTimeUpdate={() => setCurrentTime(videoRef.current?.currentTime || 0)}
+        onLoadedMetadata={() => setDuration(videoRef.current?.duration || 0)}
+        onEnded={() => { setIsPlaying(false); setShowControls(true); }}
+        onClick={togglePlay}
+      />
+
+      {/* Loading spinner */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
+          <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+        </div>
+      )}
+
+      {/* Center play overlay when paused */}
+      {!isPlaying && !isLoading && (
+        <div
+          className="absolute inset-0 flex items-center justify-center cursor-pointer"
+          onClick={togglePlay}
+        >
+          <div className="bg-black/50 rounded-full p-4 hover:bg-black/70 transition-colors">
+            <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        </div>
+      )}
+
+      {/* Controls bar */}
+      <div
+        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-4 pb-4 pt-10 transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+      >
+        {/* Progress bar */}
+        <div
+          className="w-full h-1.5 bg-white/30 rounded-full cursor-pointer mb-3 relative group/progress"
+          onClick={handleSeek}
+        >
+          <div
+            className="absolute top-0 left-0 h-full bg-white rounded-full transition-all"
+            style={{ width: `${progress}%` }}
+          />
+          <div
+            className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-white rounded-full -translate-x-1/2 shadow opacity-0 group-hover/progress:opacity-100 transition-opacity"
+            style={{ left: `${progress}%` }}
+          />
+        </div>
+
+        <div className="flex items-center gap-3 text-white">
+          {/* Play/Pause */}
+          <button onClick={togglePlay} className="hover:text-white/70 transition-colors flex-shrink-0">
+            {isPlaying ? (
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            )}
+          </button>
+
+          {/* Time */}
+          <span className="text-xs font-mono text-white/80 flex-shrink-0 tabular-nums">
+            {fmt(currentTime)} / {fmt(duration)}
+          </span>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Volume */}
+          <button onClick={toggleMute} className="hover:text-white/70 transition-colors flex-shrink-0">
+            {isMuted || volume === 0 ? (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+              </svg>
+            ) : volume < 0.5 ? (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+              </svg>
+            )}
+          </button>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.02"
+            value={isMuted ? 0 : volume}
+            onChange={handleVolumeChange}
+            className="w-16 h-1 accent-white cursor-pointer"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {/* Fullscreen */}
+          <button onClick={toggleFullscreen} className="hover:text-white/70 transition-colors flex-shrink-0">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const STATUS_CONFIG = {
   all: { label: "ALL", color: "#374151" },
@@ -36,6 +248,9 @@ const AdminReportDetailsModal = ({
   const [isUpdating, setIsUpdating] = useState(false);
   const [localUpdates, setLocalUpdates] = useState([]);
   const [loadingUpdates, setLoadingUpdates] = useState(false);
+  const [mediaViewerOpen, setMediaViewerOpen] = useState(false);
+  const [mediaViewerUrl, setMediaViewerUrl] = useState("");
+  const [mediaViewerType, setMediaViewerType] = useState("image");
 
   // Reset all state and load updates when a different incident is opened
   useEffect(() => {
@@ -86,6 +301,8 @@ const AdminReportDetailsModal = ({
     currentStatus === "active" ||
     currentStatus === "resolved" ||
     dispatchedTeam;
+  const isTerminal =
+    currentStatus === "resolved" || currentStatus === "rejected";
   const statusCfg = STATUS_CONFIG[currentStatus];
 
   // Call the correct update API based on report type
@@ -109,6 +326,12 @@ const AdminReportDetailsModal = ({
     } catch (err) {
       console.error("Failed to persist update entry:", err);
     }
+  };
+
+  const openMediaViewer = (url) => {
+    setMediaViewerUrl(url);
+    setMediaViewerType(isVideoUrl(url) ? "video" : "image");
+    setMediaViewerOpen(true);
   };
 
   // Handle status change via API
@@ -205,16 +428,54 @@ const AdminReportDetailsModal = ({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
-    >
+    <>
+      {/* ── Media Viewer Overlay ── */}
+      {mediaViewerOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setMediaViewerOpen(false)}
+        >
+          {/* Close button */}
+          <button
+            className="absolute top-4 right-4 z-10 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-colors"
+            onClick={() => setMediaViewerOpen(false)}
+            aria-label="Close viewer"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <div
+            className="relative w-full max-w-3xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {mediaViewerType === "video" ? (
+              <VideoPlayer url={mediaViewerUrl} />
+            ) : (
+              <div className="flex items-center justify-center">
+                <img
+                  src={mediaViewerUrl}
+                  alt="Evidence full view"
+                  className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Main Modal ── */}
       <div
-        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      >
+      <div
+        className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="bg-gray-800 text-white px-5 py-3 flex items-center justify-between flex-shrink-0">
+        <div className="bg-gray-800 dark:bg-gray-950 text-white px-5 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
@@ -258,14 +519,42 @@ const AdminReportDetailsModal = ({
 
         {/* Scrollable Body */}
         <div className="flex-1 overflow-y-auto">
-          {/* Photo Section */}
+          {/* Photo / Video Section */}
           {incident.photos && incident.photos.length > 0 ? (
             <div className="relative bg-gray-900">
-              <img
-                src={incident.photos[photoIndex]}
-                alt={`Evidence ${photoIndex + 1}`}
-                className="w-full h-56 object-cover"
-              />
+              {isVideoUrl(incident.photos[photoIndex]) ? (
+                /* Video thumbnail with play overlay */
+                <div
+                  className="relative w-full h-56 bg-gray-900 flex items-center justify-center cursor-pointer group"
+                  onClick={() => openMediaViewer(incident.photos[photoIndex])}
+                >
+                  <video
+                    src={incident.photos[photoIndex]}
+                    className="w-full h-56 object-cover opacity-60"
+                    muted
+                    preload="metadata"
+                    onLoadedMetadata={(e) => { e.currentTarget.currentTime = 0.1; }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="bg-black/50 rounded-full p-4 group-hover:bg-black/70 transition-colors">
+                      <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <span className="absolute bottom-3 left-3 bg-black/60 text-white text-xs font-bold px-2 py-1 rounded font-kumbh uppercase tracking-wide">
+                    VIDEO — Click to play
+                  </span>
+                </div>
+              ) : (
+                /* Clickable image */
+                <img
+                  src={incident.photos[photoIndex]}
+                  alt={`Evidence ${photoIndex + 1}`}
+                  className="w-full h-56 object-cover cursor-zoom-in hover:opacity-90 transition-opacity"
+                  onClick={() => openMediaViewer(incident.photos[photoIndex])}
+                />
+              )}
               {/* View Edit History badge */}
               <button className="absolute top-3 right-3 bg-gray-800/80 text-white text-xs font-bold px-3 py-1.5 rounded font-kumbh uppercase hover:bg-gray-800 transition-colors">
                 View Edit History
@@ -333,8 +622,8 @@ const AdminReportDetailsModal = ({
               )}
             </div>
           ) : (
-            <div className="bg-gray-100 h-40 flex items-center justify-center">
-              <div className="text-center text-gray-400">
+            <div className="bg-gray-100 dark:bg-gray-800 h-40 flex items-center justify-center">
+              <div className="text-center text-gray-400 dark:text-gray-500">
                 <svg
                   className="w-10 h-10 mx-auto mb-2"
                   fill="none"
@@ -355,7 +644,7 @@ const AdminReportDetailsModal = ({
 
           {/* Type + Status Badge */}
           <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-            <h3 className="text-base font-bold text-gray-900 font-spartan uppercase">
+            <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 font-spartan uppercase">
               {incident.type}
             </h3>
             <span
@@ -367,7 +656,7 @@ const AdminReportDetailsModal = ({
           </div>
 
           {/* Last Updated */}
-          <div className="px-5 pb-3 flex items-center gap-2 text-xs text-gray-500 font-kumbh">
+          <div className="px-5 pb-3 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 font-kumbh">
             <svg
               className="w-4 h-4"
               fill="none"
@@ -410,8 +699,8 @@ const AdminReportDetailsModal = ({
                 !showDispatch &&
                 !showNotes &&
                 !showUpdate
-                  ? "bg-gray-700 text-white"
-                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  ? "bg-gray-700 dark:bg-gray-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
               }`}
             >
               Details
@@ -428,8 +717,8 @@ const AdminReportDetailsModal = ({
                 !showDispatch &&
                 !showNotes &&
                 !showUpdate
-                  ? "bg-gray-700 text-white"
-                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  ? "bg-gray-700 dark:bg-gray-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
               }`}
             >
               Updates
@@ -441,18 +730,18 @@ const AdminReportDetailsModal = ({
             {showUpdate ? (
               /* ── Add Update Form ── */
               <div className="px-5 pb-5 animate-fadeIn">
-                <h3 className="text-sm font-bold text-gray-800 font-kumbh uppercase text-center mb-3">
+                <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 font-kumbh uppercase text-center mb-3">
                   Add Update
                 </h3>
-                <hr className="border-gray-300 mb-4" />
+                <hr className="border-gray-300 dark:border-gray-700 mb-4" />
                 <textarea
                   value={updateText}
                   onChange={(e) => setUpdateText(e.target.value)}
                   placeholder="Enter update details here ..."
                   rows={6}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm font-kumbh text-gray-700 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-kumbh text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200"
                 />
-                <button className="w-full mt-3 py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh hover:bg-gray-100 active:scale-[0.98] transition-all duration-200">
+                <button className="w-full mt-3 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200">
                   + Add Attachment
                 </button>
                 <button
@@ -466,16 +755,16 @@ const AdminReportDetailsModal = ({
             ) : showNotes ? (
               /* ── Add Notes Form ── */
               <div className="px-5 pb-5 animate-fadeIn">
-                <h3 className="text-sm font-bold text-gray-800 font-kumbh uppercase text-center mb-3">
+                <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 font-kumbh uppercase text-center mb-3">
                   Add Notes
                 </h3>
-                <hr className="border-gray-300 mb-4" />
+                <hr className="border-gray-300 dark:border-gray-700 mb-4" />
                 <textarea
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value)}
                   placeholder="Enter your notes here ..."
                   rows={6}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm font-kumbh text-gray-700 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-kumbh text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200"
                 />
                 <div className="flex gap-3 mt-3">
                   <button
@@ -483,14 +772,14 @@ const AdminReportDetailsModal = ({
                       setShowNotes(false);
                       setNoteText("");
                     }}
-                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh uppercase hover:bg-gray-100 active:scale-[0.98] transition-all duration-200"
+                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh uppercase hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveNotes}
                     disabled={isUpdating}
-                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh uppercase hover:bg-gray-100 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
+                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh uppercase hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
                   >
                     {isUpdating ? "Saving..." : "Save"}
                   </button>
@@ -499,10 +788,10 @@ const AdminReportDetailsModal = ({
             ) : showDispatch ? (
               /* ── Dispatch Team Form ── */
               <div className="px-5 pb-5 animate-fadeIn">
-                <h3 className="text-sm font-bold text-gray-800 font-kumbh uppercase text-center mb-3">
+                <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 font-kumbh uppercase text-center mb-3">
                   Dispatch Team
                 </h3>
-                <hr className="border-gray-300 mb-4" />
+                <hr className="border-gray-300 dark:border-gray-700 mb-4" />
                 <div className="space-y-3">
                   {officials.map((official, idx) => (
                     <input
@@ -515,7 +804,7 @@ const AdminReportDetailsModal = ({
                         setOfficials(updated);
                       }}
                       placeholder="+ Add Official"
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm font-kumbh text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all duration-200"
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-kumbh text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all duration-200"
                     />
                   ))}
                 </div>
@@ -526,7 +815,7 @@ const AdminReportDetailsModal = ({
                       if (!dispatchedTeam) setOfficials(["", "", ""]);
                       else setOfficials([...dispatchedTeam.officials]);
                     }}
-                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh uppercase hover:bg-gray-100 active:scale-[0.98] transition-all duration-200"
+                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh uppercase hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200"
                   >
                     Cancel
                   </button>
@@ -546,7 +835,7 @@ const AdminReportDetailsModal = ({
                 <div className="space-y-2">
                   <div className="flex items-start gap-2">
                     <svg
-                      className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0"
+                      className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -564,14 +853,14 @@ const AdminReportDetailsModal = ({
                         d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                       />
                     </svg>
-                    <p className="text-xs text-gray-700 font-kumbh uppercase leading-relaxed">
+                    <p className="text-xs text-gray-700 dark:text-gray-300 font-kumbh uppercase leading-relaxed">
                       {incident.address}
                     </p>
                   </div>
                   {incident.plusCode && (
                     <div className="flex items-start gap-2">
                       <svg
-                        className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0"
+                        className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -583,7 +872,7 @@ const AdminReportDetailsModal = ({
                           d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
                         />
                       </svg>
-                      <p className="text-xs text-gray-500 font-kumbh uppercase">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-kumbh uppercase">
                         {incident.plusCode}
                       </p>
                     </div>
@@ -592,13 +881,13 @@ const AdminReportDetailsModal = ({
 
                 {/* Reported By */}
                 <div>
-                  <p className="text-xs font-bold text-gray-900 font-kumbh uppercase mb-1.5">
+                  <p className="text-xs font-bold text-gray-900 dark:text-gray-100 font-kumbh uppercase mb-1.5">
                     {reportType === "complaints" ? "Complaint" : "Incident"}{" "}
                     Reported By:
                   </p>
                   <div className="flex items-center gap-2">
                     <svg
-                      className="w-4 h-4 text-gray-400"
+                      className="w-4 h-4 text-gray-400 dark:text-gray-500"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -610,7 +899,7 @@ const AdminReportDetailsModal = ({
                         d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                       />
                     </svg>
-                    <p className="text-xs text-gray-700 font-kumbh">
+                    <p className="text-xs text-gray-700 dark:text-gray-300 font-kumbh">
                       {incident.reportedBy}
                     </p>
                   </div>
@@ -618,11 +907,11 @@ const AdminReportDetailsModal = ({
 
                 {/* Description */}
                 <div>
-                  <p className="text-xs font-bold text-gray-900 font-kumbh uppercase mb-1.5">
+                  <p className="text-xs font-bold text-gray-900 dark:text-gray-100 font-kumbh uppercase mb-1.5">
                     {reportType === "complaints" ? "Complaint" : "Incident"}{" "}
                     Description:
                   </p>
-                  <p className="text-xs text-gray-600 font-kumbh leading-relaxed">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 font-kumbh leading-relaxed">
                     {incident.description}
                   </p>
                 </div>
@@ -637,13 +926,13 @@ const AdminReportDetailsModal = ({
                       setShowDispatch(true);
                       setShowNotes(false);
                     }}
-                    className="border-t border-gray-200 pt-4 cursor-pointer hover:bg-gray-50 -mx-5 px-5 pb-1 transition-colors duration-200"
+                    className="border-t border-gray-200 dark:border-gray-700 pt-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60 -mx-5 px-5 pb-1 transition-colors duration-200"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-bold text-gray-900 font-kumbh uppercase">
+                      <p className="text-xs font-bold text-gray-900 dark:text-gray-100 font-kumbh uppercase">
                         Dispatch Team
                       </p>
-                      <span className="text-xs text-gray-500 font-kumbh">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 font-kumbh">
                         {new Date(dispatchedTeam.timestamp).toLocaleDateString(
                           "en-US",
                           {
@@ -666,7 +955,7 @@ const AdminReportDetailsModal = ({
                       {dispatchedTeam.officials.map((name, idx) => (
                         <p
                           key={idx}
-                          className="text-xs text-gray-700 font-kumbh uppercase"
+                          className="text-xs text-gray-700 dark:text-gray-300 font-kumbh uppercase"
                         >
                           {name}
                         </p>
@@ -679,7 +968,7 @@ const AdminReportDetailsModal = ({
               /* ── Updates Tab ── */
               <div className="px-5 pb-5 animate-fadeIn">
                 {loadingUpdates ? (
-                  <div className="text-center py-8 text-gray-400">
+                  <div className="text-center py-8 text-gray-400 dark:text-gray-500">
                     <svg
                       className="w-6 h-6 mx-auto mb-2 animate-spin"
                       fill="none"
@@ -696,7 +985,7 @@ const AdminReportDetailsModal = ({
                     <p className="text-xs font-kumbh">Loading updates...</p>
                   </div>
                 ) : localUpdates.length > 0 ? (
-                  <div className="space-y-0 divide-y divide-gray-200">
+                  <div className="space-y-0 divide-y divide-gray-200 dark:divide-gray-700">
                     {localUpdates.map((update, idx) => {
                       const dt = new Date(update.timestamp);
                       const dateStr = dt.toLocaleDateString("en-US", {
@@ -719,7 +1008,7 @@ const AdminReportDetailsModal = ({
                         <div key={idx} className="py-3">
                           {/* Date row */}
                           <div className="flex items-center justify-between mb-1.5">
-                            <div className="flex items-center gap-2 text-xs text-gray-500 font-kumbh">
+                            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 font-kumbh">
                               <svg
                                 className="w-4 h-4 flex-shrink-0"
                                 fill="none"
@@ -738,30 +1027,30 @@ const AdminReportDetailsModal = ({
                               </span>
                             </div>
                             {update.type === "note" && (
-                              <span className="text-xs font-bold text-gray-700 font-kumbh uppercase px-2 py-0.5 bg-gray-100 rounded">
+                              <span className="text-xs font-bold text-gray-700 dark:text-gray-300 font-kumbh uppercase px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
                                 Note
                               </span>
                             )}
                             {update.type === "dispatch" && (
-                              <span className="text-xs font-bold text-amber-700 font-kumbh uppercase px-2 py-0.5 bg-amber-50 rounded">
+                              <span className="text-xs font-bold text-amber-700 dark:text-amber-400 font-kumbh uppercase px-2 py-0.5 bg-amber-50 dark:bg-amber-900/30 rounded">
                                 Dispatch
                               </span>
                             )}
                             {update.type === "status" && (
-                              <span className="text-xs font-bold text-blue-700 font-kumbh uppercase px-2 py-0.5 bg-blue-50 rounded">
+                              <span className="text-xs font-bold text-blue-700 dark:text-blue-400 font-kumbh uppercase px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 rounded">
                                 Status
                               </span>
                             )}
                           </div>
                           {/* Description */}
-                          <p className="text-xs text-gray-700 font-kumbh uppercase leading-relaxed">
+                          <p className="text-xs text-gray-700 dark:text-gray-300 font-kumbh uppercase leading-relaxed">
                             {update.text}
                           </p>
                           {/* Author */}
                           {update.author && (
                             <div className="flex items-center gap-1.5 mt-2">
-                              <span className="w-1.5 h-1.5 rounded-full bg-gray-700 flex-shrink-0" />
-                              <p className="text-xs text-gray-600 font-kumbh uppercase">
+                              <span className="w-1.5 h-1.5 rounded-full bg-gray-700 dark:bg-gray-400 flex-shrink-0" />
+                              <p className="text-xs text-gray-600 dark:text-gray-400 font-kumbh uppercase">
                                 {update.author}
                               </p>
                             </div>
@@ -771,7 +1060,7 @@ const AdminReportDetailsModal = ({
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-400">
+                  <div className="text-center py-8 text-gray-400 dark:text-gray-500">
                     <svg
                       className="w-10 h-10 mx-auto mb-2"
                       fill="none"
@@ -794,7 +1083,7 @@ const AdminReportDetailsModal = ({
         </div>
 
         {/* Modal Footer / Actions */}
-        <div className="flex-shrink-0 border-t border-gray-200 px-5 py-4 space-y-3 bg-gray-50">
+        <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 px-5 py-4 space-y-3 bg-gray-50 dark:bg-gray-800">
           {/* Add Notes – hidden when notes form is open */}
           {!showNotes && (
             <button
@@ -804,7 +1093,7 @@ const AdminReportDetailsModal = ({
                 setShowUpdate(false);
               }}
               disabled={isUpdating}
-              className="w-full py-2.5 rounded-lg border-2 border-gray-300 text-sm font-semibold text-gray-500 font-kumbh hover:bg-gray-100 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
+              className="w-full py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
             >
               + Add Notes
             </button>
@@ -819,8 +1108,8 @@ const AdminReportDetailsModal = ({
                   setShowNotes(false);
                   setShowDispatch(false);
                 }}
-                disabled={isUpdating}
-                className="w-full py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
+                disabled={isUpdating || isTerminal}
+                className="w-full py-2.5 rounded-lg bg-blue-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-blue-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 + Add Update
               </button>
@@ -828,15 +1117,15 @@ const AdminReportDetailsModal = ({
               {/* Bottom row – post-dispatch */}
               <button
                 onClick={() => handleStatusChange("active")}
-                disabled={isUpdating || currentStatus === "active"}
-                className="w-full py-2.5 rounded-lg bg-gray-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-gray-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isUpdating || currentStatus === "active" || isTerminal}
+                className="w-full py-2.5 rounded-lg bg-amber-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-amber-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isUpdating ? "Updating..." : "Mark as In-Progress"}
               </button>
               <button
                 onClick={() => handleStatusChange("resolved")}
                 disabled={isUpdating || currentStatus === "resolved"}
-                className="w-full py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-red-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isUpdating ? "Updating..." : "Mark as Resolved"}
               </button>
@@ -851,8 +1140,8 @@ const AdminReportDetailsModal = ({
                     setShowNotes(false);
                     setShowUpdate(false);
                   }}
-                  disabled={isUpdating}
-                  className="w-full py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
+                  disabled={isUpdating || isTerminal}
+                  className="w-full py-2.5 rounded-lg bg-amber-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-amber-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Dispatch Team
                 </button>
@@ -862,15 +1151,15 @@ const AdminReportDetailsModal = ({
               <div className="flex gap-3">
                 <button
                   onClick={() => handleStatusChange("rejected")}
-                  disabled={isUpdating}
-                  className="flex-1 py-2.5 rounded-lg bg-gray-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-gray-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
+                  disabled={isUpdating || isTerminal}
+                  className="flex-1 py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-red-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isUpdating ? "Updating..." : "Mark as Invalid"}
                 </button>
                 <button
                   onClick={() => handleStatusChange("resolved")}
-                  disabled={isUpdating}
-                  className="flex-1 py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-red-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
+                  disabled={isUpdating || isTerminal}
+                  className="flex-1 py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isUpdating ? "Updating..." : "Mark as Resolved"}
                 </button>
@@ -880,6 +1169,7 @@ const AdminReportDetailsModal = ({
         </div>
       </div>
     </div>
+    </>
   );
 };
 

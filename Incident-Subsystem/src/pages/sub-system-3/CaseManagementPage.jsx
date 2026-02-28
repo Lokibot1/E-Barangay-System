@@ -145,6 +145,39 @@ const CaseManagementPage = () => {
     fetchData();
   }, [fetchData]);
 
+  // ── Bidirectional scroll reveal ────────────────────────────────────────────
+  const containerRef = useRef(null);
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let lastScrollY = container.scrollTop;
+    const handleScroll = () => {
+      const currentScrollY = container.scrollTop;
+      container.classList.toggle("scrolling-up", currentScrollY < lastScrollY);
+      lastScrollY = currentScrollY;
+    };
+    container.addEventListener("scroll", handleScroll, { passive: true });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          entry.target.classList.toggle("visible", entry.isIntersecting);
+        });
+      },
+      { root: container, threshold: 0.1 }
+    );
+
+    container
+      .querySelectorAll(".sr-elem, .sr-elem-left, .sr-elem-scale")
+      .forEach((el) => observer.observe(el));
+
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+      observer.disconnect();
+    };
+  }, []);
+
   // Auto-refresh when user receives status-change notifications
   const { eventVersion } = useUserRealTime();
   const prevEventVersionRef = useRef(0);
@@ -203,13 +236,13 @@ const CaseManagementPage = () => {
 
   return (
     <>
-      <div className="h-full flex flex-col overflow-y-auto">
+      <div ref={containerRef} className="h-full flex flex-col overflow-y-auto">
         {/* White Space */}
         <div className={`${t.pageBg} py-8 sm:py-10 text-center px-4`}>
           <h1
             className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${t.cardText} mb-2 sm:mb-3 font-spartan uppercase tracking-tight`}
           >
-            INCIDENT & COMPLAINT MANAGEMENT
+            CASE TRACKER
           </h1>
         </div>
 
@@ -244,8 +277,8 @@ const CaseManagementPage = () => {
                 className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}
               >
                 {activeTab === "complaints"
-                  ? "Complaint Management"
-                  : "Incident Management"}
+                  ? "Complaint Tracker"
+                  : "Incident Tracker"}
               </h2>
               <button
                 onClick={() => setShowMap(!showMap)}
@@ -298,7 +331,7 @@ const CaseManagementPage = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <div
-              className={`${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`}
+              className={`sr-elem ${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -334,7 +367,8 @@ const CaseManagementPage = () => {
             </div>
 
             <div
-              className={`${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`}
+              className={`sr-elem ${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`}
+              style={{ transitionDelay: "0.1s" }}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -370,7 +404,8 @@ const CaseManagementPage = () => {
             </div>
 
             <div
-              className={`${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all sm:col-span-2 lg:col-span-1`}
+              className={`sr-elem ${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all sm:col-span-2 lg:col-span-1`}
+              style={{ transitionDelay: "0.2s" }}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -407,7 +442,7 @@ const CaseManagementPage = () => {
           </div>
 
           {/* Filter Tabs */}
-          <div className="overflow-x-auto mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="sr-elem overflow-x-auto mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
             <div
               className={`inline-flex ${t.cardBg} rounded-lg p-1.5 shadow-md border ${t.cardBorder} min-w-full sm:min-w-0`}
             >
@@ -553,6 +588,32 @@ const CaseManagementPage = () => {
         report={selectedReport}
         currentTheme={currentTheme}
       />
+
+      <style>{`
+        .sr-elem {
+          opacity: 0;
+          transform: translateY(36px);
+          transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                      transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sr-elem.visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .scrolling-up .sr-elem:not(.visible) {
+          transform: translateY(-36px);
+        }
+        .sr-elem-left {
+          opacity: 0;
+          transform: translateX(-36px);
+          transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                      transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sr-elem-left.visible {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      `}</style>
     </>
   );
 };

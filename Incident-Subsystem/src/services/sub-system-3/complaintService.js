@@ -42,6 +42,17 @@ export const fileComplaint = async (formData) => {
     body.append("evidence", formData.attachments[0]);
   }
 
+  // Append custom field values as custom_fields[field_name]
+  if (formData.customFieldValues && typeof formData.customFieldValues === "object") {
+    Object.entries(formData.customFieldValues).forEach(([fieldName, value]) => {
+      if (Array.isArray(value)) {
+        value.forEach((v) => body.append(`custom_fields[${fieldName}][]`, v));
+      } else if (value !== null && value !== undefined && value !== "") {
+        body.append(`custom_fields[${fieldName}]`, value);
+      }
+    });
+  }
+
   const response = await fetch(`${API_BASE}/complaints`, {
     method: "POST",
     headers: {

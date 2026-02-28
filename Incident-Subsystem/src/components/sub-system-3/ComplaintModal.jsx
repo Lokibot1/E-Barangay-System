@@ -5,6 +5,7 @@ import ProgressIndicator from "../../components/sub-system-3/ProgressIndicator";
 import Toast from "../../components/shared/modals/Toast";
 import { fileComplaint } from "../../services/sub-system-3/complaintService";
 import { getUser } from "../../services/sub-system-3/loginService";
+import { getAllCustomFields } from "../../services/sub-system-3/customFieldService";
 import themeTokens from "../../Themetokens";
 import { useLanguage } from "../../context/LanguageContext";
 
@@ -40,11 +41,13 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
     desiredResolution: "",
     attachments: [],
     additionalNotes: "",
+    customFieldValues: {},
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const [customFieldDefs, setCustomFieldDefs] = useState([]);
 
   const totalSteps = 4;
 
@@ -57,13 +60,22 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
     setToasts((prev) => prev.filter((x) => x.id !== id));
   }, []);
 
-  // ─── Auto-fill complainant name on open ─────────────────────────────────────
+  // ─── Auto-fill complainant name + fetch custom fields on open ───────────────
   useEffect(() => {
     if (isOpen) {
       const name = getLoggedInName();
       if (name) {
         setFormData((prev) => ({ ...prev, complainantName: name }));
       }
+
+      getAllCustomFields()
+        .then((res) => {
+          const all = Array.isArray(res) ? res : res.data || [];
+          setCustomFieldDefs(all.filter((f) => f.field_for === "complaint" && f.is_active));
+        })
+        .catch((err) => {
+          console.error("Failed to fetch complaint custom fields:", err);
+        });
     }
   }, [isOpen]);
 
@@ -90,6 +102,7 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
           desiredResolution: "",
           attachments: [],
           additionalNotes: "",
+          customFieldValues: {},
         });
       }, 300);
     }
@@ -301,6 +314,7 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
               onInputChange={handleInputChange}
               errors={errors}
               currentTheme={currentTheme}
+              customFieldDefs={customFieldDefs}
             />
           </div>
 

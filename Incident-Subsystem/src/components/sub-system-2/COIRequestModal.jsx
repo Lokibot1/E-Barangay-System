@@ -98,7 +98,12 @@ const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
 
   const handleFieldChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const phoneFields = ["contactNumber", "emergencyContactNumber"];
+    if (phoneFields.includes(name)) {
+      setFormData((prev) => ({ ...prev, [name]: value.replace(/[^0-9]/g, "").slice(0, 11) }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const validateStep = () => {
@@ -106,6 +111,15 @@ const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
       case 1:
         if (!formData.fullName.trim() || !formData.contactNumber.trim() || !formData.dateOfBirth) {
           addToast({ type: "error", title: "Missing Required Fields", message: "Please fill in your full name, contact number, and date of birth.", duration: 4000 });
+          return false;
+        }
+        if (formData.contactNumber.length !== 11) {
+          addToast({
+            type: "error",
+            title: "Invalid Contact Number",
+            message: "Contact number must be exactly 11 digits.",
+            duration: 4000,
+          });
           return false;
         }
         return true;
