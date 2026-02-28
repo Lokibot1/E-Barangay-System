@@ -60,6 +60,7 @@ const InsightsModal = ({
   onClose,
   incidents,
   complaints,
+  appointments = [],
   context = "dashboard",
 }) => {
   const [currentTheme, setCurrentTheme] = useState(
@@ -76,8 +77,8 @@ const InsightsModal = ({
   const isDark = currentTheme === "dark";
 
   const insights = useMemo(
-    () => (isOpen ? generateInsights(incidents, complaints, { context }) : []),
-    [isOpen, incidents, complaints, context],
+    () => (isOpen ? generateInsights(incidents, complaints, appointments, { context }) : []),
+    [isOpen, incidents, complaints, appointments, context],
   );
 
   const generatedAt = useMemo(
@@ -182,7 +183,7 @@ const InsightsModal = ({
       align: "center",
     });
     doc.text(
-      `Data: ${incidents?.length || 0} incidents, ${complaints?.length || 0} complaints`,
+      `Data: ${incidents?.length || 0} incidents, ${complaints?.length || 0} complaints, ${appointments?.length || 0} appointments`,
       pageWidth / 2,
       51,
       { align: "center" },

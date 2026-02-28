@@ -4,6 +4,7 @@ import themeTokens from "../../../Themetokens";
 import { getUser } from "../../../services/sub-system-3/loginService";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
 import { getMyComplaints } from "../../../services/sub-system-3/complaintService";
+import { getAllAppointments } from "../../../services/sub-system-3/appointmentService";
 import InsightsModal from "../../../components/sub-system-3/InsightsModal";
 import VolumesFactors from "../../../components/sub-system-2/factors/VolumesFactors";
 import OperationsFactors from "../../../components/sub-system-2/factors/OperationsFactors";
@@ -183,6 +184,7 @@ const AdminLanding = () => {
   );
   const [incidents, setIncidents] = useState([]);
   const [complaints, setComplaints] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showKebab, setShowKebab] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
@@ -214,12 +216,14 @@ const AdminLanding = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [incData, compData] = await Promise.all([
+      const [incData, compData, apptData] = await Promise.all([
         incidentService.getMyIncidents(),
         getMyComplaints(),
+        getAllAppointments(),
       ]);
       setIncidents(Array.isArray(incData) ? incData : incData.data || []);
       setComplaints(Array.isArray(compData) ? compData : compData.data || []);
+      setAppointments(Array.isArray(apptData) ? apptData : apptData?.data || []);
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);
     } finally {
@@ -370,11 +374,67 @@ const AdminLanding = () => {
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   };
 
+  // Appointment status donut data
+  const getAppointmentStatusData = () => {
+    const counts = { pending: 0, approved: 0, rejected: 0 };
+    appointments.forEach((a) => {
+      const s = (a.status || "pending").toLowerCase();
+      if (s === "approved") counts.approved++;
+      else if (s === "rejected") counts.rejected++;
+      else counts.pending++;
+    });
+    const colorMap = { pending: "#F59E0B", approved: "#10B981", rejected: "#EF4444" };
+    return Object.entries(counts)
+      .filter(([, v]) => v > 0)
+      .map(([name, value]) => ({
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        value,
+        color: colorMap[name],
+      }));
+  };
+
+  // Monthly appointments bar data (last 6 months)
+  const getMonthlyAppointmentData = () => {
+    const months = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        month: d.toLocaleString("default", { month: "short" }),
+        year: d.getFullYear(),
+        monthNum: d.getMonth(),
+        Pending: 0,
+        Approved: 0,
+        Rejected: 0,
+      });
+    }
+    appointments.forEach((a) => {
+      const d = new Date(a.date || a.created_at);
+      const entry = months.find(
+        (m) => m.monthNum === d.getMonth() && m.year === d.getFullYear(),
+      );
+      if (!entry) return;
+      const s = (a.status || "pending").toLowerCase();
+      if (s === "approved") entry.Approved++;
+      else if (s === "rejected") entry.Rejected++;
+      else entry.Pending++;
+    });
+    return months.map(({ month, Pending, Approved, Rejected }) => ({
+      name: month,
+      Pending,
+      Approved,
+      Rejected,
+    }));
+  };
+
   // ── Stat card counts ──
   const totalIncidents = incidents.length;
   const totalComplaints = complaints.length;
   const totalPending = [...incidents, ...complaints].filter(
     (r) => normalizeStatus(r.status) === "ongoing",
+  ).length;
+  const pendingAppointments = appointments.filter(
+    (a) => (a.status || "pending").toLowerCase() === "pending",
   ).length;
 
   const stats = [
@@ -408,12 +468,24 @@ const AdminLanding = () => {
       arrowColor: "text-gray-400",
       link: "/admin/incidents",
     },
+    {
+      count: pendingAppointments,
+      label: "APPOINTMENTS",
+      sublabel: "PENDING",
+      borderColor: "border-amber-500",
+      circleBg: "bg-amber-100",
+      circleText: "text-amber-700",
+      arrowColor: "text-amber-500",
+      link: "/admin/appointments",
+    },
   ];
 
   const monthlyData = getMonthlyData();
   const statusData = getStatusData();
   const trendData = getTrendData();
   const categoryData = getCategoryData();
+  const appointmentStatusData = getAppointmentStatusData();
+  const monthlyAppointmentData = getMonthlyAppointmentData();
 
   const chartCardClass = `${t.cardBg} border ${isDark ? "border-slate-700" : "border-gray-200"} rounded-xl p-4 shadow-md`;
 
@@ -484,7 +556,7 @@ const AdminLanding = () => {
           </div>
 
           {/* Stat Cards - compact inline */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             {stats.map((stat, i) => (
               <div
                 key={i}
@@ -706,6 +778,79 @@ const AdminLanding = () => {
                   </div>
                 )}
               </ChartCard>
+
+              {/* Donut Chart — Appointment Status */}
+              <ChartCard title="Appointment Status" className={chartCardClass} isDark={isDark}>
+                {appointmentStatusData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={appointmentStatusData}
+                        cx="50%"
+                        cy="45%"
+                        innerRadius={50}
+                        outerRadius={85}
+                        paddingAngle={4}
+                        dataKey="value"
+                        label={({ name, percent }) =>
+                          `${name} ${(percent * 100).toFixed(0)}%`
+                        }
+                      >
+                        {appointmentStatusData.map((entry, index) => (
+                          <Cell key={index} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: isDark ? "#1F2937" : "#FFF",
+                          border: `1px solid ${isDark ? "#374151" : "#E5E7EB"}`,
+                          borderRadius: "8px",
+                          fontSize: "13px",
+                        }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: "12px" }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-[300px]">
+                    <p className={`text-sm ${t.subtleText} font-kumbh`}>
+                      No appointments yet
+                    </p>
+                  </div>
+                )}
+              </ChartCard>
+
+              {/* Bar Chart — Monthly Appointments */}
+              <ChartCard title="Monthly Appointments (Last 6 Months)" className={chartCardClass} isDark={isDark}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={monthlyAppointmentData}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={isDark ? "#374151" : "#E5E7EB"}
+                    />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 12, fill: isDark ? "#9CA3AF" : "#6B7280" }}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      tick={{ fontSize: 12, fill: isDark ? "#9CA3AF" : "#6B7280" }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: isDark ? "#1F2937" : "#FFF",
+                        border: `1px solid ${isDark ? "#374151" : "#E5E7EB"}`,
+                        borderRadius: "8px",
+                        fontSize: "13px",
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: "12px" }} />
+                    <Bar dataKey="Pending" fill="#F59E0B" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Approved" fill="#10B981" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Rejected" fill="#EF4444" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
             </div>
           )}
         </div>
@@ -764,6 +909,7 @@ const AdminLanding = () => {
         onClose={() => setShowInsights(false)}
         incidents={incidents}
         complaints={complaints}
+        appointments={appointments}
       />
     </div>
   );

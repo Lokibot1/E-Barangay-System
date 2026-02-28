@@ -101,13 +101,19 @@ const getAddressRecommendation = (location, dominantType, count) => {
 
 /**
  * Main insights generator
- * @param {Array} incidents - Array of incident objects (raw or normalized)
- * @param {Array} complaints - Array of complaint objects (raw or normalized)
- * @param {Object} [options] - Optional config
+ * @param {Array} incidents    - Array of incident objects (raw or normalized)
+ * @param {Array} complaints   - Array of complaint objects (raw or normalized)
+ * @param {Array} appointments - Array of appointment objects (optional)
+ * @param {Object} [options]   - Optional config
  * @param {string} [options.context] - "dashboard" (default) or "management"
  * @returns {Array} Array of insight objects sorted by severity
  */
-export const generateInsights = (incidents = [], complaints = [], options = {}) => {
+export const generateInsights = (incidents = [], complaints = [], appointments = [], options = {}) => {
+  // Back-compat: if 3rd arg is a plain object it's the old `options` position
+  if (appointments && !Array.isArray(appointments)) {
+    options = appointments;
+    appointments = [];
+  }
   const { context = "dashboard" } = options;
   const insights = [];
   let idCounter = 1;
@@ -374,16 +380,124 @@ export const generateInsights = (incidents = [], complaints = [], options = {}) 
     }
   }
 
+  // ── Appointment rules (only when data is available) ──────────────
+  if (Array.isArray(appointments) && appointments.length > 0) {
+    const apptPending  = appointments.filter((a) => (a.status || "").toLowerCase() === "pending");
+    const apptApproved = appointments.filter((a) => (a.status || "").toLowerCase() === "approved");
+    const apptRejected = appointments.filter((a) => (a.status || "").toLowerCase() === "rejected");
+    const apptTotal    = appointments.length;
+
+    // Rule A: Pending backlog
+    if (apptPending.length >= 3) {
+      insights.push({
+        id: idCounter++,
+        category: "Appointment Backlog",
+        severity: apptPending.length >= 8 ? SEVERITY.CRITICAL : SEVERITY.WARNING,
+        title: `${apptPending.length} appointment${apptPending.length > 1 ? "s" : ""} awaiting approval`,
+        description: `${apptPending.length} complaint hearing appointment${apptPending.length > 1 ? "s are" : " is"} currently pending and have not yet been confirmed by barangay staff.`,
+        recommendation: `Review and approve or reschedule pending appointments promptly to avoid delays in complaint resolution. Access the Appointments page to manage them.`,
+        data: { pending: apptPending.length, total: apptTotal },
+      });
+    }
+
+    // Rule B: Stale pending appointments (pending > 3 days based on created_at)
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    const threeDayStr = threeDaysAgo.toISOString().split("T")[0];
+    const staleAppts = apptPending.filter((a) => {
+      const d = (a.created_at || "").split("T")[0] || a.date || "";
+      return d && d < threeDayStr;
+    });
+    if (staleAppts.length > 0) {
+      insights.push({
+        id: idCounter++,
+        category: "Stale Appointments",
+        severity: staleAppts.length >= 4 ? SEVERITY.CRITICAL : SEVERITY.WARNING,
+        title: `${staleAppts.length} appointment request${staleAppts.length > 1 ? "s" : ""} pending over 3 days`,
+        description: `${staleAppts.length} appointment${staleAppts.length > 1 ? "s have" : " has"} been in pending status for more than 3 days without admin action, potentially delaying case hearings.`,
+        recommendation: `Escalate these long-pending appointment requests for immediate review. Delays in scheduling hearings may reduce resident trust in the barangay process.`,
+        data: { count: staleAppts.length },
+      });
+    }
+
+    // Rule C: Low approval rate
+    const processedAppts = apptApproved.length + apptRejected.length;
+    if (processedAppts >= 5) {
+      const approvalRate = apptApproved.length / processedAppts;
+      if (approvalRate < 0.5) {
+        insights.push({
+          id: idCounter++,
+          category: "Appointment Approval Rate",
+          severity: SEVERITY.WARNING,
+          title: `Low appointment approval rate (${Math.round(approvalRate * 100)}%)`,
+          description: `Only ${apptApproved.length} of ${processedAppts} processed appointments have been approved. A high rejection rate may indicate scheduling conflicts or capacity constraints.`,
+          recommendation: `Review reasons for appointment rejections. Consider expanding available hearing time slots or assigning additional mediators to address scheduling bottlenecks.`,
+          data: { approved: apptApproved.length, rejected: apptRejected.length, rate: approvalRate },
+        });
+      }
+    }
+
+    // Rule D: Upcoming approved appointments this week
+    const todayStr = new Date().toISOString().split("T")[0];
+    const sevenFwd  = new Date();
+    sevenFwd.setDate(sevenFwd.getDate() + 7);
+    const sevenFwdStr = sevenFwd.toISOString().split("T")[0];
+    const upcomingAppts = apptApproved.filter(
+      (a) => a.date && a.date >= todayStr && a.date <= sevenFwdStr,
+    );
+    if (upcomingAppts.length > 0) {
+      insights.push({
+        id: idCounter++,
+        category: "Upcoming Appointments",
+        severity: SEVERITY.INFO,
+        title: `${upcomingAppts.length} approved hearing${upcomingAppts.length > 1 ? "s" : ""} scheduled this week`,
+        description: `${upcomingAppts.length} complaint hearing${upcomingAppts.length > 1 ? "s are" : " is"} approved and scheduled within the next 7 days.`,
+        recommendation: `Verify all complainants have been notified of their hearing schedules. Prepare the necessary case files and ensure mediators are available for each session.`,
+        data: { count: upcomingAppts.length },
+      });
+    }
+
+    // Rule E: Appointment coverage vs complaint count
+    if (complaints.length >= 3) {
+      const coverage = apptTotal / complaints.length;
+      if (coverage < 0.5) {
+        insights.push({
+          id: idCounter++,
+          category: "Appointment Coverage",
+          severity: SEVERITY.WARNING,
+          title: `Only ${Math.round(coverage * 100)}% of complaints have an appointment`,
+          description: `${apptTotal} appointment${apptTotal !== 1 ? "s have" : " has"} been generated for ${complaints.length} total complaints. ${complaints.length - apptTotal} complaint${complaints.length - apptTotal !== 1 ? "s" : ""} may still lack a scheduled hearing.`,
+          recommendation: `Ensure every filed complaint has a corresponding hearing appointment. Review the complaint list and manually schedule appointments where the auto-generation may have failed.`,
+          data: { appointments: apptTotal, complaints: complaints.length, coverage },
+        });
+      }
+    }
+
+    // Appointment summary — always added when appointments exist
+    insights.push({
+      id: idCounter++,
+      category: "Appointments Overview",
+      severity: SEVERITY.INFO,
+      title: "Appointment Scheduling Summary",
+      description: `Total appointments: ${apptTotal} — Pending: ${apptPending.length}, Approved: ${apptApproved.length}, Rejected: ${apptRejected.length}.`,
+      recommendation: `Monitor the appointment queue regularly. Aim to keep the pending queue below 5 and maintain an approval rate above 70% for timely complaint resolution.`,
+      data: { total: apptTotal, pending: apptPending.length, approved: apptApproved.length, rejected: apptRejected.length },
+    });
+  }
+
   // ── Summary insight (always shown) ────────────────────────────────
   const topCategories = sortedTypes.slice(0, 3).map(([name, count]) => `${name} (${count})`);
+  const apptSummary = Array.isArray(appointments) && appointments.length > 0
+    ? ` Appointments: ${appointments.length} total (${appointments.filter((a) => (a.status || "").toLowerCase() === "pending").length} pending, ${appointments.filter((a) => (a.status || "").toLowerCase() === "approved").length} approved).`
+    : "";
   insights.push({
     id: idCounter++,
     category: "Overview",
     severity: SEVERITY.INFO,
     title: "Data Summary",
-    description: `Total: ${allReports.length} reports (${totalInc} incidents, ${totalComp} complaints). Status breakdown — Pending: ${statusCounts.pending}, Dispatched: ${statusCounts.dispatched}, Active: ${statusCounts.active}, Resolved: ${statusCounts.resolved}, Rejected: ${statusCounts.rejected}. Top categories: ${topCategories.join(", ") || "N/A"}.`,
+    description: `Total: ${allReports.length} reports (${totalInc} incidents, ${totalComp} complaints). Status breakdown — Pending: ${statusCounts.pending}, Dispatched: ${statusCounts.dispatched}, Active: ${statusCounts.active}, Resolved: ${statusCounts.resolved}, Rejected: ${statusCounts.rejected}. Top categories: ${topCategories.join(", ") || "N/A"}.${apptSummary}`,
     recommendation: `Continue monitoring dashboard trends regularly. Use these insights to prioritize resource allocation and improve response times across all categories.`,
-    data: { totalInc, totalComp, statusCounts, topCategories },
+    data: { totalInc, totalComp, statusCounts, topCategories, appointments: appointments.length },
   });
 
   // Sort: critical first, then warning, then info
