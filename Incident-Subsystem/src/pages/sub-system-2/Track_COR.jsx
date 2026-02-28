@@ -9,27 +9,27 @@ const Track_COR = () => {
 
   return (
     <div className={`${t.pageBg} min-h-full p-4 sm:p-6 lg:p-8`}>
-      <div className="max-w-7xl mx-auto text-left">
+      <div className="max-w-5xl mx-auto text-left">
         <p className={`font-kumbh text-lg ${t.subtleText} mb-2`}>
           Home › Request Submitted › <span className={`font-semibold ${t.cardText}`}>Track Request Status</span>
         </p>
-        <h1 className={`font-spartan text-5xl font-bold ${t.cardText} mb-4`}>Track Request Status</h1>
+        <h1 className={`font-spartan text-2xl font-bold ${t.cardText} mb-4`}>Track Request Status</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_0.9fr] gap-4">
           <div className="lg:col-span-2 space-y-4">
             <div className="flex rounded-2xl overflow-hidden border border-gray-300">
-              <input readOnly value="RES-XXXX-XX99-619" className={`flex-1 px-4 py-4 text-3xl font-kumbh ${t.inputBg} ${t.inputText} outline-none`} />
-              <button className="px-8 bg-green-500 text-white font-kumbh text-4xl">Track</button>
+              <input readOnly value="COR-2026-1099-619" className={`flex-1 px-3 py-2 text-lg font-kumbh ${t.inputBg} ${t.inputText} outline-none`} />
+              <button className="px-4 bg-green-500 text-white font-kumbh text-lg">Track</button>
             </div>
 
-            <div className={`${t.cardBg} border-4 border-blue-500 rounded-3xl p-6`}>
-              <div className="bg-lime-100 rounded-xl p-4 flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full border-4 border-black flex items-center justify-center">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`${t.cardBg} border-2 border-blue-500 rounded-3xl p-4`}>
+              <div className="bg-lime-100 rounded-xl p-3 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full border-2 border-black flex items-center justify-center">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l2.5 2.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h2 className="font-spartan text-4xl font-bold text-black">Status: Under Review</h2>
+                <h2 className="font-spartan text-xl font-bold text-black">Status: Under Review</h2>
               </div>
 
               <div className="mt-6">
@@ -57,18 +57,18 @@ const Track_COR = () => {
               </div>
 
               <div className={`border-t ${t.cardBorder} my-4`} />
-              <h3 className={`font-spartan text-4xl font-bold ${t.cardText} mb-2`}>Request Details</h3>
-              <div className={`font-kumbh text-2xl ${t.cardText} space-y-1`}>
-                <p><span className="font-bold">Reference Number:</span> XXXX-XX99-619</p>
-                <p><span className="font-bold">Date Submitted:</span> February 20, 2026</p>
+              <h3 className={`font-spartan text-xl font-bold ${t.cardText} mb-2`}>Request Details</h3>
+              <div className={`font-kumbh text-base ${t.cardText} space-y-1`}>
+                <p><span className="font-bold">Reference Number:</span> COR-2026-1099-619</p>
+                <p><span className="font-bold">Date Submitted:</span> February 25, 2026</p>
                 <p><span className="font-bold">Document Type:</span> Certificate of Residency</p>
-                <p><span className="font-bold">Applicants Name:</span> [Given Name]</p>
+                <p><span className="font-bold">Applicants Name:</span> Russel Veloria</p>
               </div>
 
               <div className="mt-6 flex justify-center">
                 <button
                   onClick={() => navigate("/sub-system-2")}
-                  className={`font-kumbh text-2xl px-12 py-2 rounded-full ${t.inputBg} ${t.cardText}`}
+                  className={`font-kumbh text-base px-8 py-2 rounded-full ${t.inputBg} ${t.cardText}`}
                 >
                   Return to Home
                 </button>
@@ -77,16 +77,16 @@ const Track_COR = () => {
           </div>
 
           <div className="space-y-4">
-            <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-6 text-left`}>
-              <h3 className={`font-spartan text-4xl font-bold ${t.cardText} mb-2`}>Service Information</h3>
-              <p className={`font-kumbh text-2xl ${t.cardText}`}>
+            <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-3 text-left`}>
+              <h3 className={`font-spartan text-xl font-bold ${t.cardText} mb-2`}>Service Information</h3>
+              <p className={`font-kumbh text-sm ${t.cardText}`}>
                 A Certificate of Residency request has been received and is currently under review.
               </p>
             </div>
-            <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-6 text-left`}>
-              <h3 className={`font-spartan text-3xl font-bold ${t.cardText} mb-2`}>Need Help?</h3>
-              <p className={`font-kumbh text-2xl ${t.cardText}`}>8-3663-198</p>
-              <p className={`font-kumbh text-2xl ${t.cardText} mt-2`}>teamtolentino@gmail.com</p>
+            <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-3 text-left`}>
+              <h3 className={`font-spartan text-lg font-bold ${t.cardText} mb-2`}>Need Help?</h3>
+              <p className={`font-kumbh text-sm ${t.cardText}`}>8-3663-198</p>
+              <p className={`font-kumbh text-sm ${t.cardText} mt-1`}>teamtolentino@gmail.com</p>
             </div>
           </div>
         </div>
@@ -97,7 +97,7 @@ const Track_COR = () => {
 
 const Step = ({ number, active = false, current = false }) => (
   <div
-    className={`w-20 h-20 rounded-full flex items-center justify-center font-spartan text-4xl font-bold ${
+    className={`w-10 h-10 rounded-full flex items-center justify-center font-spartan text-lg font-bold ${
       active ? "bg-green-500 text-white" : current ? "bg-lime-200 text-black" : "bg-gray-400 text-white"
     }`}
   >
@@ -107,8 +107,8 @@ const Step = ({ number, active = false, current = false }) => (
 
 const StepLabel = ({ title, sub }) => (
   <div>
-    <p className="font-kumbh text-xl font-bold text-black leading-tight">{title}</p>
-    <p className="font-kumbh text-lg text-gray-600 leading-tight mt-1">{sub}</p>
+    <p className="font-kumbh text-sm font-bold text-black leading-tight">{title}</p>
+    <p className="font-kumbh text-xs text-gray-600 leading-tight mt-1">{sub}</p>
   </div>
 );
 

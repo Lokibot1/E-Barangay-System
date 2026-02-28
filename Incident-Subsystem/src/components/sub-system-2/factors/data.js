@@ -1,9 +1,9 @@
 export const CHART_COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899"];
 
 export const reportShare = [
-  { name: "BID", value: 44 },
-  { name: "COR", value: 31 },
-  { name: "COI", value: 25 },
+  { name: "BID", value: 1 },
+  { name: "COR", value: 1 },
+  { name: "COI", value: 0 },
 ];
 
 export const monthlyDemandForecast = [

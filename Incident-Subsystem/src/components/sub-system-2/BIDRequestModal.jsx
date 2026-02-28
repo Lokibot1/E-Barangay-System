@@ -167,12 +167,11 @@ const BIDRequestModal = ({ isOpen, onClose, currentTheme }) => {
         }
 
         try {
-            const response = await fetch('http://localhost:8000/api/barangay-id-request', {
+            const response = await fetch('http://127.0.0.1:8000/api/barangay-id-request', {
                 method: 'POST',
                 body: data,
                 headers: {
-                    // Do NOT set 'Content-Type': 'multipart/form-data'
-                    // The browser will set it automatically with the correct 'boundary'
+                    
                     'Accept': 'application/json',
                 }
             });

@@ -155,17 +155,60 @@ const CORRequestModal = ({ isOpen, onClose, currentTheme }) => {
   const handleSubmit = () => {
     setShowPreview(true);
   };
+const handleConfirmSubmit = async () => {
+  setShowPreview(false);
 
-  const handleConfirmSubmit = () => {
-    setShowPreview(false);
+  const data = new FormData();
+
+  // ✅ Map camelCase → snake_case
+  data.append("full_name", formData.fullName);
+  data.append("contact_number", formData.contactNumber);
+  data.append("date_of_birth", formData.dateOfBirth);
+  data.append("civil_status", formData.civilStatus);
+  data.append("email_address", formData.emailAddress);
+  data.append("purok_zone", formData.purokZone);
+  data.append("street_address", formData.streetAddress);
+  data.append("purpose_of_request", formData.purposeOfRequest);
+  data.append("years_of_residency", formData.yearsOfResidency);
+
+  if (uploadedFile) {
+    data.append("file", uploadedFile); // ⚠️ Laravel expects "file"
+  }
+
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/cor-requests", {
+      method: "POST",
+      body: data,
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    const result = await response.json();
+    console.log(result);
+
+    if (!response.ok) {
+      throw new Error(result.message || "Validation failed");
+    }
+
     addToast({
       type: "success",
       title: "Request Submitted",
-      message: "Your Certificate of Residency request has been submitted successfully.",
+      message: "Your request was successfully submitted.",
       duration: 5000,
     });
+
     setShowSuccess(true);
-  };
+  } catch (error) {
+    console.error(error);
+    addToast({
+      type: "error",
+      title: "Submission Failed",
+      message: error.message,
+      duration: 5000,
+    });
+  }
+};
 
   const handleSuccessContinue = () => {
     setShowSuccess(false);
