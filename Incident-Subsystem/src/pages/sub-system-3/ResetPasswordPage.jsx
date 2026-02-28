@@ -165,7 +165,7 @@ const ResetPasswordPage = () => {
 
         <div className="mx-auto w-full max-w-5xl">
           <div
-            className={`rounded-[28px] sm:rounded-[40px] border shadow-2xl overflow-hidden backdrop-blur-2xl ${panelClass}`}
+            className={`rounded-[28px] sm:rounded-[40px] border shadow-2xl overflow-hidden backdrop-blur-2xl max-h-[calc(100dvh-6.5rem)] sm:max-h-[calc(100dvh-8rem)] overflow-y-auto custom-scrollbar ${panelClass}`}
           >
             <div className="grid lg:grid-cols-[360px_1fr]">
               {/* Sidebar */}
@@ -184,7 +184,7 @@ const ResetPasswordPage = () => {
                   <div className={`mt-2.5 w-12 h-1 rounded-full bg-gradient-to-r ${t.primaryGrad}`} />
                 </div>
 
-                <div className={`rounded-2xl p-5 border mt-6 lg:mt-auto ${isDarkMode ? "bg-slate-950/70 border-white/10" : `${t.cardBg} border-slate-200`}`}>
+                <div className={`rounded-2xl p-4 sm:p-5 border mt-6 lg:mt-auto ${isDarkMode ? "bg-slate-950/70 border-white/10" : `${t.cardBg} border-slate-200`}`}>
                   <p className={`text-[10px] font-black uppercase tracking-widest font-kumbh mb-2 ${mutedClass}`}>
                     Instructions
                   </p>

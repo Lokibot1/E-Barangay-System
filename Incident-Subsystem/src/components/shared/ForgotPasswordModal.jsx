@@ -54,11 +54,11 @@ const ForgotPasswordModal = ({
 
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md">
-      <div className={`w-full max-w-md rounded-[28px] border shadow-2xl p-8 ${overlayBg}`}>
+      <div className={`w-full max-w-md rounded-[20px] sm:rounded-[28px] border shadow-2xl p-5 sm:p-8 ${overlayBg}`}>
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-black uppercase tracking-tighter font-spartan">
+            <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tighter font-spartan">
               Forgot Password
             </h2>
             <p className={`text-sm mt-1 font-kumbh ${mutedClass}`}>

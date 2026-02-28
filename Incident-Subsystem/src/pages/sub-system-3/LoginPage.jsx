@@ -166,7 +166,7 @@ const LoginPage = () => {
       {authSuccess && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
           <div
-            className={`w-full max-w-md p-8 rounded-[36px] border shadow-2xl ${
+            className={`w-full max-w-md p-5 sm:p-8 rounded-[24px] sm:rounded-[36px] border shadow-2xl ${
               isDarkMode
                 ? "bg-slate-900 border-white/10 text-white"
                 : "bg-white border-black/10 text-slate-900"
@@ -541,7 +541,7 @@ const LoginPage = () => {
             >
               <div className="grid lg:grid-cols-[360px_1fr] lg:h-full">
                 <aside
-                  className={`p-5 sm:p-8 lg:p-10 border-b lg:border-b-0 lg:border-r ${sideClass}`}
+                  className={`p-5 sm:p-8 lg:p-10 border-b lg:border-b-0 lg:border-r flex flex-col items-center text-center ${sideClass}`}
                 >
                   <div
                     className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.28em] mb-8 font-kumbh ${
