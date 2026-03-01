@@ -1,10 +1,38 @@
 import React from 'react';
 import { Maximize2 } from 'lucide-react';
 
+export const InfoField = ({ label, val, t }) => (
+  <div className="flex flex-col items-start gap-1">
+    <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest leading-none">
+      {label}
+    </p>
+    <p className={`font-bold ${t?.cardText ?? 'text-slate-200'} text-sm leading-tight uppercase`}>
+      {val || '---'}
+    </p>
+  </div>
+);
+
+export const InfoFieldWhite = ({ label, val, icon, t }) => (
+  <div className="flex flex-col items-start gap-1">
+    <div className="flex items-center gap-1.5">
+      {icon && <span className="text-slate-400 opacity-70">{icon}</span>}
+      <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none">
+        {label}
+      </p>
+    </div>
+    <p className={`font-bold ${t ? t.cardText : 'text-slate-700'} text-sm leading-tight uppercase`}>
+      {val || '---'}
+    </p>
+  </div>
+);
+
 export const IDCard = ({ label, src, onClick }) => (
-  <div className="space-y-3">
+  <div className="flex flex-col gap-3">
     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{label}</span>
-    <div onClick={onClick} className="group relative aspect-video bg-slate-100 rounded-xl overflow-hidden cursor-zoom-in border border-slate-200">
+    <div 
+      onClick={onClick} 
+      className="group relative aspect-video bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden cursor-zoom-in border border-slate-200 dark:border-slate-700 shadow-inner"
+    >
       {src ? (
         <img src={src} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500" alt={label} />
       ) : (
@@ -14,22 +42,5 @@ export const IDCard = ({ label, src, onClick }) => (
         <Maximize2 className="text-white" />
       </div>
     </div>
-  </div>
-);
-
-export const InfoField = ({ label, val, t }) => (
-  <div>
-    <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-0.5">{label}</p>
-    <p className={`font-bold ${t?.cardText ?? 'text-slate-200'} text-sm`}>{val || '---'}</p>
-  </div>
-);
-
-export const InfoFieldWhite = ({ label, val, icon, t }) => (
-  <div>
-    <div className="flex items-center gap-1 mb-1">
-      {icon && <span className="text-slate-400">{icon}</span>}
-      <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">{label}</p>
-    </div>
-    <p className={`font-bold ${t ? t.cardText : 'text-slate-700'} text-sm`}>{val || '---'}</p>
   </div>
 );

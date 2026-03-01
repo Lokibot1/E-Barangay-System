@@ -49,6 +49,8 @@ import Certificates from "./pages/sub-system-1/certificates";
 import Support from "./pages/sub-system-1/support";
 import Settings from "./pages/sub-system-1/settings";
 import Logout from "./pages/sub-system-1/logout";
+import VerificationNotificationListener from "./components/sub-system-1/common/VerificationNotificationListener";
+
 import "./App.css";
 import "leaflet/dist/leaflet.css";
 
@@ -102,65 +104,23 @@ function App() {
                   }
                 >
                   {/* Sub-System 2 Routes */}
-                  <Route
-                    path="/sub-system-2"
-                    element={<SubSystem2MainPage />}
-                  />
-                  <Route
-                    path="/sub-system-2/req-bid"
-                    element={<Req_BIDPage />}
-                  />
-                  <Route
-                    path="/sub-system-2/req-coi"
-                    element={<Req_COIPage />}
-                  />
-                  <Route
-                    path="/sub-system-2/req-cor"
-                    element={<Req_CORPage />}
-                  />
-                  <Route
-                    path="/sub-system-2/req-sub-bid"
-                    element={<Req_Sub_BID />}
-                  />
-                  <Route
-                    path="/sub-system-2/req-sub-coi"
-                    element={<Req_Sub_COI />}
-                  />
-                  <Route
-                    path="/sub-system-2/req-sub-cor"
-                    element={<Req_Sub_COR />}
-                  />
-                  <Route
-                    path="/sub-system-2/track-bid"
-                    element={<Track_BID />}
-                  />
-                  <Route
-                    path="/sub-system-2/track-coi"
-                    element={<Track_COI />}
-                  />
-                  <Route
-                    path="/sub-system-2/track-cor"
-                    element={<Track_COR />}
-                  />
+                  <Route path="/sub-system-2" element={<SubSystem2MainPage />} />
+                  <Route path="/sub-system-2/req-bid" element={<Req_BIDPage />} />
+                  <Route path="/sub-system-2/req-coi" element={<Req_COIPage />} />
+                  <Route path="/sub-system-2/req-cor" element={<Req_CORPage />} />
+                  <Route path="/sub-system-2/req-sub-bid" element={<Req_Sub_BID />} />
+                  <Route path="/sub-system-2/req-sub-coi" element={<Req_Sub_COI />} />
+                  <Route path="/sub-system-2/req-sub-cor" element={<Req_Sub_COR />} />
+                  <Route path="/sub-system-2/track-bid" element={<Track_BID />} />
+                  <Route path="/sub-system-2/track-coi" element={<Track_COI />} />
+                  <Route path="/sub-system-2/track-cor" element={<Track_COR />} />
 
                   {/* Sub-System 3 Routes */}
                   <Route path="/incident-complaint" element={<MainPage />} />
-                  <Route
-                    path="/incident-complaint/file-complaint"
-                    element={<FileComplaintPage />}
-                  />
-                  <Route
-                    path="/incident-complaint/incident-report"
-                    element={<IncidentReportPage />}
-                  />
-                  <Route
-                    path="/incident-complaint/incident-map"
-                    element={<IncidentMapPage />}
-                  />
-                  <Route
-                    path="/incident-complaint/case-management"
-                    element={<CaseManagementPage />}
-                  />
+                  <Route path="/incident-complaint/file-complaint" element={<FileComplaintPage />} />
+                  <Route path="/incident-complaint/incident-report" element={<IncidentReportPage />} />
+                  <Route path="/incident-complaint/incident-map" element={<IncidentMapPage />} />
+                  <Route path="/incident-complaint/case-management" element={<CaseManagementPage />} />
 
                   {/* RS Dashboard Routes */}
                   <Route path="/dashboard" element={<Dashboard />} />
@@ -172,10 +132,7 @@ function App() {
                   <Route path="/support" element={<Support />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/logout" element={<Logout />} />
-                  <Route
-                    path="/documents-inquiry"
-                    element={<DocumentsInquiryPage />}
-                  />
+                  <Route path="/documents-inquiry" element={<DocumentsInquiryPage />} />
                 </Route>
               </Route>
 
@@ -184,6 +141,8 @@ function App() {
                 <Route
                   element={
                     <RealTimeProvider>
+                      {/* For notifications and sounds */}
+                      <VerificationNotificationListener />
                       <Layout />
                     </RealTimeProvider>
                   }
@@ -193,24 +152,12 @@ function App() {
                   <Route path="/admin/households" element={<Households />} />
                   <Route path="/admin/scanner" element={<Scanner />} />
                   <Route path="/admin/user-management" element={<Verification />} />
-                  <Route
-                    path="/admin/requests"
-                    element={<AdminPlaceholder title="Requests" />}
-                  />
-                  <Route
-                    path="/admin/incidents"
-                    element={<AdminIncidentReports />}
-                  />
-                  <Route
-                    path="/admin/appointments"
-                    element={<AdminAppointments />}
-                  />
+                  <Route path="/admin/requests" element={<AdminPlaceholder title="Requests" />} />
+                  <Route path="/admin/incidents" element={<AdminIncidentReports />} />
+                  <Route path="/admin/appointments" element={<AdminAppointments />} />
                   <Route path="/admin/payments" element={<AccountsSection />} />
                   <Route path="/admin/reports" element={<Dashboard />} />
-                  <Route
-                    path="/admin/documents-inquiry"
-                    element={<DocumentsInquiryPage />}
-                  />
+                  <Route path="/admin/documents-inquiry" element={<DocumentsInquiryPage />} />
                   <Route path="/admin/certificates" element={<Certificates />} />
                   <Route path="/admin/settings" element={<Settings />} />
                   <Route path="/admin/support" element={<Support />} />

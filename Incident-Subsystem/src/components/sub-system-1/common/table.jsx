@@ -6,26 +6,35 @@ const Table = ({ title, headers, children, t }) => {
   const cardText = t?.cardText ?? 'text-gray-900';
 
   return (
-    <div className={`w-full overflow-hidden ${cardBg} transition-colors duration-300`}>
+    /* No rounded corners, sharp edges only */
+    <div className={`w-full overflow-hidden ${cardBg} transition-colors duration-300 border ${cardBorder}`}>
       {title && (
         <div className={`p-6 border-b ${cardBorder}`}>
-          <h3 className={`text-xl font-black ${cardText} tracking-tight uppercase`}>
+          <h3 className={`text-xl font-black ${cardText} tracking-tight uppercase font-spartan`}>
             {title}
           </h3>
         </div>
       )}
+      
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead className="bg-emerald-700">
             <tr>
-              {headers.map((header, index) => (
-                <th
-                  key={index}
-                  className="px-6 py-5 text-left text-sm font-black text-white uppercase tracking-wider border-b-2 border-emerald-800"
-                >
-                  {header}
-                </th>
-              ))}
+              {headers.map((header, index) => {
+                // Auto-center logic para sa Actions column lang
+                const isAction = header.toLowerCase() === 'actions';
+
+                return (
+                  <th
+                    key={index}
+                    className={`px-6 py-5 ${isAction ? 'text-center' : 'text-left'} 
+                    text-sm font-black text-white uppercase tracking-wider 
+                    border-b-2 border-emerald-800 font-spartan`}
+                  >
+                    {header}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody className={`divide-y ${cardBorder} ${cardBg}`}>

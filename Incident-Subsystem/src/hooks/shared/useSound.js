@@ -1,14 +1,22 @@
-// src/hooks/useSound.js
 import { useCallback } from 'react';
 
 export const useSound = () => {
-  const playFeedback = useCallback((type = 'light') => {
+  const playFeedback = useCallback(async (type = 'light') => {
     try {
-      const context = new (window.AudioContext || window.webkitAudioContext)();
+      // Initialize Context
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      const context = new AudioContextClass();
+
+      if (context.state === 'suspended') {
+        await context.resume();
+      }
+
       const now = context.currentTime;
       const masterGain = context.createGain();
       masterGain.connect(context.destination);
-      masterGain.gain.setValueAtTime(type === 'notify' ? 4.0 : 1.0, now);
+      
+      // Notify volume is higher
+      masterGain.gain.setValueAtTime(type === 'notify' ? 0.8 : 0.2, now);
 
       const createTone = (freq, start, duration, vol, toneType = 'sine') => {
         const osc = context.createOscillator();
@@ -24,25 +32,23 @@ export const useSound = () => {
       };
 
       if (type === 'notify') {
-        // Extra-loud alert pair for incoming verification notifications
-        createTone(880, now, 0.3, 1.0, 'triangle');
-        createTone(1100, now + 0.08, 0.3, 1.0, 'triangle');
+        // High-pitched double beep
+        createTone(880, now, 0.3, 0.5, 'triangle');
+        createTone(1100, now + 0.15, 0.4, 0.5, 'triangle');
       } 
       else if (type === 'success') {
-        // "Victory" upward slide
-        createTone(440, now, 0.3, 0.1);
-        createTone(880, now + 0.1, 0.4, 0.1);
+        createTone(440, now, 0.2, 0.1);
+        createTone(880, now + 0.1, 0.3, 0.1);
       } 
       else if (type === 'error') {
-        createTone(150, now, 0.3, 0.1); // Low thud
+        createTone(150, now, 0.4, 0.2, 'sawtooth');
       } 
       else {
-        // Standard "Pop"
         createTone(600, now, 0.1, 0.05);
       }
 
     } catch (e) {
-      console.log("Audio Error:", e);
+      console.warn("Audio Context could not start. User interaction might be required.", e);
     }
   }, []);
 

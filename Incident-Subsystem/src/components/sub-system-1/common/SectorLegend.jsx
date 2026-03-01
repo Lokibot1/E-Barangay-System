@@ -10,11 +10,18 @@ export const sectorStyles = {
   'GENERAL POPULATION': 'bg-slate-100 text-slate-600 border-slate-200 ring-slate-400',
 };
 
-const SectorLegend = ({ activeFilter, onFilterChange, counts = {}, t }) => {
-  const totalCount = Object.values(counts).reduce((a, b) => a + b, 0);
+// Added default empty object for 't' to prevent 'undefined' errors
+const SectorLegend = ({ activeFilter = 'All', onFilterChange, counts = {}, t = {} }) => {
+  
+  // Safe calculation of totalCount even if counts is empty
+  const totalCount = Object.values(counts || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+
+  // Fallback values for theme properties
+  const cardBg = t?.cardBg || 'bg-white';
+  const cardBorder = t?.cardBorder || 'border-slate-200';
 
   return (
-    <div className={`flex flex-col gap-4 p-5 ${t.cardBg} border ${t.cardBorder} rounded-3xl shadow-sm mb-4`}>
+    <div className={`flex flex-col gap-4 p-5 ${cardBg} border ${cardBorder} rounded-3xl shadow-sm mb-4`}>
       {/* Header Info */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -25,7 +32,7 @@ const SectorLegend = ({ activeFilter, onFilterChange, counts = {}, t }) => {
         </div>
         {activeFilter !== 'All' && (
           <button
-            onClick={() => onFilterChange('All')}
+            onClick={() => onFilterChange?.('All')}
             className="text-[11px] font-black text-rose-500 uppercase hover:bg-rose-50 px-3 py-1 rounded-full transition-all"
           >
             Reset Selection ↺
@@ -37,11 +44,11 @@ const SectorLegend = ({ activeFilter, onFilterChange, counts = {}, t }) => {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3">
         {/* Total Population Card */}
         <button
-          onClick={() => onFilterChange('All')}
+          onClick={() => onFilterChange?.('All')}
           className={`flex flex-col items-start px-4 py-3 rounded-2xl border-2 transition-all shadow-sm ${
             activeFilter === 'All'
             ? 'bg-slate-900 text-white border-slate-900 shadow-md'
-            : `${t.cardBg} text-slate-500 border-slate-100 hover:border-slate-300`
+            : `${cardBg} text-slate-500 border-slate-100 hover:border-slate-300`
           }`}
         >
           <span className="text-[8px] font-black uppercase tracking-wider opacity-60 mb-1">Total</span>
@@ -51,13 +58,13 @@ const SectorLegend = ({ activeFilter, onFilterChange, counts = {}, t }) => {
         {/* Dynamic Sector Cards */}
         {Object.entries(sectorStyles).map(([name, style]) => {
           const isActive = activeFilter === name;
-          const count = counts[name] || 0;
+          const count = counts?.[name] || 0;
           const baseStyles = style.split(' ring-')[0];
 
           return (
             <button
               key={name}
-              onClick={() => onFilterChange(name)}
+              onClick={() => onFilterChange?.(name)}
               className={`flex flex-col items-start px-4 py-3 rounded-2xl border-2 transition-all shadow-sm ${baseStyles} ${
                 isActive
                   ? 'ring-4 ring-slate-900/10 !border-slate-900'

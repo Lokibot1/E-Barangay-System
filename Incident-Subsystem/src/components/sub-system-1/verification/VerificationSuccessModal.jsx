@@ -8,7 +8,7 @@ const VerificationSuccessModal = ({ isOpen, onClose, data, t }) => {
     if (!data) return null;
 
     // Construct the external verification URL
-    const qrUrl = `${VERIFY_URL}/v/${data.id}?token=${data.token}`;
+    const qrUrl = `${VERIFY_URL}/verify/${data.user}/${data.token}`;
 
     const downloadQR = () => {
         const svg = document.getElementById("resident-qr");

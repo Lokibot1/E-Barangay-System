@@ -4,65 +4,66 @@ import { calculateAge } from '../../../services/sub-system-1/verification';
 import StatusBadge from '../common/StatusBadge';
 
 const VerificationRow = ({ res, onReview, t }) => {
-
   const hNo = res.details?.houseNumber || '';
   const st = res.details?.address || '';
   const fullAddress = `${hNo} ${st}`.trim() || 'N/A';
 
   const purokDisplay = res.details?.purok && res.details.purok !== 'N/A'
-    ? `${res.details.purok}`
+    ? res.details.purok
     : '---';
 
   return (
-    <tr className={`border-b last:border-none ${t.cardBorder} hover:${t.inlineBg} transition-all ${t.cardText}`}>
+    <tr className={`group transition-all hover:${t.inlineBg} ${t.cardText} border-b last:border-none ${t.cardBorder}`}>
       {/* 1. NAME */}
-      <td className="px-6 py-5">
-        <div className="text-base font-bold leading-tight">
+      <td className="px-6 py-5 text-left align-middle">
+        <div className="text-sm font-bold leading-tight uppercase tracking-tight font-spartan">
           {res.name}
         </div>
       </td>
 
       {/* 2. AGE */}
-      <td className="px-6 py-5">
-        <div className="text-base font-bold">
+      <td className="px-6 py-5 text-left align-middle">
+        <div className="text-sm font-bold font-kumbh">
           {calculateAge(res.details?.birthdate)}
         </div>
       </td>
 
-      {/* 3. ADDRESS (House No + Street) */}
-      <td className="px-6 py-5">
-        <div className={`flex items-center gap-2 text-sm ${t.subtleText} font-medium truncate max-w-[220px]`}>
-          <Home size={14} className="shrink-0 opacity-60" />
-          {fullAddress}
+      {/* 3. ADDRESS */}
+      <td className="px-6 py-5 text-left align-middle">
+        <div className={`flex items-center gap-2 text-xs ${t.subtleText} font-medium max-w-[200px] font-kumbh`}>
+          <Home size={12} className="shrink-0 opacity-60" />
+          <span className="truncate">{fullAddress}</span>
         </div>
       </td>
 
       {/* 4. PUROK */}
-      <td className="px-6 py-5">
-        <div className="flex items-center gap-1.5 text-sm font-bold text-emerald-600 whitespace-nowrap">
-          <MapPin size={14} />
-          {purokDisplay}
+      <td className="px-6 py-5 text-left align-middle">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 whitespace-nowrap font-kumbh">
+          <MapPin size={12} className="shrink-0" />
+          <span className="uppercase">{purokDisplay}</span>
         </div>
       </td>
 
       {/* 5. SUBMITTED DATE */}
-      <td className="px-6 py-5">
-        <div className="flex items-center gap-2 text-sm font-bold opacity-80">
-          <Calendar size={14} className="text-emerald-600" />
+      <td className="px-6 py-5 text-left align-middle">
+        <div className={`flex items-center gap-2 text-xs font-bold ${t.subtleText} font-kumbh`}>
+          <Calendar size={12} className="text-emerald-600 shrink-0" />
           <span>{res.date}</span>
         </div>
       </td>
 
       {/* 6. STATUS */}
-      <td className="px-6 py-5">
+      <td className="px-6 py-5 text-left align-middle">
         <StatusBadge status={res.status} />
       </td>
 
-      {/* 7. ACTIONS */}
-      <td className="px-6 py-5">
+      {/* 7. ACTIONS - CENTER FOR HEADER */}
+      <td className="px-6 py-5 text-center align-middle">
         <button
-          onClick={() => onReview(res)}
-          className={`px-5 py-2 text-xs font-black uppercase border ${t.cardBorder} rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm active:scale-95`}
+          onClick={() => onReview(res)}   
+          className={`px-5 py-2 text-[10px] text-center font-black uppercase border ${t.cardBorder} rounded-xl 
+          hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black 
+          transition-all shadow-sm active:scale-95 font-spartan`}
         >
           Review
         </button>
