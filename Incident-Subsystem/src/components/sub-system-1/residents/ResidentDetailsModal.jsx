@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Briefcase, IdCard, Save, Edit3, XCircle } from 'lucide-react';
-import { getInitials, getAvatarColor } from '../../../utils/avatar';
+import { MapPin, Briefcase, IdCard, Save, Edit3, XCircle, User } from 'lucide-react'; 
 import ModalWrapper from '../common/ModalWrapper';
 import { API_BASE_URL } from '../../../config/api';
 import axios from 'axios';
 
-// Import Sub-components
 import IdentityTab from './tabs/IdentityTab';
 import AddressTab from './tabs/AddressTab';
 import SocioEcoTab from './tabs/SocioEcoTab';
@@ -35,17 +33,35 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t }) =>
     useEffect(() => {
         if (isOpen && resident) {
             fetchReferences();
+            
+            const extractId = (val) => {
+                if (!val) return '';
+                if (typeof val === 'object') return String(val.id || '');
+                return String(val);
+            };
+
             setFormData({
                 ...resident,
-                employment_status: resident.employment_status || resident.employmentStatus,
-                income_source: resident.income_source || resident.incomeSource,
-                educational_status: resident.educational_status || resident.educationalStatus,
-                highest_attainment: resident.highest_attainment || resident.highestGrade,
-                school_level: resident.school_level || resident.schoolLevel,
-                school_type: resident.school_type || resident.schoolType,
-                residency_start_date: formatDateForInput(resident.residency_start_date),
+                first_name: resident.firstName || resident.first_name || '',
+                middle_name: resident.middleName || resident.middle_name || '',
+                last_name: resident.lastName || resident.last_name || '',
+                contact_number: resident.contact || resident.contact_number || '',
+                nationality_id: extractId(resident.nationality || resident.nationality_id),
+                sector_id: extractId(resident.sector || resident.sector_id),
+                marital_status_id: extractId(resident.maritalStatus || resident.marital_status_id),
+                temp_purok_id: extractId(resident.purok || resident.temp_purok_id),
+                temp_street_id: extractId(resident.street || resident.temp_street_id),
+                temp_house_number: resident.houseNumber || resident.temp_house_number || '',
+                employment_status: resident.employmentStatus || resident.employment_status || '',
+                income_source: resident.incomeSource || resident.income_source || '',
+                educational_status: resident.educationalStatus || resident.educational_status || '',
+                highest_attainment: resident.highestGrade || resident.highest_attainment || '',
+                school_level: resident.schoolLevel || resident.school_level || '',
+                school_type: resident.schoolType || resident.school_type || '',
+                residency_start_date: formatDateForInput(resident.residencyStartDate || resident.residency_start_date),
                 birthdate: formatDateForInput(resident.birthdate),
-                is_voter: (resident.is_voter == 1 || resident.is_voter === 'Yes') ? 'Yes' : 'No'
+                is_voter: (resident.isVoter == 1 || resident.is_voter == 1 || resident.isVoter === 'Yes' || resident.is_voter === 'Yes') ? 'Yes' : 'No',
+                age: resident.age || calculateAge(resident.birthdate)
             });
             setIsEdit(mode === 'edit');
             setActiveTab('basic');
@@ -62,10 +78,10 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t }) =>
     const calculateAge = (bday) => {
         if (!bday) return 'N/A';
         const birthDate = new Date(bday);
-        const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+        const todayDate = new Date();
+        let age = todayDate.getFullYear() - birthDate.getFullYear();
+        const m = todayDate.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && todayDate.getDate() < birthDate.getDate())) age--;
         return age;
     };
 
@@ -81,8 +97,7 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t }) =>
     const handleSave = async (e) => {
         if(e) e.preventDefault();
         setLoading(true);
-        const payload = { ...formData, is_voter: formData.is_voter === 'Yes' ? 1 : 0 };
-        const success = await onSave(payload);
+        const success = await onSave(formData);
         setLoading(false);
         if (success) setIsEdit(false);
     };
@@ -93,7 +108,7 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t }) =>
         const streetName = streetObj ? streetObj.name : '';
         const purokObj = (refs.puroks || []).find(p => String(p.id) === String(formData.temp_purok_id));
         const purokName = purokObj ? `Purok ${purokObj.number || purokObj.name}` : '';
-        return [house, streetName, purokName, "Gulod, QC"].filter(p => p && p.trim() !== "").join(", ");
+        return [house, streetName, purokName, "Barangay Gulod Novaliches, Quezon City"].filter(p => p && p.trim() !== "").join(", ");
     };
 
     const TabButton = ({ id, label, icon: Icon }) => (
@@ -102,8 +117,8 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t }) =>
             onClick={() => setActiveTab(id)}
             className={`flex-1 flex items-center justify-center gap-2 py-4 text-[11px] font-bold uppercase tracking-widest transition-all relative ${
                 activeTab === id
-                ? `text-blue-600 ${t.cardBg}`
-                : `text-slate-500 hover:text-slate-700`
+                ? `text-blue-600 ${t?.cardBg || 'bg-white dark:bg-slate-900'}`
+                : `text-slate-500 hover:text-slate-700 dark:hover:text-slate-300`
             }`}
         >
             <Icon size={14} /> {label}
@@ -121,14 +136,13 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t }) =>
             t={t}
             title={
                 <div className="flex items-center gap-4">
-                    <div className={`h-12 w-12 rounded-xl flex items-center justify-center font-black text-white shadow-inner ring-2 ring-white ${getAvatarColor(resident?.name || '')}`}>
-                        <span className="text-lg tracking-tighter">
-                            {getInitials(resident?.name || '')}
-                        </span>
+                    {/* AVATAR REMOVED: Replaced with an Icon Badge */}
+                    <div className={`h-12 w-12 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-400 shadow-inner ring-2 ring-white dark:ring-slate-700`}>
+                        <User size={24} strokeWidth={2.5} />
                     </div>
                     <div className="flex flex-col justify-center">
-                        <h2 className={`text-base font-black ${t.cardText} uppercase tracking-tight leading-none`}>
-                            {resident?.name || 'Resident Profile'}
+                        <h2 className={`text-base font-black ${t?.cardText || 'text-slate-800 dark:text-white'} uppercase tracking-tight leading-none`}>
+                            {formData.first_name ? `${formData.first_name} ${formData.last_name}` : (resident?.name || 'Resident Profile')}
                         </h2>
                         <span className="text-[10px] font-black text-slate-400 mt-1 uppercase tracking-wider font-mono">
                             #{resident?.tracking_number || resident?.id || 'NEW'}
@@ -138,15 +152,13 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t }) =>
             }
         >
             <div className="flex flex-col -m-6 h-full">
-                {/* Compact Navigation */}
-                <div className={`flex ${t.inlineBg} border-b ${t.cardBorder} px-6`}>
+                <div className={`flex ${t?.inlineBg || 'bg-slate-50 dark:bg-slate-800/50'} border-b ${t?.cardBorder || 'border-slate-200 dark:border-slate-800'} px-6`}>
                     <TabButton id="basic" label="Identity" icon={IdCard} />
                     <TabButton id="address" label="Address" icon={MapPin} />
                     <TabButton id="socio" label="Socio-Eco" icon={Briefcase} />
                 </div>
 
-                {/* Main Content Area */}
-                <div className={`flex-1 overflow-y-auto p-6 md:p-10 ${t.cardBg} min-h-[50vh] max-h-[60vh]`}>
+                <div className={`flex-1 overflow-y-auto p-6 md:p-10 ${t?.cardBg || 'bg-white dark:bg-slate-900'} min-h-[50vh] max-h-[60vh]`}>
                     <div className="max-w-4xl mx-auto">
                         {activeTab === 'basic' && <IdentityTab isEdit={isEdit} formData={formData} handleChange={handleChange} refs={refs} today={today} t={t} />}
                         {activeTab === 'address' && <AddressTab isEdit={isEdit} formData={formData} handleChange={handleChange} refs={refs} getFullHardcodedAddress={getFullHardcodedAddress} filteredStreets={(refs.streets || []).filter(s => String(s.purok_id) === String(formData.temp_purok_id))} t={t} />}
@@ -154,30 +166,21 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t }) =>
                     </div>
                 </div>
 
-                <div className={`p-6 ${t.inlineBg} border-t ${t.cardBorder} flex justify-between items-center px-10`}>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="text-[11px] font-black uppercase text-slate-400 hover:text-slate-600 transition-colors tracking-widest"
-                    >
+                <div className={`p-6 ${t?.inlineBg || 'bg-slate-50 dark:bg-slate-800/50'} border-t ${t?.cardBorder || 'border-slate-200 dark:border-slate-800'} flex justify-between items-center px-10`}>
+                    <button type="button" onClick={onClose} className="text-[11px] font-black uppercase text-slate-400 hover:text-slate-600 transition-colors tracking-widest">
                         Close Profile
                     </button>
-
                     <div className="flex items-center gap-3">
-                        {/* Edit / Cancel Toggle Button */}
                         <button
                             type="button"
                             onClick={() => setIsEdit(!isEdit)}
                             className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border ${
-                                isEdit
-                                ? 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50'
-                                : `${t.cardBg} text-blue-600 border-blue-200 hover:bg-blue-50`
+                                isEdit ? 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50' : `${t?.cardBg || 'bg-white dark:bg-slate-800'} text-blue-600 border-blue-200 dark:border-slate-700 hover:bg-blue-50`
                             }`}
                         >
                             {isEdit ? <><XCircle size={14} /> Cancel Edit</> : <><Edit3 size={14} /> Edit Record</>}
                         </button>
 
-                        {/* Save Button (Visible only when in edit mode) */}
                         {isEdit && (
                             <button
                                 type="button"

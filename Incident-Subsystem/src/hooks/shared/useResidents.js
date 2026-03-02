@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { residentService } from '../../services/sub-system-1/residents';
 
 export const useResidents = () => {
-    const [allResidents, setAllResidents] = useState([]);
+    const [allResidents, setAllResidents] = useState([]); 
     const [searchTerm, setSearchTerm] = useState("");
     const [categoryFilter, setCategoryFilter] = useState("All");
     const [loading, setLoading] = useState(true);
@@ -24,7 +24,8 @@ export const useResidents = () => {
 
     useEffect(() => { loadData(); }, []);
 
-    const filteredResidents = useMemo(() => {
+
+    const filteredResults = useMemo(() => {
         return allResidents.filter(r => {
             const sectorName = (r.sectorLabel || 'General Population').toLowerCase();
             const searchLower = searchTerm.toLowerCase();
@@ -45,38 +46,33 @@ export const useResidents = () => {
 
     const handleUpdate = async (updatedData) => {
         try {
-     
             const payload = {
+                id: updatedData.id,
                 first_name: updatedData.first_name,
                 middle_name: updatedData.middle_name,
                 last_name: updatedData.last_name,
                 suffix: updatedData.suffix,
                 gender: updatedData.gender,
-                contact_number: updatedData.contact_number,
-                birth_registration: updatedData.birth_registration,
-                marital_status_id: updatedData.marital_status_id,
-                sector_id: updatedData.sector_id,
-                is_voter: updatedData.is_voter,
+                contact_number: updatedData.contact_number, 
                 birthdate: updatedData.birthdate,
-                nationality_id: updatedData.nationality_id,
-                household_position: updatedData.household_position, 
-
-                // Address Fields
-                temp_house_number: updatedData.temp_house_number,
+                birth_registration: updatedData.birth_registration,
+                nationality_id: updatedData.nationality_id, 
                 temp_purok_id: updatedData.temp_purok_id,
                 temp_street_id: updatedData.temp_street_id,
+                temp_house_number: updatedData.temp_house_number,
+                household_position: updatedData.household_position, 
+                marital_status_id: updatedData.marital_status_id,
+                sector_id: updatedData.sector_id,
+                is_voter: updatedData.is_voter === 'Yes' ? 1 : 0,
                 residency_start_date: updatedData.residency_start_date,
-               // Education Data - 
-    educational_status: updatedData.educational_status,
-    school_type: updatedData.school_type,
-    school_level: updatedData.school_level,
-    highest_attainment: updatedData.highest_attainment, 
-
-    // Employment Data
-    employment_status: updatedData.employment_status,
-    occupation: updatedData.occupation,
-    monthly_income: updatedData.monthly_income,
-    income_source: updatedData.income_source
+                educational_status: updatedData.educational_status,
+                school_type: updatedData.school_type,
+                school_level: updatedData.school_level,
+                highest_attainment: updatedData.highest_attainment, 
+                employment_status: updatedData.employment_status,
+                occupation: updatedData.occupation,
+                monthly_income: updatedData.monthly_income,
+                income_source: updatedData.income_source
             };
 
             const res = await residentService.updateResident(updatedData.id, payload);
@@ -85,7 +81,7 @@ export const useResidents = () => {
                 await loadData(); 
                 return true;
             } else {
-                alert("Update failed: " + res.error);
+                alert("Update failed: " + (res.error || "Unknown error"));
                 return false;
             }
         } catch (error) {
@@ -102,7 +98,8 @@ export const useResidents = () => {
     };
 
     return {
-        residents: filteredResidents,
+        residents: allResidents,      
+        filteredResidents: filteredResults, 
         loading,
         error,
         searchTerm,
@@ -114,4 +111,3 @@ export const useResidents = () => {
         refresh: loadData
     };
 };
-

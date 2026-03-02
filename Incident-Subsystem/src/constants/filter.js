@@ -1,27 +1,42 @@
-export const PUROK_OPTIONS = [
-  'All',
-  '1', '2', '3', '4', '5', '6', '7', '8', '9', '10',
+export const RESIDENCY_OPTIONS = [
+  { value: 'new', label: 'New Resident (0-1 yr)' },
+  { value: 'established', label: 'Established (2-5 yrs)' },
+  { value: 'long-term', label: 'Long-term (6-10 yrs)' },
+  { value: 'pioneer', label: 'Pioneer (10+ yrs)' },
 ];
 
-export const RESIDENCY_OPTIONS = [
-  'All',
-  'New Resident',
-  'Established Resident',
-  'Long-time Resident',
+export const PUROK_OPTIONS = [
+  { value: '1', label: 'Purok 1' },
+  { value: '2', label: 'Purok 2' },
+  { value: '3', label: 'Purok 3' },
+  { value: '4', label: 'Purok 4' },
+  { value: '5', label: 'Purok 5' },
+  { value: '6', label: 'Purok 6' },
+  { value: '7', label: 'Purok 7' },
 ];
 
 export const VOTER_OPTIONS = [
-  'All',
-  'Yes',
-  'No',
+  { value: 'Yes', label: 'Voter' },
+  { value: 'No', label: 'Non-Voter' },
 ];
 
 export const SECTOR_STYLES = {
-  'GENERAL POPULATION': 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600',
-  'SENIOR CITIZEN': 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700',
-  'PWD': 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700',
-  'SOLO PARENT': 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700',
-  '4PS': 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700',
-  'OFW': 'bg-cyan-100 text-cyan-800 border-cyan-300 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-700',
-  DEFAULT: 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600',
+  'SOLO PARENT': 'bg-orange-100 text-orange-800 border-orange-200',
+  'PWD': 'bg-purple-100 text-purple-800 border-purple-200',
+  'SENIOR CITIZEN': 'bg-blue-100 text-blue-800 border-blue-200',
+  'LGBTQIA+': 'bg-rose-100 text-rose-800 border-rose-200',
+  'KASAMBAHAY': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  'OFW': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  'GENERAL POPULATION': 'bg-slate-100 text-slate-700 border-slate-300',
+  'DEFAULT': 'bg-slate-100 text-slate-700 border-slate-300'
 };
+
+export const SECTOR_OPTIONS = [
+  { value: 'General Population', label: 'General Population' },
+  { value: 'Senior Citizen', label: 'Senior Citizen' },
+  { value: 'PWD', label: 'PWD' },
+  { value: 'Solo Parent', label: 'Solo Parent' },
+  { value: 'LGBTQIA+', label: 'LGBTQIA+' },
+  { value: 'OFW', label: 'OFW' },
+  { value: 'Kasambahay', label: 'Kasambahay' },
+];
