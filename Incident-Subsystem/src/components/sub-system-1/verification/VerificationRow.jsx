@@ -5,7 +5,7 @@ import StatusBadge from '../common/StatusBadge';
 
 const VerificationRow = ({ res, onReview, t }) => {
   const hNo = res.details?.houseNumber || '';
-  const st = res.details?.address || '';
+  const st = res.details?.street || '';
   const fullAddress = `${hNo} ${st}`.trim() || 'N/A';
 
   const purokDisplay = res.details?.purok && res.details.purok !== 'N/A'

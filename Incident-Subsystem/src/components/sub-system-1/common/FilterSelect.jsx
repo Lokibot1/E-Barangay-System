@@ -1,26 +1,44 @@
 import React from 'react';
+import { ChevronDown } from 'lucide-react';
 
 const FilterSelect = ({ label, value, onChange, options, t }) => {
+  const isActive = value !== 'All';
+
   return (
-    <div className="flex flex-col items-start min-w-[150px] w-full md:w-auto">
-      <span className={`text-[10px] font-black ${t.subtleText} uppercase tracking-widest mb-1.5 ml-1`}>
-        {label}
-      </span>
-      <div className="relative w-full">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={`block w-full pl-4 pr-10 py-3 text-sm font-bold border-2 ${t.inputBorder} ${t.inputBg} ${t.inputText} rounded-2xl focus:ring-4 ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all appearance-none cursor-pointer shadow-sm hover:border-slate-300`}
-        >
-          <option value="All">All</option>
-          {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
-          <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
-        </div>
-      </div>
+    <div className="relative min-w-[160px] w-full lg:w-48">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`
+          w-full appearance-none pl-5 pr-10 py-3.5
+          ${t.inputBg} 
+          border-2 outline-none transition-all shadow-sm cursor-pointer
+          rounded-2xl text-[11px] font-black uppercase tracking-wider
+          ${t.inputText} 
+          ${isActive 
+            ? 'border-emerald-500 ring-4 ring-emerald-500/10' 
+            : `${t.inputBorder} focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10`
+          }
+        `}
+      >
+        <option value="All">{label}: ALL</option>
+        {options && options.map((opt, index) => {
+    
+          const val = typeof opt === 'object' ? opt.value : opt;
+          const display = typeof opt === 'object' ? opt.label : opt;
+          
+          return (
+            <option key={val || index} value={val}>
+              {display}
+            </option>
+          );
+   
+        })}
+      </select>
+      <ChevronDown 
+        size={14} 
+        className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${isActive ? 'text-emerald-500' : 'text-slate-400'}`} 
+      />
     </div>
   );
 };
