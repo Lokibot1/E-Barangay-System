@@ -32,6 +32,38 @@ export const notifyAppointmentReschedule = async (appointmentId) => {
 };
 
 /**
+ * Mark one, several, or all notifications as read/unread.
+ *
+ * @param {object} options
+ * @param {number[]} [options.ids]      - Specific notification IDs to update
+ * @param {boolean}  [options.markAll]  - When true, update every notification
+ * @param {boolean}  [options.read]     - true = mark read, false = mark unread
+ * @returns {Promise<object|null>}
+ */
+export const markNotificationsRead = async ({ ids, markAll = false, read = true } = {}) => {
+  const token = localStorage.getItem("authToken");
+  if (!token) return null;
+
+  const body = markAll ? { mark_all: true, read } : { ids, read };
+
+  try {
+    const res = await fetch(`${API_BASE}/notifications`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+};
+
+/**
  * Fetch notifications from the backend for the authenticated user.
  *
  * @param {object} options

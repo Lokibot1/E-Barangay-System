@@ -9,22 +9,22 @@ import React, {
 import themeTokens from "../../../Themetokens";
 import Toast from "../../../components/shared/modals/Toast";
 import {
-  getAllAppointments,
-  approveAppointment,
-  rejectAppointment,
   rescheduleAppointment,
   isSlotAvailable,
   getTimeSlots,
   BUSINESS_DAYS,
 } from "../../../services/sub-system-3/appointmentService";
+import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
 
 const ROWS_PER_PAGE = 10;
 
 const STATUS_CFG = {
-  all:      { label: "ALL",      tabBg: "bg-gray-700" },
-  pending:  { label: "PENDING",  tabBg: "bg-amber-500" },
-  approved: { label: "APPROVED", tabBg: "bg-green-600" },
-  rejected: { label: "REJECTED", tabBg: "bg-gray-500" },
+  all:         { label: "ALL",         tabBg: "bg-gray-700" },
+  scheduled:   { label: "SCHEDULED",   tabBg: "bg-blue-600" },
+  rescheduled: { label: "RESCHEDULED", tabBg: "bg-amber-500" },
+  completed:   { label: "COMPLETED",   tabBg: "bg-green-600" },
+  cancelled:   { label: "CANCELLED",   tabBg: "bg-gray-500" },
+  no_show:     { label: "NO SHOW",     tabBg: "bg-red-600" },
 };
 
 const TIME_SLOTS = getTimeSlots();
@@ -154,8 +154,9 @@ const MiniCalendar = ({ appointments, selectedDate, onSelectDate, currentTheme }
 
 // ── Reschedule Modal ──────────────────────────────────────────────────────────
 const RescheduleModal = ({ appointment, appointments, onSave, onClose, isDark, t }) => {
-  const [date, setDate] = useState(appointment.date || "");
-  const [time, setTime] = useState((appointment.time || "").substring(0, 5));
+  const { date: initDate, time: initTime } = parseScheduledAt(appointment.scheduled_at);
+  const [date, setDate] = useState(initDate || appointment.date || "");
+  const [time, setTime] = useState(initTime || (appointment.time || "").substring(0, 5));
   const [saving, setSaving] = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
@@ -200,7 +201,10 @@ const RescheduleModal = ({ appointment, appointments, onSave, onClose, isDark, t
             <div className="flex-1">
               <h3 className={`text-sm font-bold ${t.cardText} font-spartan`}>Reschedule Appointment</h3>
               <p className={`text-xs ${t.subtleText} font-kumbh`}>
-                Complaint #{appointment.complaint_id} · Current: {appointment.date} {(appointment.time || "").substring(0,5)}
+                {(() => {
+                  const { date: d, time: tm } = parseScheduledAt(appointment.scheduled_at);
+                  return `Complaint #${appointment.complaint_id} · Current: ${formatDate(d)} ${formatTime(tm)}`;
+                })()}
               </p>
             </div>
             <button
@@ -301,21 +305,35 @@ const RescheduleModal = ({ appointment, appointments, onSave, onClose, isDark, t
   );
 };
 
-// ── Status badge helper ───────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+/**
+ * Split "2026-03-05 08:00:00" (or ISO) into { date: "2026-03-05", time: "08:00" }.
+ * Treats the stored value as local time — no UTC conversion.
+ */
+const parseScheduledAt = (scheduledAt) => {
+  if (!scheduledAt) return { date: null, time: null };
+  const [datePart, timePart] = String(scheduledAt).split(/[T ]/);
+  return { date: datePart || null, time: timePart ? timePart.substring(0, 5) : null };
+};
+
 const statusBadgeCls = (status) => {
-  const s = (status || "pending").toLowerCase();
-  if (s === "approved") return "bg-green-100 text-green-700 border border-green-200";
-  if (s === "rejected") return "bg-gray-100 text-gray-500 border border-gray-200";
-  return "bg-amber-100 text-amber-700 border border-amber-200";
+  const s = (status || "scheduled").toLowerCase().replace(/-/g, "_");
+  if (s === "completed")  return "bg-green-100 text-green-700 border border-green-200";
+  if (s === "cancelled")  return "bg-gray-100 text-gray-500 border border-gray-200";
+  if (s === "rescheduled") return "bg-amber-100 text-amber-700 border border-amber-200";
+  if (s === "no_show")    return "bg-red-100 text-red-700 border border-red-200";
+  return "bg-blue-100 text-blue-700 border border-blue-200"; // scheduled (default)
 };
 
 const formatTime = (timeStr) => {
   if (!timeStr) return "—";
-  const [h] = timeStr.split(":");
+  const [h, m] = timeStr.split(":");
   const hour = parseInt(h, 10);
+  const mins = m || "00";
   const ampm = hour < 12 ? "AM" : "PM";
   const disp = hour % 12 || 12;
-  return `${disp}:00 ${ampm}`;
+  return `${disp}:${mins} ${ampm}`;
 };
 
 const formatDate = (ds) => {
@@ -323,6 +341,116 @@ const formatDate = (ds) => {
   return new Date(ds + "T00:00:00").toLocaleDateString("en-US", {
     month: "short", day: "numeric", year: "numeric",
   });
+};
+
+// ── Appointment Details Modal ─────────────────────────────────────────────────
+const AppointmentDetailsModal = ({ appointment, onClose, onReschedule, isDark, t }) => {
+  const { date, time } = parseScheduledAt(appointment.scheduled_at);
+  const status = (appointment.status || "scheduled").toLowerCase().replace(/-/g, "_");
+  const canReschedule = status === "scheduled" || status === "rescheduled";
+
+  const fullDate = date
+    ? new Date(date + "T00:00:00").toLocaleDateString("en-US", {
+        weekday: "long", month: "long", day: "numeric", year: "numeric",
+      })
+    : "—";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className={`${t.cardBg} rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden`}>
+
+        {/* Header */}
+        <div className={`px-6 py-4 border-b ${isDark ? "border-slate-700 bg-slate-900" : "border-gray-200 bg-gray-50"} flex items-center gap-3`}>
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700" : "bg-blue-100"}`}>
+            <svg className={`w-5 h-5 ${isDark ? "text-slate-300" : "text-blue-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className={`text-sm font-bold ${t.cardText} font-spartan truncate`}>
+              {appointment.title || `Appointment #${appointment.id}`}
+            </h3>
+            <p className={`text-xs ${t.subtleText} font-kumbh`}>
+              Appointment #{appointment.id} · Complaint #{appointment.complaint_id}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${isDark ? "hover:bg-slate-700 text-slate-400" : "hover:bg-gray-200 text-gray-400"}`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5 space-y-4">
+
+          {/* Status badge */}
+          <div className="flex items-center gap-2">
+            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold font-kumbh uppercase ${statusBadgeCls(status)}`}>
+              {status.replace(/_/g, " ")}
+            </span>
+          </div>
+
+          {/* Date & Time — prominent display */}
+          <div className={`flex gap-3 p-4 rounded-xl ${isDark ? "bg-slate-700" : "bg-blue-50"} border ${isDark ? "border-slate-600" : "border-blue-100"}`}>
+            <div className="flex-1">
+              <p className={`text-[10px] font-bold uppercase tracking-wide mb-1 font-kumbh ${isDark ? "text-slate-400" : "text-blue-500"}`}>Date</p>
+              <p className={`text-sm font-bold font-spartan ${t.cardText}`}>{fullDate}</p>
+            </div>
+            <div className={`w-px ${isDark ? "bg-slate-600" : "bg-blue-200"}`} />
+            <div className="flex-shrink-0 text-right">
+              <p className={`text-[10px] font-bold uppercase tracking-wide mb-1 font-kumbh ${isDark ? "text-slate-400" : "text-blue-500"}`}>Time</p>
+              <p className={`text-sm font-bold font-spartan ${t.cardText}`}>{formatTime(time)}</p>
+            </div>
+          </div>
+
+          {/* Detail rows */}
+          <div className={`rounded-xl border ${t.cardBorder} divide-y ${isDark ? "divide-slate-700" : "divide-gray-100"} overflow-hidden`}>
+            {[
+              { label: "Complainant",   value: appointment.complainant_name || "—" },
+              { label: "Appointment ID", value: `#${appointment.id}` },
+              { label: "Complaint ID",  value: `#${appointment.complaint_id || "—"}` },
+            ].map(({ label, value }) => (
+              <div key={label} className={`flex items-center px-4 py-3 ${isDark ? "bg-slate-800" : "bg-white"}`}>
+                <span className={`text-xs font-semibold w-36 flex-shrink-0 font-kumbh ${t.subtleText}`}>{label}</span>
+                <span className={`text-xs font-kumbh ${t.cardText} truncate`}>{value}</span>
+              </div>
+            ))}
+            {appointment.description && (
+              <div className={`px-4 py-3 ${isDark ? "bg-slate-800" : "bg-white"}`}>
+                <span className={`text-xs font-semibold font-kumbh ${t.subtleText} block mb-1`}>Description</span>
+                <span className={`text-xs font-kumbh ${t.cardText} leading-relaxed`}>{appointment.description}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className={`px-6 py-4 border-t ${isDark ? "border-slate-700 bg-slate-900" : "border-gray-100 bg-gray-50"} flex gap-3 justify-end`}>
+          {canReschedule && (
+            <button
+              onClick={() => { onClose(); onReschedule(appointment); }}
+              className="px-4 py-2 rounded-lg text-sm font-kumbh font-semibold bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-sm"
+            >
+              Reschedule
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className={`px-4 py-2 rounded-lg text-sm font-kumbh font-semibold transition-colors ${
+              isDark ? "bg-slate-700 text-slate-300 hover:bg-slate-600" : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+            }`}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
@@ -347,8 +475,32 @@ const AdminAppointments = () => {
   const fetchAppointments = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getAllAppointments();
-      setAppointments(data);
+      const data = await getAllComplaints();
+      const compArray = Array.isArray(data) ? data : data.data || [];
+
+      // Flatten appointments nested inside each complaint, enriched with complainant info
+      const allAppts = [];
+      compArray.forEach((complaint) => {
+        if (!Array.isArray(complaint.appointments) || complaint.appointments.length === 0) return;
+        const complainantName =
+          complaint.complainant_name ||
+          (complaint.user
+            ? `${complaint.user.last_name || ""}, ${complaint.user.first_name || ""}`.trim()
+            : "—");
+        complaint.appointments.forEach((appt) => {
+          const { date: parsedDate, time: parsedTime } = parseScheduledAt(appt.scheduled_at);
+          allAppts.push({
+            ...appt,
+            complaint_id: appt.complaint_id ?? complaint.id,
+            complainant_name: appt.complainant_name || complainantName,
+            // Normalised date/time so existing helpers (calendar, isSlotAvailable) work
+            date: appt.date || parsedDate,
+            time: appt.time || parsedTime,
+          });
+        });
+      });
+
+      setAppointments(allAppts);
     } catch (err) {
       console.error("Failed to fetch appointments:", err);
       addToast({ type: "error", title: "Error", message: "Failed to load appointments." });
@@ -378,7 +530,7 @@ const AdminAppointments = () => {
   const [endDate, setEndDate]             = useState("");
   const [currentPage, setCurrentPage]     = useState(1);
   const [rescheduleTarget, setRescheduleTarget] = useState(null);
-  const [processingId, setProcessingId]   = useState(null);
+  const [detailsTarget, setDetailsTarget]       = useState(null);
 
   // ── tab sliding indicator ──────────────────────────────────────────────────
   const statusTabsRef = useRef(null);
@@ -396,9 +548,9 @@ const AdminAppointments = () => {
 
   // ── derived counts ─────────────────────────────────────────────────────────
   const statusCounts = useMemo(() => {
-    const c = { all: appointments.length, pending: 0, approved: 0, rejected: 0 };
+    const c = { all: appointments.length, scheduled: 0, rescheduled: 0, completed: 0, cancelled: 0, no_show: 0 };
     appointments.forEach((a) => {
-      const s = (a.status || "pending").toLowerCase();
+      const s = (a.status || "scheduled").toLowerCase().replace(/-/g, "_");
       if (c[s] !== undefined) c[s]++;
     });
     return c;
@@ -407,7 +559,7 @@ const AdminAppointments = () => {
   // ── filtered + paginated data ──────────────────────────────────────────────
   const filteredData = useMemo(() => {
     return appointments.filter((a) => {
-      const s = (a.status || "pending").toLowerCase();
+      const s = (a.status || "scheduled").toLowerCase().replace(/-/g, "_");
       if (activeTab !== "all" && s !== activeTab) return false;
       if (selectedDate && a.date !== selectedDate) return false;
       if (startDate && a.date < startDate) return false;
@@ -433,39 +585,13 @@ const AdminAppointments = () => {
   useEffect(() => { setCurrentPage(1); }, [activeTab, selectedDate, searchQuery, startDate, endDate]);
 
   // ── actions ────────────────────────────────────────────────────────────────
-  const handleApprove = async (appt) => {
-    setProcessingId(appt.id);
-    try {
-      await approveAppointment(appt.id);
-      addToast({ type: "success", title: "Approved", message: `Appointment #${appt.id} approved.` });
-      fetchAppointments();
-    } catch (err) {
-      addToast({ type: "error", title: "Error", message: err.message });
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  const handleReject = async (appt) => {
-    setProcessingId(appt.id);
-    try {
-      await rejectAppointment(appt.id);
-      addToast({ type: "success", title: "Rejected", message: `Appointment #${appt.id} rejected.` });
-      fetchAppointments();
-    } catch (err) {
-      addToast({ type: "error", title: "Error", message: err.message });
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
   const handleReschedule = async (id, date, time) => {
     try {
       await rescheduleAppointment(id, date, time);
       addToast({
         type: "success",
         title: "Rescheduled",
-        message: `Appointment rescheduled to ${formatDate(date)} at ${formatTime(time + ":00")}. Complainant notified.`,
+        message: `Appointment rescheduled to ${formatDate(date)} at ${formatTime(time)}. Complainant notified.`,
       });
       fetchAppointments();
     } catch (err) {
@@ -581,17 +707,17 @@ const AdminAppointments = () => {
                 icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
               },
               {
-                key: "pending", label: "PENDING", border: "border-amber-500",
-                bg: "bg-amber-100", ic: "text-amber-600",
+                key: "scheduled", label: "SCHEDULED", border: "border-blue-400",
+                bg: "bg-blue-50", ic: "text-blue-500",
                 icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
               },
               {
-                key: "approved", label: "APPROVED", border: "border-green-500",
+                key: "completed", label: "COMPLETED", border: "border-green-500",
                 bg: "bg-green-100", ic: "text-green-600",
                 icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
               },
               {
-                key: "rejected", label: "REJECTED", border: "border-gray-400",
+                key: "cancelled", label: "CANCELLED", border: "border-gray-400",
                 bg: "bg-gray-100", ic: "text-gray-500",
                 icon: "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z",
               },
@@ -747,62 +873,51 @@ const AdminAppointments = () => {
                     </tr>
                   ) : paginatedData.length > 0 ? (
                     paginatedData.map((appt, idx) => {
-                      const status = (appt.status || "pending").toLowerCase();
-                      const busy   = processingId === appt.id;
+                      const status = (appt.status || "scheduled").toLowerCase().replace(/-/g, "_");
 
                       return (
                         <tr
                           key={appt.id}
-                          className={`border-b ${t.cardBorder} ${isDark ? "hover:bg-slate-700" : "hover:bg-gray-50"} transition-colors`}
+                          onClick={() => setDetailsTarget(appt)}
+                          className={`border-b ${t.cardBorder} ${isDark ? "hover:bg-slate-700" : "hover:bg-gray-50"} transition-colors cursor-pointer`}
                         >
-                          <td className={`text-center px-3 py-3 text-xs ${t.cardText}`}>
+                          {/* # — center */}
+                          <td className={`px-3 py-3 text-xs text-center ${t.cardText}`}>
                             {(currentPage - 1) * ROWS_PER_PAGE + idx + 1}
                           </td>
-                          <td className={`px-4 py-3 text-xs font-semibold ${t.cardText}`}>
+                          {/* Appt ID — left */}
+                          <td className={`px-4 py-3 text-xs text-left font-semibold ${t.cardText}`}>
                             #{appt.id}
                           </td>
-                          <td className={`px-4 py-3 text-xs font-semibold ${t.cardText}`}>
+                          {/* Complaint — left */}
+                          <td className={`px-4 py-3 text-xs text-left font-semibold ${t.cardText}`}>
                             #{appt.complaint_id || "—"}
                           </td>
-                          <td className={`px-4 py-3 text-xs ${t.cardText} truncate`} title={appt.complainant_name}>
+                          {/* Complainant — left */}
+                          <td className={`px-4 py-3 text-xs text-left ${t.cardText} truncate`} title={appt.complainant_name}>
                             {appt.complainant_name || "—"}
                           </td>
-                          <td className={`px-4 py-3 text-xs ${t.cardText} whitespace-nowrap`}>
+                          {/* Date — left */}
+                          <td className={`px-4 py-3 text-xs text-left ${t.cardText} whitespace-nowrap`}>
                             {formatDate(appt.date)}
                           </td>
-                          <td className={`px-4 py-3 text-xs ${t.cardText} whitespace-nowrap`}>
+                          {/* Time — left */}
+                          <td className={`px-4 py-3 text-xs text-left ${t.cardText} whitespace-nowrap`}>
                             {formatTime(appt.time)}
                           </td>
-                          <td className="px-4 py-3">
+                          {/* Status — left */}
+                          <td className="px-4 py-3 text-left">
                             <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold font-kumbh uppercase ${statusBadgeCls(status)}`}>
-                              {status}
+                              {status.replace(/_/g, " ")}
                             </span>
                           </td>
-                          <td className="px-4 py-3">
+                          {/* Actions — left (stop propagation so row-click doesn't fire) */}
+                          <td className="px-4 py-3 text-left" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center gap-1 flex-wrap">
-                              {status === "pending" && (
-                                <>
-                                  <button
-                                    onClick={() => handleApprove(appt)}
-                                    disabled={busy}
-                                    className="px-2 py-1 text-[10px] font-kumbh font-bold bg-green-100 text-green-700 hover:bg-green-200 rounded-lg transition-colors disabled:opacity-50"
-                                  >
-                                    Approve
-                                  </button>
-                                  <button
-                                    onClick={() => handleReject(appt)}
-                                    disabled={busy}
-                                    className="px-2 py-1 text-[10px] font-kumbh font-bold bg-red-100 text-red-700 hover:bg-red-200 rounded-lg transition-colors disabled:opacity-50"
-                                  >
-                                    Reject
-                                  </button>
-                                </>
-                              )}
-                              {status !== "rejected" && (
+                              {(status === "scheduled" || status === "rescheduled") && (
                                 <button
                                   onClick={() => setRescheduleTarget(appt)}
-                                  disabled={busy}
-                                  className={`px-2 py-1 text-[10px] font-kumbh font-bold rounded-lg transition-colors disabled:opacity-50 ${
+                                  className={`px-2 py-1 text-[10px] font-kumbh font-bold rounded-lg transition-colors ${
                                     isDark
                                       ? "bg-slate-600 text-slate-200 hover:bg-slate-500"
                                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -810,6 +925,9 @@ const AdminAppointments = () => {
                                 >
                                   Reschedule
                                 </button>
+                              )}
+                              {(status === "completed" || status === "cancelled" || status === "no_show") && (
+                                <span className={`text-[10px] font-kumbh ${isDark ? "text-slate-500" : "text-gray-400"}`}>—</span>
                               )}
                             </div>
                           </td>
@@ -893,6 +1011,17 @@ const AdminAppointments = () => {
           </div>
         </div>
       </div>
+
+      {/* Appointment details modal */}
+      {detailsTarget && (
+        <AppointmentDetailsModal
+          appointment={detailsTarget}
+          onClose={() => setDetailsTarget(null)}
+          onReschedule={(appt) => setRescheduleTarget(appt)}
+          isDark={isDark}
+          t={t}
+        />
+      )}
 
       {/* Reschedule modal */}
       {rescheduleTarget && (

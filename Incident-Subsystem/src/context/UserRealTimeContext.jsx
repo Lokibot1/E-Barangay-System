@@ -34,18 +34,32 @@ const capitalize = (str) =>
  * Convert a backend notification (from /api/notifications) into the
  * local user notification shape used by this context.
  */
-const mapUserBackendNotification = (n) => ({
-  id: `api-${n.id}`,
-  backendId: n.id,
-  source: n.type?.includes("complaint") ? "complaint" : "incident",
-  type: n.type || "Notification",
-  description: n.message || "No description",
-  oldStatus: n.data?.old_status || n.data?.previous_status || "",
-  newStatus: n.data?.new_status || n.data?.status || "",
-  timestamp: n.created_at,
-  read: n.is_read,
-  data: n.data,
-});
+const mapUserBackendNotification = (n) => {
+  if (n.type === "appointment_scheduled") {
+    return {
+      id: `api-${n.id}`,
+      backendId: n.id,
+      source: "appointment",
+      type: n.type,
+      description: n.message || "An appointment has been scheduled for your complaint.",
+      timestamp: n.created_at,
+      read: n.is_read,
+      data: n.data,
+    };
+  }
+  return {
+    id: `api-${n.id}`,
+    backendId: n.id,
+    source: n.type?.includes("complaint") ? "complaint" : "incident",
+    type: n.type || "Notification",
+    description: n.message || "No description",
+    oldStatus: n.data?.old_status || n.data?.previous_status || "",
+    newStatus: n.data?.new_status || n.data?.status || "",
+    timestamp: n.created_at,
+    read: n.is_read,
+    data: n.data,
+  };
+};
 
 // ── Provider ────────────────────────────────────────────────────────────
 export const UserRealTimeProvider = ({ children }) => {
@@ -55,12 +69,18 @@ export const UserRealTimeProvider = ({ children }) => {
       batchDelay: 2000,
     });
 
+  // Capture localStorage IDs at mount to detect truly new backend notifications
+  const initialNotifIdsRef = useRef(null);
+
   // Initialize from localStorage so notifications survive refreshes and logouts
   const [notifications, setNotifications] = useState(() => {
     try {
       const saved = localStorage.getItem(LS_USER_NOTIFICATIONS_KEY);
-      return saved ? JSON.parse(saved) : [];
+      const parsed = saved ? JSON.parse(saved) : [];
+      initialNotifIdsRef.current = new Set(parsed.map((n) => n.id));
+      return parsed;
     } catch {
+      initialNotifIdsRef.current = new Set();
       return [];
     }
   });
@@ -78,6 +98,7 @@ export const UserRealTimeProvider = ({ children }) => {
 
   // On mount: fetch backend notifications to hydrate any that arrived while offline.
   // These are merged with the localStorage cache — deduplicated by id.
+  // Unread notifications not in the localStorage cache also trigger toasts.
   useEffect(() => {
     fetchNotifications({ perPage: 50 }).then((response) => {
       if (!response?.data) return;
@@ -88,9 +109,19 @@ export const UserRealTimeProvider = ({ children }) => {
         const existingIds = new Set(prev.map((n) => n.id));
         const newOnes = backendItems.filter((n) => !existingIds.has(n.id));
         if (newOnes.length === 0) return prev;
-        // Prepend new backend notifications (sorted latest-first by the API)
         return [...newOnes, ...prev];
       });
+
+      // Show toasts for unread notifications that weren't cached locally at mount
+      if (initialNotifIdsRef.current) {
+        const unseen = backendItems.filter(
+          (n) => !initialNotifIdsRef.current.has(n.id) && !n.read,
+        );
+        if (unseen.length > 0) {
+          setLatestBatch(unseen.slice(0, 3));
+          setEventVersion((v) => v + 1);
+        }
+      }
     });
     // Run once on mount only
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -112,17 +143,30 @@ export const UserRealTimeProvider = ({ children }) => {
 
     if (newItems.length === 0) return;
 
-    const fresh = newItems.map((event) => ({
-      id: event.id,
-      source: event.source,
-      type: event.type,
-      description: `Your ${event.source} report status changed from ${capitalize(event.oldStatus)} to ${capitalize(event.newStatus)}`,
-      oldStatus: event.oldStatus,
-      newStatus: event.newStatus,
-      timestamp: event.timestamp,
-      read: false,
-      data: event.data,
-    }));
+    const fresh = newItems.map((event) => {
+      if (event.type === "appointment_scheduled") {
+        return {
+          id: event.id,
+          source: "appointment",
+          type: event.type,
+          description: event.description || "An appointment has been scheduled for your complaint.",
+          timestamp: event.timestamp,
+          read: false,
+          data: event.data,
+        };
+      }
+      return {
+        id: event.id,
+        source: event.source,
+        type: event.type,
+        description: `Your ${event.source} report status changed from ${capitalize(event.oldStatus)} to ${capitalize(event.newStatus)}`,
+        oldStatus: event.oldStatus,
+        newStatus: event.newStatus,
+        timestamp: event.timestamp,
+        read: false,
+        data: event.data,
+      };
+    });
 
     // Update persistent notification list (for bell dropdown)
     setNotifications((prev) => {

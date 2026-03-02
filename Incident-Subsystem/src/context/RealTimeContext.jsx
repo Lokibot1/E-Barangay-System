@@ -60,12 +60,18 @@ export const RealTimeProvider = ({ children }) => {
       batchDelay: 2000,
     });
 
+  // Capture localStorage IDs at mount to detect truly new backend notifications
+  const initialNotifIdsRef = useRef(null);
+
   // Initialize from localStorage so notifications survive refreshes and logouts
   const [notifications, setNotifications] = useState(() => {
     try {
       const saved = localStorage.getItem(LS_ADMIN_NOTIFICATIONS_KEY);
-      return saved ? JSON.parse(saved) : [];
+      const parsed = saved ? JSON.parse(saved) : [];
+      initialNotifIdsRef.current = new Set(parsed.map((n) => n.id));
+      return parsed;
     } catch {
+      initialNotifIdsRef.current = new Set();
       return [];
     }
   });
@@ -83,6 +89,7 @@ export const RealTimeProvider = ({ children }) => {
 
   // On mount: fetch backend notifications to hydrate any that arrived while offline.
   // These are merged with the localStorage cache — deduplicated by id.
+  // Unread notifications not in the localStorage cache also trigger toasts.
   useEffect(() => {
     fetchNotifications({ perPage: 50 }).then((response) => {
       if (!response?.data) return;
@@ -93,9 +100,19 @@ export const RealTimeProvider = ({ children }) => {
         const existingIds = new Set(prev.map((n) => n.id));
         const newOnes = backendItems.filter((n) => !existingIds.has(n.id));
         if (newOnes.length === 0) return prev;
-        // Prepend new backend notifications (they are already sorted latest-first by the API)
         return [...newOnes, ...prev];
       });
+
+      // Show toasts for unread notifications that weren't cached locally at mount
+      if (initialNotifIdsRef.current) {
+        const unseen = backendItems.filter(
+          (n) => !initialNotifIdsRef.current.has(n.id) && !n.read,
+        );
+        if (unseen.length > 0) {
+          setLatestBatch(unseen.slice(0, 3));
+          setEventVersion((v) => v + 1);
+        }
+      }
     });
     // Run once on mount only
     // eslint-disable-next-line react-hooks/exhaustive-deps

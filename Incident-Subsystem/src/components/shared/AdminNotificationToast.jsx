@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRealTime } from "../../context/RealTimeContext";
 import themeTokens from "../../Themetokens";
+import { useSound } from "../../hooks/shared/useSound";
 
 const TOAST_DURATION = 5000;
 
@@ -127,6 +128,7 @@ const SingleToast = memo(({ event, onDismiss, currentTheme }) => {
 // ── Toast container ─────────────────────────────────────────────────────
 const AdminNotificationToast = ({ currentTheme }) => {
   const { latestBatch, eventVersion } = useRealTime();
+  const { playFeedback } = useSound();
   const [visibleToasts, setVisibleToasts] = useState([]);
   const prevEventVersionRef = useRef(0);
 
@@ -146,7 +148,8 @@ const AdminNotificationToast = ({ currentTheme }) => {
       data: n.data,
     }));
     setVisibleToasts((prev) => [...toastEvents, ...prev].slice(0, 5));
-  }, [eventVersion, latestBatch]);
+    playFeedback("notify");
+  }, [eventVersion, latestBatch, playFeedback]);
 
   const handleDismiss = useCallback((id) => {
     setVisibleToasts((prev) => prev.filter((t) => t.id !== id));

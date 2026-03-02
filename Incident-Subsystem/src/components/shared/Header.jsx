@@ -47,9 +47,21 @@ const playNotificationSound = () => {
 };
 
 // ── Relative time utility ───────────────────────────────────────────────
+// Laravel may return timestamps as "YYYY-MM-DD HH:MM:SS" or
+// "YYYY-MM-DDTHH:MM:SS.ffffff" without a timezone indicator — these are UTC.
+// Appending "Z" forces correct UTC interpretation in all browsers.
+const normalizeTimestamp = (date) => {
+  if (typeof date === "string" &&
+    /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(date)) {
+    return date.replace(" ", "T") + "Z";
+  }
+  return date;
+};
+
 const getRelativeTime = (date) => {
+  if (!date) return "";
   const now = new Date();
-  const diff = Math.floor((now - new Date(date)) / 1000);
+  const diff = Math.floor((now - new Date(normalizeTimestamp(date))) / 1000);
   if (diff < 60) return "Just now";
   if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
@@ -62,7 +74,13 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead }) => {
   const statusLabel = notification.read ? "Read" : "New";
   const timeAgo = getRelativeTime(notification.timestamp);
   const isIncident = notification.source === "incident";
+  const isAppointment = notification.source === "appointment";
   const isStatusChange = !!notification.oldStatus;
+
+  const sourceLabel = isAppointment ? "Appointment" : isIncident ? "Incident" : "Complaint";
+  const displayType = notification.type === "appointment_scheduled"
+    ? "Appointment Scheduled"
+    : notification.type;
 
   const capitalize = (str) =>
     str ? str.replace(/\b\w/g, (c) => c.toUpperCase()) : str;
@@ -84,7 +102,7 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead }) => {
             <span
               className={`text-xs font-bold ${isDark ? "text-slate-300" : "text-slate-600"} font-kumbh uppercase`}
             >
-              {isIncident ? "Incident" : "Complaint"}
+              {sourceLabel}
             </span>
             <span
               className={`${statusColor} text-white text-xs font-semibold px-2 py-0.5 rounded-full font-kumbh`}
@@ -102,7 +120,7 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead }) => {
           <p
             className={`font-semibold text-sm ${isDark ? "text-slate-100" : "text-slate-900"} font-kumbh mb-1`}
           >
-            {notification.type}
+            {displayType}
           </p>
           <p
             className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"} font-kumbh line-clamp-2`}

@@ -24,6 +24,8 @@ const useUserRealTimeEvents = ({
 } = {}) => {
   const incidentStatusMap = useRef(new Map());
   const complaintStatusMap = useRef(new Map());
+  // complaint_id -> Set<appointment_id> — used to detect newly added appointments
+  const complaintAppointmentMap = useRef(new Map());
   const isFirstPoll = useRef(true);
   const bufferRef = useRef([]);
   const flushTimerRef = useRef(null);
@@ -117,6 +119,10 @@ const useUserRealTimeEvents = ({
           const currentStatus = item.status || "pending";
           complaintStatusMap.current.set(item.id, currentStatus);
 
+          // Seed known appointment IDs (no events on first poll)
+          const apptIds = new Set((item.appointments || []).map((a) => a.id));
+          complaintAppointmentMap.current.set(item.id, apptIds);
+
           if (saved?.complaints && saved.complaints[item.id] !== undefined) {
             const oldStatus = saved.complaints[item.id];
             if (oldStatus !== currentStatus) {
@@ -175,6 +181,23 @@ const useUserRealTimeEvents = ({
               timestamp: new Date(),
             });
           }
+
+          // Detect newly scheduled appointments on this complaint
+          const knownApptIds = complaintAppointmentMap.current.get(item.id) || new Set();
+          (item.appointments || []).forEach((appt) => {
+            if (!knownApptIds.has(appt.id)) {
+              bufferRef.current.push({
+                id: `comp-appt-${item.id}-${appt.id}-${Date.now()}`,
+                source: "appointment",
+                type: "appointment_scheduled",
+                description: "An appointment has been scheduled for your complaint.",
+                timestamp: new Date(),
+                data: { appointment: appt, complaint_id: item.id },
+              });
+              knownApptIds.add(appt.id);
+            }
+          });
+          complaintAppointmentMap.current.set(item.id, knownApptIds);
         });
 
         if (bufferRef.current.length > 0) {

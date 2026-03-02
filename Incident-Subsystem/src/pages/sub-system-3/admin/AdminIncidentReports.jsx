@@ -278,6 +278,14 @@ const normalizeComplaint = (item) => ({
   updates: [],
 });
 
+// ── Normalize backend statuses to display keys ──────────────────────────
+// Complaints use "in-progress" and "on-site"; incidents use "on-site".
+// Both map to the "active" tab key used by STATUS_CONFIG.
+const toDisplayStatusKey = (rawStatus) => {
+  if (rawStatus === "in-progress" || rawStatus === "on-site") return "active";
+  return rawStatus;
+};
+
 // ── Status config ──────────────────────────────────────────────────────
 const STATUS_CONFIG = {
   all: {
@@ -576,7 +584,7 @@ const AdminIncidentReports = () => {
   // ── Filtered data for table ────────────────────────────────────────
   const filteredTableData = useMemo(() => {
     return dataSource.filter((inc) => {
-      if (activeTab !== "all" && inc.status !== activeTab) return false;
+      if (activeTab !== "all" && toDisplayStatusKey(inc.status) !== activeTab) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         const matchesSearch =
@@ -608,7 +616,7 @@ const AdminIncidentReports = () => {
   const filteredMapData = useMemo(() => {
     return dataSource.filter((inc) => {
       // For known statuses, respect the toggle; for unknown statuses, show by default
-      if (visibleStatuses[inc.status] === false) return false;
+      if (visibleStatuses[toDisplayStatusKey(inc.status)] === false) return false;
       if (mapType !== "All Types" && inc.type !== mapType) return false;
       if (mapStartDate && inc.date < mapStartDate) return false;
       if (mapEndDate && inc.date > mapEndDate) return false;
@@ -632,7 +640,8 @@ const AdminIncidentReports = () => {
     };
     dataSource.forEach((inc) => {
       counts.all++;
-      if (counts[inc.status] !== undefined) counts[inc.status]++;
+      const displayKey = toDisplayStatusKey(inc.status);
+      if (counts[displayKey] !== undefined) counts[displayKey]++;
     });
     return counts;
   }, [dataSource]);
@@ -1397,7 +1406,7 @@ const AdminIncidentReports = () => {
                   {/* Incident/Complaint markers */}
                   {filteredMapData.map((inc) => {
                     const cfg =
-                      STATUS_CONFIG[inc.status] || STATUS_CONFIG.pending;
+                      STATUS_CONFIG[toDisplayStatusKey(inc.status)] || STATUS_CONFIG.pending;
                     return (
                       <CircleMarker
                         key={inc.id}

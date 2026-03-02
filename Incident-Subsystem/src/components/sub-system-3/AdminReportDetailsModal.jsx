@@ -223,8 +223,24 @@ const STATUS_CONFIG = {
   pending: { label: "NEW (PENDING)", color: "#dc2626" },
   dispatched: { label: "DISPATCHED", color: "#f59e0b" },
   active: { label: "ON-SITE (ACTIVE)", color: "#2563eb" },
+  "in-progress": { label: "IN PROGRESS", color: "#2563eb" },
+  "on-site": { label: "ON-SITE", color: "#2563eb" },
   resolved: { label: "RESOLVED", color: "#16a34a" },
   rejected: { label: "REJECTED", color: "#6b7280" },
+};
+
+// Map backend complaint statuses (in-progress / on-site) → frontend STATUS_CONFIG key
+const toDisplayStatus = (backendStatus, isComplaint) => {
+  if (!isComplaint) return backendStatus || "pending";
+  if (backendStatus === "in-progress" || backendStatus === "on-site") return "active";
+  return backendStatus || "pending";
+};
+
+// Map frontend STATUS_CONFIG key → backend status (complaints only)
+const toBackendStatus = (displayStatus, isComplaint) => {
+  if (!isComplaint) return displayStatus;
+  if (displayStatus === "active") return "in-progress";
+  return displayStatus;
 };
 
 const AdminReportDetailsModal = ({
@@ -241,7 +257,7 @@ const AdminReportDetailsModal = ({
   const [noteText, setNoteText] = useState("");
   const [dispatchedTeam, setDispatchedTeam] = useState(null);
   const [currentStatus, setCurrentStatus] = useState(
-    incident?.status || "pending",
+    toDisplayStatus(incident?.status, reportType === "complaints"),
   );
   const [showUpdate, setShowUpdate] = useState(false);
   const [updateText, setUpdateText] = useState("");
@@ -255,7 +271,7 @@ const AdminReportDetailsModal = ({
   // Reset all state and load updates when a different incident is opened
   useEffect(() => {
     if (!incident) return;
-    setCurrentStatus(incident.status || "pending");
+    setCurrentStatus(toDisplayStatus(incident.status, reportType === "complaints"));
     setModalTab("details");
     setPhotoIndex(0);
     setShowDispatch(false);
@@ -308,7 +324,9 @@ const AdminReportDetailsModal = ({
   // Call the correct update API based on report type
   const updateReport = async (updates) => {
     if (reportType === "complaints") {
-      return updateComplaint(incident.id, updates);
+      const mapped = { ...updates };
+      if (mapped.status) mapped.status = toBackendStatus(mapped.status, true);
+      return updateComplaint(incident.id, mapped);
     }
     return incidentService.updateIncident(incident.id, updates);
   };
@@ -340,7 +358,7 @@ const AdminReportDetailsModal = ({
     try {
       await updateReport({ status: newStatus });
       setCurrentStatus(newStatus);
-      if (onStatusUpdate) onStatusUpdate(incident.id, newStatus);
+      if (onStatusUpdate) onStatusUpdate(incident.id, toBackendStatus(newStatus, reportType === "complaints"));
       await pushUpdate({
         text: `Status updated to: ${STATUS_CONFIG[newStatus]?.label || newStatus.toUpperCase()}`,
         type: "status",

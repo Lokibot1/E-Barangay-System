@@ -8,6 +8,22 @@ const TOAST_DURATION = 5000;
 const capitalize = (str) =>
   str ? str.replace(/\b\w/g, (c) => c.toUpperCase()) : str;
 
+const formatScheduledAt = (scheduledAt) => {
+  if (!scheduledAt) return null;
+  try {
+    return new Date(scheduledAt).toLocaleString("en-PH", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch {
+    return null;
+  }
+};
+
 // ── Status-based styling ─────────────────────────────────────────────────
 const getStatusStyle = (newStatus) => {
   const s = (newStatus || "").toLowerCase();
@@ -52,7 +68,11 @@ const SingleToast = memo(({ event, onDismiss, currentTheme }) => {
   const [exiting, setExiting] = useState(false);
   const navigate = useNavigate();
   const isDark = currentTheme === "dark";
-  const style = getStatusStyle(event.newStatus);
+
+  const isAppointment = event.type === "appointment_scheduled";
+  const style = isAppointment
+    ? { border: "border-l-amber-500", bg: "bg-amber-100", bgDark: "bg-amber-900/60", text: "text-amber-600", textDark: "text-amber-400" }
+    : getStatusStyle(event.newStatus);
 
   useEffect(() => {
     const timer = setTimeout(() => setExiting(true), TOAST_DURATION);
@@ -72,6 +92,13 @@ const SingleToast = memo(({ event, onDismiss, currentTheme }) => {
 
   const isIncident = event.source === "incident";
 
+  // Appointment-specific display values
+  const apptScheduledAt = isAppointment
+    ? formatScheduledAt(
+        event.data?.scheduled_at ?? event.data?.appointment?.scheduled_at
+      )
+    : null;
+
   return (
     <div
       onClick={handleClick}
@@ -88,10 +115,26 @@ const SingleToast = memo(({ event, onDismiss, currentTheme }) => {
       <div
         className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${isDark ? style.bgDark : style.bg}`}
       >
-        <StatusIcon
-          newStatus={event.newStatus}
-          className={`w-5 h-5 ${isDark ? style.textDark : style.text}`}
-        />
+        {isAppointment ? (
+          <svg
+            className={`w-5 h-5 ${isDark ? style.textDark : style.text}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+        ) : (
+          <StatusIcon
+            newStatus={event.newStatus}
+            className={`w-5 h-5 ${isDark ? style.textDark : style.text}`}
+          />
+        )}
       </div>
 
       {/* Content */}
@@ -99,12 +142,18 @@ const SingleToast = memo(({ event, onDismiss, currentTheme }) => {
         <p
           className={`font-semibold text-sm ${isDark ? "text-slate-100" : "text-slate-900"} font-kumbh`}
         >
-          {isIncident ? "Incident" : "Complaint"} Status Updated
+          {isAppointment
+            ? "Appointment Scheduled"
+            : `${isIncident ? "Incident" : "Complaint"} Status Updated`}
         </p>
         <p
           className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-slate-600"} font-kumbh line-clamp-1`}
         >
-          {capitalize(event.oldStatus)} → {capitalize(event.newStatus)}
+          {isAppointment
+            ? apptScheduledAt
+              ? `Scheduled: ${apptScheduledAt}`
+              : "Your complaint appointment has been set."
+            : `${capitalize(event.oldStatus)} → ${capitalize(event.newStatus)}`}
         </p>
         <p
           className={`text-xs mt-1 ${isDark ? "text-slate-500" : "text-slate-400"} font-kumbh`}
