@@ -46,6 +46,145 @@ const playNotificationSound = () => {
   }
 };
 
+// ── Appointment detail helpers ──────────────────────────────────────────
+const parseApptScheduledAt = (scheduledAt) => {
+  if (!scheduledAt) return { date: null, time: null };
+  const [datePart, timePart] = String(scheduledAt).split(/[T ]/);
+  return { date: datePart || null, time: timePart ? timePart.substring(0, 5) : null };
+};
+
+const formatApptTime = (timeStr) => {
+  if (!timeStr) return "—";
+  const [h, m] = timeStr.split(":");
+  const hour = parseInt(h, 10);
+  const mins = m || "00";
+  const ampm = hour < 12 ? "AM" : "PM";
+  const disp = hour % 12 || 12;
+  return `${disp}:${mins} ${ampm}`;
+};
+
+const APPT_STATUS_BADGE = {
+  scheduled:   "bg-blue-100 text-blue-700 border border-blue-200",
+  rescheduled: "bg-amber-100 text-amber-700 border border-amber-200",
+  completed:   "bg-green-100 text-green-700 border border-green-200",
+  cancelled:   "bg-gray-100 text-gray-500 border border-gray-200",
+  no_show:     "bg-red-100 text-red-700 border border-red-200",
+};
+
+// ── User Appointment Details Modal ───────────────────────────────────────
+const UserAppointmentDetailsModal = ({ notification, onClose, isDark, t }) => {
+  const data = notification.data || {};
+  const { date, time } = parseApptScheduledAt(data.scheduled_at);
+
+  const fullDate = date
+    ? new Date(date + "T00:00:00").toLocaleDateString("en-US", {
+        weekday: "long", month: "long", day: "numeric", year: "numeric",
+      })
+    : "—";
+
+  const status = (data.status || "scheduled").toLowerCase().replace(/-/g, "_");
+  const badgeCls = APPT_STATUS_BADGE[status] || APPT_STATUS_BADGE.scheduled;
+  const title = data.title || notification.description || "Appointment";
+  const description = data.description || notification.description || "";
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className={`${t.cardBg} rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden`}>
+
+        {/* Header */}
+        <div className={`px-6 py-4 border-b ${isDark ? "border-slate-700 bg-slate-900" : "border-gray-200 bg-gray-50"} flex items-center gap-3`}>
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700" : "bg-blue-100"}`}>
+            <svg className={`w-5 h-5 ${isDark ? "text-slate-300" : "text-blue-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className={`text-sm font-bold ${t.cardText} font-spartan truncate`}>{title}</h3>
+            {data.complaint_id && (
+              <p className={`text-xs ${t.subtleText} font-kumbh`}>
+                Complaint #{data.complaint_id}
+                {data.appointment_id ? ` · Appointment #${data.appointment_id}` : ""}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${isDark ? "hover:bg-slate-700 text-slate-400" : "hover:bg-gray-200 text-gray-400"}`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5 space-y-4">
+
+          {/* Status */}
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold font-kumbh uppercase ${badgeCls}`}>
+            {status.replace(/_/g, " ")}
+          </span>
+
+          {/* Date & Time */}
+          <div className={`flex gap-3 p-4 rounded-xl ${isDark ? "bg-slate-700" : "bg-blue-50"} border ${isDark ? "border-slate-600" : "border-blue-100"}`}>
+            <div className="flex-1">
+              <p className={`text-[10px] font-bold uppercase tracking-wide mb-1 font-kumbh ${isDark ? "text-slate-400" : "text-blue-500"}`}>Date</p>
+              <p className={`text-sm font-bold font-spartan ${t.cardText}`}>{fullDate}</p>
+            </div>
+            <div className={`w-px ${isDark ? "bg-slate-600" : "bg-blue-200"}`} />
+            <div className="flex-shrink-0 text-right">
+              <p className={`text-[10px] font-bold uppercase tracking-wide mb-1 font-kumbh ${isDark ? "text-slate-400" : "text-blue-500"}`}>Time</p>
+              <p className={`text-sm font-bold font-spartan ${t.cardText}`}>{formatApptTime(time)}</p>
+            </div>
+          </div>
+
+          {/* Detail rows */}
+          <div className={`rounded-xl border ${t.cardBorder} divide-y ${isDark ? "divide-slate-700" : "divide-gray-100"} overflow-hidden`}>
+            {data.complaint_id && (
+              <div className={`flex items-center px-4 py-3 ${isDark ? "bg-slate-800" : "bg-white"}`}>
+                <span className={`text-xs font-semibold w-36 flex-shrink-0 font-kumbh ${t.subtleText}`}>Complaint</span>
+                <span className={`text-xs font-kumbh ${t.cardText}`}>#{data.complaint_id}</span>
+              </div>
+            )}
+            {description && description !== title && (
+              <div className={`px-4 py-3 ${isDark ? "bg-slate-800" : "bg-white"}`}>
+                <span className={`text-xs font-semibold font-kumbh ${t.subtleText} block mb-1`}>Details</span>
+                <span className={`text-xs font-kumbh ${t.cardText} leading-relaxed`}>{description}</span>
+              </div>
+            )}
+            <div className={`flex items-center px-4 py-3 ${isDark ? "bg-slate-800" : "bg-white"}`}>
+              <span className={`text-xs font-semibold w-36 flex-shrink-0 font-kumbh ${t.subtleText}`}>Received</span>
+              <span className={`text-xs font-kumbh ${t.cardText}`}>
+                {notification.timestamp
+                  ? new Date(
+                      typeof notification.timestamp === "string" &&
+                      /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}/.test(notification.timestamp)
+                        ? notification.timestamp.replace(" ", "T") + "Z"
+                        : notification.timestamp
+                    ).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })
+                  : "—"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className={`px-6 py-4 border-t ${isDark ? "border-slate-700 bg-slate-900" : "border-gray-100 bg-gray-50"} flex justify-end`}>
+          <button
+            onClick={onClose}
+            className={`px-4 py-2 rounded-lg text-sm font-kumbh font-semibold transition-colors ${
+              isDark ? "bg-slate-700 text-slate-300 hover:bg-slate-600" : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+            }`}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Relative time utility ───────────────────────────────────────────────
 // Laravel may return timestamps as "YYYY-MM-DD HH:MM:SS" or
 // "YYYY-MM-DDTHH:MM:SS.ffffff" without a timezone indicator — these are UTC.
@@ -69,7 +208,7 @@ const getRelativeTime = (date) => {
 };
 
 // ── Memoized notification list item ─────────────────────────────────────
-const NotificationItem = memo(({ notification, isDark, onMarkAsRead }) => {
+const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppointment }) => {
   const statusColor = notification.read ? "bg-gray-400" : "bg-amber-500";
   const statusLabel = notification.read ? "Read" : "New";
   const timeAgo = getRelativeTime(notification.timestamp);
@@ -85,9 +224,16 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead }) => {
   const capitalize = (str) =>
     str ? str.replace(/\b\w/g, (c) => c.toUpperCase()) : str;
 
+  const handleClick = () => {
+    onMarkAsRead(notification.id);
+    if (isAppointment && onViewAppointment) {
+      onViewAppointment(notification);
+    }
+  };
+
   return (
     <div
-      onClick={() => onMarkAsRead(notification.id)}
+      onClick={handleClick}
       className={`p-3 sm:p-4 border-b ${isDark ? "border-slate-700 hover:bg-slate-700" : "border-slate-100 hover:bg-slate-50"} transition-colors cursor-pointer group ${
         !notification.read
           ? isDark
@@ -129,11 +275,16 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead }) => {
           </p>
         </div>
       </div>
-      <p
-        className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"} font-kumbh mt-2`}
-      >
-        {timeAgo}{notification.reportedBy ? ` · Reported by ${notification.reportedBy}` : ""}
-      </p>
+      <div className="flex items-center justify-between mt-2">
+        <p className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"} font-kumbh`}>
+          {timeAgo}{notification.reportedBy ? ` · Reported by ${notification.reportedBy}` : ""}
+        </p>
+        {isAppointment && (
+          <span className={`text-[10px] font-semibold font-kumbh ${isDark ? "text-blue-400" : "text-blue-500"}`}>
+            View details →
+          </span>
+        )}
+      </div>
     </div>
   );
 });
@@ -146,6 +297,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const [appointmentDetail, setAppointmentDetail] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { language, setLanguage, tr } = useLanguage();
@@ -314,6 +466,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                             notification={notification}
                             isDark={isDark}
                             onMarkAsRead={handleMarkAsRead}
+                            onViewAppointment={setAppointmentDetail}
                           />
                         ))
                       ) : (
@@ -573,6 +726,15 @@ const Header = ({ currentTheme, onThemeChange }) => {
           </div>
         </div>
       </header>
+
+      {appointmentDetail && (
+        <UserAppointmentDetailsModal
+          notification={appointmentDetail}
+          onClose={() => setAppointmentDetail(null)}
+          isDark={isDark}
+          t={t}
+        />
+      )}
 
       <ThemeModal
         isOpen={isThemeModalOpen}
