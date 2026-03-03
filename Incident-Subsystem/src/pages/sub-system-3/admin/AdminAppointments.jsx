@@ -153,27 +153,120 @@ const MiniCalendar = ({ appointments, selectedDate, onSelectDate, currentTheme }
 };
 
 // ── Reschedule Modal ──────────────────────────────────────────────────────────
+// ── Inline weekday-only date picker used by RescheduleModal ───────────────────
+const WeekdayPicker = ({ value, onChange, isDark, t }) => {
+  const today = new Date().toISOString().split("T")[0];
+  const [viewMonth, setViewMonth] = useState(() => {
+    if (value) return new Date(value + "T00:00:00");
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
+
+  const year  = viewMonth.getFullYear();
+  const month = viewMonth.getMonth();
+
+  const MONTH_NAMES = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December",
+  ];
+  const DAY_NAMES = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+
+  const firstDow  = new Date(year, month, 1).getDay();
+  const daysInMon = new Date(year, month + 1, 0).getDate();
+
+  const cells = [];
+  for (let i = 0; i < firstDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMon; d++) cells.push(d);
+
+  return (
+    <div className={`rounded-xl border ${t.cardBorder} p-3 ${isDark ? "bg-slate-800" : "bg-white"}`}>
+      {/* Month nav */}
+      <div className="flex items-center justify-between mb-2">
+        <button
+          type="button"
+          onClick={() => setViewMonth(new Date(year, month - 1, 1))}
+          className={`p-1 rounded-lg transition-colors ${isDark ? "hover:bg-slate-700 text-slate-300" : "hover:bg-gray-100 text-gray-600"}`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <span className={`text-xs font-bold font-spartan ${t.cardText}`}>
+          {MONTH_NAMES[month]} {year}
+        </span>
+        <button
+          type="button"
+          onClick={() => setViewMonth(new Date(year, month + 1, 1))}
+          className={`p-1 rounded-lg transition-colors ${isDark ? "hover:bg-slate-700 text-slate-300" : "hover:bg-gray-100 text-gray-600"}`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Day-name headers */}
+      <div className="grid grid-cols-7 gap-0.5 mb-1">
+        {DAY_NAMES.map((d) => (
+          <div key={d} className={`text-center text-[10px] font-bold font-kumbh py-0.5 ${t.subtleText}`}>
+            {d}
+          </div>
+        ))}
+      </div>
+
+      {/* Day cells */}
+      <div className="grid grid-cols-7 gap-0.5">
+        {cells.map((day, i) => {
+          if (!day) return <div key={`e${i}`} />;
+          const ds  = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+          const dow = new Date(year, month, day).getDay();
+          const isWeekend = dow === 0 || dow === 6;
+          const isPast    = ds < today;
+          const disabled  = isWeekend || isPast;
+          const selected  = value === ds;
+          const isToday   = ds === today;
+
+          return (
+            <button
+              key={day}
+              type="button"
+              disabled={disabled}
+              onClick={() => !disabled && onChange(ds)}
+              className={`relative w-full aspect-square flex items-center justify-center rounded-lg text-[11px] font-kumbh font-medium transition-all ${
+                disabled
+                  ? `opacity-30 cursor-not-allowed ${isDark ? "text-slate-500" : "text-gray-400"}`
+                  : selected
+                    ? "bg-green-600 text-white shadow"
+                    : isToday
+                      ? isDark
+                        ? "bg-slate-600 text-slate-100 font-bold hover:bg-slate-500"
+                        : "bg-blue-50 text-blue-700 font-bold border border-blue-300 hover:bg-blue-100"
+                      : isDark
+                        ? "text-slate-300 hover:bg-slate-700"
+                        : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              {day}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const RescheduleModal = ({ appointment, appointments, onSave, onClose, isDark, t }) => {
   const { date: initDate, time: initTime } = parseScheduledAt(appointment.scheduled_at);
   const [date, setDate] = useState(initDate || appointment.date || "");
   const [time, setTime] = useState(initTime || (appointment.time || "").substring(0, 5));
   const [saving, setSaving] = useState(false);
 
-  const today = new Date().toISOString().split("T")[0];
-
-  const isWeekend = (ds) => {
-    if (!ds) return false;
-    const d = new Date(ds + "T00:00:00");
-    return !BUSINESS_DAYS.includes(d.getDay());
-  };
-
   const conflict =
-    date && time && !isWeekend(date)
+    date && time
       ? !isSlotAvailable(date, time, appointments, appointment.id)
       : false;
 
-  const notWeekday = date ? isWeekend(date) : false;
-  const canSave = date && time && !conflict && !notWeekday;
+  const canSave = date && time && !conflict;
 
   const handleSave = async () => {
     if (!canSave) return;
@@ -220,21 +313,15 @@ const RescheduleModal = ({ appointment, appointments, onSave, onClose, isDark, t
 
         {/* Body */}
         <div className="px-6 py-5 space-y-4">
-          {/* Date */}
+          {/* Date picker */}
           <div>
             <label className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}>
               New Date <span className={`normal-case ${t.subtleText}`}>(Mon – Fri only)</span>
             </label>
-            <input
-              type="date"
-              value={date}
-              min={today}
-              onChange={(e) => setDate(e.target.value)}
-              className={`w-full px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
-            />
-            {notWeekday && (
-              <p className="text-xs text-red-500 mt-1 font-kumbh">
-                Please choose a weekday (Monday – Friday).
+            <WeekdayPicker value={date} onChange={setDate} isDark={isDark} t={t} />
+            {date && (
+              <p className={`text-xs mt-1.5 font-kumbh ${t.subtleText}`}>
+                Selected: <span className={`font-semibold ${t.cardText}`}>{formatDate(date)}</span>
               </p>
             )}
           </div>
