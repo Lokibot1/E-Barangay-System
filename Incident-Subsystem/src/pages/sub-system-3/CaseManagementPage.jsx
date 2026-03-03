@@ -46,7 +46,12 @@ const CaseManagementPage = () => {
   const [apptFilter, setApptFilter] = useState("all");
   const [apptOpen, setApptOpen] = useState(true);
   const [expandedAppt, setExpandedAppt] = useState(null);
+  const [apptPage, setApptPage] = useState(1);
+  const apptListRef    = useRef(null);
+  const apptSentinelRef = useRef(null);
   const [loading, setLoading] = useState(false);
+
+  const APPT_PAGE_SIZE = 8;
   const [currentTheme, setCurrentTheme] = useState(() => {
     return localStorage.getItem("appTheme") || "blue";
   });
@@ -229,6 +234,20 @@ const CaseManagementPage = () => {
     };
   }, []);
 
+  // ── Infinite scroll for appointments list ──────────────────────────────────
+  useEffect(() => {
+    const sentinel  = apptSentinelRef.current;
+    const container = apptListRef.current;
+    if (!sentinel || !container) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setApptPage((p) => p + 1); },
+      { root: container, threshold: 0 },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [apptOpen, apptFilter]); // re-wire when list is toggled or filter changes
+
   // Auto-refresh when user receives status-change notifications
   const { eventVersion } = useUserRealTime();
   const prevEventVersionRef = useRef(0);
@@ -318,6 +337,7 @@ const CaseManagementPage = () => {
               setActiveTab(tab);
               setActiveFilter("ongoing");
               setApptFilter("all");
+              setApptPage(1);
               setExpandedAppt(null);
             }}
             currentTheme={currentTheme}
@@ -390,7 +410,7 @@ const CaseManagementPage = () => {
                         ].map((f) => (
                           <button
                             key={f.key}
-                            onClick={() => setApptFilter(f.key)}
+                            onClick={() => { setApptFilter(f.key); setApptPage(1); setExpandedAppt(null); }}
                             className={`px-3 py-1 rounded-full text-[11px] font-semibold font-kumbh transition-all ${
                               apptFilter === f.key
                                 ? `bg-gradient-to-r ${t.primaryGrad} text-white shadow-sm`
@@ -410,145 +430,187 @@ const CaseManagementPage = () => {
                       </div>
                     )}
 
-                    {/* Appointments list */}
-                    {apptOpen && (
-                      <div className="p-5 space-y-3">
-                        {loading ? (
-                          <div className="py-10 text-center">
-                            <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-3" />
-                            <p className={`text-sm ${t.subtleText} font-kumbh`}>Loading appointments…</p>
+                    {/* Appointments list — scrollable, infinite */}
+                    {apptOpen && (() => {
+                      const pagedAppts = visibleAppts.slice(0, apptPage * APPT_PAGE_SIZE);
+                      const hasMore    = pagedAppts.length < visibleAppts.length;
+
+                      return (
+                        <div
+                          ref={apptListRef}
+                          className="overflow-y-auto custom-scrollbar"
+                          style={{ maxHeight: "520px" }}
+                        >
+                          {/* Sticky column header */}
+                          <div className={`sticky top-0 z-10 flex items-center gap-4 px-4 py-2.5 border-b ${
+                            isDark ? "bg-slate-900 border-slate-700" : "bg-gray-50 border-gray-200"
+                          }`}>
+                            <div className="flex-shrink-0 w-12" />
+                            <div className="flex-1 min-w-0">
+                              <span className={`text-[10px] font-bold uppercase tracking-widest font-kumbh ${t.subtleText}`}>Appointment</span>
+                            </div>
+                            <div className="flex-shrink-0 w-16 text-center hidden sm:block">
+                              <span className={`text-[10px] font-bold uppercase tracking-widest font-kumbh ${t.subtleText}`}>Time</span>
+                            </div>
+                            <div className="flex-shrink-0 w-24 text-right">
+                              <span className={`text-[10px] font-bold uppercase tracking-widest font-kumbh ${t.subtleText}`}>Status</span>
+                            </div>
                           </div>
-                        ) : visibleAppts.length === 0 ? (
-                          <div className="py-10 text-center">
-                            <svg className={`w-12 h-12 ${t.subtleText} mx-auto mb-3`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <p className={`text-sm font-semibold ${t.cardText} font-spartan mb-1`}>No appointments found</p>
-                            <p className={`text-xs ${t.subtleText} font-kumbh`}>
-                              {apptFilter === "all"
-                                ? "You have no barangay appointments yet."
-                                : `No ${apptFilter.replace(/_/g, " ")} appointments.`}
-                            </p>
-                          </div>
-                        ) : (
-                          visibleAppts.map((appt) => {
-                            const status = (appt.status || "scheduled").toLowerCase().replace(/-/g, "_");
-                            const cfg    = apptStatusCfg[status] || apptStatusCfg.scheduled;
-                            const isExp  = expandedAppt === appt.id;
-                            const apptDate = appt.date
-                              ? new Date(appt.date + "T00:00:00").toLocaleDateString("en-US", {
-                                  weekday: "long", month: "long", day: "numeric", year: "numeric",
-                                })
-                              : "—";
 
-                            return (
-                              <div
-                                key={appt.id}
-                                className={`rounded-xl border ${t.cardBorder} ${isDark ? "bg-slate-800" : "bg-white"} shadow-sm overflow-hidden transition-all`}
-                              >
-                                {/* Card header — click to expand */}
-                                <button
-                                  onClick={() => setExpandedAppt(isExp ? null : appt.id)}
-                                  className={`w-full flex items-center gap-4 px-4 py-3.5 ${isDark ? "hover:bg-slate-700" : "hover:bg-gray-50"} transition-colors text-left`}
-                                >
-                                  {/* Date block */}
-                                  <div className={`flex-shrink-0 w-12 text-center rounded-lg px-1 py-1.5 ${isDark ? "bg-slate-700" : "bg-blue-50"}`}>
-                                    <p className={`text-[9px] font-bold uppercase font-kumbh ${isDark ? "text-slate-400" : "text-blue-500"}`}>
-                                      {appt.date ? new Date(appt.date + "T00:00:00").toLocaleDateString("en-US", { month: "short" }) : "—"}
-                                    </p>
-                                    <p className={`text-xl font-bold font-spartan leading-none ${isDark ? "text-slate-100" : "text-blue-700"}`}>
-                                      {appt.date ? new Date(appt.date + "T00:00:00").getDate() : "—"}
-                                    </p>
-                                  </div>
+                          {/* Body */}
+                          {loading ? (
+                            <div className="py-10 text-center">
+                              <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-3" />
+                              <p className={`text-sm ${t.subtleText} font-kumbh`}>Loading appointments…</p>
+                            </div>
+                          ) : visibleAppts.length === 0 ? (
+                            <div className="py-10 text-center">
+                              <svg className={`w-12 h-12 ${t.subtleText} mx-auto mb-3`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z" />
+                              </svg>
+                              <p className={`text-sm font-semibold ${t.cardText} font-spartan mb-1`}>No appointments found</p>
+                              <p className={`text-xs ${t.subtleText} font-kumbh`}>
+                                {apptFilter === "all"
+                                  ? "You have no barangay appointments yet."
+                                  : `No ${apptFilter.replace(/_/g, " ")} appointments.`}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="divide-y divide-transparent">
+                              {pagedAppts.map((appt) => {
+                                const status = (appt.status || "scheduled").toLowerCase().replace(/-/g, "_");
+                                const cfg    = apptStatusCfg[status] || apptStatusCfg.scheduled;
+                                const isExp  = expandedAppt === appt.id;
+                                const apptDate = appt.date
+                                  ? new Date(appt.date + "T00:00:00").toLocaleDateString("en-US", {
+                                      weekday: "long", month: "long", day: "numeric", year: "numeric",
+                                    })
+                                  : "—";
 
-                                  {/* Info */}
-                                  <div className="flex-1 min-w-0">
-                                    <p className={`text-sm font-bold font-spartan ${t.cardText} truncate`}>
-                                      {appt.title || appt.complaint_type || `Appointment #${appt.id}`}
-                                    </p>
-                                    <p className={`text-xs font-kumbh ${t.subtleText}`}>
-                                      {formatApptTime(appt.time)} · Complaint #{appt.complaint_id}
-                                    </p>
-                                  </div>
-
-                                  {/* Status + chevron */}
-                                  <div className="flex items-center gap-2 flex-shrink-0">
-                                    <span className={`hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold font-kumbh uppercase ${cfg.cls}`}>
-                                      {cfg.label}
-                                    </span>
-                                    <svg
-                                      className={`w-4 h-4 ${t.subtleText} transition-transform duration-200 ${isExp ? "rotate-180" : ""}`}
-                                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                return (
+                                  <div
+                                    key={appt.id}
+                                    className={`border-b ${isDark ? "border-slate-700" : "border-gray-100"} last:border-b-0`}
+                                  >
+                                    {/* Row — click to expand */}
+                                    <button
+                                      onClick={() => setExpandedAppt(isExp ? null : appt.id)}
+                                      className={`w-full flex items-center gap-4 px-4 py-3.5 ${isDark ? "hover:bg-slate-700" : "hover:bg-gray-50"} transition-colors text-left`}
                                     >
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                  </div>
-                                </button>
-
-                                {/* Expanded details */}
-                                {isExp && (
-                                  <div className={`px-4 pb-4 border-t ${isDark ? "border-slate-700" : "border-gray-100"} pt-3 space-y-3`}>
-                                    {/* Status (mobile visible here) */}
-                                    <span className={`sm:hidden inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold font-kumbh uppercase ${cfg.cls}`}>
-                                      {cfg.label}
-                                    </span>
-
-                                    {/* Date & time row */}
-                                    <div className={`flex gap-3 p-3 rounded-xl ${isDark ? "bg-slate-700" : "bg-blue-50"} border ${isDark ? "border-slate-600" : "border-blue-100"}`}>
-                                      <div className="flex-1">
-                                        <p className={`text-[10px] font-bold uppercase tracking-wide mb-0.5 font-kumbh ${isDark ? "text-slate-400" : "text-blue-500"}`}>Date</p>
-                                        <p className={`text-sm font-bold font-spartan ${t.cardText}`}>{apptDate}</p>
+                                      {/* Date block */}
+                                      <div className={`flex-shrink-0 w-12 text-center rounded-lg px-1 py-1.5 ${isDark ? "bg-slate-700" : "bg-blue-50"}`}>
+                                        <p className={`text-[9px] font-bold uppercase font-kumbh ${isDark ? "text-slate-400" : "text-blue-500"}`}>
+                                          {appt.date ? new Date(appt.date + "T00:00:00").toLocaleDateString("en-US", { month: "short" }) : "—"}
+                                        </p>
+                                        <p className={`text-xl font-bold font-spartan leading-none ${isDark ? "text-slate-100" : "text-blue-700"}`}>
+                                          {appt.date ? new Date(appt.date + "T00:00:00").getDate() : "—"}
+                                        </p>
                                       </div>
-                                      <div className={`w-px ${isDark ? "bg-slate-600" : "bg-blue-200"}`} />
-                                      <div className="flex-shrink-0 text-right">
-                                        <p className={`text-[10px] font-bold uppercase tracking-wide mb-0.5 font-kumbh ${isDark ? "text-slate-400" : "text-blue-500"}`}>Time</p>
-                                        <p className={`text-sm font-bold font-spartan ${t.cardText}`}>{formatApptTime(appt.time)}</p>
-                                      </div>
-                                    </div>
 
-                                    {/* Where to go */}
-                                    <div className={`flex items-center gap-3 p-3 rounded-xl border ${isDark ? "bg-slate-700 border-slate-600" : "bg-green-50 border-green-200"}`}>
-                                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-600" : "bg-green-100"}`}>
-                                        <svg className={`w-4 h-4 ${isDark ? "text-green-400" : "text-green-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                      {/* Info */}
+                                      <div className="flex-1 min-w-0">
+                                        <p className={`text-sm font-bold font-spartan ${t.cardText} truncate`}>
+                                          {appt.title || appt.complaint_type || `Appointment #${appt.id}`}
+                                        </p>
+                                        <p className={`text-xs font-kumbh ${t.subtleText}`}>
+                                          Complaint #{appt.complaint_id}
+                                        </p>
+                                      </div>
+
+                                      {/* Time (desktop) */}
+                                      <div className="flex-shrink-0 w-16 text-center hidden sm:block">
+                                        <span className={`text-xs font-semibold font-kumbh ${t.cardText}`}>{formatApptTime(appt.time)}</span>
+                                      </div>
+
+                                      {/* Status + chevron */}
+                                      <div className="flex items-center gap-2 flex-shrink-0 w-24 justify-end">
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold font-kumbh uppercase ${cfg.cls}`}>
+                                          {cfg.label}
+                                        </span>
+                                        <svg
+                                          className={`w-4 h-4 ${t.subtleText} transition-transform duration-200 ${isExp ? "rotate-180" : ""}`}
+                                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        >
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                         </svg>
                                       </div>
-                                      <div>
-                                        <p className={`text-[10px] font-bold uppercase tracking-wide font-kumbh ${isDark ? "text-green-400" : "text-green-600"}`}>Where to Go</p>
-                                        <p className={`text-sm font-bold font-spartan ${t.cardText}`}>Gulod Barangay Hall</p>
-                                      </div>
-                                    </div>
+                                    </button>
 
-                                    {/* Detail rows */}
-                                    <div className={`rounded-xl border ${t.cardBorder} divide-y ${isDark ? "divide-slate-700" : "divide-gray-100"} overflow-hidden`}>
-                                      {[
-                                        { label: "Complaint Type",      value: appt.complaint_type || "—" },
-                                        { label: "Respondent",          value: appt.respondent_name || "—" },
-                                        { label: "Respondent Address",  value: appt.respondent_address || "—" },
-                                        { label: "Appointment ID",      value: `#${appt.id}` },
-                                        { label: "Complaint ID",        value: `#${appt.complaint_id || "—"}` },
-                                      ].map(({ label, value }) => (
-                                        <div key={label} className={`flex items-start px-4 py-2.5 ${isDark ? "bg-slate-800" : "bg-white"}`}>
-                                          <span className={`text-xs font-semibold w-36 flex-shrink-0 font-kumbh ${t.subtleText} pt-0.5`}>{label}</span>
-                                          <span className={`text-xs font-kumbh ${t.cardText} leading-relaxed`}>{value}</span>
+                                    {/* Expanded details */}
+                                    {isExp && (
+                                      <div className={`px-5 pb-5 pt-1 space-y-3 ${isDark ? "bg-slate-800/60" : "bg-gray-50/80"}`}>
+                                        {/* Date & time row */}
+                                        <div className={`flex gap-3 p-3 rounded-xl ${isDark ? "bg-slate-700" : "bg-blue-50"} border ${isDark ? "border-slate-600" : "border-blue-100"}`}>
+                                          <div className="flex-1">
+                                            <p className={`text-[10px] font-bold uppercase tracking-wide mb-0.5 font-kumbh ${isDark ? "text-slate-400" : "text-blue-500"}`}>Date</p>
+                                            <p className={`text-sm font-bold font-spartan ${t.cardText}`}>{apptDate}</p>
+                                          </div>
+                                          <div className={`w-px ${isDark ? "bg-slate-600" : "bg-blue-200"}`} />
+                                          <div className="flex-shrink-0 text-right">
+                                            <p className={`text-[10px] font-bold uppercase tracking-wide mb-0.5 font-kumbh ${isDark ? "text-slate-400" : "text-blue-500"}`}>Time</p>
+                                            <p className={`text-sm font-bold font-spartan ${t.cardText}`}>{formatApptTime(appt.time)}</p>
+                                          </div>
                                         </div>
-                                      ))}
-                                      {appt.description && (
-                                        <div className={`px-4 py-2.5 ${isDark ? "bg-slate-800" : "bg-white"}`}>
-                                          <span className={`text-xs font-semibold font-kumbh ${t.subtleText} block mb-1`}>Notes</span>
-                                          <span className={`text-xs font-kumbh ${t.cardText} leading-relaxed`}>{appt.description}</span>
+
+                                        {/* Where to go */}
+                                        <div className={`flex items-center gap-3 p-3 rounded-xl border ${isDark ? "bg-slate-700 border-slate-600" : "bg-green-50 border-green-200"}`}>
+                                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-600" : "bg-green-100"}`}>
+                                            <svg className={`w-4 h-4 ${isDark ? "text-green-400" : "text-green-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                          </div>
+                                          <div>
+                                            <p className={`text-[10px] font-bold uppercase tracking-wide font-kumbh ${isDark ? "text-green-400" : "text-green-600"}`}>Where to Go</p>
+                                            <p className={`text-sm font-bold font-spartan ${t.cardText}`}>Gulod Barangay Hall</p>
+                                          </div>
                                         </div>
-                                      )}
-                                    </div>
+
+                                        {/* Detail rows */}
+                                        <div className={`rounded-xl border ${t.cardBorder} divide-y ${isDark ? "divide-slate-700" : "divide-gray-100"} overflow-hidden`}>
+                                          {[
+                                            { label: "Complaint Type",     value: appt.complaint_type || "—" },
+                                            { label: "Respondent",         value: appt.respondent_name || "—" },
+                                            { label: "Respondent Address", value: appt.respondent_address || "—" },
+                                            { label: "Appointment ID",     value: `#${appt.id}` },
+                                            { label: "Complaint ID",       value: `#${appt.complaint_id || "—"}` },
+                                          ].map(({ label, value }) => (
+                                            <div key={label} className={`flex items-start px-4 py-2.5 ${isDark ? "bg-slate-800" : "bg-white"}`}>
+                                              <span className={`text-xs font-semibold w-36 flex-shrink-0 font-kumbh ${t.subtleText} pt-0.5`}>{label}</span>
+                                              <span className={`text-xs font-kumbh ${t.cardText} leading-relaxed`}>{value}</span>
+                                            </div>
+                                          ))}
+                                          {appt.description && (
+                                            <div className={`px-4 py-2.5 ${isDark ? "bg-slate-800" : "bg-white"}`}>
+                                              <span className={`text-xs font-semibold font-kumbh ${t.subtleText} block mb-1`}>Notes</span>
+                                              <span className={`text-xs font-kumbh ${t.cardText} leading-relaxed`}>{appt.description}</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
-                                )}
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                    )}
+                                );
+                              })}
+
+                              {/* Infinite scroll sentinel — only rendered when more items exist */}
+                              {hasMore && (
+                                <div ref={apptSentinelRef} className="flex justify-center py-4">
+                                  <div className="animate-spin w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full" />
+                                </div>
+                              )}
+
+                              {/* End-of-list note */}
+                              {!hasMore && visibleAppts.length > 0 && (
+                                <p className={`text-center text-[11px] font-kumbh ${t.subtleText} py-3`}>
+                                  All {visibleAppts.length} appointment{visibleAppts.length !== 1 ? "s" : ""} shown
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </>
               );
@@ -745,6 +807,10 @@ const CaseManagementPage = () => {
           opacity: 1;
           transform: translateX(0);
         }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
       `}</style>
     </>
   );
