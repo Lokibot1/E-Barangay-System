@@ -9,6 +9,31 @@ import { incidentService } from "../../services/sub-system-3/incidentService";
 import { getMyComplaints } from "../../services/sub-system-3/complaintService";
 import { useUserRealTime } from "../../context/UserRealTimeContext";
 
+// ── Appointment helpers ────────────────────────────────────────────────────────
+const parseApptScheduledAt = (scheduledAt) => {
+  if (!scheduledAt) return { date: null, time: null };
+  const [datePart, timePart] = String(scheduledAt).split(/[T ]/);
+  return { date: datePart || null, time: timePart ? timePart.substring(0, 5) : null };
+};
+
+const formatApptTime = (timeStr) => {
+  if (!timeStr) return "—";
+  const [h, m] = timeStr.split(":");
+  const hour = parseInt(h, 10);
+  const mins = m || "00";
+  const ampm = hour < 12 ? "AM" : "PM";
+  const disp = hour % 12 || 12;
+  return `${disp}:${mins} ${ampm}`;
+};
+
+const apptStatusCfg = {
+  scheduled:   { label: "Scheduled",   cls: "bg-blue-100 text-blue-700 border border-blue-200" },
+  rescheduled: { label: "Rescheduled", cls: "bg-amber-100 text-amber-700 border border-amber-200" },
+  completed:   { label: "Completed",   cls: "bg-green-100 text-green-700 border border-green-200" },
+  cancelled:   { label: "Cancelled",   cls: "bg-gray-100 text-gray-500 border border-gray-300" },
+  no_show:     { label: "No Show",     cls: "bg-red-100 text-red-700 border border-red-200" },
+};
+
 const CaseManagementPage = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,6 +42,10 @@ const CaseManagementPage = () => {
   const [showMap, setShowMap] = useState(false);
   const [complaints, setComplaints] = useState([]);
   const [incidents, setIncidents] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const [apptFilter, setApptFilter] = useState("all");
+  const [apptOpen, setApptOpen] = useState(true);
+  const [expandedAppt, setExpandedAppt] = useState(null);
   const [loading, setLoading] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(() => {
     return localStorage.getItem("appTheme") || "blue";
@@ -129,10 +158,32 @@ const CaseManagementPage = () => {
         const data = await getMyComplaints();
         const raw = Array.isArray(data) ? data : data.data || [];
         setComplaints(raw.map(normalizeComplaint));
-      } else {
+      } else if (activeTab === "incidents") {
         const data = await incidentService.getMyIncidents();
         const raw = Array.isArray(data) ? data : data.data || [];
         setIncidents(raw.map(normalizeIncident));
+      } else if (activeTab === "appointments") {
+        // Complaints carry nested appointments + respondent data — flatten them
+        const compData = await getMyComplaints();
+        const compArray = Array.isArray(compData) ? compData : compData.data || [];
+
+        const allAppts = [];
+        compArray.forEach((complaint) => {
+          if (!Array.isArray(complaint.appointments) || !complaint.appointments.length) return;
+          complaint.appointments.forEach((appt) => {
+            const { date: parsedDate, time: parsedTime } = parseApptScheduledAt(appt.scheduled_at);
+            allAppts.push({
+              ...appt,
+              complaint_id:       appt.complaint_id ?? complaint.id,
+              complaint_type:     capitalize(complaint.type || "Complaint"),
+              respondent_name:    complaint.respondent_name    || "—",
+              respondent_address: complaint.respondent_address || "—",
+              date:               appt.date || parsedDate,
+              time:               appt.time || parsedTime,
+            });
+          });
+        });
+        setAppointments(allAppts);
       }
     } catch (error) {
       console.error(`Failed to fetch ${activeTab}:`, error);
@@ -266,269 +317,366 @@ const CaseManagementPage = () => {
             onTabChange={(tab) => {
               setActiveTab(tab);
               setActiveFilter("ongoing");
+              setApptFilter("all");
+              setExpandedAppt(null);
             }}
             currentTheme={currentTheme}
           />
 
-          {/* Header */}
-          <div className="mb-6 sm:mb-8">
-            <div className="flex items-center justify-between mb-2">
-              <h2
-                className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}
-              >
-                {activeTab === "complaints"
-                  ? "Complaint Tracker"
-                  : "Incident Tracker"}
-              </h2>
-              <button
-                onClick={() => setShowMap(!showMap)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg ${t.cardBg} border ${t.cardBorder} hover:shadow-md transition-all font-kumbh`}
-              >
-                {showMap ? (
-                  <>
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 6h16M4 10h16M4 14h16M4 18h16"
-                      />
-                    </svg>
-                    <span className="hidden sm:inline">Grid View</span>
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                      />
-                    </svg>
-                    <span className="hidden sm:inline">Map View</span>
-                  </>
-                )}
-              </button>
-            </div>
-            <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh text-left`}>
-              {activeTab === "complaints"
-                ? "View and track your submitted complaints"
-                : "View and track your submitted incident reports"}
-            </p>
-          </div>
+          {activeTab === "appointments" ? (
+            /* ── Appointments Tab ─────────────────────────────────────────── */
+            (() => {
+              const apptStatusKey = (a) => (a.status || "scheduled").toLowerCase().replace(/-/g, "_");
+              const apptCounts = ["all","scheduled","rescheduled","completed","cancelled","no_show"].reduce((acc, k) => {
+                acc[k] = k === "all" ? appointments.length : appointments.filter((a) => apptStatusKey(a) === k).length;
+                return acc;
+              }, {});
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-            <div
-              className={`sr-elem ${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p
-                    className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}
+              const visibleAppts = apptFilter === "all"
+                ? appointments
+                : appointments.filter((a) => apptStatusKey(a) === apptFilter);
+
+              return (
+                <>
+                  {/* Header */}
+                  <div className="mb-6 sm:mb-8">
+                    <h2 className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan mb-1`}>
+                      My Appointments
+                    </h2>
+                    <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh`}>
+                      Barangay hearing appointments scheduled for your complaints
+                    </p>
+                  </div>
+
+                  {/* Collapsible appointments section */}
+                  <div className={`${t.cardBg} rounded-2xl border ${t.cardBorder} shadow-md overflow-hidden`}>
+
+                    {/* Section header / toggle */}
+                    <button
+                      onClick={() => setApptOpen((v) => !v)}
+                      className={`w-full flex items-center gap-3 px-5 py-4 ${isDark ? "hover:bg-slate-700" : "hover:bg-gray-50"} transition-colors`}
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700" : "bg-blue-100"}`}>
+                        <svg className={`w-4 h-4 ${isDark ? "text-slate-300" : "text-blue-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 text-left">
+                        <span className={`text-sm font-bold font-spartan ${t.cardText}`}>
+                          Appointment List
+                        </span>
+                        <span className={`ml-2 text-[11px] font-kumbh ${t.subtleText}`}>
+                          {visibleAppts.length} {apptFilter === "all" ? "total" : apptFilter.replace(/_/g, " ")}
+                        </span>
+                      </div>
+                      <svg
+                        className={`w-4 h-4 ${t.subtleText} transition-transform duration-300 ${apptOpen ? "rotate-180" : ""}`}
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {/* Status filter pills */}
+                    {apptOpen && (
+                      <div className={`px-5 pb-3 flex flex-wrap gap-2 border-b ${isDark ? "border-slate-700" : "border-gray-100"}`}>
+                        {[
+                          { key: "all",         label: "All" },
+                          { key: "scheduled",   label: "Scheduled" },
+                          { key: "rescheduled", label: "Rescheduled" },
+                          { key: "completed",   label: "Completed" },
+                          { key: "cancelled",   label: "Cancelled" },
+                          { key: "no_show",     label: "No Show" },
+                        ].map((f) => (
+                          <button
+                            key={f.key}
+                            onClick={() => setApptFilter(f.key)}
+                            className={`px-3 py-1 rounded-full text-[11px] font-semibold font-kumbh transition-all ${
+                              apptFilter === f.key
+                                ? `bg-gradient-to-r ${t.primaryGrad} text-white shadow-sm`
+                                : isDark
+                                  ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
+                          >
+                            {f.label}
+                            {apptCounts[f.key] !== undefined && (
+                              <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${apptFilter === f.key ? "bg-white/20" : isDark ? "bg-slate-600" : "bg-white"}`}>
+                                {apptCounts[f.key] ?? appointments.filter((a) => (a.status || "").toLowerCase().replace(/-/g,"_") === f.key).length}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Appointments list */}
+                    {apptOpen && (
+                      <div className="p-5 space-y-3">
+                        {loading ? (
+                          <div className="py-10 text-center">
+                            <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-3" />
+                            <p className={`text-sm ${t.subtleText} font-kumbh`}>Loading appointments…</p>
+                          </div>
+                        ) : visibleAppts.length === 0 ? (
+                          <div className="py-10 text-center">
+                            <svg className={`w-12 h-12 ${t.subtleText} mx-auto mb-3`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <p className={`text-sm font-semibold ${t.cardText} font-spartan mb-1`}>No appointments found</p>
+                            <p className={`text-xs ${t.subtleText} font-kumbh`}>
+                              {apptFilter === "all"
+                                ? "You have no barangay appointments yet."
+                                : `No ${apptFilter.replace(/_/g, " ")} appointments.`}
+                            </p>
+                          </div>
+                        ) : (
+                          visibleAppts.map((appt) => {
+                            const status = (appt.status || "scheduled").toLowerCase().replace(/-/g, "_");
+                            const cfg    = apptStatusCfg[status] || apptStatusCfg.scheduled;
+                            const isExp  = expandedAppt === appt.id;
+                            const apptDate = appt.date
+                              ? new Date(appt.date + "T00:00:00").toLocaleDateString("en-US", {
+                                  weekday: "long", month: "long", day: "numeric", year: "numeric",
+                                })
+                              : "—";
+
+                            return (
+                              <div
+                                key={appt.id}
+                                className={`rounded-xl border ${t.cardBorder} ${isDark ? "bg-slate-800" : "bg-white"} shadow-sm overflow-hidden transition-all`}
+                              >
+                                {/* Card header — click to expand */}
+                                <button
+                                  onClick={() => setExpandedAppt(isExp ? null : appt.id)}
+                                  className={`w-full flex items-center gap-4 px-4 py-3.5 ${isDark ? "hover:bg-slate-700" : "hover:bg-gray-50"} transition-colors text-left`}
+                                >
+                                  {/* Date block */}
+                                  <div className={`flex-shrink-0 w-12 text-center rounded-lg px-1 py-1.5 ${isDark ? "bg-slate-700" : "bg-blue-50"}`}>
+                                    <p className={`text-[9px] font-bold uppercase font-kumbh ${isDark ? "text-slate-400" : "text-blue-500"}`}>
+                                      {appt.date ? new Date(appt.date + "T00:00:00").toLocaleDateString("en-US", { month: "short" }) : "—"}
+                                    </p>
+                                    <p className={`text-xl font-bold font-spartan leading-none ${isDark ? "text-slate-100" : "text-blue-700"}`}>
+                                      {appt.date ? new Date(appt.date + "T00:00:00").getDate() : "—"}
+                                    </p>
+                                  </div>
+
+                                  {/* Info */}
+                                  <div className="flex-1 min-w-0">
+                                    <p className={`text-sm font-bold font-spartan ${t.cardText} truncate`}>
+                                      {appt.title || appt.complaint_type || `Appointment #${appt.id}`}
+                                    </p>
+                                    <p className={`text-xs font-kumbh ${t.subtleText}`}>
+                                      {formatApptTime(appt.time)} · Complaint #{appt.complaint_id}
+                                    </p>
+                                  </div>
+
+                                  {/* Status + chevron */}
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    <span className={`hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold font-kumbh uppercase ${cfg.cls}`}>
+                                      {cfg.label}
+                                    </span>
+                                    <svg
+                                      className={`w-4 h-4 ${t.subtleText} transition-transform duration-200 ${isExp ? "rotate-180" : ""}`}
+                                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    >
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                  </div>
+                                </button>
+
+                                {/* Expanded details */}
+                                {isExp && (
+                                  <div className={`px-4 pb-4 border-t ${isDark ? "border-slate-700" : "border-gray-100"} pt-3 space-y-3`}>
+                                    {/* Status (mobile visible here) */}
+                                    <span className={`sm:hidden inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold font-kumbh uppercase ${cfg.cls}`}>
+                                      {cfg.label}
+                                    </span>
+
+                                    {/* Date & time row */}
+                                    <div className={`flex gap-3 p-3 rounded-xl ${isDark ? "bg-slate-700" : "bg-blue-50"} border ${isDark ? "border-slate-600" : "border-blue-100"}`}>
+                                      <div className="flex-1">
+                                        <p className={`text-[10px] font-bold uppercase tracking-wide mb-0.5 font-kumbh ${isDark ? "text-slate-400" : "text-blue-500"}`}>Date</p>
+                                        <p className={`text-sm font-bold font-spartan ${t.cardText}`}>{apptDate}</p>
+                                      </div>
+                                      <div className={`w-px ${isDark ? "bg-slate-600" : "bg-blue-200"}`} />
+                                      <div className="flex-shrink-0 text-right">
+                                        <p className={`text-[10px] font-bold uppercase tracking-wide mb-0.5 font-kumbh ${isDark ? "text-slate-400" : "text-blue-500"}`}>Time</p>
+                                        <p className={`text-sm font-bold font-spartan ${t.cardText}`}>{formatApptTime(appt.time)}</p>
+                                      </div>
+                                    </div>
+
+                                    {/* Where to go */}
+                                    <div className={`flex items-center gap-3 p-3 rounded-xl border ${isDark ? "bg-slate-700 border-slate-600" : "bg-green-50 border-green-200"}`}>
+                                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-600" : "bg-green-100"}`}>
+                                        <svg className={`w-4 h-4 ${isDark ? "text-green-400" : "text-green-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                      </div>
+                                      <div>
+                                        <p className={`text-[10px] font-bold uppercase tracking-wide font-kumbh ${isDark ? "text-green-400" : "text-green-600"}`}>Where to Go</p>
+                                        <p className={`text-sm font-bold font-spartan ${t.cardText}`}>Gulod Barangay Hall</p>
+                                      </div>
+                                    </div>
+
+                                    {/* Detail rows */}
+                                    <div className={`rounded-xl border ${t.cardBorder} divide-y ${isDark ? "divide-slate-700" : "divide-gray-100"} overflow-hidden`}>
+                                      {[
+                                        { label: "Complaint Type",      value: appt.complaint_type || "—" },
+                                        { label: "Respondent",          value: appt.respondent_name || "—" },
+                                        { label: "Respondent Address",  value: appt.respondent_address || "—" },
+                                        { label: "Appointment ID",      value: `#${appt.id}` },
+                                        { label: "Complaint ID",        value: `#${appt.complaint_id || "—"}` },
+                                      ].map(({ label, value }) => (
+                                        <div key={label} className={`flex items-start px-4 py-2.5 ${isDark ? "bg-slate-800" : "bg-white"}`}>
+                                          <span className={`text-xs font-semibold w-36 flex-shrink-0 font-kumbh ${t.subtleText} pt-0.5`}>{label}</span>
+                                          <span className={`text-xs font-kumbh ${t.cardText} leading-relaxed`}>{value}</span>
+                                        </div>
+                                      ))}
+                                      {appt.description && (
+                                        <div className={`px-4 py-2.5 ${isDark ? "bg-slate-800" : "bg-white"}`}>
+                                          <span className={`text-xs font-semibold font-kumbh ${t.subtleText} block mb-1`}>Notes</span>
+                                          <span className={`text-xs font-kumbh ${t.cardText} leading-relaxed`}>{appt.description}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()
+          ) : (
+            /* ── Complaints / Incidents Tabs ───────────────────────────────── */
+            <>
+              {/* Header */}
+              <div className="mb-6 sm:mb-8">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}>
+                    {activeTab === "complaints" ? "Complaint Tracker" : "Incident Tracker"}
+                  </h2>
+                  <button
+                    onClick={() => setShowMap(!showMap)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg ${t.cardBg} border ${t.cardBorder} hover:shadow-md transition-all font-kumbh`}
                   >
-                    On-Going
-                  </p>
-                  <p
-                    className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}
-                  >
-                    {statusCounts.ongoing}
-                  </p>
+                    {showMap ? (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                        </svg>
+                        <span className="hidden sm:inline">Grid View</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        <span className="hidden sm:inline">Map View</span>
+                      </>
+                    )}
+                  </button>
                 </div>
-                <div
-                  className={`w-12 h-12 sm:w-14 sm:h-14 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0`}
-                >
-                  <svg
-                    className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh text-left`}>
+                  {activeTab === "complaints"
+                    ? "View and track your submitted complaints"
+                    : "View and track your submitted incident reports"}
+                </p>
+              </div>
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div className={`sr-elem ${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}>On-Going</p>
+                      <p className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}>{statusCounts.ongoing}</p>
+                    </div>
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`sr-elem ${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`} style={{ transitionDelay: "0.1s" }}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}>Resolved</p>
+                      <p className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}>{statusCounts.resolved}</p>
+                    </div>
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg className="w-6 h-6 sm:w-7 sm:h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`sr-elem ${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all sm:col-span-2 lg:col-span-1`} style={{ transitionDelay: "0.2s" }}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}>Rejected</p>
+                      <p className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}>{statusCounts.rejected}</p>
+                    </div>
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg className="w-6 h-6 sm:w-7 sm:h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div
-              className={`sr-elem ${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`}
-              style={{ transitionDelay: "0.1s" }}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p
-                    className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}
-                  >
-                    Resolved
-                  </p>
-                  <p
-                    className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}
-                  >
-                    {statusCounts.resolved}
-                  </p>
-                </div>
-                <div
-                  className={`w-12 h-12 sm:w-14 sm:h-14 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0`}
-                >
-                  <svg
-                    className="w-6 h-6 sm:w-7 sm:h-7 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div
-              className={`sr-elem ${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all sm:col-span-2 lg:col-span-1`}
-              style={{ transitionDelay: "0.2s" }}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p
-                    className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}
-                  >
-                    Rejected
-                  </p>
-                  <p
-                    className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}
-                  >
-                    {statusCounts.rejected}
-                  </p>
-                </div>
-                <div
-                  className={`w-12 h-12 sm:w-14 sm:h-14 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0`}
-                >
-                  <svg
-                    className="w-6 h-6 sm:w-7 sm:h-7 text-red-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Filter Tabs */}
-          <div className="sr-elem overflow-x-auto mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
-            <div
-              className={`inline-flex ${t.cardBg} rounded-lg p-1.5 shadow-md border ${t.cardBorder} min-w-full sm:min-w-0`}
-            >
-              {["ongoing", "resolved", "rejected"].map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-2.5 rounded-md font-semibold text-xs sm:text-sm transition-all font-kumbh capitalize whitespace-nowrap ${
-                    activeFilter === filter
-                      ? `bg-gradient-to-r ${t.primaryGrad} text-white shadow-md`
-                      : `${t.subtleText} ${isDark ? "hover:bg-slate-200 hover:text-slate-800" : "hover:bg-slate-100 hover:text-slate-800"}`
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-                    <svg
-                      className="w-3.5 h-3.5 sm:w-4 sm:h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      {filter === "ongoing" && (
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      )}
-                      {filter === "resolved" && (
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      )}
-                      {filter === "rejected" && (
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      )}
-                    </svg>
-                    <span className="hidden sm:inline">{filter}</span>
-                    <span
-                      className={`ml-0.5 sm:ml-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ${
+              {/* Filter Tabs */}
+              <div className="sr-elem overflow-x-auto mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
+                <div className={`inline-flex ${t.cardBg} rounded-lg p-1.5 shadow-md border ${t.cardBorder} min-w-full sm:min-w-0`}>
+                  {["ongoing", "resolved", "rejected"].map((filter) => (
+                    <button
+                      key={filter}
+                      onClick={() => setActiveFilter(filter)}
+                      className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-2.5 rounded-md font-semibold text-xs sm:text-sm transition-all font-kumbh capitalize whitespace-nowrap ${
                         activeFilter === filter
-                          ? "bg-white/20"
-                          : isDark
-                            ? "bg-slate-600 text-slate-300"
-                            : "bg-slate-200 text-slate-700"
+                          ? `bg-gradient-to-r ${t.primaryGrad} text-white shadow-md`
+                          : `${t.subtleText} ${isDark ? "hover:bg-slate-200 hover:text-slate-800" : "hover:bg-slate-100 hover:text-slate-800"}`
                       }`}
                     >
-                      {statusCounts[filter]}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
+                      <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                        <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          {filter === "ongoing" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />}
+                          {filter === "resolved" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />}
+                          {filter === "rejected" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />}
+                        </svg>
+                        <span className="hidden sm:inline">{filter}</span>
+                        <span className={`ml-0.5 sm:ml-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ${
+                          activeFilter === filter ? "bg-white/20" : isDark ? "bg-slate-600 text-slate-300" : "bg-slate-200 text-slate-700"
+                        }`}>
+                          {statusCounts[filter]}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-          {/* Loading State */}
-          {loading ? (
-            <div
-              className={`${t.cardBg} rounded-xl p-8 sm:p-12 text-center border ${t.cardBorder}`}
-            >
-              <div className="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-              <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                Loading {activeTab}...
-              </p>
-            </div>
-          ) : showMap ? (
-            <div className="mb-6">
-              <MapComponent
-                mode="view"
-                markers={getMapMarkers()}
-                currentTheme={currentTheme}
-                height="600px"
-              />
-            </div>
-          ) : (
-            <>
-              {/* Reports Grid */}
-              {filteredReports.length > 0 ? (
+              {/* Loading / Map / Grid */}
+              {loading ? (
+                <div className={`${t.cardBg} rounded-xl p-8 sm:p-12 text-center border ${t.cardBorder}`}>
+                  <div className="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
+                  <p className={`text-sm ${t.subtleText} font-kumbh`}>Loading {activeTab}...</p>
+                </div>
+              ) : showMap ? (
+                <div className="mb-6">
+                  <MapComponent mode="view" markers={getMapMarkers()} currentTheme={currentTheme} height="600px" />
+                </div>
+              ) : filteredReports.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {filteredReports.map((report) => (
                     <ReportCard
@@ -541,30 +689,14 @@ const CaseManagementPage = () => {
                   ))}
                 </div>
               ) : (
-                <div
-                  className={`${t.cardBg} rounded-xl p-8 sm:p-12 text-center border ${t.cardBorder}`}
-                >
-                  <svg
-                    className={`w-12 h-12 sm:w-16 sm:h-16 ${t.subtleText} mx-auto mb-4`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                    />
+                <div className={`${t.cardBg} rounded-xl p-8 sm:p-12 text-center border ${t.cardBorder}`}>
+                  <svg className={`w-12 h-12 sm:w-16 sm:h-16 ${t.subtleText} mx-auto mb-4`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                   </svg>
-                  <h3
-                    className={`text-lg sm:text-xl font-bold ${t.cardText} mb-2 font-spartan`}
-                  >
+                  <h3 className={`text-lg sm:text-xl font-bold ${t.cardText} mb-2 font-spartan`}>
                     No {activeFilter} {activeTab === "complaints" ? "complaints" : "incidents"}
                   </h3>
-                  <p
-                    className={`text-sm sm:text-base ${t.subtleText} font-kumbh`}
-                  >
+                  <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh`}>
                     There are no {activeTab === "complaints" ? "complaints" : "incidents"} with this status at the moment.
                   </p>
                 </div>
