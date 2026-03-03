@@ -14,7 +14,7 @@
   import SignupForm from "./auth/signup/SignUpForm";
   import { useAuthLogic } from "./auth/hooks/useAuthLogic";
   import { useUser } from "../context/UserContext";
-  import { handleDownloadSlip } from "../services/sub-system-1/verification";
+  import { handleDownloadSlip } from "../utils/sub-system-1/documentGenerator";
   import bsbPic from "../assets/images/bgygulod.png";
   import bgyLogo from "../assets/images/bgylogo.png";
 

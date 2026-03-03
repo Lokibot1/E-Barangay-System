@@ -9,6 +9,7 @@ import {
   ResponsiveContainer, Cell,
 } from 'recharts';
 import { StatCard, Card, SectionHeader } from '../AnalyticsInterface';
+import { FileText, CheckCircle, Clock, XCircle, AlertTriangle, Circle } from 'lucide-react';
 import { COLORS, pct, calcVerifRate } from '../analyticsConfig';
 
 export default function RegistrationTab({ raw, t }) {
@@ -51,20 +52,20 @@ export default function RegistrationTab({ raw, t }) {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard icon="📋" label="Total Submitted"  value={totalSubmitted}
+        <StatCard icon={FileText} label="Total Submitted"  value={totalSubmitted}
           sub="With barangay ID application"         color="primary"   t={t} />
-        <StatCard icon="✅" label="Verified"          value={ov.verified ?? 0}
+        <StatCard icon={CheckCircle} label="Verified"          value={ov.verified ?? 0}
           sub={`${pct(ov.verified, totalSubmitted)}% of submitted`} color="success" t={t} />
-        <StatCard icon="⏳" label="Pending"           value={ov.pending ?? 0}
+        <StatCard icon={Clock} label="Pending"           value={ov.pending ?? 0}
           sub="Needs staff action"                   color="warning"   t={t} />
-        <StatCard icon="❌" label="Rejected"          value={ov.rejected ?? 0}
+        <StatCard icon={XCircle} label="Rejected"          value={ov.rejected ?? 0}
           sub="Resubmission needed"                  color="danger"    t={t} />
       </div>
 
       {/* Unregistered alert */}
       {(ov.no_id ?? 0) > 0 && (
         <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm text-orange-700 flex gap-3">
-          <span className="text-xl shrink-0">⚠️</span>
+          <AlertTriangle className="w-6 h-6 shrink-0 text-orange-500" />
           <div>
             <span className="font-black">{ov.no_id} Unregistered Residents</span> — no Barangay ID application on file.
             These are excluded from verification rate calculations since they never submitted.
@@ -119,7 +120,7 @@ export default function RegistrationTab({ raw, t }) {
           </ResponsiveContainer>
           {worstUnreg && (
             <p className="text-xs text-orange-500 font-semibold mt-2">
-              ⚠️ {worstUnreg.purok} has the most unregistered ({worstUnreg.unregistered})
+              <AlertTriangle className="inline-block w-4 h-4 mr-1 text-orange-500" /> {worstUnreg.purok} has the most unregistered ({worstUnreg.unregistered})
             </p>
           )}
         </Card>
@@ -159,9 +160,9 @@ export default function RegistrationTab({ raw, t }) {
             </BarChart>
           </ResponsiveContainer>
           <div className="flex gap-4 mt-3 text-xs font-bold">
-            <span className="text-green-600">🟢 ≥80% Good</span>
-            <span className="text-amber-500">🟡 50–79% Moderate</span>
-            <span className="text-red-500">🔴 &lt;50% Needs Action</span>
+            <span className="text-green-600"><Circle className="inline-block w-3 h-3 mr-1" /> ≥80% Good</span>
+            <span className="text-amber-500"><Circle className="inline-block w-3 h-3 mr-1" /> 50–79% Moderate</span>
+            <span className="text-red-500"><Circle className="inline-block w-3 h-3 mr-1" /> &lt;50% Needs Action</span>
           </div>
         </Card>
       </div>

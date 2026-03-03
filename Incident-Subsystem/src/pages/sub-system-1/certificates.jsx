@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, FileText, UserCheck, ArrowRight, Printer } from 'lucide-react';
-import { useResidents } from '../../hooks/shared/useResidents';
-import { usePrinter } from '../../hooks/shared/usePrinter';
+import { useResidents } from '../../hooks/sub-system-1/useResidents';
+import { usePrinter } from '../../hooks/sub-system-1/usePrinter';
 import themeTokens from '../../Themetokens';
 
 const Certificates = () => {

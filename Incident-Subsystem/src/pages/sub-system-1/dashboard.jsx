@@ -75,9 +75,10 @@ export default function Dashboard() {
         {/* Title row */}
         <div className="flex items-center justify-between px-6 sm:px-8 py-3">
           <div>
-            <h1 className={`text-base font-spartan font-bold ${t.cardText}`}>
-              {tabMeta?.icon} Analytics — {tabMeta?.label}
-            </h1>
+           <h1 className={`text-base font-spartan font-bold ${t.cardText} flex items-center gap-2`}>
+  {tabMeta?.icon && <tabMeta.icon size={18} strokeWidth={2.5} />} 
+  Analytics — {tabMeta?.label}
+</h1>
             <p className={`text-xs font-kumbh ${t.subtleText}`}>
               {lastUpdated
                 ? `Updated: ${lastUpdated.toLocaleTimeString('en-PH')} · Barangay Gulod`
@@ -96,20 +97,23 @@ export default function Dashboard() {
         {/* Tabs scroll row */}
         <div className={`px-6 sm:px-8 overflow-x-auto`}>
           <div className="flex gap-1 min-w-max">
-            {TABS.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-3 py-3 text-sm font-kumbh font-bold whitespace-nowrap border-b-2 transition-colors ${
-                  activeTab === tab.id
-                    ? `${t.sidebarActiveBorder} ${t.sidebarActiveText}`
-                    : `border-transparent ${t.subtleText} hover:${t.sidebarActiveText}`
-                }`}
-              >
-                {tab.icon} {tab.label}
-              </button>
-            ))}
-          </div>
+  {TABS.map(tab => {
+    const Icon = tab.icon; 
+    return (
+      <button
+        key={tab.id}
+        onClick={() => setActiveTab(tab.id)}
+        className={`flex items-center gap-2 px-3 py-3 text-sm font-kumbh font-bold whitespace-nowrap border-b-2 transition-colors ${
+          activeTab === tab.id
+            ? `${t.sidebarActiveBorder} ${t.sidebarActiveText}`
+            : `border-transparent ${t.subtleText} hover:${t.sidebarActiveText}`
+        }`}
+      >
+        <Icon size={16} /> {tab.label}
+      </button>
+    );
+  })}
+</div>
         </div>
       </div>
 

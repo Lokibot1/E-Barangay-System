@@ -1,8 +1,8 @@
 import React from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ShieldCheck, Smartphone, Camera, User, Key, IdCard, AlertTriangle, Download } from 'lucide-react';
-import ModalWrapper from '../common/ModalWrapper';
-import { VERIFY_URL } from '../../../config/api';
+import ModalWrapper from '../../common/ModalWrapper';
+import { VERIFY_URL } from '../../../../config/api';
 
 const VerificationSuccessModal = ({ isOpen, onClose, data, t }) => {
     if (!data) return null;

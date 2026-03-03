@@ -1,9 +1,9 @@
 import React from 'react';
-import DetailHeader from './details/DetailHeader';
-import IdentitySection from './details/IdentitySection';
-import ResidencySection from './details/ResidencySection';
-import EconomicSection from './details/EconomicSection';
-import Profile from './details/Profile';
+import DetailHeader from '../details/DetailHeader';
+import IdentitySection from '../details/IdentitySection';
+import ResidencySection from '../details/ResidencySection';
+import EconomicSection from '../details/EconomicSection';
+import Profile from '../details/Profile';
 
 const VerificationDetailView = (props) => {
   const { data, onZoom, t } = props;

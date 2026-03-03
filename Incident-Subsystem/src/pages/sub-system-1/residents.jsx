@@ -6,9 +6,9 @@ import ResidentFilters from '../../components/sub-system-1/residents/ResidentFil
 import ResidentStats from '../../components/sub-system-1/residents/ResidentStats';
 import Pagination from '../../components/sub-system-1/common/pagination';
 
-import { useResidents } from '../../hooks/shared/useResidents';
-import { usePrinter } from '../../hooks/shared/usePrinter';
-import { getResidencyLabel } from '../../utils/residency';
+import { useResidents } from '../../hooks/sub-system-1/useResidents';
+import { usePrinter } from '../../hooks/sub-system-1/usePrinter';
+import { getResidencyLabel } from '../../utils/sub-system-1/residency';
 import themeTokens from '../../Themetokens';
 
 const Residents = () => {

@@ -17,7 +17,7 @@ import Toast from "../../components/shared/modals/Toast";
 import { login, saveAuth, isAuthenticated, isAdmin } from "../../services/sub-system-3/loginService";
 import { useAuthLogic } from "../../homepage/auth/hooks/useAuthLogic";
 import SignupForm from "../../homepage/auth/signup/SignUpForm";
-import { handleDownloadSlip } from "../../services/sub-system-1/verification";
+import { handleDownloadSlip } from "../../utils/sub-system-1/documentGenerator";
 import bsbPic from "../../assets/images/bgygulod.png";
 import bgyLogo from "../../assets/images/bgylogo.png";
 

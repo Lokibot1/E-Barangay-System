@@ -15,7 +15,6 @@ const VerificationNotificationListener = () => {
   const bannerTimerRef = useRef(null);
   const isFetchingRef = useRef(false);
 
-  // Ninja Clean: clean storage if no login session
   useEffect(() => {
     const token = localStorage.getItem('authToken'); 
     if (!token) {

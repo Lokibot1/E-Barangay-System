@@ -6,9 +6,9 @@ import HouseholdTable from '../../components/sub-system-1/household/householdtab
 import HouseholdModal from '../../components/sub-system-1/household/householdmodal';
 import Pagination from '../../components/sub-system-1/common/pagination';
 
-import { useHouseholds } from '../../hooks/shared/useHousehold';
-import { usePrinter } from '../../hooks/shared/usePrinter';
-import { calculateHouseholdStats } from '../../utils/householdUtils';
+import { useHouseholds } from '../../hooks/sub-system-1/useHousehold';
+import { usePrinter } from '../../hooks/sub-system-1/usePrinter';
+import { calculateHouseholdStats } from '../../utils/sub-system-1/householdUtils';
 import themeTokens from '../../Themetokens';
 
 const Households = () => {

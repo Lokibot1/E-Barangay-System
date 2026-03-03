@@ -1,12 +1,20 @@
 // ============================================================
 // SectorsTab.jsx
-// Imports ONLY from: './AnalyticsUI' and './analyticsConfig'
+// Fixed Lucide rendering
 // ============================================================
 
+import React from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
+import { 
+  Baby, 
+  Accessibility, 
+  UserRound, 
+  Rainbow, 
+  AlertTriangle 
+} from 'lucide-react';
 import { StatCard, Card, SectionHeader } from '../AnalyticsInterface';
 import { COLORS, SECTOR_COLORS } from '../analyticsConfig';
 
@@ -36,12 +44,32 @@ export default function SectorsTab({ raw }) {
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard icon="👴" label="Senior Citizens" value={totalSenior}  sub="Aged 60+"              color="danger"  />
-        <StatCard icon="♿" label="PWD"              value={totalPwd}    sub="Persons w/ Disability"  color="warning" />
-        <StatCard icon="👨‍👧" label="Solo Parent"
-          value={sectorChartData.find(s => s.name === 'Solo Parent')?.value ?? 0} color="teal" />
-        <StatCard icon="🌈" label="LGBTQIA+"
-          value={sectorChartData.find(s => s.name === 'LGBTQIA+')?.value ?? 0}   color="purple" />
+        <StatCard 
+          icon={Baby} 
+          label="Senior Citizens" 
+          value={totalSenior}  
+          sub="Aged 60+"              
+          color="danger"  
+        />
+        <StatCard 
+          icon={Accessibility} 
+          label="PWD"               
+          value={totalPwd}     
+          sub="Persons w/ Disability"  
+          color="warning" 
+        />
+        <StatCard 
+          icon={UserRound} 
+          label="Solo Parent"
+          value={sectorChartData.find(s => s.name === 'Solo Parent')?.value ?? 0} 
+          color="teal" 
+        />
+        <StatCard 
+          icon={Rainbow} 
+          label="LGBTQIA+"
+          value={sectorChartData.find(s => s.name === 'LGBTQIA+')?.value ?? 0}   
+          color="purple" 
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -69,9 +97,10 @@ export default function SectorsTab({ raw }) {
             </BarChart>
           </ResponsiveContainer>
           {worstPurokSenior && (
-            <p className="text-xs text-orange-500 font-semibold mt-2">
-              ⚠️ {worstPurokSenior.purok} has the most seniors ({worstPurokSenior.count}) — priority for ayuda
-            </p>
+            <div className="flex items-center gap-1.5 text-xs text-orange-600 font-semibold mt-2 bg-orange-50 p-2 rounded-md">
+              <AlertTriangle size={14} />
+              <span>{worstPurokSenior.purok} has the most seniors ({worstPurokSenior.count}) — priority for ayuda</span>
+            </div>
           )}
         </Card>
 
@@ -95,8 +124,8 @@ export default function SectorsTab({ raw }) {
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
               <Legend iconSize={10} />
-              <Bar dataKey="ofw"         name="OFW"        fill={COLORS.accent} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="solo_parent" name="Solo Parent" fill={COLORS.teal}  radius={[4, 4, 0, 0]} />
+              <Bar dataKey="ofw"         name="OFW"         fill={COLORS.accent} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="solo_parent" name="Solo Parent" fill={COLORS.teal}   radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Card>

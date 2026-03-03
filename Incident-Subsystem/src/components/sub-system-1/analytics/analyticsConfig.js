@@ -5,69 +5,89 @@
 // DO NOT split this into multiple files.
 // ============================================================
 
+import { 
+  LayoutDashboard, 
+  Map as MapIcon, 
+  Users, 
+  PieChart, 
+  ClipboardList, 
+  Briefcase, 
+  Target,
+  CheckCircle2,
+  Users2,
+  UserRound,
+  Accessibility,
+  AlertTriangle,
+  Baby,
+  Vote
+} from 'lucide-react';
+
 // ─── COLORS ──────────────────────────────────────────────────
 export const COLORS = {
   primary:   '#1a5276',
   secondary: '#2980b9',
-  accent:    '#e67e22',
-  success:   '#27ae60',
-  danger:    '#e74c3c',
-  warning:   '#f39c12',
-  purple:    '#8e44ad',
-  teal:      '#16a085',
-  gray:      '#7f8c8d',
-  pink:      '#c0392b',
+  accent:     '#e67e22',
+  success:    '#27ae60',
+  danger:     '#e74c3c',
+  warning:    '#f39c12',
+  purple:     '#8e44ad',
+  teal:       '#16a085',
+  gray:       '#7f8c8d',
+  pink:       '#c0392b',
 };
 
 export const SECTOR_COLORS = {
-  'Solo Parent':        COLORS.teal,
-  'PWD':                COLORS.warning,
-  'Senior Citizen':     COLORS.danger,
+  'Solo Parent':         COLORS.teal,
+  'PWD':                 COLORS.warning,
+  'Senior Citizen':      COLORS.danger,
   'LGBTQIA+':           COLORS.purple,
-  'Kasambahay':         COLORS.success,
-  'OFW':                COLORS.accent,
+  'Kasambahay':          COLORS.success,
+  'OFW':                 COLORS.accent,
   'General Population': COLORS.primary,
-  'Unclassified':       COLORS.gray,
+  'Unclassified':        COLORS.gray,
 };
 
 // ─── ORDERING ────────────────────────────────────────────────
 export const AGE_ORDER = ['0-17', '18-25', '26-35', '36-50', '51-59', '60+'];
 
 export const INCOME_ORDER = [
-  'No Income', 'Below 5,000', '0',
-  '5,001-10,000', '10,001-20,000',
-  '20,001-30,000', '20,001-40,000', '30,001-40,000',
-  '30,001-50,000', '40,001-50,000', '40,001-70,000',
-  '50,001-100,000', 'Above 50,000', 'Above 100,000',
+  'No Income', 
+  'Below 5,000', 
+  '5,001-10,000', 
+  '10,001-20,000', 
+  '20,001-30,000', 
+  '30,001-40,000', 
+  '40,001-50,000', 
+  '50,001-70,000', 
+  '70,001-100,000', 
+  'Above 100,000',
 ];
 
 // ─── TABS ────────────────────────────────────────────────────
 export const TABS = [
-  { id: 'overview',     label: 'Overview',       icon: '🏠' },
-  { id: 'heatmap',      label: 'Purok Heatmap',  icon: '🗺️' },
-  { id: 'demographics', label: 'Demographics',   icon: '👥' },
-  { id: 'sectors',      label: 'Sectors',        icon: '📊' },
-  { id: 'registration', label: 'Registration',   icon: '📋' },
-  { id: 'livelihood',   label: 'Livelihood',     icon: '💼' },
-  { id: 'insights',     label: 'Decision Guide', icon: '🎯' },
+  { id: 'overview',     label: 'Overview',       icon: LayoutDashboard },
+  { id: 'heatmap',      label: 'Purok Heatmap',  icon: MapIcon },
+  { id: 'demographics', label: 'Demographics',   icon: Users },
+  { id: 'sectors',      label: 'Sectors',        icon: PieChart },
+  { id: 'registration', label: 'Registration',   icon: ClipboardList },
+  { id: 'livelihood',   label: 'Livelihood',     icon: Briefcase },
+  { id: 'insights',     label: 'Decision Guide', icon: Target },
 ];
 
 // ─── HEATMAP METRICS ─────────────────────────────────────────
 export const HEATMAP_METRICS = [
-  { key: 'verified',     label: 'Verified',     icon: '✅' },
-  { key: 'total',        label: 'Total',        icon: '👥' },
-  { key: 'seniors',      label: 'Seniors',      icon: '👴' },
-  { key: 'pwd',          label: 'PWD',          icon: '♿' },
-  { key: 'unregistered', label: 'Unregistered', icon: '⚠️' },
-  { key: 'minors',       label: 'Minors',       icon: '🧒' },
-  { key: 'voters',       label: 'Voters',       icon: '🗳️' },
+  { key: 'verified',     label: 'Verified',     icon: CheckCircle2 },
+  { key: 'total',        label: 'Total',        icon: Users2 },
+  { key: 'seniors',      label: 'Seniors',      icon: UserRound },
+  { key: 'pwd',          label: 'PWD',          icon: Accessibility },
+  { key: 'unregistered', label: 'Unregistered', icon: AlertTriangle },
+  { key: 'minors',       label: 'Minors',       icon: Baby },
+  { key: 'voters',       label: 'Voters',       icon: Vote },
 ];
 
 // ─── MAP ─────────────────────────────────────────────────────
-// Confirmed center of Barangay Gulod
 export const BARANGAY_CENTER = [14.71275, 121.03859];
 
-// Real OSM boundary (Relation 270990) — Barangay Gulod, Novaliches QC
 export const BARANGAY_BOUNDARY = [
   [14.710492,  121.0335323], [14.7101886, 121.033562],  [14.709774,  121.0338342],
   [14.7095436, 121.0339713], [14.7094757, 121.0345597], [14.7094277, 121.0350814],
@@ -112,8 +132,6 @@ export const BARANGAY_BOUNDARY = [
 ];
 
 // Purok circle marker positions for the heatmap.
-// Using circles instead of polygons — no boundary issues, easy to adjust.
-// Center coords are estimated centers of each purok zone.
 export const PUROK_CENTERS = {
   'Purok 1': { center: [14.7169, 121.0413], label: 'Purok 1' },
   'Purok 2': { center: [14.7125, 121.0432], label: 'Purok 2' },
@@ -125,20 +143,15 @@ export const PUROK_CENTERS = {
 };
 
 // ─── UTILITY FUNCTIONS ────────────────────────────────────────
-// Percentage helper — safe division, returns integer
 export function pct(part, total) {
   return total > 0 ? Math.round((part / total) * 100) : 0;
 }
 
-// Verification rate: only counts SUBMITTED residents (verified + pending + rejected).
-// Unregistered residents (no barangay_id, never submitted) are NOT included.
-// Example: Purok 1 has 3 verified, 0 pending, 0 rejected → rate = 100% ✓
 export function calcVerifRate(p) {
   const submitted = (Number(p.verified) || 0) + (Number(p.pending) || 0) + (Number(p.rejected) || 0);
   return submitted > 0 ? Math.round(((Number(p.verified) || 0) / submitted) * 100) : 0;
 }
 
-// Blue-to-red heat color gradient
 export function getHeatColor(value, max, alpha = 0.75) {
   if (!max || max === 0) return `rgba(26,82,118,0.1)`;
   const ratio = Math.min(value / max, 1);
