@@ -2,25 +2,31 @@ import React from 'react';
 import Table from '../common/table';
 import HouseholdRow from './householdrow';
 
-const HouseholdTable = ({ households, onView, onDelete, t }) => {
-  const headers = ["ID", "Head of Family", "Location", "Tenure", "Wall Type", "Members", "Action"];
+const HouseholdTable = ({ households, onView, t }) => {
+
+  const headers = [
+    "Household Head & ID", 
+    "Location", 
+    "Classification", 
+    "Members", 
+    "Action" 
+  ];
 
   return (
     <Table headers={headers} t={t}>
-      {households.length > 0 ? (
+      {households && households.length > 0 ? (
         households.map((h) => (
           <HouseholdRow
-            key={h.id}
+            key={h.db_id || h.id}
             item={h}
             onView={onView}
-            onDelete={onDelete}
             t={t}
           />
         ))
       ) : (
         <tr>
-          <td colSpan={6} className="px-6 py-24 text-center text-lg font-black text-slate-400 uppercase tracking-widest">
-            No record found.
+          <td colSpan={5} className={`px-6 py-32 text-center text-sm font-black ${t.subtleText} uppercase tracking-[0.2em]`}>
+            No household records found
           </td>
         </tr>
       )}

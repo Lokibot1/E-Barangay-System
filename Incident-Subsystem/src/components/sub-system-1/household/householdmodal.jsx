@@ -1,135 +1,67 @@
 import React from 'react';
-import { Home, Users, MapPin, User, ShieldCheck } from 'lucide-react';
 import ModalWrapper from '../common/ModalWrapper';
+import HouseholdHero from './hhmc/HouseholdHero';
+import HousingSurvey from './hhmc/HousingSurvey';
+import FamilyTable from './hhmc/FamilyTable';
 
 const HouseholdModal = ({ isOpen, onClose, data, t }) => {
   if (!data) return null;
+
+  const hNo = data.houseNumber || data.details?.houseNumber || '';
+  const street = data.street || data.details?.street || '';
+  const purok = data.purok || data.details?.purok || 'N/A';
+  
+  const baseAddress = (hNo || street) 
+    ? `${hNo} ${street}`.trim() 
+    : (data.address || 'NO ADDRESS PROVIDED');
+
+  const fullAddress = `${baseAddress}, BGY. GULOD, NOVALICHES, QUEZON CITY`.replace(/\s+/g, ' ').trim();
 
   return (
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
-      title={`Household: ${data.household_id || 'PENDING ID'}`}
+      title={`HOUSEHOLD PROFILE: ${data.household_id || 'PENDING ID'}`}
       maxWidth="max-w-3xl"
       t={t}
     >
       <div className="space-y-6">
-        {/* Top Header Info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
-            <div className="flex items-center gap-2 text-emerald-600 mb-2">
-              <User size={16} strokeWidth={2.5} />
-              <span className="text-[10px] font-black uppercase tracking-widest">Head of Family</span>
-            </div>
-            <p className={`text-lg font-black ${t.cardText} uppercase`}>{data.head}</p>
-          </div>
+        {/* 1. Hero Sections (Head & Size) */}
+        <HouseholdHero data={data} t={t} />
 
-          <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl">
-            <div className="flex items-center gap-2 text-blue-600 mb-2">
-              <Users size={16} strokeWidth={2.5} />
-              <span className="text-[10px] font-black uppercase tracking-widest">Total Members</span>
-            </div>
-            <p className={`text-lg font-black ${t.cardText} leading-none`}>
-              {data.members} <span className="text-xs font-bold text-slate-400 ml-1">Registered Persons</span>
+        {/* 2. Housing Survey (Materials & Classification) */}
+        <HousingSurvey data={data} t={t} />
+
+        {/* 3. FIXED LOCATION BLOCK */}
+        <div className={`${t.inlineBg} rounded-2xl p-4 border ${t.cardBorder}`}>
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Registered Address</p>
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-2">
+            <p className={`text-sm font-bold ${t.cardText} uppercase font-spartan max-w-[80%]`}>
+              {fullAddress}
             </p>
+            <span className="text-[10px] font-black text-emerald-600 uppercase bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800/50">
+              Purok {purok}
+            </span>
           </div>
         </div>
 
-        {/* NEW: Housing Survey Section */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className={`p-3 ${t.inlineBg} border ${t.cardBorder} rounded-2xl text-center`}>
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Tenure Status</p>
-            <p className={`text-xs font-black ${t.cardText} uppercase`}>{data.tenure_status || 'N/A'}</p>
-          </div>
-          <div className={`p-3 ${t.inlineBg} border ${t.cardBorder} rounded-2xl text-center`}>
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Wall Material</p>
-            <p className={`text-xs font-black ${t.cardText} uppercase`}>{data.wall_material || 'N/A'}</p>
-          </div>
-          <div className={`p-3 ${t.inlineBg} border ${t.cardBorder} rounded-2xl text-center`}>
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Roof Material</p>
-            <p className={`text-xs font-black ${t.cardText} uppercase`}>{data.roof_material || 'N/A'}</p>
-          </div>
-        </div>
+        {/* 4. Family Composition Table */}
+        <FamilyTable 
+          members={data.memberList} 
+          establishedDate={data.established_date} 
+          t={t} 
+        />
 
-        {/* Technical & Location Details */}
-        <div className={`${t.inlineBg} rounded-2xl p-5 border ${t.cardBorder}`}>
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1 space-y-3">
-              <div className="flex items-start gap-3">
-                <MapPin className="text-slate-400 mt-0.5" size={18} />
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Permanent Address</p>
-                  <p className={`text-sm font-bold ${t.cardText} uppercase`}>
-                    {data.address || 'No Address Provided'} (Purok {data.purok})
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className={`flex-1 space-y-3 border-l ${t.cardBorder} pl-0 md:pl-6`}>
-              <div className="flex items-center gap-3">
-                <ShieldCheck className="text-emerald-500" size={18} />
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Indigent Status</p>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-black uppercase ${Number(data.is_indigent) === 1 ? 'bg-rose-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
-                    {Number(data.is_indigent) === 1 ? 'YES (INDIGENT)' : 'NO (GENERAL)'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Family Composition Table */}
-        <div>
-          <div className="flex items-center justify-between mb-3 px-1">
-            <h4 className={`flex items-center gap-2 text-xs font-black ${t.cardText} uppercase tracking-widest`}>
-              <Users size={16} className="text-emerald-600" /> Family Composition
-            </h4>
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Established: {new Date(data.established_date).toLocaleDateString()}</span>
-          </div>
-
-          <div className={`border ${t.cardBorder} rounded-2xl overflow-hidden shadow-sm`}>
-            <table className="w-full text-left text-sm">
-              <thead className={`${t.inlineBg} ${t.subtleText} font-bold text-[10px] uppercase tracking-widest border-b ${t.cardBorder}`}>
-                <tr>
-                  <th className="px-5 py-4 tracking-tighter">Full Name</th>
-                  <th className="px-5 py-4">Relationship</th>
-                  <th className="px-5 py-4 text-center">Age</th>
-                  <th className="px-5 py-4">Sector</th>
-                </tr>
-              </thead>
-              <tbody className={`divide-y ${t.cardBorder}`}>
-                {data.memberList?.length > 0 ? (
-                  data.memberList.map((m, i) => (
-                    <tr key={i} className={`hover:${t.inlineBg} transition-colors`}>
-                      <td className={`px-5 py-4 font-black ${t.cardText} uppercase text-xs`}>{m.name}</td>
-                      <td className="px-5 py-4 text-emerald-600 text-[11px] font-black uppercase tracking-tight">{m.relation}</td>
-                      <td className={`px-5 py-4 text-center ${t.subtleText} font-bold`}>{m.age}</td>
-                      <td className="px-5 py-4">
-                        <span className={`text-[9px] px-2 py-1 ${t.inlineBg} rounded-lg font-black ${t.subtleText} uppercase`}>
-                          {m.sector || 'General'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="px-5 py-8 text-center text-xs font-bold text-slate-400 italic">No family members registered yet.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Action Footer */}
-        <div className={`pt-4 flex justify-end gap-3 border-t ${t.cardBorder}`}>
+        {/* Footer */}
+        <div className="pt-2 flex justify-end items-center gap-4">
+          <p className="text-[9px] font-bold text-slate-400 italic font-kumbh">
+            Data is subject to barangay privacy policy
+          </p>
           <button
             onClick={onClose}
-            className="px-6 py-2.5 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
+            className={`px-8 py-3 bg-slate-900 dark:bg-white text-white dark:text-black text-[11px] font-black uppercase tracking-[0.2em] rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg font-spartan`}
           >
-            Close
+            Dismiss
           </button>
         </div>
       </div>

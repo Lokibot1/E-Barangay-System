@@ -40,3 +40,14 @@ export const SECTOR_OPTIONS = [
   { value: 'OFW', label: 'OFW' },
   { value: 'Kasambahay', label: 'Kasambahay' },
 ];
+
+export const INDIGENT_OPTIONS = [
+  { value: '1', label: 'Indigent Only' },
+  { value: '0', label: 'General / Non-Indigent' },
+];
+
+export const TENURE_OPTIONS = [
+  { value: 'Owned', label: 'Owned' },
+  { value: 'Rented', label: 'Rented' },
+  { value: 'Sharer', label: 'Sharer' },
+];

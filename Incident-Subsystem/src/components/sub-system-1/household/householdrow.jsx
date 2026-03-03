@@ -1,76 +1,82 @@
 import React from 'react';
 import { Eye } from 'lucide-react';
+import { SECTOR_STYLES } from '../../../constants/filter';
 
-// Helpers for the Avatar
-const getInitials = (name) => {
-  if (!name) return "??";
-  const parts = name.trim().split(' ');
-  return parts.length === 1
-    ? parts[0].substring(0, 2).toUpperCase()
-    : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-};
-
-const getAvatarColor = (name) => {
-  const colors = [
-    'bg-blue-100 text-blue-700',
-    'bg-emerald-100 text-emerald-700',
-    'bg-violet-100 text-violet-700',
-    'bg-amber-100 text-amber-700',
-    'bg-rose-100 text-rose-700',
-  ];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return colors[Math.abs(hash) % colors.length];
-};
-
-const HouseholdRow = ({ item, onView, onDelete, t }) => {
+const HouseholdRow = ({ item, onView, t }) => {
   const getTenureColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'owned': return 'bg-emerald-100 text-emerald-700';
-      case 'rented': return 'bg-blue-100 text-blue-700';
-      case 'sharer': return 'bg-amber-100 text-amber-700';
-      default: return 'bg-slate-100 text-slate-600';
+      case 'owned': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border-emerald-200';
+      case 'rented': return 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border-blue-200';
+      case 'sharer': return 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-amber-200';
+      default: return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200';
     }
   };
 
+  const sectorName = (item.head_sector || '').toUpperCase();
+  const isPriority = sectorName.includes('SENIOR') || sectorName.includes('PWD');
+
   return (
-    <tr className={`border-b last:border-none ${t.cardBorder} hover:${t.inlineBg} transition-all`}>
-      <td className="px-6 py-5 text-base text-emerald-600 font-bold">{item.id}</td>
-
-      <td className={`px-6 py-5 font-bold ${item.head === 'No Head Assigned' ? 'text-slate-400 italic' : t.cardText}`}>
-        {item.head}
-      </td>
-
-      <td className={`px-6 py-5 text-base ${t.subtleText}`}>
+    <tr className={`group transition-all hover:${t.inlineBg} ${t.cardText} border-b last:border-none ${t.cardBorder}`}>
+      
+      {/* 1. NAME & ID - Text Base for Readability */}
+      <td className="px-6 py-5 text-left align-middle">
         <div className="flex flex-col">
-          <span className="truncate max-w-[180px]">{item.address}</span>
-          <span className="text-[10px] font-black text-slate-400 uppercase">Purok {item.purok}</span>
+          <div className="flex items-center gap-2">
+            <p className="text-base font-bold uppercase tracking-tight font-spartan truncate">
+              {item.head}
+            </p>
+            {isPriority && (
+              <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase border-2 flex-shrink-0 ${SECTOR_STYLES[sectorName] || SECTOR_STYLES['DEFAULT']}`}>
+                {sectorName}
+              </span>
+            )}
+          </div>
+          <p className={`text-[10px] ${t.subtleText} font-bold mt-1 tracking-widest uppercase font-kumbh`}>
+            ID: {item.id}
+          </p>
         </div>
       </td>
 
-      {/* Tenure Status with Badge */}
-      <td className="px-6 py-5">
-        <span className={`text-[10px] px-2.5 py-1 rounded-lg font-black uppercase tracking-wider ${getTenureColor(item.tenure_status)}`}>
-          {item.tenure_status || 'N/A'}
-        </span>
+      {/* 2. LOCATION */}
+      <td className="px-6 py-5 text-left align-middle">
+        <p className="text-sm font-bold uppercase truncate font-kumbh">
+          {item.address || "No Address"}
+        </p>
+        <p className="text-[10px] font-black text-emerald-600 uppercase mt-1 tracking-wider">
+          Purok {item.purok}
+        </p>
       </td>
 
-      {/* Wall Material Info */}
-      <td className={`px-6 py-5 text-xs font-bold ${t.subtleText}`}>
-        {item.wall_material || '---'}
+      {/* 3. CLASSIFICATION */}
+      <td className="px-6 py-5 text-left align-middle">
+        <div className="flex flex-col gap-1.5">
+          <span className={`w-fit px-2.5 py-1 text-[9px] font-black uppercase rounded border-2 ${getTenureColor(item.tenure_status)} font-spartan`}>
+            {item.tenure_status || 'N/A'}
+          </span>
+          {Number(item.is_indigent) === 1 && (
+            <span className="text-[9px] font-black text-rose-500 uppercase tracking-tighter ml-0.5">
+              • Indigent Unit
+            </span>
+          )}
+        </div>
       </td>
 
-      <td className={`px-6 py-5 text-center text-base font-black ${t.cardText}`}>
-        {item.members}
+      {/* 4. MEMBERS - Centered */}
+      <td className="px-6 py-5 text-center align-middle">
+        <span className="text-base font-bold font-kumbh">{item.members}</span>
       </td>
 
-      <td className="px-6 py-5">
-        <button
-          onClick={() => onView(item)}
-          className={`p-3 text-slate-600 hover:bg-emerald-600 hover:text-white border ${t.cardBorder} rounded-lg transition-all shadow-sm`}
-        >
-          <Eye size={18} />
-        </button>
+      {/* 5. ACTION - With Fixed Tooltip */}
+      <td className="px-6 py-5 text-center align-middle">
+        <div className="flex justify-center">
+          <button
+            onClick={() => onView(item)}
+            title="View Household Profile" 
+            className={`p-3 rounded-xl border ${t.cardBorder} text-slate-400 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all shadow-sm active:scale-90`}
+          >
+            <Eye size={18} />
+          </button>
+        </div>
       </td>
     </tr>
   );

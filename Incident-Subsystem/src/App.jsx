@@ -42,7 +42,7 @@ import LoginPage from "./pages/sub-system-3/LoginPage";
 import ResetPasswordPage from "./pages/sub-system-3/ResetPasswordPage";
 import Dashboard from "./pages/sub-system-1/dashboard";
 import Residents from "./pages/sub-system-1/residents";
-import Scanner from "./pages/sub-system-1/qr";
+
 import Verification from "./pages/sub-system-1/verification";
 import Households from "./pages/sub-system-1/household";
 import Certificates from "./pages/sub-system-1/certificates";
@@ -125,7 +125,7 @@ function App() {
                   {/* RS Dashboard Routes */}
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/residents" element={<Residents />} />
-                  <Route path="/scanner" element={<Scanner />} />
+            
                   <Route path="/verification" element={<Verification />} />
                   <Route path="/households" element={<Households />} />
                   <Route path="/certificates" element={<Certificates />} />
@@ -150,7 +150,7 @@ function App() {
                   <Route path="/admin" element={<AdminLanding />} />
                   <Route path="/admin/residents" element={<Residents />} />
                   <Route path="/admin/households" element={<Households />} />
-                  <Route path="/admin/scanner" element={<Scanner />} />
+        
                   <Route path="/admin/user-management" element={<Verification />} />
                   <Route path="/admin/requests" element={<AdminPlaceholder title="Requests" />} />
                   <Route path="/admin/incidents" element={<AdminIncidentReports />} />

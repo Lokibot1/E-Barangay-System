@@ -1,30 +1,27 @@
 export const calculateHouseholdStats = (households) => {
   if (!households || households.length === 0) {
-    return { total: 0, avgSize: 0, indigentCount: 0, densestPurok: 'N/A' };
+    return { total: 0, indigents: 0, owners: 0, priority: 0, ownerPercent: 0 };
   }
 
   const total = households.length;
   
-  // Sum of all members
-  const totalMembers = households.reduce((sum, h) => sum + (Number(h.members) || 0), 0);
+  // 1. Count Indigents
+  const indigents = households.filter(h => Number(h.is_indigent) === 1).length;
   
-  // Count indigents
-  const indigentCount = households.filter(h => h.is_indigent).length;
+  // 2. Count Home Owners
+  const owners = households.filter(h => h.tenure_status?.toLowerCase() === 'owned').length;
 
-  // Find Purok with most households
-  const purokCounts = households.reduce((acc, h) => {
-    acc[h.purok] = (acc[h.purok] || 0) + 1;
-    return acc;
-  }, {});
-  
-  const densestPurok = Object.keys(purokCounts).reduce((a, b) => 
-    purokCounts[a] > purokCounts[b] ? a : b
-  , 'N/A');
+  // 3. Priority Heads (Senior or PWD)
+  const priority = households.filter(h => {
+    const headSector = h.head_sector?.toLowerCase() || '';
+    return headSector.includes('senior') || headSector.includes('pwd');
+  }).length;
 
   return {
     total,
-    avgSize: (totalMembers / total).toFixed(1),
-    indigentCount,
-    densestPurok: `Purok ${densestPurok}`
+    indigents,
+    owners,
+    priority,
+    ownerPercent: total > 0 ? ((owners / total) * 100).toFixed(0) : 0
   };
 };

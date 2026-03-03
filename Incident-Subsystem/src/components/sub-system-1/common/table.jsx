@@ -6,7 +6,6 @@ const Table = ({ title, headers, children, t }) => {
   const cardText = t?.cardText ?? 'text-gray-900';
 
   return (
-    /* No rounded corners, sharp edges only */
     <div className={`w-full overflow-hidden ${cardBg} transition-colors duration-300 border ${cardBorder}`}>
       {title && (
         <div className={`p-6 border-b ${cardBorder}`}>
@@ -17,18 +16,19 @@ const Table = ({ title, headers, children, t }) => {
       )}
       
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+        <table className="w-full border-collapse"> 
           <thead className="bg-emerald-700">
             <tr>
               {headers.map((header, index) => {
-                // Auto-center logic para sa Actions column lang
-                const isAction = header.toLowerCase() === 'actions';
+       
+                const hLabel = header.toLowerCase();
+                const isCentered = hLabel.includes('action') || hLabel === 'members' || hLabel === 'age';
 
                 return (
                   <th
                     key={index}
-                    className={`px-6 py-5 ${isAction ? 'text-center' : 'text-left'} 
-                    text-sm font-black text-white uppercase tracking-wider 
+                    className={`px-6 py-5 ${isCentered ? 'text-center' : 'text-left'} 
+                    text-[12px] font-black text-white uppercase tracking-wider 
                     border-b-2 border-emerald-800 font-spartan`}
                   >
                     {header}

@@ -1,88 +1,92 @@
 import React from 'react';
-import { Search } from 'lucide-react';
+import { Search, X, FilterX } from 'lucide-react';
 import FilterSelect from '../common/FilterSelect';
+import { PUROK_OPTIONS, TENURE_OPTIONS, INDIGENT_OPTIONS } from '../../../constants/filter';
 
 const HouseholdFilters = ({
-  searchTerm, setSearchTerm,
-  purokFilter, setPurokFilter,
-  statusFilter, setStatusFilter,
-  materialFilter, setMaterialFilter,
+  searchTerm,
+  setSearchTerm,
+  purokFilter,
+  setPurokFilter,
+  statusFilter,
+  setStatusFilter,
+  tenureFilter, 
+  setTenureFilter, 
   totalResults,
-  t
+  t 
 }) => {
 
   const handleReset = () => {
     setSearchTerm('');
     setPurokFilter('All');
     setStatusFilter('All');
-    setMaterialFilter('All');
+    setTenureFilter('All');
   };
 
-  const hasActiveFilters = searchTerm !== '' || purokFilter !== 'All' || statusFilter !== 'All' || materialFilter !== 'All';
-
-  const puroks = [
-    { label: 'Purok 1', value: '1' },
-    { label: 'Purok 2', value: '2' },
-    { label: 'Purok 3', value: '3' },
-    { label: 'Purok 4', value: '4' },
-    { label: 'Purok 5', value: '5' },
-    { label: 'Purok 6', value: '6' },
-    { label: 'Purok 7', value: '7' },
-  ];
-
-  const statusOptions = [
-    { label: 'Indigent', value: '1' },
-    { label: 'General', value: '0' },
-  ];
-
-  const materialOptions = [
-    { label: 'Concrete', value: 'Concrete' },
-    { label: 'Wood', value: 'Wood' },
-    { label: 'Makeshift', value: 'Makeshift' },
-    { label: 'Half Concrete', value: 'Half Concrete' },
-  ];
+  const hasActiveFilters = searchTerm !== '' || purokFilter !== 'All' || statusFilter !== 'All' || tenureFilter !== 'All';
 
   return (
     <div className={`flex flex-col ${t.cardBg}`}>
-      {/* Upper Section: Search and Dropdowns */}
-      <div className={`flex flex-col lg:flex-row lg:items-end justify-between p-6 gap-6 border-b ${t.cardBorder}`}>
+      {/* Upper Filter Section */}
+      <div className={`flex flex-col lg:flex-row lg:items-center justify-between p-6 sm:p-8 gap-4 border-b ${t.cardBorder}`}>
 
-        {/* Search Bar */}
-        <div className="flex-1 w-full lg:max-w-md">
-          <span className={`text-[10px] font-black ${t.subtleText} uppercase tracking-widest mb-1.5 ml-1 block`}>
-            Search Household
-          </span>
+        <div className="flex-1 w-full group"> 
           <div className="relative w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <Search 
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-emerald-500 transition-colors" 
+              size={18} 
+            />
             <input
               type="text"
-              placeholder="Search by ID or Head..."
+              placeholder="Search by ID or Head Name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full pl-11 pr-4 py-3 ${t.inputBg} border-2 ${t.inputBorder} rounded-2xl text-sm font-bold outline-none ${t.inputText} focus:ring-4 ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm`}
+              className={`
+                w-full pl-11 pr-11 py-3 
+                ${t.inputBg} 
+                border-2 ${t.inputBorder} 
+                rounded-2xl text-sm font-bold outline-none 
+                ${t.inputText} 
+                focus:ring-4 focus:ring-emerald-500/10 
+                focus:border-emerald-500 
+                transition-all shadow-sm font-kumbh
+              `}
             />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Filters Group */}
-        <div className="flex flex-wrap md:flex-nowrap gap-4 items-end">
-          <FilterSelect label="Purok" value={purokFilter} onChange={setPurokFilter} options={puroks} t={t} />
-          <FilterSelect label="Status" value={statusFilter} onChange={setStatusFilter} options={statusOptions} t={t} />
-          <FilterSelect label="Wall Material" value={materialFilter} onChange={setMaterialFilter} options={materialOptions} t={t} />
+        {/* High-Value Filters Group - Using your Exported Constants */}
+        <div className="flex flex-wrap md:flex-nowrap gap-3 items-center">
+          <FilterSelect label="Purok" value={purokFilter} onChange={setPurokFilter} options={PUROK_OPTIONS} t={t} />
+          <FilterSelect label="Tenure" value={tenureFilter} onChange={setTenureFilter} options={TENURE_OPTIONS} t={t} />
+          <FilterSelect label="Status" value={statusFilter} onChange={setStatusFilter} options={INDIGENT_OPTIONS} t={t} />
         </div>
       </div>
 
-      <div className={`px-8 py-4 ${t.inlineBg} border-b ${t.cardBorder} flex justify-between items-center text-[10px] font-black uppercase tracking-widest`}>
-        <span className={`${t.subtleText} text-sm`}>
-          Results: <span className="text-emerald-600 text">{totalResults} Households Found</span>
-        </span>
+      {/* Results Bar */}
+      <div className={`px-8 py-3 ${t.inlineBg} border-b ${t.cardBorder} flex justify-between items-center`}>
+        <div className="flex items-center gap-2">
+          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className={`text-[15px] font-black uppercase tracking-widest ${t.subtleText}`}>
+            {totalResults} Households Registered
+          </span>
+        </div>
 
         {hasActiveFilters && (
           <button
             onClick={handleReset}
-            className="flex items-center text-sm gap-1.5 text-rose-500 hover:text-rose-600 transition-colors group"
+            className="flex items-center text-[15px] font-black uppercase gap-1.5 text-rose-500 hover:text-rose-600 transition-colors group font-spartan"
           >
-            Clear Filters ✕
+            <FilterX size={15} className="group-hover:rotate-12 transition-transform" /> 
+            Reset Filters
           </button>
         )}
       </div>

@@ -1,13 +1,13 @@
 import React from 'react';
 
 const StatCard = ({ title, value, subtitle, icon: Icon, color = 'blue', t }) => {
- 
   const colorMap = {
-    emerald: 'text-emerald-600 bg-emerald-50 border-emerald-100',
-    blue: 'text-blue-600 bg-blue-50 border-blue-100',
-    amber: 'text-amber-600 bg-amber-50 border-amber-100',
-    rose: 'text-rose-600 bg-rose-50 border-rose-100',
-    slate: 'text-slate-600 bg-slate-50 border-slate-100'
+    emerald: 'text-emerald-600 bg-emerald-50 border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/20',
+    blue: 'text-blue-600 bg-blue-50 border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/20',
+    amber: 'text-amber-600 bg-amber-50 border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/20',
+    rose: 'text-rose-600 bg-rose-50 border-rose-100 dark:bg-rose-500/10 dark:border-rose-500/20',
+    purple: 'text-purple-600 bg-purple-50 border-purple-100 dark:bg-purple-500/10 dark:border-purple-500/20',
+    slate: 'text-slate-600 bg-slate-50 border-slate-100 dark:bg-slate-500/10 dark:border-slate-500/20'
   };
 
   const activeColor = colorMap[color] || colorMap.blue;
@@ -26,7 +26,7 @@ const StatCard = ({ title, value, subtitle, icon: Icon, color = 'blue', t }) => 
       </div>
       
       <div className={`text-3xl font-spartan font-black ${t?.cardText} mb-1`}>
-        {value.toLocaleString()}
+        {typeof value === 'number' ? value.toLocaleString() : value}
       </div>
       
       {subtitle && (

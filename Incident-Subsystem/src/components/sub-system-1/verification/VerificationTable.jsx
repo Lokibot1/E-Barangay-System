@@ -3,7 +3,7 @@ import Table from '../common/table';
 import VerificationRow from './VerificationRow';
 
 const PendingVerificationTable = ({ data, onReview, t }) => {
-  const headerLabels = ["Name", "Age", "Address", "Purok", "Submitted", "Status", "Actions"];
+  const headerLabels = ["Name", "Age", "Address", "Purok", "Submitted", "Status", "Action"];
 
   return (
     <div className="w-full">
@@ -19,13 +19,13 @@ const PendingVerificationTable = ({ data, onReview, t }) => {
           ))
         ) : (
           <tr>
-            <td colSpan={7} className="px-6 py-24 text-center">
-              <div className="flex flex-col items-center justify-center space-y-2">
-                <span className="text-lg font-black text-slate-400 uppercase tracking-widest font-spartan">
-                  No records found
+            <td colSpan={7} className="px-6 py-32 text-center">
+              <div className="flex flex-col items-center justify-center space-y-3">
+                <span className={`text-xl font-black ${t.subtleText} uppercase tracking-[0.3em] font-spartan`}>
+                  No Pending Verifications
                 </span>
-                <p className="text-xs text-slate-400 font-bold uppercase font-kumbh">
-                  Try adjusting your filters or search term
+                <p className={`text-xs ${t.subtleText} font-bold uppercase font-kumbh opacity-70`}>
+                  Everything is up to date.
                 </p>
               </div>
             </td>
