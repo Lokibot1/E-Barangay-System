@@ -411,9 +411,11 @@ const AppointmentDetailsModal = ({ appointment, onClose, onReschedule, isDark, t
           {/* Detail rows */}
           <div className={`rounded-xl border ${t.cardBorder} divide-y ${isDark ? "divide-slate-700" : "divide-gray-100"} overflow-hidden`}>
             {[
-              { label: "Complainant",   value: appointment.complainant_name || "—" },
-              { label: "Appointment ID", value: `#${appointment.id}` },
-              { label: "Complaint ID",  value: `#${appointment.complaint_id || "—"}` },
+              { label: "Complainant",        value: appointment.complainant_name || "—" },
+              { label: "Respondent",         value: appointment.respondent_name || "—" },
+              { label: "Respondent Address", value: appointment.respondent_address || "—" },
+              { label: "Appointment ID",     value: `#${appointment.id}` },
+              { label: "Complaint ID",       value: `#${appointment.complaint_id || "—"}` },
             ].map(({ label, value }) => (
               <div key={label} className={`flex items-center px-4 py-3 ${isDark ? "bg-slate-800" : "bg-white"}`}>
                 <span className={`text-xs font-semibold w-36 flex-shrink-0 font-kumbh ${t.subtleText}`}>{label}</span>
@@ -493,6 +495,8 @@ const AdminAppointments = () => {
             ...appt,
             complaint_id: appt.complaint_id ?? complaint.id,
             complainant_name: appt.complainant_name || complainantName,
+            respondent_name: appt.respondent_name || complaint.respondent_name || "—",
+            respondent_address: appt.respondent_address || complaint.respondent_address || "—",
             // Normalised date/time so existing helpers (calendar, isSlotAvailable) work
             date: appt.date || parsedDate,
             time: appt.time || parsedTime,
