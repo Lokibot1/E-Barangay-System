@@ -9,12 +9,13 @@ export const useVerification = () => {
   const [error, setError] = useState(null);
   const isFetchingRef = useRef(false);
 
-  const loadData = useCallback(async (isInitial = false) => {
+  // loadData function
+  const loadData = useCallback(async (showLoading = false) => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
 
     try {
-      if (isInitial) setLoading(true); 
+      if (showLoading) setLoading(true); 
       setError(null);
       const data = await verificationService.getSubmissions();
       setSubmissions(data || []);
@@ -27,13 +28,27 @@ export const useVerification = () => {
     }
   }, []);
 
-  const updateStatus = async (id, status) => {
-    const res = await verificationService.updateStatus(id, status);
+  // Update Status function
+  const updateStatus = async (id, status, isIndigent = 0, additionalData = {}) => {
+    const res = await verificationService.updateStatus(id, status, isIndigent, additionalData);
     if (res.success) {
-      await loadData(false); // Silent refresh after update
+      await loadData(false); // Silent refresh after manual update
     }
     return res;
   };
+
+
+  useEffect(() => {
+  const handleManualRefresh = () => {
+    console.log("Notif clicked! Refreshing...");
+    isFetchingRef.current = false; 
+    loadData(true); 
+  };
+
+  window.addEventListener('refreshVerificationData', handleManualRefresh);
+  return () => window.removeEventListener('refreshVerificationData', handleManualRefresh);
+}, [loadData]);
+
 
   useEffect(() => { 
     loadData(true); 
@@ -44,7 +59,6 @@ export const useVerification = () => {
 
     return () => clearInterval(interval);
   }, [loadData]);
-
 
   return { 
     submissions, 

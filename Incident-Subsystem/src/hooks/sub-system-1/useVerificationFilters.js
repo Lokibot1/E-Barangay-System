@@ -10,15 +10,19 @@ export const useVerificationFilters = (submissions, itemsPerPage = 10) => {
   }, [searchTerm, activeTab]);
 
   const filteredData = useMemo(() => {
-    return (submissions || []).filter(s => {
-      const matchesTab = s.status === activeTab;
+    const data = submissions || [];
+    return data.filter(s => {
+     
+      const matchesTab = s.status?.toLowerCase() === activeTab?.toLowerCase();
+      
       const matchesSearch = s.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      
       return matchesTab && matchesSearch;
     });
   }, [submissions, activeTab, searchTerm]);
 
   const totalItems = filteredData.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
   
   const currentData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;

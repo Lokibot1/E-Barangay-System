@@ -1,35 +1,92 @@
 import React from 'react';
-import { Briefcase, GraduationCap } from 'lucide-react';
-import { InfoFieldWhite } from '../../common/InfoField';
+import { Wallet, Home, Lock } from 'lucide-react';
+import { InfoField } from '../../common/InfoField';
 
-const EconomicSection = ({ details, t }) => (
-  <div className={`${t.cardBg} p-8 border ${t.cardBorder} border-t-4 border-t-amber-500 rounded-2xl shadow-sm`}>
-    <div className="flex items-center gap-2 mb-8 border-l-4 border-amber-500 pl-3">
-      <Briefcase size={18} className="text-amber-500" />
-      <p className="text-xs font-black text-slate-400 uppercase tracking-[2px]">Economic & Education</p>
-    </div>
+const EconomicSection = ({ details, t, isIndigent, setIsIndigent, isNewHousehold }) => {
+  
+ 
+  const position = details?.householdPosition?.toLowerCase() || '';
+  const isHead = position.includes('head');
 
-    <div className="space-y-12">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-        <InfoFieldWhite label="Employment" val={details?.employmentStatus} t={t} />
-        <InfoFieldWhite label="Occupation" val={details?.occupation} t={t} />
-        <InfoFieldWhite label="Monthly Income" val={details?.monthlyIncome} t={t} />
-        <InfoFieldWhite label="Income Source" val={details?.incomeSource} t={t} />
+
+  const canModify = isNewHousehold || isHead;
+
+  // 3. Force Disable Function
+  const handleToggle = (e) => {
+    e.preventDefault();
+    if (canModify) {
+      setIsIndigent(isIndigent === 1 ? 0 : 1);
+    }
+  };
+
+  return (
+    <div className={`p-8 rounded-3xl border ${t.cardBorder} ${t.cardBg} space-y-8 shadow-sm relative overflow-hidden`}>
+      <div className="flex justify-between items-center">
+        <h3 className={`text-lg font-black ${t.cardText} uppercase tracking-tight flex items-center gap-3`}>
+          <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-500">
+            <Wallet size={20} />
+          </div>
+          Socio-Economic Profile
+        </h3>
+
+        {/* TOGGLE BUTTON WITH FORCE DISABLE */}
+        <button
+          type="button"
+          disabled={!canModify} // HTML-level disable
+          onClick={handleToggle}
+          className={`
+            flex items-center gap-3 px-5 py-2.5 rounded-2xl border-2 transition-all duration-300
+            ${!canModify 
+              ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-70 pointer-events-none' 
+              : isIndigent 
+                ? 'bg-rose-500 border-rose-600 text-white shadow-lg shadow-rose-500/30 ring-4 ring-rose-500/10' 
+                : 'bg-transparent border-slate-200 text-slate-400 hover:border-emerald-500 hover:text-emerald-500'
+            }
+          `}
+        >
+          {!canModify && <Lock size={14} />}
+          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-transform 
+            ${!canModify ? 'border-slate-300' : isIndigent ? 'bg-white border-white scale-110' : 'border-current'}`}>
+            {isIndigent === 1 && (
+              <div className={`w-2 h-2 rounded-full ${!canModify ? 'bg-slate-300' : 'bg-rose-500'}`} />
+            )}
+          </div>
+          <span className="text-xs font-black uppercase tracking-widest">
+            {!canModify ? (isIndigent ? 'Indigent (Locked)' : 'Non-Indigent') : 'Tag as Indigent'}
+          </span>
+        </button>
       </div>
 
-      <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
-        <p className="text-[10px] font-bold text-emerald-600 uppercase mb-6 tracking-widest flex items-center gap-2">
-          <GraduationCap size={16} /> Educational Background
+      {/* Details Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+        <InfoField label="Employment Status" val={details?.employmentStatus} t={t} />
+        <InfoField label="Occupation" val={details?.occupation} t={t} />
+        <InfoField label="Monthly Income" val={details?.monthlyIncome} t={t} />
+        <InfoField label="Primary Income Source" val={details?.incomeSource} t={t} />
+      </div>
+
+      {/* Housing Section */}
+      <div className={`pt-8 border-t ${t.cardBorder}`}>
+        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-6 flex items-center gap-2">
+          <Home size={14} /> Housing Conditions
         </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          <InfoFieldWhite label="Status" val={details?.educationalStatus} t={t} />
-          <InfoFieldWhite label="School Type" val={details?.schoolType} t={t} />
-          <InfoFieldWhite label="Level" val={details?.schoolLevel} t={t} />
-          <InfoFieldWhite label="Highest Grade" val={details?.highestGrade} t={t} />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <InfoField label="Tenure Status" val={details?.tenureStatus} t={t} />
+          <InfoField label="Wall Material" val={details?.wallMaterial} t={t} />
+          <InfoField label="Roof Material" val={details?.roofMaterial} t={t} />
+          <InfoField label="Water Source" val={details?.waterSource} t={t} />
         </div>
       </div>
+      
+      {!canModify && (
+        <div className="mt-4 py-2 px-4 bg-slate-50 border border-slate-100 rounded-xl">
+           <p className="text-[9px] text-slate-400 italic text-center leading-tight uppercase tracking-tighter">
+             ReadOnly: Status is inherited from Household Records
+           </p>
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 export default EconomicSection;

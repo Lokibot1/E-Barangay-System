@@ -1,9 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL, STORAGE_URL } from '../../config/api';
 
-/**
- * Helper: Calculate age from birthdate
- */
 export const calculateAge = (birthdate) => {
   if (!birthdate) return 'N/A';
   const birth = new Date(birthdate);
@@ -14,9 +11,6 @@ export const calculateAge = (birthdate) => {
   return age;
 };
 
-/**
- * Helper: Standardize date format
- */
 const formatDate = (dateStr) => {
   if (!dateStr) return 'N/A';
   const d = new Date(dateStr);
@@ -28,15 +22,11 @@ const formatDate = (dateStr) => {
 };
 
 export const verificationService = {
-  /**
-   * Fetch all resident submissions and map them to the UI structure
-   */
   getSubmissions: async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/submissions`);
 
       return response.data.map(res => {
-        // Compute these once per resident
         const ageVal = calculateAge(res.birthdate);
         const fullName = `${res.first_name || ''} ${res.middle_name || ''} ${res.last_name || ''} ${res.suffix || ''}`
           .replace(/\s+/g, ' ')
@@ -53,6 +43,8 @@ export const verificationService = {
           status: res.status,
           sector: res.sector?.name || '',
           registration_payload: res.registration_payload, 
+          household_exists: res.household_exists, 
+          household_indigent_status: res.household_indigent_status,
           
           details: {
             birthdate: formatDate(res.birthdate),
@@ -63,33 +55,24 @@ export const verificationService = {
             nationality: res.nationality?.name || 'Filipino',
             birthRegistration: res.birth_registration || 'N/A',
             sector: res.sector?.name || '',
-            
-            // Address & Position
             houseNumber: res.temp_house_number || 'N/A',
             purok: res.resolved_purok || 'N/A',
             street: res.resolved_street || 'N/A',
             householdPosition: res.household_position || 'N/A',
-            
             addressSummary: `${res.temp_house_number || ''} ${res.resolved_street || ''}, ${res.resolved_purok || ''}, Brgy. Gulod`
               .replace(/N\/A/g, '')
               .replace(/\s+/g, ' ')
               .trim(),
-            
             residencyStatus: res.residency_status || 'N/A',
             residencyStartDate: formatDate(res.residency_start_date),
             isVoter: res.is_voter, 
-            
             idFront: res.id_front_path ? `${STORAGE_URL}/${res.id_front_path}` : null,
             idBack: res.id_back_path ? `${STORAGE_URL}/${res.id_back_path}` : null,
             idType: res.id_type || 'Resident ID',
-            
-            // Employment
             employmentStatus: res.employment_data?.employment_status || 'N/A',
             occupation: res.employment_data?.occupation || 'N/A',
             monthlyIncome: res.employment_data?.monthly_income || '0',
             incomeSource: res.employment_data?.income_source || 'N/A', 
-            
-            // Education
             educationalStatus: res.education_data?.educational_status || 'N/A',
             schoolType: res.education_data?.school_type || 'N/A',
             schoolLevel: res.education_data?.school_level || 'N/A',
@@ -99,20 +82,22 @@ export const verificationService = {
       });
     } catch (error) {
       console.error("Fetch submissions error:", error);
-      const message = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to fetch submissions';
-      throw new Error(message);
+      throw new Error(error.response?.data?.message || 'Failed to fetch submissions');
     }
   },
 
-  /**
-   * Update the status of a specific resident
-   */
-  updateStatus: async (id, status) => {
+  updateStatus: async (id, status, isIndigent, additionalData) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/residents/${id}/status`, { status });
+      const response = await axios.put(`${API_BASE_URL}/residents/${id}/status`, { 
+        status,
+        is_indigent: isIndigent,
+        wall_material: additionalData?.wallMaterial,
+        roof_material: additionalData?.roofMaterial,
+        water_source: additionalData?.waterSource,
+        tenure_status: additionalData?.tenureStatus
+      });
       return response.data;
     } catch (error) {
-      console.error("Update status error:", error);
       return { 
         success: false, 
         message: error.response?.data?.message || 'Update failed' 

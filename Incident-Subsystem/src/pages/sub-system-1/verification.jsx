@@ -23,7 +23,7 @@ const Verification = () => {
   const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem('appTheme') || 'blue');
   const t = themeTokens[currentTheme] || themeTokens.blue; 
 
-  const { submissions, loading, error, updateStatus } = useVerification();
+  const { submissions, loading, error, updateStatus, refresh } = useVerification();
   const { playFeedback } = useSound();
   const { 
     searchTerm, setSearchTerm, activeTab, setActiveTab, 
@@ -40,22 +40,52 @@ const Verification = () => {
 
   useEffect(() => { window.scrollTo(0, 0); }, [view]);
 
+  // FIX: LISTENER FOR NOTIFICATION CLICK
+  useEffect(() => {
+    const handleRemoteRefresh = (event) => {
+   
+      setView('list');
+      setSelectedRes(null);
+
+      if (event.detail?.switchToTab) {
+        setActiveTab(event.detail.switchToTab);
+      } else {
+        setActiveTab('Pending');
+      }
+
+      refresh();
+      
+      console.log("UI Updated: Switched to Pending Tab via Notification");
+    };
+
+    window.addEventListener('refreshVerificationData', handleRemoteRefresh);
+    return () => window.removeEventListener('refreshVerificationData', handleRemoteRefresh);
+  }, [refresh, setActiveTab]);
+
   const tabs = [
     { id: 'Pending', label: 'New Requests', icon: Clock },
     { id: 'For Verification', label: 'For Visit', icon: MapPin },
     { id: 'Rejected', label: 'Rejected', icon: XCircle },
   ];
 
-  const handleAction = (id, status) => {
+  const handleAction = (id, status, isIndigent = 0, additionalData = {}) => {
     const actionText = status === 'Rejected' ? 'REJECT' : status === 'For Verification' ? 'SET FOR VISIT' : 'APPROVE';
-    setPendingAction({ id, status, actionText });
+    setPendingAction({ 
+      id, 
+      status, 
+      actionText, 
+      isIndigent, 
+      additionalData 
+    });
   };
 
   const confirmPendingAction = async () => {
     if (!pendingAction) return;
-    const { id, status } = pendingAction;
+    
+    const { id, status, isIndigent, additionalData } = pendingAction;
     setPendingAction(null);
-    const result = await updateStatus(id, status);
+
+    const result = await updateStatus(id, status, isIndigent, additionalData);
 
     if (result.success) {
       if (status === 'Verified' || status === 'Approved') {
@@ -64,10 +94,13 @@ const Verification = () => {
         setShowSuccess(true);
         setIsMinimized(false);
       } else {
-        setView('list'); setSelectedRes(null); setActiveTab(status);
+        setView('list'); 
+        setSelectedRes(null); 
+        setActiveTab(status);
       }
     } else {
-      playFeedback('error'); alert(`Error: ${result.message}`);
+      playFeedback('error'); 
+      alert(`Error: ${result.message}`);
     }
   };
 
@@ -78,36 +111,64 @@ const Verification = () => {
 
       <VerificationSuccessModal
         isOpen={showSuccess}
-        onClose={() => { setShowSuccess(false); setIsMinimized(true); setView('list'); setSelectedRes(null); setActiveTab('Pending'); }}
+        onClose={() => { 
+          setShowSuccess(false); 
+          setIsMinimized(true); 
+          setView('list'); 
+          setSelectedRes(null); 
+          setActiveTab('Pending'); 
+        }}
         data={accountDetails} t={t}
       />
 
       <ConfirmActionModal pendingAction={pendingAction} onClose={() => setPendingAction(null)} onConfirm={confirmPendingAction} t={t} />
 
       {isMinimized && accountDetails && (
-        <MinimizedSuccessCard data={accountDetails} onExpand={() => { setShowSuccess(true); setIsMinimized(false); }} onClose={() => { setIsMinimized(false); setAccountDetails(null); }} />
+        <MinimizedSuccessCard 
+          data={accountDetails} 
+          onExpand={() => { setShowSuccess(true); setIsMinimized(false); }} 
+          onClose={() => { setIsMinimized(false); setAccountDetails(null); }} 
+        />
       )}
 
       {view === 'list' ? (
         <div className="animate-in fade-in duration-500 space-y-5">
-          <h1 className={`text-2xl sm:text-3xl font-bold ${t.cardText} font-spartan uppercase`}>Identity Verification</h1>
+          <div className="flex flex-col gap-1">
+             <h1 className={`text-2xl sm:text-3xl font-bold ${t.cardText} font-spartan uppercase`}>Identity Verification</h1>
+             <p className={`text-xs ${t.subtleText} font-medium tracking-wider`}>Manage and review resident account applications</p>
+          </div>
           
           <VerificationStats submissions={submissions} t={t} />
           <VerificationTabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
-          <div className={`bg-white dark:bg-slate-900 border ${t.cardBorder} rounded-xl overflow-hidden shadow-sm flex flex-col`}>
+          <div className={`bg-white dark:bg-slate-900 border ${t.cardBorder} rounded-xl overflow-hidden shadow-sm flex flex-col transition-all duration-300`}>
             <VerificationFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} t={t} />
             
-            {loading ? <div className="p-10 text-center italic text-slate-400">Loading...</div> : (
+            {loading ? (
+              <div className="p-20 flex flex-col items-center justify-center gap-4 text-slate-400">
+                <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-sm font-medium animate-pulse italic">Updating records...</p>
+              </div>
+            ) : (
               <>
-                <PendingVerificationTable data={currentData} onReview={(res) => { setSelectedRes(res); setView('detail'); }} t={t} />
+                <PendingVerificationTable onPageChange={setCurrentPage} data={currentData} onReview={(res) => { setSelectedRes(res); setView('detail'); }} t={t} />
                 <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={totalItems} itemsPerPage={10} t={t} />
               </>
             )}
           </div>
         </div>
       ) : (
-        <VerificationDetailView data={selectedRes} setView={setView} onVisitBgy={() => handleAction(selectedRes.id, 'For Verification')} onApprove={() => handleAction(selectedRes.id, 'Verified')} onReject={() => handleAction(selectedRes.id, 'Rejected')} onZoom={setZoomedImg} t={t} />
+        <VerificationDetailView 
+          data={selectedRes} 
+          setView={setView} 
+          onVisitBgy={() => handleAction(selectedRes.id, 'For Verification')} 
+          onApprove={(indigentStatus, extraData) => {
+            handleAction(selectedRes.id, 'Verified', indigentStatus, extraData);
+          }} 
+          onReject={() => handleAction(selectedRes.id, 'Rejected')} 
+          onZoom={setZoomedImg} 
+          t={t} 
+        />
       )}
     </div>
   );

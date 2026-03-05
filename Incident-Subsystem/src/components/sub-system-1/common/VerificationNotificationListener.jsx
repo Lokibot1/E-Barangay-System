@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Bell, X } from 'lucide-react'; 
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate, useLocation } from 'react-router-dom'; 
 import { useSound } from '../../../hooks/shared/useSound';
 import { verificationService } from '../../../services/sub-system-1/verification';
 
@@ -9,6 +9,7 @@ const POLL_INTERVAL_MS = 1000;
 const VerificationNotificationListener = () => {
   const { playFeedback } = useSound();
   const navigate = useNavigate(); 
+  const location = useLocation(); 
   const [notificationBanner, setNotificationBanner] = useState(null);
   
   const lastCountKey = 'admin_last_pending_count';
@@ -36,6 +37,7 @@ const VerificationNotificationListener = () => {
         const savedCount = sessionStorage.getItem(lastCountKey);
         const previousCount = savedCount !== null ? parseInt(savedCount, 10) : null;
 
+        
         if (previousCount !== null && pendingCount > previousCount) {
           const newCount = pendingCount - previousCount;
           
@@ -56,13 +58,40 @@ const VerificationNotificationListener = () => {
     };
 
     loadPendingCount();
-
     const interval = setInterval(loadPendingCount, POLL_INTERVAL_MS);
+    
     return () => {
       clearInterval(interval);
       if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
     };
-  }, [playFeedback]); 
+  }, [playFeedback]);
+
+
+  const handleViewPending = () => {
+    const targetPath = '/admin/user-management';
+    const isAlreadyOnPage = location.pathname === targetPath;
+
+    if (isAlreadyOnPage) {
+      
+      window.dispatchEvent(new CustomEvent('refreshVerificationData', { 
+        detail: { switchToTab: 'Pending' } 
+      }));
+      
+   
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+  
+      navigate(targetPath);
+    
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('refreshVerificationData', { 
+          detail: { switchToTab: 'Pending' } 
+        }));
+      }, 100);
+    }
+
+    setNotificationBanner(null);
+  };
 
   if (!notificationBanner) return null;
 
@@ -93,12 +122,8 @@ const VerificationNotificationListener = () => {
         </div>
         
         <button
-          onClick={() => {
-            navigate('/admin/user-management'); 
-            setNotificationBanner(null);
-            window.dispatchEvent(new Event('refreshVerificationData'));
-          }}
-          className="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-md active:scale-95"
+          onClick={handleViewPending}
+          className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black rounded-xl transition-all shadow-md active:scale-95 uppercase tracking-wider"
         >
           VIEW PENDING LIST
         </button>

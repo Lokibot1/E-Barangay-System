@@ -13,7 +13,7 @@ const ResidentStats = ({ residents, t }) => {
 
     return [
       { 
-        title: 'Total Population', 
+        title: 'Registered Residents', 
         value: residents.length, 
         subtitle: 'Official Records', 
         icon: Users, 
