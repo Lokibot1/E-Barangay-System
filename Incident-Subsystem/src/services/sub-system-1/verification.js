@@ -51,6 +51,7 @@ export const verificationService = {
             age: ageVal,
             sex: res.gender || 'N/A',
             contact: res.contact_number || 'N/A',
+            email: res.email || 'N/A',
             maritalStatus: res.marital_status?.name || 'N/A', 
             nationality: res.nationality?.name || 'Filipino',
             birthRegistration: res.birth_registration || 'N/A',

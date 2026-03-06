@@ -53,6 +53,7 @@
             <Phone size={14} /> Contact Details
         </p>
         <InfoField label="Mobile Number" val={details?.contact} t={{cardText: 'text-emerald-400'}} />
+        <InfoField label="Email Address" val={details?.email} t={{cardText: 'text-emerald-400'}} />
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ const transformResident = (r) => {
 
   return {
     ...r,
-
+    email: r.email || "",
     sectorLabel: (typeof r.sector === "object" ? r.sector?.name : r.sector) || "GENERAL POPULATION",
 
     sector_id: r.sector?.id || r.sector_id || "",

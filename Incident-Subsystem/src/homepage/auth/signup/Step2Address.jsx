@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const Step2Address = ({ 
   formData, 
@@ -12,8 +12,52 @@ const Step2Address = ({
 }) => {
   const labelClass = `text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`;
   const requiredStar = <span className="text-rose-500 ml-0.5">*</span>;
+  const todayStr = new Date().toISOString().split("T")[0];
 
-  // 1. Base Options
+  useEffect(() => {
+    if (addressExists && formData.householdPosition === "Head") {
+      const event = {
+        target: {
+          name: 'householdPosition',
+          value: ''
+        }
+      };
+      handleChange(event);
+    }
+  }, [addressExists, formData.householdPosition, handleChange]);
+
+  const onHouseNumberInput = (e) => {
+    let val = e.target.value.toUpperCase(); 
+    val = val.replace(/[^0-9A-Z-]/g, '');   
+
+    if (val.length > 0 && !/^\d/.test(val)) {
+      val = '';
+    }
+
+    if (/^\d+[A-Z]$/.test(val)) {
+      const match = val.match(/^(\d+)([A-Z])$/);
+      if (match) val = `${match[1]}-${match[2]}`;
+    }
+
+    e.target.value = val;
+    handleHouseNumberChange(e);
+  };
+
+  const validateDate = () => {
+    if (!formData.residencyStartDate || !formData.residencyStatus) return false;
+    const selected = new Date(formData.residencyStartDate);
+    const now = new Date();
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(now.getMonth() - 6);
+
+    if (selected > now) return false; 
+    if (formData.residencyStatus === "New Resident") return selected >= sixMonthsAgo; 
+    if (formData.residencyStatus === "Old Resident") return selected < sixMonthsAgo; 
+    return true;
+  };
+
+  const isDateValid = validateDate();
+
   const positions = [
     { value: "Head", label: "Head of Family" },
     { value: "Spouse", label: "Spouse" },
@@ -23,16 +67,12 @@ const Step2Address = ({
     { value: "Others", label: "Others" }
   ];
 
-  // 2. REACTIVE FILTERING LOGIC
-  // Itatago ang "Head" option kung nalaman ng system na may Head na sa address na iyon
   const filteredPositions = addressExists 
     ? positions.filter(p => p.value !== "Head") 
     : positions;
 
-  // LOCK LOGIC: Dapat kumpleto ang address bago makapili ng position
   const isAddressComplete = formData.houseNumber?.trim() && formData.street && formData.purok;
 
-  // Helpers para sa Live Preview
   const getStreetName = () => {
     if (!formData.street || !streets.length) return '';
     const street = streets.find(s => s.id.toString() === formData.street.toString());
@@ -45,16 +85,15 @@ const Step2Address = ({
     return purok ? (purok.number || purok.name) : formData.purok;
   };
 
-  const fullAddress = `${formData.houseNumber || ''} ${getStreetName()}, PUROK ${getPurokDisplay()}, BRGY. GULOD NOVALICHES`.trim();
+  const fullAddress = `${formData.houseNumber || ''} ${getStreetName()}, PUROK ${getPurokDisplay()}, BRGY. GULOD NOVALICHES QUEZON CITY`.trim();
 
-  // VALIDATION FOR NEXT BUTTON
   const isStep2Valid = 
     isAddressComplete && 
     formData.householdPosition && 
     formData.residencyStatus && 
-    formData.residencyStartDate && 
+    isDateValid && 
     (formData.householdPosition === "Head" 
-      ? (formData.tenureStatus && formData.wallMaterial && formData.roofMaterial) // Gamitin ang camelCase dito
+      ? (formData.tenureStatus && formData.wallMaterial && formData.roofMaterial)
       : true);
 
   return (
@@ -68,9 +107,9 @@ const Step2Address = ({
             type="text" 
             name="houseNumber" 
             value={formData.houseNumber || ""} 
-            onChange={handleHouseNumberChange} 
+            onChange={onHouseNumberInput} 
             className="full-input-sm" 
-            placeholder="123-A" 
+            placeholder="Ex: 123-A" 
           />
         </div>
         <div className="space-y-1">
@@ -86,33 +125,31 @@ const Step2Address = ({
         </div>
       </div>
 
-      <div className="space-y-1">
-        <label className={labelClass}>Street{requiredStar}</label>
-        <select 
-          name="street" 
-          value={formData.street || ""} 
-          disabled={!formData.purok} 
-          onChange={handleChange} 
-          className="full-input-sm disabled:opacity-30"
-        >
-          <option value="">Select Street</option>
-          {streets.map(s => (
-            <option key={s.id} value={s.id.toString()}>{s.name}</option>
-          ))}
-        </select>
-      </div>
-
-      <hr className="border-slate-100 dark:border-slate-800 my-2" />
-
-      {/* 2. HOUSEHOLD POSITION & RESIDENCY TYPE */}
+      {/* 2. STREET & HOUSEHOLD POSITION */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <label className={labelClass}>Street{requiredStar}</label>
+          <select 
+            name="street" 
+            value={formData.street || ""} 
+            disabled={!formData.purok} 
+            onChange={handleChange} 
+            className="full-input-sm disabled:opacity-30"
+          >
+            <option value="">Select Street</option>
+            {streets.map(s => (
+              <option key={s.id} value={s.id.toString()}>{s.name}</option>
+            ))}
+          </select>
+        </div>
+
         <div className="space-y-1">
           <label className={labelClass}>Household Position{requiredStar}</label>
           <select 
             name="householdPosition" 
             value={formData.householdPosition || ""} 
             onChange={handleChange} 
-            disabled={!isAddressComplete} // LOCK UNTIL ADDRESS IS DONE
+            disabled={!isAddressComplete} 
             className={`full-input-sm transition-colors ${
               !isAddressComplete 
                 ? "opacity-40 cursor-not-allowed bg-slate-50 dark:bg-slate-900/50" 
@@ -123,38 +160,23 @@ const Step2Address = ({
               {!isAddressComplete ? "Waiting for address..." : "Select Position"}
             </option>
             {filteredPositions.map(pos => (
-              <option key={pos.value} value={pos.value}>
-                {pos.label}
-              </option>
+              <option key={pos.value} value={pos.value}>{pos.label}</option>
             ))}
           </select>
-          
           {addressExists && isAddressComplete && (
-            <div className="flex items-start gap-1.5 mt-1 animate-in fade-in slide-in-from-top-1">
-              <span className="text-amber-600 text-[10px]">⚠️</span>
-              <p className="text-[9px] text-amber-600 font-bold leading-tight">
-                Address already has a registered Head. "Head of Family" is hidden.
-              </p>
-            </div>
+            <p className="text-[9px] text-amber-600 font-bold leading-tight mt-1 px-1">
+              ⚠️ Address already has a registered Head.
+            </p>
           )}
-        </div>
-
-        <div className="space-y-1">
-          <label className={labelClass}>Residency Type{requiredStar}</label>
-          <select name="residencyStatus" value={formData.residencyStatus || ""} onChange={handleChange} className="full-input-sm">
-            <option value="">Select Type</option>
-            <option value="Old Resident">Old Resident</option>
-            <option value="New Resident">New Resident</option>
-          </select>
         </div>
       </div>
 
-      {/* 3. CONDITIONAL HOUSING DETAILS (Only for Head) */}
-      {formData.householdPosition === "Head" && (
+      {/* 3. HOUSING SURVEY (Only for Head) */}
+      {formData.householdPosition === "Head" && !addressExists && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-200">
           <div className="col-span-full mb-1 flex justify-between items-center">
-              <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">New Household Survey</p>
-              <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 px-2 py-0.5 rounded-full font-bold">Required for Head</span>
+            <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Housing Survey</p>
+            <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 px-2 py-0.5 rounded-full font-bold">Required for Head</span>
           </div>
           <div className="space-y-1">
             <label className={labelClass}>Housing Status</label>
@@ -188,23 +210,41 @@ const Step2Address = ({
         </div>
       )}
 
-      {/* 4. DATE STARTED */}
-      <div className="space-y-1">
-          <label className={labelClass}>Date Started Residency{requiredStar}</label>
+      <hr className="border-slate-100 dark:border-slate-800 my-1" />
+
+      {/* 4. RESIDENCY TYPE & DATE */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <label className={labelClass}>Residency Type{requiredStar}</label>
+          <select name="residencyStatus" value={formData.residencyStatus || ""} onChange={handleChange} className="full-input-sm">
+            <option value="">Select Type</option>
+            <option value="Old Resident">Old Resident (6+ mos)</option>
+            <option value="New Resident">New Resident (Within 6 mos)</option>
+          </select>
+        </div>
+        <div className="space-y-1">
+          <label className={labelClass}>Date Started{requiredStar}</label>
           <input 
             type="date" 
             name="residencyStartDate" 
             value={formData.residencyStartDate || ""} 
             onChange={handleChange} 
-            max={new Date().toISOString().split("T")[0]} 
-            className="full-input-sm" 
+            max={todayStr} 
+            className={`full-input-sm ${formData.residencyStartDate && !isDateValid ? 'border-rose-500 ring-2 ring-rose-500/20' : ''}`} 
           />
+        </div>
       </div>
+      
+      {formData.residencyStartDate && !isDateValid && (
+        <p className="text-[10px] text-rose-500 font-bold italic px-1">
+          Invalid date for {formData.residencyStatus} status.
+        </p>
+      )}
 
       {/* 5. LIVE PREVIEW */}
       <div className={`p-4 border rounded-2xl transition-colors ${isStep2Valid ? "bg-emerald-500/5 border-emerald-600/20" : "bg-slate-50 dark:bg-slate-900/20 border-slate-200 dark:border-slate-800"}`}>
         <p className={`text-[10px] font-black uppercase leading-tight ${isStep2Valid ? "text-slate-700 dark:text-emerald-400" : "text-slate-400"}`}>
-          {isStep2Valid ? fullAddress : "Please complete the required address fields..."}
+          {isAddressComplete ? fullAddress : "Please complete address fields..."}
         </p>
       </div>
 
@@ -223,7 +263,7 @@ const Step2Address = ({
           type="button" 
           disabled={!isStep2Valid} 
           onClick={() => setStep(3)} 
-          className="sm:flex-[2] py-4 bg-emerald-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest disabled:opacity-30 transition-all hover:bg-emerald-800 active:scale-[0.98]"
+          className="sm:flex-[2] py-4 bg-emerald-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest disabled:opacity-30 transition-all hover:bg-emerald-800 active:scale-[0.98] shadow-lg shadow-emerald-900/20"
         >
           Next: Education & Work
         </button>
