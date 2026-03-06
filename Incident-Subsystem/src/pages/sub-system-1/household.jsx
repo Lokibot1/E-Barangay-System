@@ -3,11 +3,13 @@ import { Printer } from 'lucide-react';
 import HouseholdStats from '../../components/sub-system-1/household/HouseholdStats';
 import HouseholdFilters from '../../components/sub-system-1/household/householdfilters';
 import HouseholdTable from '../../components/sub-system-1/household/householdtable';
-import HouseholdModal from '../../components/sub-system-1/household/householdmodal';
+import HouseholdModal from '../../components/sub-system-1/household/modals/householdmodal';
+import EditHouseholdModal from '../../components/sub-system-1/household/modals/EditHouseholdModal';
 import Pagination from '../../components/sub-system-1/common/pagination';
 
 import { useHouseholds } from '../../hooks/sub-system-1/useHousehold';
 import { usePrinter } from '../../hooks/sub-system-1/usePrinter';
+import { householdService } from '../../services/sub-system-1/household'; 
 import { calculateHouseholdStats } from '../../utils/sub-system-1/householdUtils';
 import themeTokens from '../../Themetokens';
 
@@ -21,8 +23,13 @@ const Households = () => {
   }, []);
 
   const t = themeTokens[currentTheme];
-  const { households, loading } = useHouseholds();
+  const { households, loading, refresh } = useHouseholds();
   const { printTable } = usePrinter();
+
+  // Modals State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedHousehold, setSelectedHousehold] = useState(null);
 
   // Filters State
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,8 +40,29 @@ const Households = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedHousehold, setSelectedHousehold] = useState(null);
+  // --- THE FIXED UPDATE LOGIC ---
+  const handleUpdate = async (db_id, updatedData) => {
+    try {
+      const targetId = db_id || selectedHousehold?.db_id;
+      
+      if (!targetId) {
+        alert("Error: Household ID not found.");
+        return;
+      }
+
+      await householdService.update(targetId, updatedData);
+      await refresh(); 
+      
+      setIsEditModalOpen(false);
+      setSelectedHousehold(null);
+      
+      console.log(`Household ${targetId} updated successfully.`);
+    } catch (err) {
+      console.error("Update failed:", err);
+      const errorMsg = err.response?.data?.message || "Failed to update household record.";
+      alert(errorMsg);
+    }
+  };
 
   // Memoized Stats based on ALL households
   const stats = useMemo(() => calculateHouseholdStats(households), [households]);
@@ -42,8 +70,8 @@ const Households = () => {
   // Memoized Filtered List
   const filteredHouseholds = useMemo(() => {
     return households.filter(h => {
-      const matchesSearch = h.head.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            h.id.toString().toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = (h.head || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            (h.id || '').toString().toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesPurok = purokFilter === 'All' || String(h.purok) === String(purokFilter);
       const matchesStatus = statusFilter === 'All' || String(h.is_indigent) === String(statusFilter);
@@ -123,6 +151,7 @@ const Households = () => {
           households={currentData} 
           t={t} 
           onView={(h) => { setSelectedHousehold(h); setIsModalOpen(true); }} 
+          onEdit={(h) => { setSelectedHousehold(h); setIsEditModalOpen(true); }} 
         />
 
         <div className={`p-6 border-t ${t.cardBorder}`}>
@@ -143,6 +172,22 @@ const Households = () => {
           data={selectedHousehold} 
           t={t} 
           onClose={() => { setIsModalOpen(false); setSelectedHousehold(null); }} 
+          onEdit={(h) => { 
+            setIsModalOpen(false); 
+            setSelectedHousehold(h); 
+            setIsEditModalOpen(true); 
+          }} 
+        />
+      )}
+
+      {/* EDIT MODAL */}
+      {isEditModalOpen && (
+        <EditHouseholdModal 
+          isOpen={isEditModalOpen}
+          data={selectedHousehold}
+          onUpdate={handleUpdate}
+          t={t}
+          onClose={() => { setIsEditModalOpen(false); setSelectedHousehold(null); }}
         />
       )}
     </div>

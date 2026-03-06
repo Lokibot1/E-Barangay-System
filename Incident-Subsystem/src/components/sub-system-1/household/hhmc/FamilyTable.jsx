@@ -1,15 +1,12 @@
 import React from 'react';
 import { Users } from 'lucide-react';
 
-const FamilyTable = ({ members, establishedDate, t }) => (
+const FamilyTable = ({ members, t }) => (
   <div>
     <div className="flex items-center justify-between mb-3 px-1">
       <h4 className={`flex items-center gap-2 text-[10px] font-black ${t.cardText} uppercase tracking-widest font-spartan`}>
         <Users size={14} className="text-emerald-600" /> Composition
       </h4>
-      <div className="text-[9px] font-bold text-slate-400 uppercase">
-        Est: {new Date(establishedDate).toLocaleDateString()}
-      </div>
     </div>
 
     <div className={`border ${t.cardBorder} rounded-2xl overflow-hidden shadow-sm bg-white dark:bg-transparent`}>

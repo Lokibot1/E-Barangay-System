@@ -2,7 +2,7 @@ import React from 'react';
 import Table from '../common/table';
 import HouseholdRow from './householdrow';
 
-const HouseholdTable = ({ households, onView, t }) => {
+const HouseholdTable = ({ households, onView, onEdit, t }) => { // Added onEdit prop here
 
   const headers = [
     "Household Head & ID", 
@@ -20,6 +20,7 @@ const HouseholdTable = ({ households, onView, t }) => {
             key={h.db_id || h.id}
             item={h}
             onView={onView}
+            onEdit={onEdit} // Passed onEdit to the row
             t={t}
           />
         ))

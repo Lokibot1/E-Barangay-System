@@ -16,6 +16,17 @@ export const householdService = {
       throw error;
     }
   },
+
+  update: async (db_id, payload) => {
+    try {
+      const res = await api.put(`/households/${db_id}`, payload);
+      return res.data;
+    } catch (error) {
+      console.error("Update Error:", error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   delete: async (db_id) => {
     try {
       await api.delete(`/households/${db_id}`);
