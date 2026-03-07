@@ -14,7 +14,7 @@ const IncidentForm = ({
   errors,
   currentTheme,
 }) => {
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
   const { tr } = useLanguage();
   const inf = tr.incidentForm;
 
@@ -552,3 +552,4 @@ const IncidentForm = ({
 };
 
 export default IncidentForm;
+

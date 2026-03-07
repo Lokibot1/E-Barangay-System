@@ -18,7 +18,7 @@ const Toast = ({ toasts, onRemove, currentTheme }) => {
 
 const ToastItem = ({ toast, onRemove, currentTheme }) => {
   const [exiting, setExiting] = useState(false);
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
 
   useEffect(() => {
@@ -145,3 +145,4 @@ const ToastItem = ({ toast, onRemove, currentTheme }) => {
 };
 
 export default Toast;
+

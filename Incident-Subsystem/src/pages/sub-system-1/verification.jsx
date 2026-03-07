@@ -20,8 +20,15 @@ import ImageZoomOverlay from '../../components/sub-system-1/common/ImageZoomOver
 import MinimizedSuccessCard from '../../components/sub-system-1/verification/MinimizedSuccessCard';
 
 const Verification = () => {
-  const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem('appTheme') || 'blue');
-  const t = themeTokens[currentTheme] || themeTokens.blue; 
+  const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem('appTheme') || 'modern');
+  const t = themeTokens[currentTheme] || themeTokens.modern; 
+  const isDark = currentTheme === 'dark';
+
+  useEffect(() => {
+    const handler = (e) => setCurrentTheme(e.detail);
+    window.addEventListener('themeChange', handler);
+    return () => window.removeEventListener('themeChange', handler);
+  }, []);
 
   const { submissions, loading, error, updateStatus, refresh } = useVerification();
   const { playFeedback } = useSound();
@@ -40,10 +47,8 @@ const Verification = () => {
 
   useEffect(() => { window.scrollTo(0, 0); }, [view]);
 
-  // FIX: LISTENER FOR NOTIFICATION CLICK
   useEffect(() => {
     const handleRemoteRefresh = (event) => {
-   
       setView('list');
       setSelectedRes(null);
 
@@ -54,8 +59,6 @@ const Verification = () => {
       }
 
       refresh();
-      
-      console.log("UI Updated: Switched to Pending Tab via Notification");
     };
 
     window.addEventListener('refreshVerificationData', handleRemoteRefresh);
@@ -70,21 +73,13 @@ const Verification = () => {
 
   const handleAction = (id, status, isIndigent = 0, additionalData = {}) => {
     const actionText = status === 'Rejected' ? 'REJECT' : status === 'For Verification' ? 'SET FOR VISIT' : 'APPROVE';
-    setPendingAction({ 
-      id, 
-      status, 
-      actionText, 
-      isIndigent, 
-      additionalData 
-    });
+    setPendingAction({ id, status, actionText, isIndigent, additionalData });
   };
 
   const confirmPendingAction = async () => {
     if (!pendingAction) return;
-    
     const { id, status, isIndigent, additionalData } = pendingAction;
     setPendingAction(null);
-
     const result = await updateStatus(id, status, isIndigent, additionalData);
 
     if (result.success) {
@@ -94,55 +89,66 @@ const Verification = () => {
         setShowSuccess(true);
         setIsMinimized(false);
       } else {
-        setView('list'); 
-        setSelectedRes(null); 
-        setActiveTab(status);
+        setView('list'); setSelectedRes(null); setActiveTab(status);
       }
     } else {
-      playFeedback('error'); 
-      alert(`Error: ${result.message}`);
+      playFeedback('error'); alert(`Error: ${result.message}`);
     }
   };
 
   return (
-    <div className={`font-sans min-h-screen py-4 pb-20 px-4 md:px-0 relative ${t.pageBg}`}>
+    <div className={`font-sans min-h-screen py-4 pb-24 px-3 sm:px-4 lg:px-5 relative ${t.pageBg}`}>
       
       <ImageZoomOverlay isOpen={!!zoomedImg} imgSrc={zoomedImg} onClose={() => setZoomedImg(null)} />
 
       <VerificationSuccessModal
         isOpen={showSuccess}
-        onClose={() => { 
-          setShowSuccess(false); 
-          setIsMinimized(true); 
-          setView('list'); 
-          setSelectedRes(null); 
-          setActiveTab('Pending'); 
-        }}
-        data={accountDetails} t={t}
+        onClose={() => { setShowSuccess(false); setIsMinimized(true); setView('list'); setSelectedRes(null); setActiveTab('Pending'); }}
+        data={accountDetails} t={t} currentTheme={currentTheme}
       />
 
       <ConfirmActionModal pendingAction={pendingAction} onClose={() => setPendingAction(null)} onConfirm={confirmPendingAction} t={t} />
 
       {isMinimized && accountDetails && (
-        <MinimizedSuccessCard 
-          data={accountDetails} 
-          onExpand={() => { setShowSuccess(true); setIsMinimized(false); }} 
-          onClose={() => { setIsMinimized(false); setAccountDetails(null); }} 
-        />
+        <MinimizedSuccessCard data={accountDetails} onExpand={() => { setShowSuccess(true); setIsMinimized(false); }} onClose={() => { setIsMinimized(false); setAccountDetails(null); }} />
       )}
-
+      <div className="mx-auto w-full max-w-[1600px]">
       {view === 'list' ? (
-        <div className="animate-in fade-in duration-500 space-y-5">
-          <div className="flex flex-col gap-1">
-             <h1 className={`text-2xl sm:text-3xl font-bold ${t.cardText} font-spartan uppercase`}>Identity Verification</h1>
-             <p className={`text-xs ${t.subtleText} font-medium tracking-wider`}>Manage and review resident account applications</p>
-          </div>
+        <div className="animate-in fade-in duration-500 space-y-6 pt-4 sm:pt-5">
+          <section className="max-w-3xl space-y-3 text-left">
+            <div className="space-y-2 text-left">
+              <h1 className={`text-[2.25rem] sm:text-[2.1rem] font-bold tracking-tight text-left ${t.cardText} font-spartan`}>
+                Identity Verification
+              </h1>
+              <p className={`max-w-2xl text-[13px] leading-6 sm:text-[13px] text-left ${t.subtleText} font-kumbh`}>
+                Review resident identity submissions, schedule on-site visits, and finalize approvals from one clean queue.
+              </p>
+            </div>
+          </section>
           
-          <VerificationStats submissions={submissions} t={t} />
-          <VerificationTabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
+          <VerificationStats submissions={submissions} t={t} currentTheme={currentTheme} />
 
-          <div className={`bg-white dark:bg-slate-900 border ${t.cardBorder} rounded-xl overflow-hidden shadow-sm flex flex-col transition-all duration-300`}>
-            <VerificationFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} t={t} />
+          <div className={`${t.cardBg} border ${t.cardBorder} overflow-hidden rounded-[30px] shadow-[0_18px_45px_rgba(15,23,42,0.08)] flex flex-col`}>
+            <div className={`border-b px-5 py-5 sm:px-6 ${t.cardBorder} ${isDark ? 'bg-slate-950/70' : 'bg-white/70'}`}>
+              <div className="flex">
+                <VerificationTabs
+                  tabs={tabs}
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  t={t}
+                  currentTheme={currentTheme}
+                />
+              </div>
+            </div>
+
+            <VerificationFilters
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              activeTab={activeTab}
+              totalItems={totalItems}
+              t={t}
+              currentTheme={currentTheme}
+            />
             
             {loading ? (
               <div className="p-20 flex flex-col items-center justify-center gap-4 text-slate-400">
@@ -151,25 +157,33 @@ const Verification = () => {
               </div>
             ) : (
               <>
-                <PendingVerificationTable onPageChange={setCurrentPage} data={currentData} onReview={(res) => { setSelectedRes(res); setView('detail'); }} t={t} />
-                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={totalItems} itemsPerPage={10} t={t} />
+                <PendingVerificationTable data={currentData} onReview={(res) => { setSelectedRes(res); setView('detail'); }} t={t} currentTheme={currentTheme} />
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                  totalItems={totalItems}
+                  itemsPerPage={10}
+                  t={t}
+                  currentTheme={currentTheme}
+                />
               </>
             )}
           </div>
         </div>
       ) : (
-        <VerificationDetailView 
-          data={selectedRes} 
-          setView={setView} 
-          onVisitBgy={() => handleAction(selectedRes.id, 'For Verification')} 
-          onApprove={(indigentStatus, extraData) => {
-            handleAction(selectedRes.id, 'Verified', indigentStatus, extraData);
-          }} 
-          onReject={() => handleAction(selectedRes.id, 'Rejected')} 
-          onZoom={setZoomedImg} 
-          t={t} 
+        <VerificationDetailView
+          data={selectedRes}
+          setView={setView}
+          onVisitBgy={() => handleAction(selectedRes.id, 'For Verification')}
+          onApprove={(indigentStatus, extraData) => handleAction(selectedRes.id, 'Verified', indigentStatus, extraData)}
+          onReject={() => handleAction(selectedRes.id, 'Rejected')}
+          onZoom={setZoomedImg}
+          t={t}
+          currentTheme={currentTheme}
         />
       )}
+      </div>
     </div>
   );
 };

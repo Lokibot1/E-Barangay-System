@@ -64,7 +64,7 @@ const InsightsModal = ({
   context = "dashboard",
 }) => {
   const [currentTheme, setCurrentTheme] = useState(
-    () => localStorage.getItem("appTheme") || "blue",
+    () => localStorage.getItem("appTheme") || "modern",
   );
 
   useEffect(() => {
@@ -73,7 +73,7 @@ const InsightsModal = ({
     return () => window.removeEventListener("themeChange", handler);
   }, []);
 
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
 
   const insights = useMemo(
@@ -495,3 +495,5 @@ const InsightsModal = ({
 };
 
 export default InsightsModal;
+
+

@@ -14,7 +14,7 @@ const ForgotPasswordModal = ({
   const [email, setEmail] = useState(initialEmail || "");
   const [loading, setLoading] = useState(false);
 
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
 
   // Sync pre-filled email every time the modal opens
   useEffect(() => {
@@ -113,3 +113,4 @@ const ForgotPasswordModal = ({
 };
 
 export default ForgotPasswordModal;
+

@@ -6,7 +6,7 @@ import themeTokens from '../../Themetokens';
 
 const Certificates = () => {
   const [currentTheme, setCurrentTheme] = useState(
-    () => localStorage.getItem('appTheme') || 'blue'
+    () => localStorage.getItem('appTheme') || 'modern'
   );
 
   useEffect(() => {

@@ -4,7 +4,7 @@ import themeTokens from "../../Themetokens";
 
 const Track_BID = () => {
   const navigate = useNavigate();
-  const currentTheme = localStorage.getItem("appTheme") || "blue";
+  const currentTheme = localStorage.getItem("appTheme") || "modern";
   const t = themeTokens[currentTheme];
 
   return (

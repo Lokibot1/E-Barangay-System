@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import themeTokens from "../../Themetokens";
 
 const TabsComponent = ({ activeTab, onTabChange, currentTheme }) => {
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
   const containerRef = useRef(null);
   const [sliderStyle, setSliderStyle] = useState({});
@@ -118,3 +118,4 @@ const TabsComponent = ({ activeTab, onTabChange, currentTheme }) => {
 };
 
 export default TabsComponent;
+

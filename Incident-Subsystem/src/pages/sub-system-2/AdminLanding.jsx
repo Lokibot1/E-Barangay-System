@@ -10,7 +10,7 @@ import AccountsSection from "../../components/sub-system-2/accounts/AccountsSect
 import { totalTransactionCount } from "../../components/sub-system-2/accounts/data";
 
 const AdminLanding = () => {
-  const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem("appTheme") || "blue");
+  const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem("appTheme") || "modern");
 
   useEffect(() => {
     const handleThemeChange = (e) => setCurrentTheme(e.detail);
@@ -62,13 +62,13 @@ const AdminLanding = () => {
           </div>
 
           <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>Volumes</h2>
-          <VolumesFactors t={t} isDark={isDark} />
+          <VolumesFactors t={t} isDark={isDark} currentTheme={currentTheme} />
 
           <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>Operations</h2>
-          <OperationsFactors t={t} isDark={isDark} />
+          <OperationsFactors t={t} isDark={isDark} currentTheme={currentTheme} />
 
           <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>Socio-Economy</h2>
-          <SocioEconomyFactors t={t} isDark={isDark} />
+          <SocioEconomyFactors t={t} isDark={isDark} currentTheme={currentTheme} />
 
           <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>Reports</h2>
           <ReportsSection />
@@ -82,3 +82,4 @@ const AdminLanding = () => {
 };
 
 export default AdminLanding;
+

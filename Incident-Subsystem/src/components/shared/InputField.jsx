@@ -13,7 +13,7 @@ const InputField = ({
   icon,
   ...props
 }) => {
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
 
   return (
     <div className="form-group">
@@ -66,3 +66,4 @@ const InputField = ({
 };
 
 export default InputField;
+

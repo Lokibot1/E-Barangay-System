@@ -17,7 +17,21 @@ export default function OverviewTab({ raw, t }) {
   const hm = raw?.heatmap?.puroks ?? [];
   const reg = raw?.registration;
 
-  const statusData = ov.status_breakdown ?? [];
+  const statusColorMap = {
+    verified: COLORS.success,
+    pending: COLORS.warning,
+    rejected: COLORS.danger,
+    unregistered: COLORS.gray,
+    voters: COLORS.teal,
+  };
+
+  const statusData = (ov.status_breakdown ?? []).map((entry) => {
+    const key = String(entry.status || entry.name || '').toLowerCase().replace(/\s+/g, '_');
+    return {
+      ...entry,
+      color: statusColorMap[key] || entry.color || COLORS.primary,
+    };
+  });
   const trendData = reg?.registration_trend ?? [];
 
   const genderData = (ov.gender_breakdown ?? []).map(g => ({
@@ -29,8 +43,17 @@ export default function OverviewTab({ raw, t }) {
   const residencyData = (ov.residency_breakdown ?? []).map(r => ({
     name: r.residency_status,
     value: Number(r.count),
-    color: r.residency_status === 'Old Resident' ? COLORS.primary : COLORS.secondary,
+    color: r.residency_status === 'Old Resident' ? COLORS.teal : COLORS.secondary,
   }));
+
+  const gridStroke = '#e9ecf7';
+  const axisTick = { fontSize: 11, fill: '#64748b' };
+  const tooltipStyle = {
+    borderRadius: '10px',
+    border: '1px solid #e2e8f0',
+    backgroundColor: '#ffffff',
+    fontSize: '12px',
+  };
 
   return (
     <div className="space-y-6">
@@ -112,11 +135,11 @@ export default function OverviewTab({ raw, t }) {
         <Card title="Registration Status Breakdown" t={t}>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
-              <Pie data={statusData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value">
+              <Pie data={statusData} cx="50%" cy="50%" innerRadius={56} outerRadius={90} paddingAngle={3} dataKey="value">
                 {statusData.map((e, i) => <Cell key={i} fill={e.color} />)}
               </Pie>
-              <Tooltip />
-              <Legend iconType="circle" iconSize={10} />
+              <Tooltip contentStyle={tooltipStyle} />
+              <Legend iconType="circle" iconSize={10} wrapperStyle={{ fontSize: 11 }} />
             </PieChart>
           </ResponsiveContainer>
         </Card>
@@ -124,17 +147,17 @@ export default function OverviewTab({ raw, t }) {
         <Card title="Daily Registration Trend" t={t}>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={trendData} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+              <XAxis dataKey="date" tick={axisTick} />
+              <YAxis tick={axisTick} />
+              <Tooltip contentStyle={tooltipStyle} />
               <Line
                 type="monotone"
                 dataKey="count"
                 name="Registrations"
                 stroke={COLORS.primary}
-                strokeWidth={2.5}
-                dot={{ r: 4, fill: COLORS.primary }}
+                strokeWidth={2.8}
+                dot={{ r: 3, fill: COLORS.primary }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -153,7 +176,7 @@ export default function OverviewTab({ raw, t }) {
               >
                 {genderData.map((e, i) => <Cell key={i} fill={e.color} />)}
               </Pie>
-              <Tooltip />
+              <Tooltip contentStyle={tooltipStyle} />
             </PieChart>
           </ResponsiveContainer>
         </Card>
@@ -171,7 +194,7 @@ export default function OverviewTab({ raw, t }) {
               >
                 {residencyData.map((e, i) => <Cell key={i} fill={e.color} />)}
               </Pie>
-              <Tooltip />
+              <Tooltip contentStyle={tooltipStyle} />
             </PieChart>
           </ResponsiveContainer>
         </Card>
@@ -181,13 +204,13 @@ export default function OverviewTab({ raw, t }) {
         <Card title="Residents per Purok - Quick View" t={t}>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={hm} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="purok" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip />
-              <Bar dataKey="total" name="Total" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="verified" name="Verified" fill={COLORS.success} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="seniors" name="Seniors" fill={COLORS.danger} radius={[4, 4, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+              <XAxis dataKey="purok" tick={axisTick} />
+              <YAxis tick={axisTick} />
+              <Tooltip contentStyle={tooltipStyle} />
+              <Bar dataKey="total" name="Total" fill={COLORS.primary} radius={[8, 8, 0, 0]} />
+              <Bar dataKey="verified" name="Verified" fill={COLORS.success} radius={[8, 8, 0, 0]} />
+              <Bar dataKey="seniors" name="Seniors" fill={COLORS.danger} radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Card>

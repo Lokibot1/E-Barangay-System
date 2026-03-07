@@ -1,63 +1,185 @@
-import React, { useState, useEffect } from "react";
-import themeTokens from "../../Themetokens";
+import React, { useEffect, useMemo, useState } from "react";
+
+const themes = [
+  {
+    id: "blue",
+    name: "Ocean Blue",
+    description: "Professional and calming",
+    accent: "#2563eb",
+    accentTo: "#4f46e5",
+    soft: "#dbeafe",
+    preview: {
+      bg: "linear-gradient(135deg, #f1f5f9 0%, #f8fafc 45%, #eff6ff 100%)",
+      card: "#ffffff",
+    },
+    selectedBorder: "#2563eb",
+    selectedShadow: "0 14px 34px rgba(37, 99, 235, 0.14)",
+    selectedBadge: "#2563eb",
+    shellBg: "#ffffff",
+    headerBg: "linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%)",
+    headerIcon: "#2563eb",
+    headerText: "#0f172a",
+    headerSubtext: "#475569",
+    closeColor: "#475569",
+    closeHoverBg: "rgba(15, 23, 42, 0.06)",
+    noteBg: "#eff6ff",
+    noteBorder: "#bfdbfe",
+    noteIcon: "#2563eb",
+    noteTitle: "#1d4ed8",
+    noteText: "#1e3a8a",
+    footerBg: "#f8fafc",
+    footerBorder: "#e2e8f0",
+    cancelText: "#475569",
+    cancelHoverText: "#0f172a",
+    cancelHoverBg: "#e2e8f0",
+    actionBg: "linear-gradient(90deg, #2563eb 0%, #4f46e5 100%)",
+    infoBg: "#ffffff",
+    infoText: "#475569",
+  },
+  {
+    id: "purple",
+    name: "Royal Purple",
+    description: "Creative and elegant",
+    accent: "#9333ea",
+    accentTo: "#db2777",
+    soft: "#f3e8ff",
+    preview: {
+      bg: "linear-gradient(135deg, #f1f5f9 0%, #f8fafc 45%, #faf5ff 100%)",
+      card: "#ffffff",
+    },
+    selectedBorder: "#9333ea",
+    selectedShadow: "0 14px 34px rgba(147, 51, 234, 0.14)",
+    selectedBadge: "#9333ea",
+    shellBg: "#ffffff",
+    headerBg: "linear-gradient(135deg, #ede9fe 0%, #faf5ff 100%)",
+    headerIcon: "#9333ea",
+    headerText: "#0f172a",
+    headerSubtext: "#475569",
+    closeColor: "#475569",
+    closeHoverBg: "rgba(15, 23, 42, 0.06)",
+    noteBg: "#faf5ff",
+    noteBorder: "#d8b4fe",
+    noteIcon: "#9333ea",
+    noteTitle: "#7e22ce",
+    noteText: "#6b21a8",
+    footerBg: "#f8fafc",
+    footerBorder: "#e2e8f0",
+    cancelText: "#475569",
+    cancelHoverText: "#0f172a",
+    cancelHoverBg: "#e2e8f0",
+    actionBg: "linear-gradient(90deg, #9333ea 0%, #db2777 100%)",
+    infoBg: "#ffffff",
+    infoText: "#475569",
+  },
+  {
+    id: "green",
+    name: "Forest Green",
+    description: "Natural and refreshing",
+    accent: "#16a34a",
+    accentTo: "#059669",
+    soft: "#dcfce7",
+    preview: {
+      bg: "linear-gradient(135deg, #f1f5f9 0%, #f8fafc 45%, #f0fdf4 100%)",
+      card: "#ffffff",
+    },
+    selectedBorder: "#16a34a",
+    selectedShadow: "0 14px 34px rgba(22, 163, 74, 0.14)",
+    selectedBadge: "#16a34a",
+    shellBg: "#ffffff",
+    headerBg: "linear-gradient(135deg, #dcfce7 0%, #ecfdf5 100%)",
+    headerIcon: "#16a34a",
+    headerText: "#0f172a",
+    headerSubtext: "#475569",
+    closeColor: "#475569",
+    closeHoverBg: "rgba(15, 23, 42, 0.06)",
+    noteBg: "#f0fdf4",
+    noteBorder: "#86efac",
+    noteIcon: "#16a34a",
+    noteTitle: "#15803d",
+    noteText: "#166534",
+    footerBg: "#f8fafc",
+    footerBorder: "#e2e8f0",
+    cancelText: "#475569",
+    cancelHoverText: "#0f172a",
+    cancelHoverBg: "#e2e8f0",
+    actionBg: "linear-gradient(90deg, #16a34a 0%, #059669 100%)",
+    infoBg: "#ffffff",
+    infoText: "#475569",
+  },
+  {
+    id: "dark",
+    name: "Dark Mode",
+    description: "Easy on the eyes",
+    accent: "#475569",
+    accentTo: "#0f172a",
+    soft: "#334155",
+    preview: {
+      bg: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+      card: "#1e293b",
+    },
+    selectedBorder: "#64748b",
+    selectedShadow: "0 14px 34px rgba(15, 23, 42, 0.32)",
+    selectedBadge: "#334155",
+    shellBg: "#0f172a",
+    headerBg: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+    headerIcon: "#e2e8f0",
+    headerText: "#ffffff",
+    headerSubtext: "#cbd5e1",
+    closeColor: "#cbd5e1",
+    closeHoverBg: "rgba(226, 232, 240, 0.14)",
+    noteBg: "rgba(51, 65, 85, 0.45)",
+    noteBorder: "#475569",
+    noteIcon: "#93c5fd",
+    noteTitle: "#e2e8f0",
+    noteText: "#cbd5e1",
+    footerBg: "#111827",
+    footerBorder: "#334155",
+    cancelText: "#cbd5e1",
+    cancelHoverText: "#ffffff",
+    cancelHoverBg: "rgba(226, 232, 240, 0.14)",
+    actionBg: "linear-gradient(90deg, #334155 0%, #0f172a 100%)",
+    infoBg: "#0f172a",
+    infoText: "#cbd5e1",
+  },
+];
+
+const normalizeTheme = (theme) => (theme === "modern" ? "blue" : theme || "blue");
 
 const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
-  const [selectedTheme, setSelectedTheme] = useState(currentTheme);
+  const [selectedTheme, setSelectedTheme] = useState(normalizeTheme(currentTheme));
 
   useEffect(() => {
-    setSelectedTheme(currentTheme);
+    setSelectedTheme(normalizeTheme(currentTheme));
   }, [currentTheme]);
 
+  const selectedThemeConfig = useMemo(() => {
+    return themes.find((theme) => theme.id === selectedTheme) || themes[0];
+  }, [selectedTheme]);
+
+  const modalChrome = useMemo(
+    () => ({
+      shellBg: "#ffffff",
+      headerBg: `linear-gradient(135deg, ${selectedThemeConfig.soft} 0%, #f8fafc 100%)`,
+      headerIcon: selectedThemeConfig.accent,
+      headerText: "#0f172a",
+      headerSubtext: "#475569",
+      closeColor: "#475569",
+      closeHoverBg: "rgba(15, 23, 42, 0.06)",
+      noteBg: "#f8fafc",
+      noteBorder: selectedThemeConfig.soft,
+      noteIcon: selectedThemeConfig.accent,
+      noteTitle: "#0f172a",
+      noteText: "#475569",
+      footerBg: "#ffffff",
+      footerBorder: "#e2e8f0",
+      cancelText: "#475569",
+      cancelHoverText: "#0f172a",
+      cancelHoverBg: "#f1f5f9",
+    }),
+    [selectedThemeConfig],
+  );
+
   if (!isOpen) return null;
-
-  const t = themeTokens[currentTheme] || themeTokens.blue;
-  const isDark = currentTheme === "dark";
-
-  const themes = [
-    {
-      id: "blue",
-      name: "Ocean Blue",
-      description: "Professional and calming",
-      colors: { primary: "from-blue-600 to-indigo-600", light: "bg-blue-50" },
-      preview: {
-        bg: "bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50",
-        card: "bg-white",
-      },
-    },
-    {
-      id: "purple",
-      name: "Royal Purple",
-      description: "Creative and elegant",
-      colors: { primary: "from-purple-600 to-pink-600", light: "bg-purple-50" },
-      preview: {
-        bg: "bg-gradient-to-br from-slate-100 via-slate-50 to-purple-50",
-        card: "bg-white",
-      },
-    },
-    {
-      id: "green",
-      name: "Forest Green",
-      description: "Natural and refreshing",
-      colors: {
-        primary: "from-green-600 to-emerald-600",
-        light: "bg-green-50",
-      },
-      preview: {
-        bg: "bg-gradient-to-br from-slate-100 via-slate-50 to-green-50",
-        card: "bg-white",
-      },
-    },
-    {
-      id: "dark",
-      name: "Dark Mode",
-      description: "Easy on the eyes",
-      colors: { primary: "from-slate-700 to-slate-900", light: "bg-slate-800" },
-      preview: {
-        bg: "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900",
-        card: "bg-slate-800",
-      },
-    },
-  ];
 
   const handleApply = () => {
     onThemeChange(selectedTheme);
@@ -65,18 +187,19 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
+    <div className="fixed inset-0 z-[1600] flex items-center justify-center p-4 animate-fadeIn">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
 
       <div
-        className={`relative ${t.cardBg} rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-scaleIn`}
+        className="relative rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-scaleIn flex flex-col"
+        style={{ backgroundColor: modalChrome.shellBg }}
       >
-        {/* Header */}
         <div
-          className={`bg-gradient-to-r ${t.modalHeaderGrad} px-6 py-5 flex items-center justify-between`}
+          className="px-6 py-5 flex items-center justify-between shrink-0"
+          style={{ background: modalChrome.headerBg }}
         >
           <div>
             <div className="flex items-center space-x-3">
@@ -85,7 +208,8 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
                 width="32"
                 height="32"
                 viewBox="0 0 48 48"
-                className={`${isDark ? "text-white" : t.modalHeaderIcon} flex-shrink-0`}
+                className="flex-shrink-0"
+                style={{ color: modalChrome.headerIcon }}
               >
                 <path
                   fill="currentColor"
@@ -95,20 +219,29 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
                 />
               </svg>
               <h2
-                className={`text-2xl font-bold ${isDark ? "text-white" : t.cardText} font-spartan`}
+                className="text-2xl font-bold font-spartan"
+                style={{ color: modalChrome.headerText }}
               >
                 Choose Your Theme
               </h2>
             </div>
             <p
-              className={`text-sm ${isDark ? "text-slate-300" : t.subtleText} font-kumbh mt-1 ml-11`}
+              className="text-sm font-kumbh mt-1 ml-11"
+              style={{ color: modalChrome.headerSubtext }}
             >
               Customize the appearance of your workspace
             </p>
           </div>
           <button
             onClick={onClose}
-            className={`${isDark ? "text-white hover:bg-slate-200 hover:text-slate-800" : `${t.subtleText} hover:bg-black/5`} p-2 rounded-full transition-colors`}
+            className="p-2 rounded-full transition-colors"
+            style={{ color: modalChrome.closeColor }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = modalChrome.closeHoverBg;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
           >
             <svg
               className="w-6 h-6"
@@ -126,22 +259,31 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6 pb-28 pr-4">
           <div className="grid md:grid-cols-2 gap-6">
             {themes.map((theme) => (
               <div
                 key={theme.id}
                 onClick={() => setSelectedTheme(theme.id)}
-                className={`relative cursor-pointer rounded-xl border-2 transition-all duration-300 overflow-hidden group ${
+              className={`relative cursor-pointer rounded-xl border-2 transition-all duration-300 overflow-hidden group ${
                   selectedTheme === theme.id
-                    ? "border-blue-600 shadow-xl scale-105"
-                    : `${isDark ? "border-slate-600 hover:border-slate-300 hover:bg-slate-700/50" : "border-slate-200 hover:border-slate-300"} hover:shadow-lg`
+                    ? "shadow-xl scale-[1.02]"
+                    : "border-slate-200 hover:border-slate-300 hover:shadow-lg"
                 }`}
+                style={
+                  selectedTheme === theme.id
+                    ? {
+                        borderColor: theme.selectedBorder,
+                        boxShadow: theme.selectedShadow,
+                      }
+                    : undefined
+                }
               >
-                {/* Selected Badge */}
                 {selectedTheme === theme.id && (
-                  <div className="absolute top-3 right-3 z-10 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold font-kumbh flex items-center space-x-1 animate-slideDown">
+                  <div
+                    className="absolute top-3 right-3 z-10 text-white px-3 py-1 rounded-full text-xs font-bold font-kumbh flex items-center space-x-1 animate-slideDown"
+                    style={{ backgroundColor: theme.selectedBadge }}
+                  >
                     <svg
                       className="w-3 h-3"
                       fill="none"
@@ -159,69 +301,95 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
                   </div>
                 )}
 
-                {/* Preview */}
-                <div className={`${theme.preview.bg} p-6 h-48 relative`}>
+                <div className="p-6 h-48 relative" style={{ background: theme.preview.bg }}>
                   <div
-                    className={`${theme.preview.card} rounded-lg p-3 mb-3 shadow-md`}
+                    className="rounded-lg p-3 mb-3 shadow-md"
+                    style={{ backgroundColor: theme.preview.card }}
                   >
                     <div
-                      className={`w-20 h-2 bg-gradient-to-r ${theme.colors.primary} rounded-full mb-2`}
+                      className="w-20 h-2 rounded-full mb-2"
+                      style={{
+                        background: `linear-gradient(90deg, ${theme.accent} 0%, ${theme.accentTo} 100%)`,
+                      }}
                     />
                     <div
-                      className={`w-32 h-1.5 ${theme.colors.light} rounded-full`}
+                      className="w-32 h-1.5 rounded-full"
+                      style={{ backgroundColor: theme.soft }}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {[0, 1].map((i) => (
                       <div
                         key={i}
-                        className={`${theme.preview.card} rounded-lg p-3 shadow-md`}
+                        className="rounded-lg p-3 shadow-md"
+                        style={{ backgroundColor: theme.preview.card }}
                       >
                         <div
-                          className={`w-8 h-8 bg-gradient-to-br ${theme.colors.primary} rounded-lg mb-2`}
+                          className="w-8 h-8 rounded-lg mb-2"
+                          style={{
+                            background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accentTo} 100%)`,
+                          }}
                         />
                         <div
-                          className={`w-16 h-1.5 ${theme.colors.light} rounded-full mb-1`}
+                          className="w-16 h-1.5 rounded-full mb-1"
+                          style={{ backgroundColor: theme.soft }}
                         />
                         <div
-                          className={`w-12 h-1 ${theme.colors.light} rounded-full`}
+                          className="w-12 h-1 rounded-full"
+                          style={{ backgroundColor: theme.soft }}
                         />
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Info */}
-                <div className={`p-4 ${t.cardBg}`}>
+                <div
+                  className="p-4"
+                  style={{ backgroundColor: theme.infoBg }}
+                >
                   <div className="flex items-center justify-between mb-2">
                     <h3
-                      className={`text-lg font-bold ${t.cardText} font-spartan`}
+                      className="text-lg font-bold font-spartan"
+                      style={{ color: theme.id === "dark" ? "#ffffff" : "#0f172a" }}
                     >
                       {theme.name}
                     </h3>
                     <div
-                      className={`w-4 h-4 bg-gradient-to-r ${theme.colors.primary} rounded-full border-2 ${isDark ? "border-slate-800" : "border-white"} shadow-sm`}
+                      className={`w-4 h-4 rounded-full border-2 ${theme.id === "dark" ? "border-slate-800" : "border-white"} shadow-sm`}
+                      style={{
+                        background: `linear-gradient(90deg, ${theme.accent} 0%, ${theme.accentTo} 100%)`,
+                      }}
                     />
                   </div>
-                  <p className={`text-sm ${t.subtleText} font-kumbh`}>
+                  <p
+                    className="text-sm font-kumbh"
+                    style={{ color: theme.id === "dark" ? "#cbd5e1" : theme.infoText }}
+                  >
                     {theme.description}
                   </p>
                 </div>
 
                 <div
-                  className={`absolute inset-0 bg-gradient-to-r ${theme.colors.primary} opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none`}
+                  className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none"
+                  style={{
+                    background: `linear-gradient(90deg, ${theme.accent} 0%, ${theme.accentTo} 100%)`,
+                  }}
                 />
               </div>
             ))}
           </div>
 
-          {/* Note */}
           <div
-            className={`mt-6 p-4 ${isDark ? "bg-slate-700 border-slate-500" : "bg-blue-50 border-blue-200"} border rounded-xl`}
+            className="mt-6 p-4 border rounded-xl"
+            style={{
+              backgroundColor: modalChrome.noteBg,
+              borderColor: modalChrome.noteBorder,
+            }}
           >
             <div className="flex items-start space-x-3">
               <svg
-                className={`w-5 h-5 ${isDark ? "text-slate-300" : "text-blue-600"} mt-0.5 flex-shrink-0`}
+                className="w-5 h-5 mt-0.5 flex-shrink-0"
+                style={{ color: modalChrome.noteIcon }}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -235,12 +403,14 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
               </svg>
               <div>
                 <p
-                  className={`text-sm font-semibold ${isDark ? "text-slate-200" : "text-blue-900"} font-kumbh`}
+                  className="text-sm font-semibold font-kumbh"
+                  style={{ color: modalChrome.noteTitle }}
                 >
                   Theme Preview
                 </p>
                 <p
-                  className={`text-xs ${isDark ? "text-slate-400" : "text-blue-700"} font-kumbh mt-1`}
+                  className="text-xs font-kumbh mt-1"
+                  style={{ color: modalChrome.noteText }}
                 >
                   The selected theme will be applied to your entire workspace,
                   including buttons, cards, and navigation elements.
@@ -250,19 +420,32 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
           </div>
         </div>
 
-        {/* Footer */}
         <div
-          className={`${isDark ? "bg-slate-900 border-slate-700" : "bg-slate-50 border-slate-200"} px-6 py-4 flex items-center justify-between border-t`}
+          className="px-6 py-4 flex items-center justify-between border-t shrink-0 relative z-10 shadow-[0_-10px_24px_rgba(15,23,42,0.08)]"
+          style={{
+            backgroundColor: modalChrome.footerBg,
+            borderColor: modalChrome.footerBorder,
+          }}
         >
           <button
             onClick={onClose}
-            className={`px-5 py-2.5 ${isDark ? "text-slate-300 hover:text-slate-800 hover:bg-slate-200" : "text-slate-600 hover:text-slate-800 hover:bg-slate-200"} rounded-lg font-semibold font-kumbh transition-colors`}
+            className="px-5 py-2.5 rounded-lg font-semibold font-kumbh transition-colors"
+            style={{ color: modalChrome.cancelText }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = modalChrome.cancelHoverBg;
+              e.currentTarget.style.color = modalChrome.cancelHoverText;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.color = modalChrome.cancelText;
+            }}
           >
             Cancel
           </button>
           <button
             onClick={handleApply}
-            className={`px-6 py-2.5 bg-gradient-to-r ${t.submitGrad} text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300 font-kumbh flex items-center space-x-2`}
+            className="px-6 py-2.5 text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300 font-kumbh flex items-center space-x-2"
+            style={{ background: selectedThemeConfig.actionBg }}
           >
             <svg
               className="w-5 h-5"

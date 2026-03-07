@@ -12,7 +12,7 @@ const SelectField = ({
   icon,
   ...props
 }) => {
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
 
   return (
     <div className="form-group">
@@ -76,3 +76,4 @@ const SelectField = ({
 };
 
 export default SelectField;
+

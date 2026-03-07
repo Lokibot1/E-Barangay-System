@@ -1,9 +1,31 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { isAdmin } from "../../homepage/services/loginService";
 import { useLanguage } from "../../context/LanguageContext";
 import themeTokens from "../../Themetokens";
 import logo from "../../assets/images/logo.jpg";
+import {
+  House,
+  Users,
+  LayoutGrid,
+  BarChart3,
+  ShieldCheck,
+  UserRound,
+  Home,
+  ClipboardList,
+  AlertTriangle,
+  Calendar,
+  Wallet,
+  FileText,
+  Search,
+  Settings,
+  CircleHelp,
+  FileWarning,
+  MapPinned,
+  ScanSearch,
+  Menu,
+} from "lucide-react";
 
 const documentServiceChildren = [
   {
@@ -186,11 +208,14 @@ const getAdminNavItems = (s) => [
 
 // ── Sidebar ─────────────────────────────────────────────────────────────────
 const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
-  const t = themeTokens[currentTheme];
+  const t = themeTokens[currentTheme] || themeTokens.modern || themeTokens.blue;
+  const isDark = currentTheme === "dark";
   const { tr } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [flyoutMenu, setFlyoutMenu] = useState(null);
+  const itemButtonRefs = React.useRef({});
   const adminMode = isAdmin();
   const isSubSystem2Route = location.pathname.startsWith("/sub-system-2");
   const isIncidentRoute = location.pathname.startsWith("/incident-complaint");
@@ -242,10 +267,60 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
     setExpandedItems(getExpandedFromPath());
   }, [location.pathname]);
 
+  React.useEffect(() => {
+    if (!collapsed) {
+      setFlyoutMenu(null);
+    }
+  }, [collapsed, location.pathname]);
+
+  React.useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (!collapsed) return;
+      const target = event.target;
+      if (
+        target.closest("[data-flyout-menu]") ||
+        target.closest("[data-flyout-trigger]")
+      ) {
+        return;
+      }
+      setFlyoutMenu(null);
+      setExpandedItems({});
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [collapsed]);
+
   const handleItemClick = (item) => {
     if (item.children && item.children.length > 0) {
+      // Collapsed mode: show floating submenu (no full sidebar expansion).
+      if (collapsed) {
+        const buttonEl = itemButtonRefs.current[item.id];
+        const rect = buttonEl?.getBoundingClientRect();
+        const nextFlyout = {
+          itemId: item.id,
+          left: (rect?.right || 72) + 10,
+          top: Math.max((rect?.top || 120) - 8, 12),
+        };
+
+        setExpandedItems((prev) => {
+          const next = {};
+          NAV_ITEMS.forEach((navItem) => {
+            if (navItem.children && navItem.children.length > 0) {
+              next[navItem.id] = navItem.id === item.id ? !prev[item.id] : false;
+            }
+          });
+          return next;
+        });
+
+        setFlyoutMenu((prev) =>
+          prev?.itemId === item.id ? null : nextFlyout,
+        );
+        return;
+      }
+
       if (item.path) navigate(item.path);
-      // Expand clicked item, collapse others
+      // Expanded mode: inline submenu behavior.
       setExpandedItems((prev) => {
         const next = {};
         NAV_ITEMS.forEach((navItem) => {
@@ -259,6 +334,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
       navigate(item.path);
       // Collapse all dropdowns when clicking a non-parent link
       setExpandedItems({});
+      setFlyoutMenu(null);
     }
     setIsMobileMenuOpen(false);
   };
@@ -266,13 +342,76 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
   const handleSubItemClick = (e, subItem) => {
     e.stopPropagation();
     navigate(subItem.path);
+    setFlyoutMenu(null);
+    if (collapsed) setExpandedItems({});
     setIsMobileMenuOpen(false);
   };
 
-  const isPathActive = (path) => location.pathname === path;
+  const normalizePath = (value = "") => {
+    if (!value) return "/";
+    const cleaned = value.replace(/\/+$/, "");
+    return cleaned === "" ? "/" : cleaned;
+  };
+
+  const isPathActive = (path) => {
+    const current = normalizePath(location.pathname);
+    const target = normalizePath(path);
+    return current === target;
+  };
+
+  const isPathWithin = (path) => {
+    const current = normalizePath(location.pathname);
+    const target = normalizePath(path);
+    return current === target || current.startsWith(`${target}/`);
+  };
+  const iconMap = {
+    main: House,
+    dashboard: House,
+    "subsystem-1": LayoutGrid,
+    "subsystem-2": FileText,
+    "incident-complaint": AlertTriangle,
+    "file-complaint": FileWarning,
+    "incident-report": AlertTriangle,
+    "incident-map": MapPinned,
+    "case-management": ScanSearch,
+    "resident-registry": Users,
+    reports: BarChart3,
+    verification: ShieldCheck,
+    residents: UserRound,
+    households: Home,
+    requests: ClipboardList,
+    incidents: AlertTriangle,
+    appointments: Calendar,
+    payments: Wallet,
+    "documents-inquiry": FileText,
+    certificates: FileText,
+    "documents-inquiry-sub": Search,
+    settings: Settings,
+    "settings-sub": Settings,
+    support: CircleHelp,
+    "request-barangay-id": FileText,
+    "request-indigency": FileText,
+    "request-residency": FileText,
+  };
+
+  const renderMenuIcon = (itemId, pathData, className = "w-4 h-4") => {
+    const Icon = iconMap[itemId];
+    if (Icon) return <Icon className={className} strokeWidth={2} />;
+    return (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={pathData} />
+      </svg>
+    );
+  };
 
   const isParentActive = (item) => {
-    if (item.path && isPathActive(item.path)) return true;
+    // Leaf routes should only be active on exact match.
+    if ((!item.children || item.children.length === 0) && item.path) {
+      return isPathActive(item.path);
+    }
+
+    // Parent routes with children can stay active on nested paths.
+    if (item.path && isPathWithin(item.path)) return true;
     if (item.children) {
       return item.children.some((child) => isPathActive(child.path));
     }
@@ -321,29 +460,45 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
       {/* Sidebar */}
       <aside
         className={`
-          ${t.sidebarBg} border-r ${t.sidebarBorder}
+          ${t.sidebarBg} ${t.sidebarBorder} border-r
           flex flex-col h-screen
           transition-all duration-300 ease-in-out
           flex-shrink-0
+          relative overflow-visible
           fixed md:relative
           z-40
           ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
-        style={{ width: collapsed ? "72px" : "240px" }}
+        style={{ width: collapsed ? "72px" : "224px" }}
       >
         {/* ── Logo row ────────────────────────────────────────────────────── */}
         <div
           className={`
-            flex items-center gap-3 px-3 py-3.5 border-b ${t.sidebarBorder}
+            flex items-center border-b ${t.sidebarBorder}
             flex-shrink-0
+            ${collapsed ? "justify-center px-0 py-3" : "gap-1.5 px-3 py-3"}
           `}
         >
-          {/* Logo mark — clickable, toggles collapse */}
           <button
-            onClick={onToggle}
+            onClick={() => {
+              setFlyoutMenu(null);
+              setExpandedItems({});
+              onToggle();
+            }}
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="w-9 h-9 rounded-full shadow-md flex-shrink-0 cursor-pointer hover:opacity-80 hover:shadow-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 overflow-hidden"
+            className={`hidden md:inline-flex flex-shrink-0 items-center justify-center ${t.subtleText} transition-colors ${
+              collapsed ? "h-7 w-7" : "h-8 w-8"
+            } ${
+              isDark ? "hover:text-slate-200" : "hover:text-slate-700"
+            }`}
           >
+            <Menu className={collapsed ? "h-3.5 w-3.5" : "h-[14px] w-[14px]"} />
+          </button>
+
+          {!collapsed && (
+            <>
+          {/* Logo mark */}
+          <button className="w-8 h-8 rounded-full shadow-sm flex-shrink-0 overflow-hidden">
             <img
               src={logo}
               alt="Barangay Gulod Logo"
@@ -353,19 +508,15 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
 
           {/* App name — fades out when collapsed */}
           <div
-            className="overflow-hidden transition-all duration-300"
-            style={{
-              width: collapsed ? "0px" : "160px",
-              opacity: collapsed ? 0 : 1,
-            }}
+            className="min-w-0 flex-1 overflow-hidden text-left"
           >
             <p
-              className={`font-spartan text-sm font-bold ${t.sidebarAppName} whitespace-nowrap truncate`}
+              className={`font-spartan text-[14px] font-bold leading-none ${t.sidebarAppName || t.cardText} whitespace-nowrap truncate text-left`}
             >
               {adminMode ? tr.sidebar.adminPanel : "Barangay Gulod"}
             </p>
             <p
-              className={`font-kumbh text-xs ${t.sidebarText} whitespace-nowrap truncate`}
+              className={`mt-1 font-kumbh text-[11px] leading-none ${t.sidebarText} whitespace-nowrap truncate text-left`}
             >
               {adminMode
                 ? tr.sidebar.eBarangaySystem
@@ -374,11 +525,13 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                   : tr.sidebar.incidentReporting}
             </p>
           </div>
+            </>
+          )}
         </div>
 
         {/* ── Nav links ───────────────────────────────────────────────────── */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2">
-          <ul className="flex flex-col gap-0.5">
+        <nav className={`flex-1 overflow-y-auto ${collapsed ? "py-3 px-2" : "py-3 px-2"}`}>
+          <ul className={`flex flex-col ${collapsed ? "gap-2" : "gap-1"}`}>
             {NAV_ITEMS.map((item) => {
               const active = item.path ? isParentActive(item) : false;
               const expanded = expandedItems[item.id];
@@ -386,58 +539,69 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
               const isPlaceholder = !item.path && !hasChildren;
 
               return (
-                <li key={item.id}>
+                <li
+                  key={item.id}
+                  className={`relative ${
+                    item.id === "settings"
+                      ? (collapsed ? `mt-3 pt-3 border-t ${t.sidebarBorder}` : "mt-1 pt-1")
+                      : ""
+                  }`}
+                >
                   {/* Main item */}
                   <button
+                    ref={(el) => {
+                      itemButtonRefs.current[item.id] = el;
+                    }}
+                    data-flyout-trigger="true"
                     onClick={() => handleItemClick(item)}
                     title={collapsed ? item.label : undefined}
                     className={`
-                      w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
+                      w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl
                       transition-all duration-150 text-left
-                      border-l-[3px]
+                      border
+                      ${collapsed ? "inline-flex items-center justify-center gap-0 px-0 py-0 w-9 h-9 mx-auto text-center rounded-lg" : ""}
                       ${
                         active
-                          ? `${t.sidebarActiveBg} ${t.sidebarActiveText} ${t.sidebarActiveBorder}`
+                          ? `${t.sidebarActiveBg} ${t.sidebarActiveText} ${t.sidebarActiveBorder} shadow-sm`
                           : `border-transparent ${t.sidebarText} ${!isPlaceholder ? t.sidebarHoverBg : ""}`
                       }
                       ${isPlaceholder ? "opacity-50 cursor-default" : ""}
                     `}
                   >
                     {/* Icon */}
-                    <svg
-                      className={`w-5 h-5 flex-shrink-0 transition-colors duration-150 ${
-                        active ? t.sidebarIconActive : "text-current"
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                    <span
+                      className={`inline-flex items-center justify-center flex-shrink-0 transition-colors duration-150 ${
+                        collapsed
+                          ? `h-8 w-8 ${active ? t.sidebarIconActive : isDark ? "text-slate-300" : "text-slate-500"}`
+                          : `w-8 h-8 rounded-lg ${
+                              active
+                                ? `${t.primaryLight} ${t.sidebarIconActive}`
+                                : `${isDark ? "bg-slate-800/80 text-slate-400" : "bg-slate-100 text-slate-500"}`
+                            }`
+                      } ${collapsed ? "mx-auto" : ""}`}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d={item.icon}
-                      />
-                    </svg>
+                      <span className={`transition-colors duration-150 ${active ? t.sidebarIconActive : "text-current"}`}>
+                        {renderMenuIcon(item.id, item.icon, "w-4 h-4")}
+                      </span>
+                    </span>
 
                     {/* Label — slides out when collapsed */}
-                    <span
-                      className="font-kumbh text-sm font-medium whitespace-nowrap truncate transition-all duration-300 flex-1"
-                      style={{
-                        width: collapsed ? "0px" : "120px",
-                        opacity: collapsed ? 0 : 1,
-                      }}
-                    >
-                      {item.label}
-                    </span>
+                    {!collapsed && (
+                      <span
+                        className="font-kumbh text-[13px] font-medium whitespace-nowrap truncate transition-all duration-300 flex-1"
+                        style={{ width: "112px", opacity: 1 }}
+                      >
+                        {item.label}
+                      </span>
+                    )}
 
                     {/* Badge (admin items) */}
                     {item.badge && !collapsed && (
                       <span
-                        className={`text-xs font-semibold font-kumbh px-2 py-0.5 rounded-md flex-shrink-0 ${
-                          active
-                            ? "bg-green-600 text-white"
-                            : "bg-gray-200 text-gray-600"
+                      className={`text-xs font-semibold font-kumbh px-2 py-0.5 rounded-md flex-shrink-0 ${
+                        active
+                            ? `${t.primarySolid} text-white`
+                            : `${isDark ? "bg-slate-800 text-slate-300" : "bg-slate-200 text-slate-600"}`
                         }`}
                       >
                         {item.badge}
@@ -447,7 +611,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                     {/* Chevron for expandable items */}
                     {hasChildren && !collapsed && (
                       <svg
-                        className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${
+                        className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${t.subtleText} ${
                           expanded ? "rotate-180" : ""
                         }`}
                         fill="none"
@@ -466,56 +630,100 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
 
                   {/* Sublinks */}
                   {hasChildren && expanded && !collapsed && (
-                    <ul className="mt-0.5 ml-4 pl-3 border-l border-gray-300/30">
-                      {item.children.map((child) => {
-                        const childActive = isPathActive(child.path);
+                    <div className="relative mt-1 ml-3 pl-4">
+                      <span
+                        aria-hidden="true"
+                        className={`pointer-events-none absolute bottom-4 left-0 top-2 w-px rounded-full ${
+                          isDark ? "bg-slate-700/80" : "bg-slate-300"
+                        }`}
+                      />
+                      <ul className="space-y-0.5">
+                        {item.children.map((child) => {
+                          const childActive = isPathActive(child.path);
 
-                        return (
-                          <li key={child.id}>
-                            <button
-                              onClick={(e) => handleSubItemClick(e, child)}
-                              className={`
-                                w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg
-                                transition-all duration-150 text-left
-                                ${
-                                  childActive
-                                    ? `${t.sidebarActiveBg} ${t.sidebarActiveText}`
-                                    : `${t.sidebarText} ${t.sidebarHoverBg}`
-                                }
-                              `}
-                            >
-                              <svg
-                                className={`w-4 h-4 flex-shrink-0 transition-colors duration-150 ${
-                                  childActive
-                                    ? t.sidebarIconActive
-                                    : "text-current"
+                          return (
+                            <li key={child.id} className="relative">
+                              <span
+                                aria-hidden="true"
+                                className={`pointer-events-none absolute -left-4 top-1/2 h-4 w-3 -translate-y-1/2 rounded-bl-[10px] border-b border-l ${
+                                  isDark ? "border-slate-700/80" : "border-slate-300"
                                 }`}
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
+                              />
+                              <button
+                                onClick={(e) => handleSubItemClick(e, child)}
+                                className={`
+                                  w-full flex items-center gap-2 px-2 py-1.5 rounded-xl border border-transparent
+                                  transition-all duration-150 text-left
+                                  ${
+                                    childActive
+                                      ? `${t.sidebarActiveBg} ${t.sidebarActiveText} ${t.sidebarActiveBorder}`
+                                      : `${t.sidebarText} ${t.sidebarHoverBg}`
+                                  }
+                                `}
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d={child.icon}
-                                />
-                              </svg>
+                                <span className={`flex-shrink-0 transition-colors duration-150 ${childActive ? t.sidebarIconActive : "text-current"}`}>
+                                  {renderMenuIcon(child.id, child.icon, "w-3.5 h-3.5")}
+                                </span>
 
-                              <span className="font-kumbh text-xs font-medium whitespace-nowrap truncate">
-                                {child.label}
-                              </span>
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
+                                <span className="font-kumbh text-xs font-medium whitespace-nowrap truncate">
+                                  {child.label}
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
                   )}
+
                 </li>
               );
             })}
           </ul>
         </nav>
+
+        {/* Floating sublinks (collapsed mode) - portal layer to stay above page content */}
+        {collapsed && flyoutMenu && typeof document !== "undefined" && (() => {
+          const parent = NAV_ITEMS.find((i) => i.id === flyoutMenu.itemId);
+          if (!parent || !parent.children || parent.children.length === 0) return null;
+
+          return createPortal(
+            <div
+              data-flyout-menu="true"
+              className={`hidden md:block fixed z-[1300] w-[200px] rounded-2xl border ${t.cardBorder} ${t.cardBg} shadow-2xl p-2`}
+              style={{ left: `${flyoutMenu.left}px`, top: `${flyoutMenu.top}px` }}
+            >
+              <p className={`px-2 py-1 text-[10px] font-kumbh font-bold uppercase tracking-wide ${t.subtleText}`}>
+                {parent.label}
+              </p>
+              <ul className="mt-1 space-y-1">
+                {parent.children.map((child) => {
+                  const childActive = isPathActive(child.path);
+                  return (
+                    <li key={child.id}>
+                      <button
+                        onClick={(e) => handleSubItemClick(e, child)}
+                        className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left transition-colors ${
+                          childActive
+                            ? `${t.sidebarActiveBg} ${t.sidebarActiveText}`
+                            : `${t.sidebarText} ${t.sidebarHoverBg}`
+                        }`}
+                      >
+                        <span className="flex-shrink-0">
+                          {renderMenuIcon(child.id, child.icon, "w-3.5 h-3.5")}
+                        </span>
+                        <span className="font-kumbh text-xs font-medium whitespace-nowrap truncate">
+                          {child.label}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>,
+            document.body,
+          );
+        })()}
       </aside>
     </>
   );

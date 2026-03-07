@@ -8,7 +8,7 @@ import { getAllCustomFields } from "../../services/sub-system-3/customFieldServi
 import { useLanguage } from "../../context/LanguageContext";
 
 const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
   const { tr } = useLanguage();
   const im = tr.incidentModal;
 
@@ -354,3 +354,4 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
 };
 
 export default TwoStepIncidentReportModal;
+

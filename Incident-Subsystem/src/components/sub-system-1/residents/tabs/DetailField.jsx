@@ -1,19 +1,29 @@
 import React from 'react';
 
-const DetailField = ({ 
-    label, 
-    name, 
-    val, 
-    isEdit, 
-    onChange, 
-    type = "text", 
-    options = [], 
-    max, 
-    className = "", 
-    error, 
+const inputAccentMap = {
+    modern: { border: 'focus:border-blue-500', ring: 'focus:ring-blue-500/10', icon: 'group-hover:text-blue-500' },
+    blue: { border: 'focus:border-blue-500', ring: 'focus:ring-blue-500/10', icon: 'group-hover:text-blue-500' },
+    purple: { border: 'focus:border-purple-500', ring: 'focus:ring-purple-500/10', icon: 'group-hover:text-purple-500' },
+    green: { border: 'focus:border-green-500', ring: 'focus:ring-green-500/10', icon: 'group-hover:text-green-500' },
+    dark: { border: 'focus:border-slate-500', ring: 'focus:ring-slate-500/10', icon: 'group-hover:text-slate-300' },
+};
+
+const DetailField = ({
+    label,
+    name,
+    val,
+    isEdit,
+    onChange,
+    type = "text",
+    options = [],
+    max,
+    className = "",
+    error,
     placeholder,
-    t 
+    t,
+    currentTheme = 'modern'
 }) => {
+    const accent = inputAccentMap[currentTheme] || inputAccentMap.modern;
     
     const getDisplayLabel = () => {
         if (val === undefined || val === null || val === '') return '---';
@@ -45,9 +55,9 @@ const DetailField = ({
         text-sm font-semibold 
         ${t?.inputText || 'text-slate-700 dark:text-slate-200'}
         outline-none transition-all shadow-sm
-        ${error 
-            ? 'border-red-500 focus:ring-4 focus:ring-red-500/10' 
-            : `${t?.inputBorder || 'border-slate-300 dark:border-slate-700'} focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10`
+        ${error
+            ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10'
+            : `${t?.inputBorder || 'border-slate-300 dark:border-slate-700'} ${accent.border} focus:ring-2 ${accent.ring}`
         }
     `;
 
@@ -78,10 +88,14 @@ const DetailField = ({
                                 {(options || []).map((opt, i) => {
                                     const optId = opt?.id !== undefined ? opt.id : (opt?.value !== undefined ? opt.value : opt);
                                     const optLabel = opt?.name || opt?.label || opt?.number || opt;
-                                    return <option key={optId || i} value={optId}>{optLabel}</option>;
+                                    return (
+                                        <option key={optId || i} value={optId}>
+                                            {optLabel}
+                                        </option>
+                                    );
                                 })}
                             </select>
-                            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400 group-hover:text-blue-500 transition-colors">
+                            <div className={`absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400 transition-colors ${accent.icon}`}>
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                                 </svg>

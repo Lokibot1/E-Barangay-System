@@ -24,16 +24,16 @@ import {
 
 // ─── COLORS ──────────────────────────────────────────────────
 export const COLORS = {
-  primary:   '#1a5276',
-  secondary: '#2980b9',
-  accent:     '#e67e22',
-  success:    '#27ae60',
-  danger:     '#e74c3c',
-  warning:    '#f39c12',
-  purple:     '#8e44ad',
-  teal:       '#16a085',
-  gray:       '#7f8c8d',
-  pink:       '#c0392b',
+  primary:   '#6366f1',
+  secondary: '#3b82f6',
+  accent:    '#f59e0b',
+  success:   '#10b981',
+  danger:    '#ef4444',
+  warning:   '#f97316',
+  purple:    '#8b5cf6',
+  teal:      '#14b8a6',
+  gray:      '#94a3b8',
+  pink:      '#ec4899',
 };
 
 export const SECTOR_COLORS = {
@@ -84,6 +84,51 @@ export const HEATMAP_METRICS = [
   { key: 'minors',       label: 'Minors',       icon: Baby },
   { key: 'voters',       label: 'Voters',       icon: Vote },
 ];
+
+export const HEATMAP_METRIC_COLORS = {
+  verified: {
+    accent: COLORS.success,
+    text: '#059669',
+    soft: '#ecfdf5',
+    border: '#a7f3d0',
+  },
+  total: {
+    accent: COLORS.secondary,
+    text: '#2563eb',
+    soft: '#eff6ff',
+    border: '#bfdbfe',
+  },
+  seniors: {
+    accent: COLORS.warning,
+    text: '#ea580c',
+    soft: '#fff7ed',
+    border: '#fdba74',
+  },
+  pwd: {
+    accent: COLORS.purple,
+    text: '#7c3aed',
+    soft: '#f5f3ff',
+    border: '#ddd6fe',
+  },
+  unregistered: {
+    accent: COLORS.danger,
+    text: '#dc2626',
+    soft: '#fef2f2',
+    border: '#fecaca',
+  },
+  minors: {
+    accent: '#06b6d4',
+    text: '#0891b2',
+    soft: '#ecfeff',
+    border: '#a5f3fc',
+  },
+  voters: {
+    accent: COLORS.teal,
+    text: '#0f766e',
+    soft: '#f0fdfa',
+    border: '#99f6e4',
+  },
+};
 
 // ─── MAP ─────────────────────────────────────────────────────
 export const BARANGAY_CENTER = [14.71275, 121.03859];
@@ -152,11 +197,29 @@ export function calcVerifRate(p) {
   return submitted > 0 ? Math.round(((Number(p.verified) || 0) / submitted) * 100) : 0;
 }
 
-export function getHeatColor(value, max, alpha = 0.75) {
-  if (!max || max === 0) return `rgba(26,82,118,0.1)`;
+function hexToRgb(hex) {
+  const normalized = hex.replace('#', '');
+  const full = normalized.length === 3
+    ? normalized.split('').map((char) => `${char}${char}`).join('')
+    : normalized;
+  const int = parseInt(full, 16);
+  return {
+    r: (int >> 16) & 255,
+    g: (int >> 8) & 255,
+    b: int & 255,
+  };
+}
+
+export function getHeatColor(value, max, alpha = 0.75, baseColor = COLORS.primary) {
+  if (!max || max === 0) {
+    const start = hexToRgb('#f8fafc');
+    return `rgba(${start.r},${start.g},${start.b},0.35)`;
+  }
   const ratio = Math.min(value / max, 1);
-  const r = Math.round(26  + (231 - 26)  * ratio);
-  const g = Math.round(82  + (76  - 82)  * ratio);
-  const b = Math.round(118 + (60  - 118) * ratio);
+  const start = hexToRgb('#f8fafc');
+  const end = hexToRgb(baseColor);
+  const r = Math.round(start.r + (end.r - start.r) * ratio);
+  const g = Math.round(start.g + (end.g - start.g) * ratio);
+  const b = Math.round(start.b + (end.b - start.b) * ratio);
   return `rgba(${r},${g},${b},${alpha})`;
 }

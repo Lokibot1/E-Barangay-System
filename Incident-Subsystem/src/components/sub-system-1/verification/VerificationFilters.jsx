@@ -1,21 +1,30 @@
 import React from 'react';
 import { Search, X } from 'lucide-react';
 
-const VerificationFilters = ({ searchTerm, setSearchTerm, t }) => {
-  return (
-    <div className={`p-6 border-b ${t.cardBorder} ${t.inlineBg}`}>
-      <div className="flex items-center">
-        <div className="relative w-full max-w-xl group">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-200 group-focus-within:text-emerald-500 text-slate-400">
-            <Search size={20} />
-          </div>
+const VerificationFilters = ({ searchTerm, setSearchTerm, t, currentTheme }) => {
+  const isDark = currentTheme === 'dark';
+  const accentMap = {
+    modern: { icon: 'group-focus-within:text-blue-500', ring: 'focus:ring-blue-500/10', border: 'focus:border-blue-500' },
+    blue: { icon: 'group-focus-within:text-blue-500', ring: 'focus:ring-blue-500/10', border: 'focus:border-blue-500' },
+    purple: { icon: 'group-focus-within:text-purple-500', ring: 'focus:ring-purple-500/10', border: 'focus:border-purple-500' },
+    green: { icon: 'group-focus-within:text-green-500', ring: 'focus:ring-green-500/10', border: 'focus:border-green-500' },
+    dark: { icon: 'group-focus-within:text-slate-300', ring: 'focus:ring-slate-500/10', border: 'focus:border-slate-500' },
+  };
+  const accent = accentMap[currentTheme] || accentMap.modern;
 
+  return (
+    <div className={`border-b px-5 py-5 sm:px-6 ${t.cardBorder} ${isDark ? 'bg-slate-950/40' : 'bg-slate-50/80'}`}>
+      <div className="flex justify-start">
+        <div className="group relative w-full max-w-xl">
+          <Search className={`absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors ${accent.icon}`} size={18} />
           <input
             type="text"
             placeholder="Search name of a resident..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full pl-12 pr-12 py-4 ${t.inputBg} border ${t.inputBorder} rounded-2xl text-sm font-bold outline-none ${t.inputText} focus:ring-4 ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm`}
+            className={`w-full rounded-[18px] border ${t.inputBorder} ${t.inputBg} ${t.inputText} ${t.inputPlaceholder} pl-12 pr-4 py-3.5 text-sm font-normal placeholder:font-normal outline-none transition-all focus:ring-2 ${accent.ring} ${accent.border} ${
+              isDark ? 'shadow-none' : 'shadow-[0_12px_24px_rgba(15,23,42,0.06)]'
+            }`}
           />
 
           {searchTerm && (

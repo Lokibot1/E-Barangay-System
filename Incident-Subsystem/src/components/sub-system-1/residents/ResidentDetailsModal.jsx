@@ -12,12 +12,21 @@ const formatDateForInput = (dateString) => {
     return dateString.split('T')[0];
 };
 
-const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t }) => {
+const modalAccentMap = {
+    modern: { text: 'text-blue-600', bar: 'bg-blue-600', border: 'border-blue-200', hover: 'hover:bg-blue-50' },
+    blue: { text: 'text-blue-600', bar: 'bg-blue-600', border: 'border-blue-200', hover: 'hover:bg-blue-50' },
+    purple: { text: 'text-purple-600', bar: 'bg-purple-600', border: 'border-purple-200', hover: 'hover:bg-purple-50' },
+    green: { text: 'text-green-600', bar: 'bg-green-600', border: 'border-green-200', hover: 'hover:bg-green-50' },
+    dark: { text: 'text-slate-200', bar: 'bg-slate-300', border: 'border-slate-600', hover: 'hover:bg-slate-700' },
+};
+
+const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t, currentTheme = 'modern' }) => {
     const [formData, setFormData] = useState({});
     const [isEdit, setIsEdit] = useState(false);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('basic');
     const today = new Date().toISOString().split("T")[0];
+    const accent = modalAccentMap[currentTheme] || modalAccentMap.modern;
 
     const [refs, setRefs] = useState({
         puroks: [], streets: [], marital_statuses: [], sectors: [],
@@ -118,13 +127,13 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t }) =>
             onClick={() => setActiveTab(id)}
             className={`flex-1 flex items-center justify-center gap-2 py-4 text-[11px] font-bold uppercase tracking-widest transition-all relative ${
                 activeTab === id
-                ? `text-blue-600 ${t?.cardBg || 'bg-white dark:bg-slate-900'}`
+                ? `${accent.text} ${t?.cardBg || 'bg-white dark:bg-slate-900'}`
                 : `text-slate-500 hover:text-slate-700 dark:hover:text-slate-300`
             }`}
         >
             <Icon size={14} /> {label}
             {activeTab === id && (
-                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600" />
+                <div className={`absolute bottom-0 left-0 w-full h-0.5 ${accent.bar}`} />
             )}
         </button>
     );
@@ -160,9 +169,9 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t }) =>
 
                 <div className={`flex-1 overflow-y-auto p-6 md:p-10 ${t?.cardBg || 'bg-white dark:bg-slate-900'} min-h-[50vh] max-h-[60vh]`}>
                     <div className="max-w-4xl mx-auto">
-                        {activeTab === 'basic' && <IdentityTab isEdit={isEdit} formData={formData} handleChange={handleChange} refs={refs} today={today} t={t} />}
-                        {activeTab === 'address' && <AddressTab isEdit={isEdit} formData={formData} handleChange={handleChange} refs={refs} getFullHardcodedAddress={getFullHardcodedAddress} filteredStreets={(refs.streets || []).filter(s => String(s.purok_id) === String(formData.temp_purok_id))} t={t} />}
-                        {activeTab === 'socio' && <SocioEcoTab isEdit={isEdit} formData={formData} handleChange={handleChange} refs={refs} t={t} />}
+                        {activeTab === 'basic' && <IdentityTab isEdit={isEdit} formData={formData} handleChange={handleChange} refs={refs} today={today} t={t} currentTheme={currentTheme} />}
+                        {activeTab === 'address' && <AddressTab isEdit={isEdit} formData={formData} handleChange={handleChange} refs={refs} getFullHardcodedAddress={getFullHardcodedAddress} filteredStreets={(refs.streets || []).filter(s => String(s.purok_id) === String(formData.temp_purok_id))} t={t} currentTheme={currentTheme} />}
+                        {activeTab === 'socio' && <SocioEcoTab isEdit={isEdit} formData={formData} handleChange={handleChange} refs={refs} t={t} currentTheme={currentTheme} />}
                     </div>
                 </div>
 
@@ -175,7 +184,7 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t }) =>
                             type="button"
                             onClick={() => setIsEdit(!isEdit)}
                             className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border ${
-                                isEdit ? 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50' : `${t?.cardBg || 'bg-white dark:bg-slate-800'} text-blue-600 border-blue-200 dark:border-slate-700 hover:bg-blue-50`
+                                isEdit ? 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50' : `${t?.cardBg || 'bg-white dark:bg-slate-800'} ${accent.text} ${accent.border} ${accent.hover}`
                             }`}
                         >
                             {isEdit ? <><XCircle size={14} /> Cancel Edit</> : <><Edit3 size={14} /> Edit Record</>}
@@ -186,7 +195,7 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t }) =>
                                 type="button"
                                 onClick={handleSave}
                                 disabled={loading}
-                                className="flex items-center gap-2 px-10 py-3 bg-emerald-600 text-white text-[11px] font-black uppercase rounded-xl shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 transition-all active:scale-95 disabled:opacity-50"
+                                className={`flex items-center gap-2 px-10 py-3 ${t?.primarySolid || 'bg-blue-600'} ${t?.primaryHover || 'hover:bg-blue-700'} text-white text-[11px] font-black uppercase rounded-xl shadow-lg transition-all active:scale-95 disabled:opacity-50`}
                             >
                                 <Save size={16} />
                                 {loading ? 'Saving...' : 'Save Changes'}

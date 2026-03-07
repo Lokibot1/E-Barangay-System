@@ -12,7 +12,7 @@ import { getResidencyLabel } from '../../utils/sub-system-1/residency';
 import themeTokens from '../../Themetokens';
 
 const Residents = () => {
-  const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem('appTheme') || 'blue');
+  const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem('appTheme') || 'modern');
   
   useEffect(() => {
     const handler = (e) => setCurrentTheme(e.detail);
@@ -20,7 +20,8 @@ const Residents = () => {
     return () => window.removeEventListener('themeChange', handler);
   }, []);
 
-  const t = themeTokens[currentTheme];
+  const t = themeTokens[currentTheme] || themeTokens.modern;
+  const isDark = currentTheme === 'dark';
 
   const { 
     residents, 
@@ -68,73 +69,88 @@ const Residents = () => {
   useEffect(() => { setCurrentPage(1); }, [searchTerm, categoryFilter, purokFilter, residencyFilter]);
 
   if (loading) return (
-    <div className={`p-6 sm:p-8 ${t.subtleText} font-kumbh flex justify-center items-center h-64`}>
-      <div className="animate-pulse font-black tracking-widest uppercase">Syncing Records...</div>
+    <div className={`font-sans min-h-screen py-4 pb-24 px-3 sm:px-4 lg:px-5 relative ${t.pageBg}`}>
+      <div className="mx-auto flex h-64 w-full max-w-[1600px] items-center justify-center">
+        <div className={`animate-pulse font-semibold font-kumbh ${t.subtleText}`}>Syncing records...</div>
+      </div>
     </div>
   );
 
   return (
-    <div className="p-6 sm:p-8 space-y-6 pb-20">
-      {/* Header Section */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className={`text-2xl font-bold font-spartan ${t.cardText} uppercase tracking-tight`}>Resident Index</h1>
-          <p className={`text-xs ${t.subtleText} uppercase tracking-widest mt-1`}>Official Masterlist</p>
-        </div>
-        
-        <button 
-          onClick={() => printTable(
-            "Resident Masterlist", 
-            [
-              { header: "#", key: "no", width: "5%", align: "center" },
-              { header: "Full Name", key: "name", width: "25%" },
-              { header: "Age", key: "age", width: "8%", align: "center" },
-              { header: "Purok", key: "resolved_purok", width: "12%" },
-              { header: "Address", key: "full_address", width: "25%" },
-              { header: "Residency", key: "residency_status", width: "15%" },
-            ], 
-            finalFiltered, 
-            `Purok: ${purokFilter} | Sector: ${categoryFilter} | Status: ${residencyFilter}`
-          )} 
-          className="flex items-center gap-2 bg-blue-700 text-white px-6 py-3 rounded-2xl font-bold text-[10px] uppercase hover:opacity-90 shadow-lg active:scale-95 transition-all"
-        >
-          <PrinterIcon size={14} /> Export Masterlist
-        </button>
-      </div>
+    <div className={`font-sans min-h-screen py-4 pb-24 px-3 sm:px-4 lg:px-5 relative ${t.pageBg}`}>
+      <div className="mx-auto w-full max-w-[1600px]">
+        <div className="animate-in fade-in duration-500 space-y-6 pt-4 sm:pt-5">
+          <section className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div className="max-w-3xl space-y-3 text-left">
+              <div className="space-y-2 text-left">
+                <h1 className={`text-[2.25rem] sm:text-[2.1rem] font-bold tracking-tight text-left ${t.cardText} font-spartan`}>
+                  Resident index
+                </h1>
+                <p className={`max-w-2xl text-[13px] leading-6 sm:text-[13px] text-left ${t.subtleText} font-kumbh`}>
+                  Maintain the official masterlist, filter demographic sectors, and review resident records from one organized workspace.
+                </p>
+              </div>
+            </div>
 
-      <ResidentStats residents={residents} t={t} />
+            <button
+              onClick={() => printTable(
+                "Resident Masterlist",
+                [
+                  { header: "#", key: "no", width: "5%", align: "center" },
+                  { header: "Full Name", key: "name", width: "25%" },
+                  { header: "Age", key: "age", width: "8%", align: "center" },
+                  { header: "Purok", key: "resolved_purok", width: "12%" },
+                  { header: "Address", key: "full_address", width: "25%" },
+                  { header: "Residency", key: "residency_status", width: "15%" },
+                ],
+                finalFiltered,
+                `Purok: ${purokFilter} | Sector: ${categoryFilter} | Status: ${residencyFilter}`
+              )}
+              className={`inline-flex items-center gap-2 self-start rounded-[20px] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(15,23,42,0.14)] transition-all active:scale-[0.98] ${t.primarySolid} ${t.primaryHover} ${
+                isDark ? 'shadow-slate-950/30' : ''
+              }`}
+            >
+              <PrinterIcon size={15} />
+              Export Masterlist
+            </button>
+          </section>
 
-      {/* Main Table Container */}
-      <div className={`${t.cardBg} border ${t.cardBorder} rounded-[2rem] overflow-hidden shadow-sm`}>
-        
-        {/* All Filtering Logic is now here */}
-        <ResidentFilters 
-          searchTerm={searchTerm} 
-          setSearchTerm={setSearchTerm}
-          categoryFilter={categoryFilter}
-          setCategoryFilter={setCategoryFilter}
-          purokFilter={purokFilter}
-          setPurokFilter={setPurokFilter}
-          residencyFilter={residencyFilter}
-          setResidencyFilter={setResidencyFilter}
-          totalResults={finalFiltered.length}
-          resetAllFilters={resetAllFilters}
-          t={t}
-        />
+          <ResidentStats residents={residents} t={t} currentTheme={currentTheme} />
 
-        <div className="overflow-x-auto">
-          <ResidentTable residents={currentItems} onUpdate={handleUpdate} onDelete={handleDelete} t={t} />
-        </div>
+          <div className={`${t.cardBg} border ${t.cardBorder} overflow-hidden rounded-[30px] shadow-[0_18px_45px_rgba(15,23,42,0.08)] flex flex-col`}>
+            <ResidentFilters
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              categoryFilter={categoryFilter}
+              setCategoryFilter={setCategoryFilter}
+              purokFilter={purokFilter}
+              setPurokFilter={setPurokFilter}
+              residencyFilter={residencyFilter}
+              setResidencyFilter={setResidencyFilter}
+              totalResults={finalFiltered.length}
+              resetAllFilters={resetAllFilters}
+              t={t}
+              currentTheme={currentTheme}
+            />
 
-        <div className={`p-6 border-t ${t.cardBorder}`}>
-          <Pagination 
-            currentPage={currentPage} 
-            totalPages={totalPages} 
-            onPageChange={setCurrentPage} 
-            totalItems={finalFiltered.length} 
-            itemsPerPage={itemsPerPage} 
-            t={t}
-          />
+            <ResidentTable
+              residents={currentItems}
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
+              t={t}
+              currentTheme={currentTheme}
+            />
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={finalFiltered.length}
+              itemsPerPage={itemsPerPage}
+              t={t}
+              currentTheme={currentTheme}
+            />
+          </div>
         </div>
       </div>
     </div>

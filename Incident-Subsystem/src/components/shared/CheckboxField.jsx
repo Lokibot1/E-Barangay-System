@@ -8,7 +8,7 @@ const CheckboxField = ({
   currentTheme,
   ...props
 }) => {
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
 
   return (
     <div className="flex items-center group">
@@ -29,3 +29,4 @@ const CheckboxField = ({
 };
 
 export default CheckboxField;
+

@@ -326,14 +326,14 @@ const BARANGAY_BOUNDARY = [
 
 const IncidentMapPage = () => {
   const [currentTheme, setCurrentTheme] = useState(() => {
-    return localStorage.getItem("appTheme") || "blue";
+    return localStorage.getItem("appTheme") || "modern";
   });
   const [markers, setMarkers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const handleStorageChange = () => {
-      setCurrentTheme(localStorage.getItem("appTheme") || "blue");
+      setCurrentTheme(localStorage.getItem("appTheme") || "modern");
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -1059,3 +1059,4 @@ const IncidentMapPage = () => {
 };
 
 export default IncidentMapPage;
+

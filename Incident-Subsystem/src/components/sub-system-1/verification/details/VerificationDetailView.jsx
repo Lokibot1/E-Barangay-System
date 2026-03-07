@@ -7,7 +7,7 @@ import EconomicSection from '../details/EconomicSection';
 import Profile from '../details/Profile';
 
 const VerificationDetailView = (props) => {
-  const { data, onZoom, t, onApprove } = props;
+  const { data, onZoom, t, onApprove, currentTheme } = props;
 
   const householdExists = data?.household_exists; 
   const isNewHousehold = householdExists === false || householdExists === 0;
@@ -45,7 +45,7 @@ const VerificationDetailView = (props) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 space-y-6">
-          <IdentitySection details={combinedDetails} onZoom={onZoom} t={t} />
+          <IdentitySection details={combinedDetails} onZoom={onZoom} t={t} currentTheme={currentTheme} />
           <ResidencySection details={combinedDetails} t={t} />
           
           <EconomicSection 

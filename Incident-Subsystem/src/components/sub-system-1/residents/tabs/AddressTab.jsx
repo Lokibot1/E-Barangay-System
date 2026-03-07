@@ -2,7 +2,16 @@ import React from 'react';
 import { Navigation, Calendar, AlertCircle, Clock } from 'lucide-react';
 import DetailField from './DetailField';
 
-const AddressTab = ({ isEdit, formData, handleChange, refs, getFullHardcodedAddress, filteredStreets, t }) => {
+const accentBoxMap = {
+    modern: 'bg-blue-50 border-blue-100 text-blue-700',
+    blue: 'bg-blue-50 border-blue-100 text-blue-700',
+    purple: 'bg-purple-50 border-purple-100 text-purple-700',
+    green: 'bg-green-50 border-green-100 text-green-700',
+    dark: 'bg-slate-700 border-slate-600 text-slate-200',
+};
+
+const AddressTab = ({ isEdit, formData, handleChange, refs, getFullHardcodedAddress, filteredStreets, t, currentTheme = 'modern' }) => {
+    const accentBox = accentBoxMap[currentTheme] || accentBoxMap.modern;
     
     // Duration Calculation Logic
    const calculateDuration = (startDate) => {
@@ -30,7 +39,7 @@ const AddressTab = ({ isEdit, formData, handleChange, refs, getFullHardcodedAddr
             {/* SECTION 1: GEOGRAPHIC LOCATION */}
             <section className={`${t.cardBg} border ${t.cardBorder} rounded-[2rem] overflow-hidden shadow-sm`}>
                 <div className={`${t.inlineBg} px-8 py-4 border-b ${t.cardBorder} flex items-center gap-3`}>
-                    <div className="p-2 bg-blue-600 rounded-lg text-white">
+                    <div className={`p-2 rounded-lg text-white ${t.primarySolid}`}>
                         <Navigation size={18} />
                     </div>
                     <h3 className={`text-sm font-black ${t.cardText} uppercase tracking-widest`}>Geographic Location</h3>
@@ -45,13 +54,13 @@ const AddressTab = ({ isEdit, formData, handleChange, refs, getFullHardcodedAddr
                                     Notice: Modifying the address may affect household groupings and records.
                                 </p>
                             </div>
-                            <DetailField label="House No. / Block & Lot" name="temp_house_number" val={formData.temp_house_number} isEdit={true} onChange={handleChange} t={t} />
-                            <DetailField label="Purok / Zone" name="temp_purok_id" val={formData.temp_purok_id} isEdit={true} onChange={handleChange} type="select" options={refs.puroks} t={t} />
-                            <DetailField label="Street / Sitio" name="temp_street_id" val={formData.temp_street_id} isEdit={true} onChange={handleChange} type="select" options={filteredStreets} t={t} />
+                            <DetailField label="House No. / Block & Lot" name="temp_house_number" val={formData.temp_house_number} isEdit={true} onChange={handleChange} t={t} currentTheme={currentTheme} />
+                            <DetailField label="Purok / Zone" name="temp_purok_id" val={formData.temp_purok_id} isEdit={true} onChange={handleChange} type="select" options={refs.puroks} t={t} currentTheme={currentTheme} />
+                            <DetailField label="Street / Sitio" name="temp_street_id" val={formData.temp_street_id} isEdit={true} onChange={handleChange} type="select" options={filteredStreets} t={t} currentTheme={currentTheme} />
                         </div>
                     ) : (
                         <div className={`p-6 ${t.inlineBg} rounded-2xl border ${t.cardBorder} text-left`}>
-                            <DetailField label="Primary Registered Address" val={getFullHardcodedAddress()} isEdit={false} t={t} />
+                            <DetailField label="Primary Registered Address" val={getFullHardcodedAddress()} isEdit={false} t={t} currentTheme={currentTheme} />
                         </div>
                     )}
                 </div>
@@ -60,7 +69,7 @@ const AddressTab = ({ isEdit, formData, handleChange, refs, getFullHardcodedAddr
            {/* SECTION 2: RESIDENCY STATUS */}
 <section className={`${t.cardBg} border ${t.cardBorder} rounded-[2rem] overflow-hidden shadow-sm`}>
     <div className={`${t.inlineBg} px-8 py-4 border-b ${t.cardBorder} flex items-center gap-3`}>
-        <div className="p-2 bg-emerald-700 rounded-lg text-white shadow-sm">
+        <div className={`p-2 rounded-lg text-white shadow-sm ${t.primarySolid}`}>
             <Calendar size={20} />
         </div>
         <h3 className={`text-sm font-black ${t.cardText} uppercase tracking-widest`}>Residency Status</h3>
@@ -77,19 +86,20 @@ const AddressTab = ({ isEdit, formData, handleChange, refs, getFullHardcodedAddr
                 isEdit={isEdit} 
                 onChange={handleChange} 
                 type="date" 
-                t={t} 
+                t={t}
+                currentTheme={currentTheme} 
             />
             
             {!isEdit && formData.residency_start_date && (
-                <div className="flex items-center gap-3 ml-1 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-xl animate-in fade-in duration-700">
-                    <div className="p-1.5 bg-emerald-600 rounded-md text-white">
+                <div className={`flex items-center gap-3 ml-1 p-3 border rounded-xl animate-in fade-in duration-700 ${accentBox}`}>
+                    <div className={`p-1.5 rounded-md text-white ${t.primarySolid}`}>
                         <Clock size={16} />
                     </div>
                     <div>
-                        <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-tighter leading-none mb-1">
+                        <p className="text-[10px] font-bold uppercase tracking-tighter leading-none mb-1">
                             Length of Stay
                         </p>
-                        <p className="text-lg font-black text-emerald-800 dark:text-emerald-300 leading-none">
+                        <p className="text-lg font-black leading-none">
                             {calculateDuration(formData.residency_start_date)}
                         </p>
                     </div>

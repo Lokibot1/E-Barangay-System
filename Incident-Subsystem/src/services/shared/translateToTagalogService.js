@@ -330,7 +330,7 @@ const translations = {
       message:
         "Are you sure you want to sign out? You will need to log in again to access the system.",
       cancel: "Cancel",
-      confirm: "Yes, Logout",
+      confirm: "Logout",
       loggingOut: "Logging out...",
     },
 

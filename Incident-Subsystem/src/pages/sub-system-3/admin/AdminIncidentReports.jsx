@@ -407,7 +407,7 @@ const TableRow = memo(
 // ════════════════════════════════════════════════════════════════════════
 const AdminIncidentReports = () => {
   const [currentTheme, setCurrentTheme] = useState(
-    () => localStorage.getItem("appTheme") || "blue",
+    () => localStorage.getItem("appTheme") || "modern",
   );
 
   useEffect(() => {
@@ -416,7 +416,7 @@ const AdminIncidentReports = () => {
     return () => window.removeEventListener("themeChange", handler);
   }, []);
 
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
 
   // ── Page tab state (Incidents vs Complaints) ───────────────────────
@@ -650,7 +650,7 @@ const AdminIncidentReports = () => {
 
   return (
     <div className={`min-h-full ${t.pageBg} pb-10`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="w-full px-4 sm:px-5 lg:px-6 py-6">
         {/* ── Page Header ─────────────────────────────────────────── */}
         <div className="flex items-center gap-4 mb-6">
           <div
@@ -1536,3 +1536,5 @@ const AdminIncidentReports = () => {
 };
 
 export default AdminIncidentReports;
+
+

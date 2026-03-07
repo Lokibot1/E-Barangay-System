@@ -51,12 +51,12 @@ const DateTimeBar = ({ currentTheme }) => {
           />
         </svg>
         <span
-          className={`text-sm font-medium ${t.cardText} font-kumbh hidden sm:inline`}
+          className={`text-xs font-medium ${t.cardText} font-kumbh hidden sm:inline`}
         >
           {formatDate(currentDateTime)}
         </span>
         <span
-          className={`text-sm font-medium ${t.cardText} font-kumbh sm:hidden`}
+          className={`text-xs font-medium ${t.cardText} font-kumbh sm:hidden`}
         >
           {currentDateTime.toLocaleDateString("en-US", {
             month: "short",
@@ -70,7 +70,9 @@ const DateTimeBar = ({ currentTheme }) => {
         <span className={`text-xs ${t.subtleText} font-kumbh hidden sm:inline`}>
           {currentDateTime.toLocaleDateString("en-US", { weekday: "long" })}
         </span>
-        <span className={`text-sm font-semibold ${t.primaryText} font-kumbh`}>
+        <span
+          className={`text-xs font-medium font-kumbh ${t.primaryText}`}
+        >
           {formatTime(currentDateTime)}
         </span>
       </div>

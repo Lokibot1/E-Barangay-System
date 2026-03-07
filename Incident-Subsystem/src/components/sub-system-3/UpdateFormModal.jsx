@@ -75,7 +75,7 @@ const EMPTY_NEW_FIELD = {
 };
 
 const UpdateFormModal = ({ isOpen, onClose, formType, currentTheme }) => {
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
 
   const permanentFields =
@@ -548,3 +548,4 @@ const UpdateFormModal = ({ isOpen, onClose, formType, currentTheme }) => {
 };
 
 export default UpdateFormModal;
+

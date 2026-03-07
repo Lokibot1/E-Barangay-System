@@ -2,73 +2,99 @@ import React from 'react';
 import { Pencil, Eye, Trash2 } from 'lucide-react';
 import { SECTOR_STYLES } from '../../../constants/filter';
 
-const ResidentRow = ({ r, onView, onEdit, onDelete, t }) => {
+const rowAccentMap = {
+    modern: {
+        primaryText: 'text-blue-700',
+        primarySoft: 'border border-blue-200 bg-blue-50 text-blue-700',
+        buttonHover: 'hover:bg-blue-600 hover:text-white hover:border-blue-600',
+    },
+    blue: {
+        primaryText: 'text-blue-700',
+        primarySoft: 'border border-blue-200 bg-blue-50 text-blue-700',
+        buttonHover: 'hover:bg-blue-600 hover:text-white hover:border-blue-600',
+    },
+    purple: {
+        primaryText: 'text-purple-700',
+        primarySoft: 'border border-purple-200 bg-purple-50 text-purple-700',
+        buttonHover: 'hover:bg-purple-600 hover:text-white hover:border-purple-600',
+    },
+    green: {
+        primaryText: 'text-green-700',
+        primarySoft: 'border border-green-200 bg-green-50 text-green-700',
+        buttonHover: 'hover:bg-green-600 hover:text-white hover:border-green-600',
+    },
+    dark: {
+        primaryText: 'text-slate-200',
+        primarySoft: 'border border-slate-700 bg-slate-800 text-slate-200',
+        buttonHover: 'hover:bg-slate-100 hover:text-slate-900 hover:border-slate-300',
+    },
+};
+
+const ResidentRow = ({ r, onView, onEdit, onDelete, t, currentTheme = 'modern' }) => {
+    const accent = rowAccentMap[currentTheme] || rowAccentMap.modern;
+    const isDark = currentTheme === 'dark';
+    const rowDivider = isDark ? 'border-slate-800/90' : 'border-slate-200';
+    const cellBase = `border-b ${rowDivider} px-6 py-5 align-middle`;
     const displayName = r.name || "Unknown Resident";
     const rawSector = typeof r.sector === 'object' ? r.sector?.name : (r.sectorLabel || r.sector);
-    const sectorName = (rawSector || 'GENERAL POPULATION').toUpperCase();
+    const sectorKey = (rawSector || 'GENERAL POPULATION').toUpperCase();
+    const sectorName = rawSector || 'General population';
     const isHead = r.household_position?.toLowerCase() === 'head of family';
 
     return (
-        <tr className={`group transition-all hover:${t.inlineBg} ${t.cardText} border-b last:border-none ${t.cardBorder}`}>
-            
-            {/* 1. NAME & ID - Text Base for Readability */}
-            <td className="px-6 py-5 text-left align-middle">
+        <tr className={`group transition-colors duration-200 ${t.cardText} ${isDark ? 'hover:bg-slate-900/60' : 'hover:bg-slate-50/80'}`}>
+            <td className={`${cellBase} text-left`}>
                 <div className="flex flex-col">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-base font-bold leading-tight uppercase tracking-tight font-spartan">
+                        <p className="text-[15px] font-semibold leading-tight font-kumbh">
                             {displayName}
                         </p>
                         {isHead && (
-                            <span className={`px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] font-black rounded uppercase border border-emerald-200`}>
-                                HEAD
+                            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700">
+                                Head
                             </span>
                         )}
                     </div>
-                    <p className={`text-xs ${t.subtleText} font-bold mt-1 tracking-widest uppercase font-kumbh`}>
+                    <p className={`mt-1 text-[12px] ${t.subtleText} font-medium font-kumbh`}>
                         ID: {r.barangay_id || 'N/A'}
                     </p>
                 </div>
             </td>
 
-            {/* 2. AGE - Centered & Bold */}
-            <td className="px-6 py-5 text-center align-middle">
-                <div className="text-base font-bold font-kumbh">
+            <td className={`${cellBase} text-center`}>
+                <div className="text-[1.05rem] font-semibold font-kumbh">
                     {r.age}
                 </div>
             </td>
 
-            {/* 3. ADDRESS */}
-            <td className="px-6 py-5 text-left align-middle">
-                <div className={`text-sm ${t.subtleText} font-medium max-w-[250px] font-kumbh uppercase leading-snug`}>
+            <td className={`${cellBase} text-left`}>
+                <div className={`max-w-[300px] text-sm ${t.subtleText} font-normal font-kumbh leading-6`}>
                     {r.full_address || "No Address"}
                 </div>
             </td>
 
-            {/* 4. PUROK */}
-            <td className="px-6 py-5 text-left align-middle">
-                <div className="text-sm font-black text-emerald-600 font-kumbh uppercase">
+            <td className={`${cellBase} text-left`}>
+                <div className={`inline-flex rounded-full px-3 py-1.5 text-xs font-semibold font-kumbh ${accent.primarySoft}`}>
                     {r.resolved_purok || `Purok ${r.temp_purok_id}`}
                 </div>
             </td>
 
-            {/* 5. SECTOR TAG */}
-            <td className="px-6 py-5 text-left align-middle">
-                <span className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wide rounded-md border-2 ${SECTOR_STYLES[sectorName] || SECTOR_STYLES['DEFAULT']} font-spartan whitespace-nowrap`}>
+            <td className={`${cellBase} text-left`}>
+                <span className={`inline-flex rounded-full px-3 py-1.5 text-[11px] font-semibold border ${SECTOR_STYLES[sectorKey] || SECTOR_STYLES['DEFAULT']} font-kumbh whitespace-nowrap`}>
                     {sectorName}
                 </span>
             </td>
 
-            {/* 6. ACTIONS - Balanced Buttons */}
-            <td className="px-6 py-5 text-center align-middle">
-                <div className={`flex items-center justify-center border ${t.cardBorder} w-fit mx-auto ${t.cardBg} rounded-xl overflow-hidden shadow-sm`}>
-                    <button onClick={() => onView(r)} title="View" className="p-3 text-slate-500 hover:bg-emerald-600 hover:text-white border-r transition-all">
-                        <Eye size={18} />
+            <td className={`${cellBase} text-center`}>
+                <div className={`mx-auto flex w-fit items-center justify-center overflow-hidden rounded-[18px] border ${t.cardBorder} ${t.cardBg} shadow-[0_10px_20px_rgba(15,23,42,0.06)]`}>
+                    <button onClick={() => onView(r)} title="View" className={`border-r px-4 py-3 text-slate-500 transition-all ${accent.buttonHover}`}>
+                        <Eye size={16} />
                     </button>
-                    <button onClick={() => onEdit(r)} title="Edit" className="p-3 text-slate-500 hover:bg-blue-600 hover:text-white border-r transition-all">
-                        <Pencil size={18} />
+                    <button onClick={() => onEdit(r)} title="Edit" className={`border-r px-4 py-3 text-slate-500 transition-all ${accent.buttonHover}`}>
+                        <Pencil size={16} />
                     </button>
-                    <button onClick={() => onDelete(r.id, displayName)} title="Delete" className="p-3 text-slate-500 hover:bg-rose-600 hover:text-white transition-all">
-                        <Trash2 size={18} />
+                    <button onClick={() => onDelete(r.id, displayName)} title="Delete" className="px-4 py-3 text-slate-500 hover:bg-rose-600 hover:text-white transition-all">
+                        <Trash2 size={16} />
                     </button>
                 </div>
             </td>

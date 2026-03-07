@@ -2,7 +2,7 @@ import React from "react";
 import themeTokens from "../../Themetokens";
 
 const ProgressIndicator = ({ currentStep, totalSteps, currentTheme, stepLabels }) => {
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
 
   const defaultLabels = ["Basic Info", "Details", "People", "Additional"];
   const labels = stepLabels || defaultLabels;
@@ -156,3 +156,4 @@ const ProgressIndicator = ({ currentStep, totalSteps, currentTheme, stepLabels }
 };
 
 export default ProgressIndicator;
+

@@ -288,7 +288,7 @@ const IconActionButtons = ({ isDark }) => (
 // ── Main page ──────────────────────────────────────────────────────────
 const DocumentsInquiryPage = () => {
   const [currentTheme, setCurrentTheme] = useState(
-    () => localStorage.getItem("appTheme") || "blue",
+    () => localStorage.getItem("appTheme") || "modern",
   );
   const [activeStatus, setActiveStatus] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
@@ -303,7 +303,7 @@ const DocumentsInquiryPage = () => {
     return () => window.removeEventListener("themeChange", handler);
   }, []);
 
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
 
   const statusCounts = useMemo(() => {
@@ -352,7 +352,7 @@ const DocumentsInquiryPage = () => {
 
   return (
     <div className={`min-h-full ${t.pageBg} pb-10`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="w-full px-3 sm:px-4 lg:px-5 py-6 space-y-6">
         {/* ── Page Header ──────────────────────────────────────────── */}
         <div className="flex items-center gap-4">
           <div
@@ -861,3 +861,5 @@ const DocumentsInquiryPage = () => {
 };
 
 export default DocumentsInquiryPage;
+
+

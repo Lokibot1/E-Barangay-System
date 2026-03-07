@@ -1,4 +1,27 @@
 export const CHART_COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899"];
+export const REPORT_TYPE_COLORS = {
+  BID: "#3B82F6",
+  COR: "#10B981",
+  COI: "#F59E0B",
+};
+export const STATUS_COLORS = {
+  ongoing: "#3B82F6",
+  resolved: "#10B981",
+  rejected: "#EF4444",
+  pending: "#F59E0B",
+  approved: "#10B981",
+};
+export const GENDER_COLORS = {
+  male: "#6366F1",
+  female: "#EC4899",
+};
+export const RESIDENT_REQUEST_COLORS = ["#6366F1", "#94A3B8"];
+export const HEATMAP_CLASSES = {
+  low: "bg-green-100",
+  medium: "bg-yellow-200",
+  high: "bg-amber-300",
+  peak: "bg-red-400",
+};
 
 export const reportShare = [
   { name: "BID", value: 1 },

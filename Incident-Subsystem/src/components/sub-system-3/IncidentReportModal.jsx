@@ -7,7 +7,7 @@ import { incidentService } from "../../services/sub-system-3/incidentService";
 import { useLanguage } from "../../context/LanguageContext";
 
 const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
   const { tr } = useLanguage();
   const im = tr.incidentModal;
 
@@ -322,3 +322,4 @@ const IncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
 };
 
 export default IncidentReportModal;
+

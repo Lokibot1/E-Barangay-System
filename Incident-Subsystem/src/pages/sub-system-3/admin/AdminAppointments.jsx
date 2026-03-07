@@ -21,6 +21,12 @@ import ConfirmationModal from "../../../components/shared/ConfirmationModal";
 const ROWS_PER_PAGE = 5;
 
 const STATUS_CFG = {
+  all:         { label: "ALL",         color: "#16a34a" },
+  scheduled:   { label: "SCHEDULED",   color: "#2563eb" },
+  rescheduled: { label: "RESCHEDULED", color: "#f59e0b" },
+  completed:   { label: "COMPLETED",   color: "#16a34a" },
+  cancelled:   { label: "CANCELLED",   color: "#dc2626" },
+  no_show:     { label: "NO SHOW",     color: "#64748b" },
   all: { label: "ALL", tabBg: "bg-gray-700" },
   scheduled: { label: "SCHEDULED", tabBg: "bg-blue-600" },
   rescheduled: { label: "RESCHEDULED", tabBg: "bg-amber-500" },
@@ -1412,7 +1418,7 @@ const OverdueAlertModal = ({ appointments, onAction, onClose, isDark, t }) => {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const AdminAppointments = () => {
   const [currentTheme, setCurrentTheme] = useState(
-    () => localStorage.getItem("appTheme") || "blue",
+    () => localStorage.getItem("appTheme") || "modern",
   );
 
   useEffect(() => {
@@ -2343,3 +2349,5 @@ const AdminAppointments = () => {
 };
 
 export default AdminAppointments;
+
+

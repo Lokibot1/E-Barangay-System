@@ -4,8 +4,44 @@ import { ShieldCheck, Smartphone, Camera, User, Key, IdCard, AlertTriangle, Down
 import ModalWrapper from '../../common/ModalWrapper';
 import { VERIFY_URL } from '../../../../config/api';
 
-const VerificationSuccessModal = ({ isOpen, onClose, data, t }) => {
+const accentBoxMap = {
+    modern: "bg-blue-600",
+    blue: "bg-blue-600",
+    purple: "bg-purple-600",
+    green: "bg-green-600",
+    dark: "bg-slate-600",
+};
+
+const accentBorderMap = {
+    modern: "border-blue-500 bg-blue-50/30",
+    blue: "border-blue-500 bg-blue-50/30",
+    purple: "border-purple-500 bg-purple-50/30",
+    green: "border-green-500 bg-green-50/30",
+    dark: "border-slate-500 bg-slate-700/60",
+};
+
+const accentTextMap = {
+    modern: "text-blue-600",
+    blue: "text-blue-600",
+    purple: "text-purple-600",
+    green: "text-green-600",
+    dark: "text-slate-200",
+};
+
+const subtleIconMap = {
+    modern: "text-blue-500",
+    blue: "text-blue-500",
+    purple: "text-purple-500",
+    green: "text-green-500",
+    dark: "text-slate-300",
+};
+
+const VerificationSuccessModal = ({ isOpen, onClose, data, t, currentTheme = "modern" }) => {
     if (!data) return null;
+    const accentBoxClass = accentBoxMap[currentTheme] || accentBoxMap.modern;
+    const accentBorderClass = accentBorderMap[currentTheme] || accentBorderMap.modern;
+    const accentTextClass = accentTextMap[currentTheme] || accentTextMap.modern;
+    const subtleIconClass = subtleIconMap[currentTheme] || subtleIconMap.modern;
 
     // Construct the external verification URL
     const qrUrl = `${VERIFY_URL}/verify/${data.user}/${data.token}`;
@@ -48,10 +84,10 @@ const VerificationSuccessModal = ({ isOpen, onClose, data, t }) => {
             t={t}
             title={
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-emerald-600 rounded-xl shadow-lg">
+                    <div className={`p-2 rounded-xl shadow-lg ${accentBoxClass}`}>
                         <ShieldCheck className="text-white" size={20} />
                     </div>
-                    <h2 className={`text-sm font-black uppercase tracking-widest ${t.cardText} text-emerald-600`}>Verification Success</h2>
+                    <h2 className={`text-sm font-black uppercase tracking-widest ${t.cardText} ${accentTextClass}`}>Verification Success</h2>
                 </div>
             }
         >
@@ -92,10 +128,10 @@ const VerificationSuccessModal = ({ isOpen, onClose, data, t }) => {
 
                 {/* RIGHT: CREDENTIALS */}
                 <div className="w-full md:w-3/5 space-y-3">
-                    <CredentialBox label="FULL LEGAL NAME" value={data.name} icon={User} t={t} />
-                    <CredentialBox label="UNIQUE BARANGAY ID" value={data.id} icon={IdCard} highlight t={t} />
-                    <CredentialBox label="LOGIN USERNAME" value={data.user} icon={Smartphone} t={t} />
-                    <CredentialBox label="TEMPORARY PASSWORD" value={data.pass} icon={Key} isSecret t={t} />
+                    <CredentialBox label="FULL LEGAL NAME" value={data.name} icon={User} t={t} currentTheme={currentTheme} />
+                    <CredentialBox label="UNIQUE BARANGAY ID" value={data.id} icon={IdCard} highlight t={t} currentTheme={currentTheme} />
+                    <CredentialBox label="LOGIN USERNAME" value={data.user} icon={Smartphone} t={t} currentTheme={currentTheme} />
+                    <CredentialBox label="TEMPORARY PASSWORD" value={data.pass} icon={Key} isSecret t={t} currentTheme={currentTheme} />
 
                     <div className="mt-6 space-y-2">
                         <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-200">
@@ -105,7 +141,7 @@ const VerificationSuccessModal = ({ isOpen, onClose, data, t }) => {
                             </p>
                         </div>
 
-                        <div className="flex items-center gap-3 p-4 bg-blue-600 rounded-2xl shadow-xl">
+                        <div className={`flex items-center gap-3 p-4 rounded-2xl shadow-xl ${accentBoxClass}`}>
                             <Camera className="text-white shrink-0" size={18} />
                             <p className="text-[10px] font-black text-white uppercase">
                                 Staff: Ensure resident has copied or photographed this screen.
@@ -118,16 +154,22 @@ const VerificationSuccessModal = ({ isOpen, onClose, data, t }) => {
     );
 };
 
-const CredentialBox = ({ label, value, icon: Icon, highlight, isSecret, t }) => (
-    <div className={`p-3 rounded-xl border ${highlight ? 'border-emerald-500 bg-emerald-50/30' : `${t.cardBorder} ${t.cardBg}`} shadow-sm`}>
+const CredentialBox = ({ label, value, icon: Icon, highlight, isSecret, t, currentTheme = "modern" }) => {
+    const accentBorderClass = accentBorderMap[currentTheme] || accentBorderMap.modern;
+    const accentTextClass = accentTextMap[currentTheme] || accentTextMap.modern;
+    const subtleIconClass = subtleIconMap[currentTheme] || subtleIconMap.modern;
+
+    return (
+    <div className={`p-3 rounded-xl border ${highlight ? accentBorderClass : `${t.cardBorder} ${t.cardBg}`} shadow-sm`}>
         <div className="flex items-center gap-2 mb-1">
-            {Icon && <Icon size={12} className={highlight ? "text-emerald-500" : "text-slate-400"} />}
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
+            {Icon && <Icon size={12} className={highlight ? accentTextClass : subtleIconClass} />}
+            <span className={`text-[9px] font-black uppercase tracking-widest ${t.subtleText}`}>{label}</span>
         </div>
-        <p className={`text-sm font-mono font-bold ${highlight ? 'text-emerald-600' : t.cardText} ${isSecret ? 'bg-amber-100 px-2 py-0.5 rounded text-amber-700 border border-amber-200' : ''}`}>
+        <p className={`text-sm font-mono font-bold ${highlight ? accentTextClass : t.cardText} ${isSecret ? 'bg-amber-100 px-2 py-0.5 rounded text-amber-700 border border-amber-200' : ''}`}>
             {value || '---'}
         </p>
     </div>
 );
+};
 
 export default VerificationSuccessModal;

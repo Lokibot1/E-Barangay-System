@@ -16,6 +16,15 @@ const authHeaders = () => ({
   "Content-Type": "application/json",
 });
 
+const parseScheduledAt = (scheduledAt) => {
+  if (!scheduledAt) return { date: null, time: null };
+  const [datePart, timePart] = String(scheduledAt).split(/[T ]/);
+  return {
+    date: datePart || null,
+    time: timePart ? timePart.substring(0, 5) : null,
+  };
+};
+
 // ── Complaint-scoped appointment CRUD ─────────────────────────────────────────
 
 /**
@@ -161,4 +170,26 @@ export const getTimeSlots = () => {
     slots.push({ value: val, label });
   }
   return slots;
+};
+
+export const isSlotAvailable = (date, time, appointments = [], excludeId = null) => {
+  if (!date || !time) return false;
+
+  return !appointments.some((appointment) => {
+    const appointmentId = appointment?.id ?? appointment?.appointment_id;
+    if (excludeId !== null && String(appointmentId) === String(excludeId)) {
+      return false;
+    }
+
+    const status = String(appointment?.status || "scheduled").toLowerCase().replace(/-/g, "_");
+    if (["completed", "cancelled", "no_show"].includes(status)) {
+      return false;
+    }
+
+    const parsed = parseScheduledAt(appointment?.scheduled_at);
+    const appointmentDate = appointment?.date || parsed.date;
+    const appointmentTime = (appointment?.time || parsed.time || "").substring(0, 5);
+
+    return appointmentDate === date && appointmentTime === time;
+  });
 };

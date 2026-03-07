@@ -12,7 +12,7 @@ const TwoStepIncidentForm = ({
   typesLoading = false,
   customFieldDefs = [],
 }) => {
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
 
   const [customTypeInput, setCustomTypeInput] = useState("");
@@ -542,3 +542,4 @@ const TwoStepIncidentForm = ({
 };
 
 export default TwoStepIncidentForm;
+

@@ -10,10 +10,12 @@ import themeTokens from "../../Themetokens";
 import { isAdmin } from "../../homepage/services/loginService";
 
 const Layout = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState(() => {
-    return localStorage.getItem("appTheme") || "blue";
-  });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => localStorage.getItem("sidebarCollapsed") === "true",
+  );
+  const [currentTheme, setCurrentTheme] = useState(
+    () => localStorage.getItem("appTheme") || "modern",
+  );
   const location = useLocation();
 
   // Scroll to main content section on route change
@@ -38,6 +40,10 @@ const Layout = () => {
     }
   }, [currentTheme]);
 
+  useEffect(() => {
+    localStorage.setItem("sidebarCollapsed", String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
   const handleThemeChange = (theme) => {
     setCurrentTheme(theme);
     localStorage.setItem("appTheme", theme);
@@ -47,13 +53,16 @@ const Layout = () => {
   };
 
   return (
-    <div className={`h-screen ${t.pageBg} flex overflow-hidden`}>
+    <div
+      data-theme={currentTheme}
+      className={`theme-scope h-screen ${t.pageBg} flex overflow-hidden font-kumbh [&_h1]:font-spartan [&_h2]:font-spartan [&_h3]:font-spartan`}
+    >
       <Sidebar
         currentTheme={currentTheme}
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed((prev) => !prev)}
       />
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden transition-all duration-300 ease-in-out">
         <DateTimeBar currentTheme={currentTheme} />
         <Header currentTheme={currentTheme} onThemeChange={handleThemeChange} />
         <main className="flex-1 overflow-y-auto">

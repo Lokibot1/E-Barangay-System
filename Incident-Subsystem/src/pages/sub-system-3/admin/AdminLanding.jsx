@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import themeTokens from "../../../Themetokens";
 import { getUser } from "../../../homepage/services/loginService";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
@@ -8,237 +7,91 @@ import InsightsModal from "../../../components/sub-system-3/InsightsModal";
 import VolumesFactors from "../../../components/sub-system-2/factors/VolumesFactors";
 import OperationsFactors from "../../../components/sub-system-2/factors/OperationsFactors";
 import SocioEconomyFactors from "../../../components/sub-system-2/factors/SocioEconomyFactors";
-import sanBartolomeImg from "../../../assets/css/images/SanBartolome.jpg";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { CHART_COLORS, STATUS_COLORS } from "../../../components/sub-system-2/factors/data";
 import {
+  ResponsiveContainer,
   BarChart,
   Bar,
+  CartesianGrid,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
   LineChart,
   Line,
+  AreaChart,
+  Area,
 } from "recharts";
 
-const COLORS = [
-  "#3B82F6",
-  "#10B981",
-  "#EF4444",
-  "#F59E0B",
-  "#8B5CF6",
-  "#EC4899",
-  "#06B6D4",
-  "#F97316",
-];
-const STATUS_COLORS = {
-  ongoing: "#3B82F6",
-  resolved: "#10B981",
-  rejected: "#EF4444",
+
+const themeAccentMap = {
+  modern: {
+    glow: "bg-blue-500/10",
+    shadow: "shadow-blue-500/25 hover:opacity-95",
+    live: "bg-blue-50 text-blue-600",
+    dot: "bg-blue-500",
+    primaryChip: "bg-blue-50 text-blue-600",
+    barActive: "bg-blue-500",
+    barIdle: "bg-blue-200",
+  },
+  blue: {
+    glow: "bg-blue-500/10",
+    shadow: "shadow-blue-500/25 hover:opacity-95",
+    live: "bg-blue-50 text-blue-600",
+    dot: "bg-blue-500",
+    primaryChip: "bg-blue-50 text-blue-600",
+    barActive: "bg-blue-500",
+    barIdle: "bg-blue-200",
+  },
+  purple: {
+    glow: "bg-purple-500/10",
+    shadow: "shadow-purple-500/25 hover:opacity-95",
+    live: "bg-purple-50 text-purple-600",
+    dot: "bg-purple-500",
+    primaryChip: "bg-purple-50 text-purple-600",
+    barActive: "bg-purple-500",
+    barIdle: "bg-purple-200",
+  },
+  green: {
+    glow: "bg-green-500/10",
+    shadow: "shadow-green-500/25 hover:opacity-95",
+    live: "bg-green-50 text-green-600",
+    dot: "bg-green-500",
+    primaryChip: "bg-green-50 text-green-600",
+    barActive: "bg-green-500",
+    barIdle: "bg-green-200",
+  },
+  dark: {
+    glow: "bg-slate-500/10",
+    shadow: "shadow-slate-950/40",
+    live: "bg-slate-700 text-slate-200",
+    dot: "bg-slate-300",
+    primaryChip: "bg-slate-700 text-slate-200",
+    barActive: "bg-slate-300",
+    barIdle: "bg-slate-600",
+  },
 };
 
-// ── Reusable chart card with kebab export menu ───────────────────────
-const ChartCard = ({ title, className, isDark, children }) => {
-  const cardRef = useRef(null);
-  const menuRef = useRef(null);
-  const [open, setOpen] = useState(false);
-  const [exporting, setExporting] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target))
-        setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open]);
-
-  const captureChart = async () => {
-    if (!cardRef.current) return null;
-    // Wait for dropdown to unmount after setOpen(false)
-    await new Promise((r) =>
-      requestAnimationFrame(() => requestAnimationFrame(r)),
-    );
-    // Hide the kebab button and any Recharts tooltips/popovers during capture
-    if (menuRef.current) menuRef.current.style.display = "none";
-    const tooltips = cardRef.current.querySelectorAll(
-      ".recharts-tooltip-wrapper, .recharts-active-dot",
-    );
-    tooltips.forEach((el) => {
-      el.dataset.prevDisplay = el.style.display;
-      el.style.display = "none";
-    });
-    const canvas = await html2canvas(cardRef.current, {
-      backgroundColor: isDark ? "#1E293B" : "#FFFFFF",
-      scale: 2,
-      useCORS: true,
-    });
-    if (menuRef.current) menuRef.current.style.display = "";
-    tooltips.forEach((el) => {
-      el.style.display = el.dataset.prevDisplay || "";
-      delete el.dataset.prevDisplay;
-    });
-    return canvas;
-  };
-
-  const handleSaveImage = async () => {
-    setOpen(false);
-    setExporting(true);
-    try {
-      const canvas = await captureChart();
-      if (!canvas) return;
-      const link = document.createElement("a");
-      link.download = `${title.replace(/[^a-zA-Z0-9]/g, "-")}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const handleSavePDF = async () => {
-    setOpen(false);
-    setExporting(true);
-    try {
-      const canvas = await captureChart();
-      if (!canvas) return;
-      const imgData = canvas.toDataURL("image/png");
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const isLandscape = imgWidth > imgHeight * 1.3;
-      const doc = new jsPDF({
-        orientation: isLandscape ? "landscape" : "portrait",
-      });
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const margin = 14;
-      const availW = pageWidth - margin * 2;
-      const ratio = imgHeight / imgWidth;
-      const drawW = availW;
-      const drawH = drawW * ratio;
-      const finalH = Math.min(drawH, pageHeight - margin * 2 - 20);
-      const finalW = finalH === drawH ? drawW : finalH / ratio;
-
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.text(title, pageWidth / 2, margin + 4, { align: "center" });
-      doc.addImage(
-        imgData,
-        "PNG",
-        (pageWidth - finalW) / 2,
-        margin + 10,
-        finalW,
-        finalH,
-      );
-
-      doc.setFontSize(7);
-      doc.setTextColor(150);
-      doc.text(
-        "E-Barangay Integrated Services Platform",
-        pageWidth / 2,
-        pageHeight - 8,
-        { align: "center" },
-      );
-
-      doc.save(`${title.replace(/[^a-zA-Z0-9]/g, "-")}.pdf`);
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  return (
-    <div className={className} ref={cardRef}>
-      <div className="flex items-center justify-between mb-4">
-        <h3
-          className={`text-sm font-bold ${isDark ? "text-slate-200" : "text-gray-900"} font-spartan uppercase tracking-wide`}
-        >
-          {title}
-        </h3>
-        <div className="relative" ref={menuRef}>
-          <button
-            onClick={() => setOpen((p) => !p)}
-            disabled={exporting}
-            className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-slate-600 text-slate-400" : "hover:bg-gray-200 text-gray-400"} ${exporting ? "opacity-50 cursor-wait" : ""}`}
-          >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="5" r="2" />
-              <circle cx="12" cy="12" r="2" />
-              <circle cx="12" cy="19" r="2" />
-            </svg>
-          </button>
-          {open && (
-            <div
-              className={`absolute right-0 top-full mt-1 w-44 rounded-xl shadow-lg border z-20 overflow-hidden ${isDark ? "bg-slate-700 border-slate-600" : "bg-white border-gray-200"}`}
-            >
-              <button
-                onClick={handleSaveImage}
-                className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-kumbh font-semibold transition-colors ${isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"}`}
-              >
-                <svg
-                  className="w-4 h-4 text-blue-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                Save as Image
-              </button>
-              <button
-                onClick={handleSavePDF}
-                className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-kumbh font-semibold transition-colors ${isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"}`}
-              >
-                <svg
-                  className="w-4 h-4 text-red-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                Save as PDF
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-      {children}
-    </div>
-  );
+const normalizeStatus = (status) => {
+  const s = String(status || "").toLowerCase();
+  if (s === "pending" || s === "ongoing" || s === "in_progress") return "ongoing";
+  if (s === "resolved" || s === "completed" || s === "closed" || s === "approved") return "resolved";
+  if (s === "rejected" || s === "denied" || s === "dismissed") return "rejected";
+  return "ongoing";
 };
 
-const AdminLanding = () => {
-  const [currentTheme, setCurrentTheme] = useState(
-    () => localStorage.getItem("appTheme") || "blue",
-  );
+export default function AdminLanding() {
+  const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem("appTheme") || "modern");
   const [incidents, setIncidents] = useState([]);
   const [complaints, setComplaints] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isLive, setIsLive] = useState(true);
-  const [polling, setPolling] = useState(false);
   const [showKebab, setShowKebab] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
-  const [hiddenSeries, setHiddenSeries] = useState({});
   const kebabRef = useRef(null);
-  const pollIntervalRef = useRef(null);
 
   useEffect(() => {
     const handleThemeChange = (e) => setCurrentTheme(e.detail);
@@ -246,184 +99,157 @@ const AdminLanding = () => {
     return () => window.removeEventListener("themeChange", handleThemeChange);
   }, []);
 
-  // Close kebab on outside click
   useEffect(() => {
     if (!showKebab) return;
-    const handler = (e) => {
-      if (kebabRef.current && !kebabRef.current.contains(e.target))
+    const handleOutsideClick = (e) => {
+      if (kebabRef.current && !kebabRef.current.contains(e.target)) {
         setShowKebab(false);
+      }
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [showKebab]);
 
-  const t = themeTokens[currentTheme];
+  const t = themeTokens[currentTheme] || themeTokens.modern || themeTokens.blue;
   const isDark = currentTheme === "dark";
-  const user = getUser();
-  const firstName = user?.name?.split(" ")[0] || "Admin";
-  const navigate = useNavigate();
+  const accent = themeAccentMap[currentTheme] || themeAccentMap.modern;
 
-  // Fetch data for the 6 chart cards only (incidents, complaints, appointments)
-  const fetchData = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    else setPolling(true);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
     try {
-      // Incidents + complaints fetched together — same as the working case tracker
       const [incData, compData] = await Promise.all([
         incidentService.getAllIncidents(),
         getAllComplaints(),
       ]);
-      const compArray = Array.isArray(compData) ? compData : compData.data || [];
-      setIncidents(Array.isArray(incData) ? incData : incData.data || []);
-      setComplaints(compArray);
+      const incidentsArray = Array.isArray(incData) ? incData : incData?.data || [];
+      const complaintsArray = Array.isArray(compData) ? compData : compData?.data || [];
+      const appointmentArray = [];
 
-      // Flatten appointments nested inside each complaint (mirrors AdminAppointments.jsx)
-      const allAppts = [];
-      compArray.forEach((complaint) => {
-        if (Array.isArray(complaint.appointments)) {
-          complaint.appointments.forEach((appt) => {
-            allAppts.push({ ...appt, complaint_id: appt.complaint_id ?? complaint.id });
+      complaintsArray.forEach((complaint) => {
+        (complaint.appointments || []).forEach((appointment) => {
+          appointmentArray.push({
+            ...appointment,
+            complaint_id: appointment.complaint_id ?? complaint.id,
           });
-        }
+        });
       });
-      setAppointments(allAppts);
-    } catch (err) {
-      console.error("Failed to fetch dashboard data:", err);
-    }
 
-    if (!silent) setLoading(false);
-    else setPolling(false);
+      setIncidents(incidentsArray);
+      setComplaints(complaintsArray);
+      setAppointments(appointmentArray);
+    } catch (err) {
+      console.error("Failed to fetch admin dashboard data:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Initial load
   useEffect(() => {
-    fetchData(false);
+    fetchData();
   }, [fetchData]);
 
-  // Auto-polling every 30 s (silent — no full loading spinner)
-  useEffect(() => {
-    if (!isLive) {
-      clearInterval(pollIntervalRef.current);
-      return;
-    }
-    pollIntervalRef.current = setInterval(() => fetchData(true), 30_000);
-    return () => clearInterval(pollIntervalRef.current);
-  }, [isLive, fetchData]);
+  const user = getUser();
+  const firstName = user?.name?.split(" ")[0] || "Admin";
 
-  // ── Normalize status ──
-  const normalizeStatus = (status) => {
-    if (!status) return "ongoing";
-    const s = status.toLowerCase();
-    if (s === "pending" || s === "ongoing" || s === "in_progress")
-      return "ongoing";
-    if (s === "resolved" || s === "completed" || s === "closed")
-      return "resolved";
-    if (s === "rejected" || s === "dismissed" || s === "denied")
-      return "rejected";
-    return "ongoing";
-  };
+  const overview = useMemo(() => {
+    const totalRequests = incidents.length + complaints.length;
+    const pendingRequests = [...incidents, ...complaints].filter((r) => {
+      const s = String(r?.status || "").toLowerCase();
+      return s === "pending" || s === "ongoing" || s === "in_progress";
+    }).length;
 
-  // ── Chart Data Processors ──
+    const openComplaints = complaints.filter((c) => {
+      const s = String(c?.status || "").toLowerCase();
+      return s === "pending" || s === "ongoing" || s === "in_progress";
+    }).length;
+    const incidentReports = incidents.length;
+    const pendingAppointments = appointments.filter((a) => {
+      const status = String(a?.status || "").toLowerCase().replace(/-/g, "_");
+      return status === "scheduled" || status === "rescheduled";
+    }).length;
 
-  // Monthly bar chart data (last 6 months)
-  const getMonthlyData = () => {
+    return {
+      totalRequests,
+      pendingRequests,
+      openComplaints,
+      incidentReports,
+      pendingAppointments,
+    };
+  }, [incidents, complaints, appointments]);
+
+  const monthlyData = useMemo(() => {
     const months = [];
     const now = new Date();
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push({
-        month: d.toLocaleString("default", { month: "short" }),
-        year: d.getFullYear(),
+        name: d.toLocaleString("default", { month: "short" }),
         monthNum: d.getMonth(),
-        incidents: 0,
-        complaints: 0,
-      });
-    }
-
-    incidents.forEach((item) => {
-      const d = new Date(item.created_at);
-      const entry = months.find(
-        (m) => m.monthNum === d.getMonth() && m.year === d.getFullYear(),
-      );
-      if (entry) entry.incidents++;
-    });
-
-    complaints.forEach((item) => {
-      const d = new Date(item.created_at || item.incident_date);
-      const entry = months.find(
-        (m) => m.monthNum === d.getMonth() && m.year === d.getFullYear(),
-      );
-      if (entry) entry.complaints++;
-    });
-
-    return months.map((m) => ({
-      name: m.month,
-      Incidents: m.incidents,
-      Complaints: m.complaints,
-    }));
-  };
-
-  // Status distribution (pie/donut)
-  const getStatusData = () => {
-    const all = [
-      ...incidents.map((i) => normalizeStatus(i.status)),
-      ...complaints.map((c) => normalizeStatus(c.status)),
-    ];
-    const counts = { ongoing: 0, resolved: 0, rejected: 0 };
-    all.forEach((s) => {
-      if (counts[s] !== undefined) counts[s]++;
-    });
-    return Object.entries(counts)
-      .filter(([, v]) => v > 0)
-      .map(([name, value]) => ({
-        name: name.charAt(0).toUpperCase() + name.slice(1),
-        value,
-        color: STATUS_COLORS[name],
-      }));
-  };
-
-  // Daily trend (last 14 days)
-  const getTrendData = () => {
-    const days = [];
-    const now = new Date();
-    for (let i = 13; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      days.push({
-        date: d.toLocaleDateString("default", {
-          month: "short",
-          day: "numeric",
-        }),
-        dateStr: d.toISOString().split("T")[0],
+        year: d.getFullYear(),
         Incidents: 0,
         Complaints: 0,
       });
     }
 
     incidents.forEach((item) => {
-      const dateStr = (item.created_at || "").split("T")[0];
-      const entry = days.find((d) => d.dateStr === dateStr);
-      if (entry) entry.Incidents++;
+      const d = new Date(item.created_at);
+      const target = months.find((m) => m.monthNum === d.getMonth() && m.year === d.getFullYear());
+      if (target) target.Incidents += 1;
     });
 
     complaints.forEach((item) => {
-      const dateStr = (item.created_at || item.incident_date || "").split(
-        "T",
-      )[0];
-      const entry = days.find((d) => d.dateStr === dateStr);
-      if (entry) entry.Complaints++;
+      const d = new Date(item.created_at || item.incident_date);
+      const target = months.find((m) => m.monthNum === d.getMonth() && m.year === d.getFullYear());
+      if (target) target.Complaints += 1;
     });
 
-    return days.map(({ date, Incidents, Complaints }) => ({
-      date,
-      Incidents,
-      Complaints,
-    }));
-  };
+    return months.map(({ name, Incidents, Complaints }) => ({ name, Incidents, Complaints }));
+  }, [incidents, complaints]);
 
-  // Category breakdown (pie)
-  const getCategoryData = () => {
-    const counts = {};
+  const statusData = useMemo(() => {
+    const all = [...incidents, ...complaints].map((r) => normalizeStatus(r.status));
+    const counts = { ongoing: 0, resolved: 0, rejected: 0 };
+    all.forEach((s) => {
+      counts[s] += 1;
+    });
+    return [
+      { name: "Ongoing", value: counts.ongoing, color: STATUS_COLORS.ongoing },
+      { name: "Resolved", value: counts.resolved, color: STATUS_COLORS.resolved },
+      { name: "Rejected", value: counts.rejected, color: STATUS_COLORS.rejected },
+    ].filter((x) => x.value > 0);
+  }, [incidents, complaints]);
+
+  const trendData = useMemo(() => {
+    const days = [];
+    const now = new Date();
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      days.push({
+        key: d.toISOString().split("T")[0],
+        date: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        Incidents: 0,
+        Complaints: 0,
+      });
+    }
+
+    incidents.forEach((i) => {
+      const key = String(i.created_at || "").split("T")[0];
+      const target = days.find((d) => d.key === key);
+      if (target) target.Incidents += 1;
+    });
+
+    complaints.forEach((c) => {
+      const key = String(c.created_at || c.incident_date || "").split("T")[0];
+      const target = days.find((d) => d.key === key);
+      if (target) target.Complaints += 1;
+    });
+
+    return days.map(({ date, Incidents, Complaints }) => ({ date, Incidents, Complaints }));
+  }, [incidents, complaints]);
+
+  const categoryData = useMemo(() => {
+    const bucket = {};
 
     incidents.forEach((item) => {
       let types = [];
@@ -433,287 +259,166 @@ const AdminLanding = () => {
       } catch {
         types = [item.type || "Other"];
       }
-      types.forEach((t) => {
-        const label = t.charAt(0).toUpperCase() + t.slice(1);
-        counts[label] = (counts[label] || 0) + 1;
+      types.forEach((tpe) => {
+        const label = tpe.charAt(0).toUpperCase() + tpe.slice(1);
+        bucket[label] = (bucket[label] || 0) + 1;
       });
     });
 
     complaints.forEach((item) => {
-      const label = item.type
-        ? item.type.charAt(0).toUpperCase() + item.type.slice(1)
-        : "Other";
-      counts[label] = (counts[label] || 0) + 1;
+      const label = item.type ? item.type.charAt(0).toUpperCase() + item.type.slice(1) : "Other";
+      bucket[label] = (bucket[label] || 0) + 1;
     });
 
-    return Object.entries(counts).map(([name, value]) => ({ name, value }));
-  };
+    return Object.entries(bucket).map(([name, value]) => ({ name, value }));
+  }, [incidents, complaints]);
 
-  // Appointment status donut data
-  const getAppointmentStatusData = () => {
-    const counts = { scheduled: 0, rescheduled: 0, completed: 0, cancelled: 0, "no-show": 0 };
+  const appointmentStatusData = useMemo(() => {
+    const counts = { Pending: 0, Approved: 0, Rejected: 0 };
     appointments.forEach((a) => {
-      const s = (a.status || "scheduled").toLowerCase();
-      if (s in counts) counts[s]++;
-      else counts.scheduled++;
+      const s = String(a.status || "scheduled").toLowerCase().replace(/-/g, "_");
+      if (s === "completed") counts.Approved += 1;
+      else if (s === "cancelled" || s === "no_show") counts.Rejected += 1;
+      else counts.Pending += 1;
     });
-    const colorMap = {
-      scheduled: "#3B82F6",
-      rescheduled: "#F59E0B",
-      completed: "#10B981",
-      cancelled: "#6B7280",
-      "no-show": "#EF4444",
-    };
-    const labelMap = {
-      scheduled: "Scheduled",
-      rescheduled: "Rescheduled",
-      completed: "Completed",
-      cancelled: "Cancelled",
-      "no-show": "No Show",
-    };
-    return Object.entries(counts)
-      .filter(([, v]) => v > 0)
-      .map(([name, value]) => ({
-        name: labelMap[name],
-        value,
-        color: colorMap[name],
-      }));
-  };
 
-  // Monthly appointments bar data (last 6 months)
-  const getMonthlyAppointmentData = () => {
+    return [
+      { name: "Pending", value: counts.Pending, color: STATUS_COLORS.pending },
+      { name: "Approved", value: counts.Approved, color: STATUS_COLORS.approved },
+      { name: "Rejected", value: counts.Rejected, color: STATUS_COLORS.rejected },
+    ].filter((x) => x.value > 0);
+  }, [appointments]);
+
+  const monthlyAppointmentData = useMemo(() => {
     const months = [];
     const now = new Date();
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push({
-        month: d.toLocaleString("default", { month: "short" }),
-        year: d.getFullYear(),
+        name: d.toLocaleString("default", { month: "short" }),
         monthNum: d.getMonth(),
-        Scheduled: 0,
-        Rescheduled: 0,
-        Completed: 0,
-        Cancelled: 0,
-        "No Show": 0,
+        year: d.getFullYear(),
+        Pending: 0,
+        Approved: 0,
+        Rejected: 0,
       });
     }
+
     appointments.forEach((a) => {
-      const d = new Date(a.scheduled_at || a.date || a.created_at);
-      const entry = months.find(
-        (m) => m.monthNum === d.getMonth() && m.year === d.getFullYear(),
-      );
-      if (!entry) return;
-      const s = (a.status || "scheduled").toLowerCase();
-      if (s === "rescheduled") entry.Rescheduled++;
-      else if (s === "completed") entry.Completed++;
-      else if (s === "cancelled") entry.Cancelled++;
-      else if (s === "no-show") entry["No Show"]++;
-      else entry.Scheduled++;
-    });
-    return months.map(({ month, Scheduled, Rescheduled, Completed, Cancelled, "No Show": NoShow }) => ({
-      name: month,
-      Scheduled,
-      Rescheduled,
-      Completed,
-      Cancelled,
-      "No Show": NoShow,
-    }));
-  };
-
-  // ── Stat card counts ──
-  const totalIncidents = incidents.length;
-  const totalComplaints = complaints.length;
-  const totalPending = [...incidents, ...complaints].filter(
-    (r) => normalizeStatus(r.status) === "ongoing",
-  ).length;
-  const pendingAppointments = appointments.filter((a) => {
-    const s = (a.status || "scheduled").toLowerCase();
-    return s === "scheduled" || s === "rescheduled";
-  }).length;
-
-  const stats = [
-    {
-      count: totalPending,
-      label: "REQUESTS",
-      sublabel: "PENDING",
-      borderColor: "border-green-600",
-      circleBg: "bg-gray-200",
-      circleText: "text-gray-700",
-      arrowColor: "text-amber-500",
-      link: "/admin/requests",
-    },
-    {
-      count: totalComplaints,
-      label: "COMPLAINTS",
-      sublabel: "OPEN",
-      borderColor: "border-green-600",
-      circleBg: "bg-gray-200",
-      circleText: "text-green-700",
-      arrowColor: "text-amber-500",
-      link: "/admin/incidents",
-    },
-    {
-      count: totalIncidents,
-      label: "REPORTS",
-      sublabel: "INCIDENT",
-      borderColor: "border-gray-300",
-      circleBg: "bg-gray-200",
-      circleText: "text-gray-700",
-      arrowColor: "text-gray-400",
-      link: "/admin/incidents",
-    },
-    {
-      count: pendingAppointments,
-      label: "APPOINTMENTS",
-      sublabel: "PENDING",
-      borderColor: "border-amber-500",
-      circleBg: "bg-amber-100",
-      circleText: "text-amber-700",
-      arrowColor: "text-amber-500",
-      link: "/admin/appointments",
-    },
-  ];
-
-  const monthlyData = getMonthlyData();
-  const statusData = getStatusData();
-  const trendData = getTrendData();
-  const categoryData = getCategoryData();
-  const appointmentStatusData = getAppointmentStatusData();
-  const monthlyAppointmentData = getMonthlyAppointmentData();
-
-  // ── Legend toggle helpers ──
-  const toggleSeries = (chartId, key) =>
-    setHiddenSeries((prev) => {
-      const cur = new Set(prev[chartId]);
-      cur.has(key) ? cur.delete(key) : cur.add(key);
-      return { ...prev, [chartId]: cur };
+      const d = new Date(a.date || a.created_at);
+      const m = months.find((x) => x.monthNum === d.getMonth() && x.year === d.getFullYear());
+      if (!m) return;
+      const s = String(a.status || "scheduled").toLowerCase().replace(/-/g, "_");
+      if (s === "completed") m.Approved += 1;
+      else if (s === "cancelled" || s === "no_show") m.Rejected += 1;
+      else m.Pending += 1;
     });
 
-  const isHidden = (chartId, key) => !!(hiddenSeries[chartId]?.has(key));
+    return months.map(({ name, Pending, Approved, Rejected }) => ({ name, Pending, Approved, Rejected }));
+  }, [appointments]);
 
-  // Custom clickable legend renderer (works for bar, line, and pie charts)
-  const renderClickableLegend = (chartId, overridePayload) => (props) => {
-    const items = overridePayload ?? props.payload ?? [];
-    return (
-      <ul
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "center",
-          gap: "4px 14px",
-          padding: 0,
-          margin: 0,
-          listStyle: "none",
-        }}
-      >
-        {items.map((entry, i) => {
-          const hidden = isHidden(chartId, entry.value);
-          return (
-            <li
-              key={i}
-              onClick={() => toggleSeries(chartId, entry.value)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                cursor: "pointer",
-                userSelect: "none",
-                opacity: hidden ? 0.35 : 1,
-                fontSize: 12,
-              }}
-            >
-              <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  backgroundColor: entry.color,
-                  flexShrink: 0,
-                }}
-              />
-              <span style={{ textDecoration: hidden ? "line-through" : "none", color: isDark ? "#D1D5DB" : "#374151" }}>
-                {entry.value}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-    );
+  const combinedLoadData = useMemo(
+    () =>
+      monthlyData.map((m, idx) => ({
+        name: m.name,
+        Requests: m.Incidents + m.Complaints,
+        Appointments:
+          (monthlyAppointmentData[idx]?.Pending || 0) +
+          (monthlyAppointmentData[idx]?.Approved || 0) +
+          (monthlyAppointmentData[idx]?.Rejected || 0),
+      })),
+    [monthlyData, monthlyAppointmentData]
+  );
+
+  const cardClass = `${t.cardBg} border ${isDark ? "border-slate-700" : "border-[#e6e8f1]"} rounded-2xl`;
+  const tooltipStyle = {
+    backgroundColor: isDark ? "#1f2937" : "#ffffff",
+    border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
+    borderRadius: "10px",
+    fontSize: "12px",
   };
-
-  // Pre-filter pie/donut data so hidden slices are removed from the chart
-  // but the full payload is still passed to the legend so items remain clickable
-  const filteredStatusData = statusData.filter((d) => !isHidden("statusDist", d.name));
-  const filteredCategoryData = categoryData.filter((d) => !isHidden("categories", d.name));
-  const filteredApptStatusData = appointmentStatusData.filter((d) => !isHidden("apptStatus", d.name));
-
-  const chartCardClass = `${t.cardBg} border ${isDark ? "border-slate-700" : "border-gray-200"} rounded-xl p-4 shadow-md`;
+  const heroClass = isDark
+    ? `${cardClass} relative overflow-hidden p-5 sm:p-6 bg-slate-800/80`
+    : `${cardClass} relative overflow-hidden p-5 sm:p-6 bg-gradient-to-r from-white via-white to-slate-50/60`;
+  const heroGlowClass = accent.glow;
+  const heroChipClass = isDark ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-500";
+  const announcementButtonClass = `inline-flex items-center gap-2 px-5 h-10 rounded-2xl bg-gradient-to-r ${t.primaryGrad} text-white text-sm font-medium shadow-lg transition-all cursor-default ${
+    accent.shadow
+  }`;
+  const liveBadgeClass = isDark ? accent.live : `${t.primaryLight} ${t.primaryText}`;
+  const liveDotClass = accent.dot;
+  const iconChipStyles = {
+    pendingRequests: {
+      backgroundColor: isDark ? "rgba(22, 163, 74, 0.16)" : "#ecfdf5",
+      color: "#16a34a",
+    },
+    openComplaints: {
+      backgroundColor: isDark ? "rgba(22, 163, 74, 0.16)" : "#ecfdf5",
+      color: "#16a34a",
+    },
+    incidentReports: {
+      backgroundColor: isDark ? "rgba(148, 163, 184, 0.18)" : "#f1f5f9",
+      color: "#64748b",
+    },
+    pendingAppointments: {
+      backgroundColor: isDark ? "rgba(245, 158, 11, 0.16)" : "#fffbeb",
+      color: "#d97706",
+    },
+  };
 
   return (
-    <div className="flex flex-col min-h-full">
-      {/* ── Hero Section ─────────────────────────────────────────────── */}
-      <div className="relative w-full h-[420px] sm:h-[500px] overflow-hidden">
-        <img
-          src={sanBartolomeImg}
-          alt="Barangay Gulod"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/50" />
-
-        <div className="relative z-10 flex flex-col justify-center items-start h-full px-6 sm:px-10 lg:px-16 max-w-7xl mx-auto w-full">
-          <p className="text-white/90 text-lg sm:text-xl font-semibold font-kumbh mb-2">
-            Hi, {firstName}!
-          </p>
-          <h1 className="text-white text-3xl sm:text-4xl lg:text-5xl font-bold font-spartan leading-tight text-left">
-            Welcome to
-            <br />
-            E-Barangay Integrated Services
-            <br />
-            Platform of Gulod
-          </h1>
-          <div className="mt-6">
-            <button className="px-6 py-3 bg-green-700 hover:bg-green-800 text-white text-sm font-bold font-kumbh uppercase tracking-wider rounded transition-colors">
-              View Announcements
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Analytics Dashboard ─────────────────────────────────────── */}
-      <div className={`${t.pageBg} px-6 sm:px-10 lg:px-16 py-6`}>
-        <div className="max-w-7xl mx-auto w-full">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <h2
-                className={`text-2xl font-bold ${t.cardText} font-spartan text-left`}
+    <div className={`min-h-full ${t.pageBg}`}>
+      <div className="w-full px-4 sm:px-5 py-4 sm:py-6 space-y-5">
+        <section className={heroClass}>
+          <div className={`absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl pointer-events-none ${heroGlowClass}`} />
+          <div className="relative grid grid-cols-1 lg:grid-cols-[1fr_auto] items-start gap-4 sm:gap-6">
+            <div className="space-y-2 text-left justify-self-start">
+              <div className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-medium ${heroChipClass}`}>
+                Overview
+              </div>
+              <h1 className={`font-spartan text-[2.2rem] sm:text-[2.8rem] font-bold leading-none tracking-tight ${t.cardText}`}>
+                Welcome back, {firstName}
+              </h1>
+              <p className={`text-[11px] sm:text-[13px] font-kumbh ${t.subtleText}`}>
+                Monitor requests, complaints, reports, and appointment activity in real time.
+              </p>
+            </div>
+            <div className="flex items-start self-start justify-self-start lg:justify-self-end">
+              <button
+                type="button"
+                className={announcementButtonClass}
               >
+                <span className="inline-flex w-5 h-5 rounded-full bg-white/20 items-center justify-center">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20l-6-3-6 3V5a2 2 0 012-2h8a2 2 0 012 2v15z" />
+                  </svg>
+                </span>
+                View Announcements
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="px-1 sm:px-1 pt-6 sm:pt-7">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 className={`font-spartan text-lg sm:text-2xl font-semibold tracking-tight leading-none ${t.cardText}`}>
                 Analytics Dashboard
               </h2>
-              <button
-                onClick={() => setIsLive((v) => !v)}
-                title={isLive ? "Pause auto-refresh" : "Resume auto-refresh"}
-                className={`flex items-center gap-1.5 text-xs font-bold font-kumbh px-2.5 py-1 rounded-lg transition-colors ${
-                  isLive
-                    ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                    : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                } ${isDark ? (isLive ? "bg-emerald-900/40 text-emerald-400 hover:bg-emerald-800/50" : "bg-slate-700 text-slate-400 hover:bg-slate-600") : ""}`}
-              >
-                <span
-                  className={`w-2 h-2 rounded-full flex-shrink-0 ${isLive ? "bg-emerald-500 animate-pulse" : "bg-gray-400"}`}
-                />
-                {isLive ? (polling ? "Updating…" : "Live") : "Paused"}
-              </button>
+              <span className={`inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-medium font-kumbh ${liveBadgeClass}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${liveDotClass}`} />
+                Live
+              </span>
             </div>
             <div className="relative" ref={kebabRef}>
               <button
+                type="button"
                 onClick={() => setShowKebab((prev) => !prev)}
-                className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-slate-700 text-slate-300" : "hover:bg-gray-200 text-gray-600"}`}
+                className={`inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${
+                  isDark ? "text-slate-300 hover:bg-slate-800" : "text-slate-500 hover:bg-slate-100"
+                }`}
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="5" r="2" />
                   <circle cx="12" cy="12" r="2" />
                   <circle cx="12" cy="19" r="2" />
@@ -721,27 +426,22 @@ const AdminLanding = () => {
               </button>
               {showKebab && (
                 <div
-                  className={`absolute right-0 top-full mt-1 w-52 rounded-xl shadow-lg border z-20 overflow-hidden ${isDark ? "bg-slate-700 border-slate-600" : "bg-white border-gray-200"}`}
+                  className={`absolute right-0 top-full mt-2 w-52 rounded-xl border shadow-lg z-20 overflow-hidden ${
+                    isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"
+                  }`}
                 >
                   <button
+                    type="button"
                     onClick={() => {
                       setShowKebab(false);
                       setShowInsights(true);
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-kumbh font-semibold transition-colors ${isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"}`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-kumbh font-medium transition-colors ${
+                      isDark ? "text-slate-200 hover:bg-slate-700" : "text-slate-700 hover:bg-slate-50"
+                    }`}
                   >
-                    <svg
-                      className="w-4 h-4 text-amber-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                      />
+                    <svg className="h-4 w-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                     Generate Insights
                   </button>
@@ -749,452 +449,231 @@ const AdminLanding = () => {
               )}
             </div>
           </div>
+        </section>
 
-          {/* Stat Cards - compact inline */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            {stats.map((stat, i) => (
-              <div
-                key={i}
-                onClick={() => navigate(stat.link)}
-                className={`${t.cardBg} border-l-4 ${stat.borderColor} rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer hover:shadow-md transition-all`}
-              >
-                <div
-                  className={`w-11 h-11 ${stat.circleBg} rounded-full flex items-center justify-center flex-shrink-0`}
-                >
-                  <span
-                    className={`text-lg font-bold ${stat.circleText} font-spartan`}
-                  >
-                    {loading ? "..." : stat.count}
-                  </span>
-                </div>
-                <div>
-                  <p
-                    className={`text-[10px] font-medium ${t.subtleText} font-kumbh uppercase tracking-wide leading-tight`}
-                  >
-                    {stat.sublabel}
-                  </p>
-                  <p
-                    className={`text-sm font-bold ${t.cardText} font-spartan uppercase`}
-                  >
-                    {stat.label}
-                  </p>
-                </div>
-              </div>
-            ))}
+        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2.5">
+          <article className={`${cardClass} p-3.5`}>
+            <div className="flex items-start justify-between">
+              <p className={`text-[13px] sm:text-[14px] font-normal ${t.cardText}`}>Pending requests</p>
+              <span className="inline-flex h-[26px] w-[26px] items-center justify-center rounded-md" style={iconChipStyles.pendingRequests}>
+                <svg className="h-[14px] w-[14px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V9m-6-4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </span>
+            </div>
+            <p className={`mt-2 text-[2rem] font-semibold leading-none ${t.cardText}`}>{loading ? "..." : overview.pendingRequests}</p>
+            <div className="mt-2.5">
+              <span className={`text-[10px] sm:text-[11px] font-medium ${t.subtleText}`}>Awaiting resident review</span>
+            </div>
+          </article>
+
+          <article className={`${cardClass} p-3.5`}>
+            <div className="flex items-start justify-between">
+              <p className={`text-[13px] sm:text-[14px] font-normal ${t.cardText}`}>Open complaints</p>
+              <span className="inline-flex h-[26px] w-[26px] items-center justify-center rounded-md" style={iconChipStyles.openComplaints}>
+                <svg className="h-[14px] w-[14px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
+            </div>
+            <p className={`mt-2 text-[2rem] font-semibold leading-none ${t.cardText}`}>{loading ? "..." : overview.openComplaints}</p>
+            <div className="mt-2.5">
+              <span className={`text-[10px] sm:text-[11px] font-medium ${t.subtleText}`}>Active unresolved complaints</span>
+            </div>
+          </article>
+
+          <article className={`${cardClass} p-3.5`}>
+            <div className="flex items-start justify-between">
+              <p className={`text-[13px] sm:text-[14px] font-normal ${t.cardText}`}>Incident reports</p>
+              <span className="inline-flex h-[26px] w-[26px] items-center justify-center rounded-md" style={iconChipStyles.incidentReports}>
+                <svg className="h-[14px] w-[14px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
+            </div>
+            <p className={`mt-2 text-[2rem] font-semibold leading-none ${t.cardText}`}>{loading ? "..." : overview.incidentReports}</p>
+            <div className="mt-2.5">
+              <span className={`text-[10px] sm:text-[11px] font-medium ${t.subtleText}`}>Filed incident reports</span>
+            </div>
+          </article>
+
+          <article className={`${cardClass} p-3.5`}>
+            <div className="flex items-start justify-between">
+              <p className={`text-[13px] sm:text-[14px] font-normal ${t.cardText}`}>Pending appointments</p>
+              <span className="inline-flex h-[26px] w-[26px] items-center justify-center rounded-md" style={iconChipStyles.pendingAppointments}>
+                <svg className="h-[14px] w-[14px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </span>
+            </div>
+            <p className={`mt-2 text-[2rem] font-semibold leading-none ${t.cardText}`}>{loading ? "..." : overview.pendingAppointments}</p>
+            <div className="mt-2.5">
+              <span className={`text-[10px] sm:text-[11px] font-medium ${t.subtleText}`}>Waiting for schedule slot</span>
+            </div>
+          </article>
+        </section>
+
+        <section className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+          <article className={`${cardClass} p-4`}>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Monthly Reports</h3>
+            <div className="h-[290px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#374151" : "#e5e7eb"} />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: isDark ? "#94a3b8" : "#64748b" }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: isDark ? "#94a3b8" : "#64748b" }} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="Incidents" fill="#3B82F6" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="Complaints" fill="#14B8A6" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </article>
+
+          <article className={`${cardClass} p-4`}>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Status Distribution</h3>
+            <div className="h-[290px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={62} outerRadius={96} paddingAngle={4}>
+                    {statusData.map((entry, idx) => (
+                      <Cell key={`${entry.name}-${idx}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </article>
+
+          <article className={`${cardClass} p-4`}>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Report Trend (14 days)</h3>
+            <div className="h-[290px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={trendData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#374151" : "#e5e7eb"} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: isDark ? "#94a3b8" : "#64748b" }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: isDark ? "#94a3b8" : "#64748b" }} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Line type="monotone" dataKey="Incidents" stroke="#3B82F6" strokeWidth={2.5} dot={{ r: 2 }} />
+                  <Line type="monotone" dataKey="Complaints" stroke="#14B8A6" strokeWidth={2.5} dot={{ r: 2 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </article>
+
+          <article className={`${cardClass} p-4`}>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Report Categories</h3>
+            <div className="h-[290px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="45%" outerRadius={96} paddingAngle={2}>
+                    {categoryData.map((entry, idx) => (
+                      <Cell key={`${entry.name}-${idx}`} fill={CHART_COLORS[idx % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </article>
+
+          <article className={`${cardClass} p-4`}>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Appointment Status</h3>
+            <div className="h-[290px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={appointmentStatusData} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={62} outerRadius={96} paddingAngle={4}>
+                    {appointmentStatusData.map((entry, idx) => (
+                      <Cell key={`${entry.name}-${idx}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </article>
+
+          <article className={`${cardClass} p-4`}>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Monthly Appointments</h3>
+            <div className="h-[290px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyAppointmentData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#374151" : "#e5e7eb"} />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: isDark ? "#94a3b8" : "#64748b" }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: isDark ? "#94a3b8" : "#64748b" }} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="Pending" fill={STATUS_COLORS.pending} radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="Approved" fill={STATUS_COLORS.approved} radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="Rejected" fill={STATUS_COLORS.rejected} radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </article>
+        </section>
+
+        <section className="grid grid-cols-1 gap-3">
+          <article className={`${cardClass} p-4`}>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Requests vs Appointments Trend</h3>
+            <div className="h-[280px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={combinedLoadData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#374151" : "#e5e7eb"} />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: isDark ? "#94a3b8" : "#64748b" }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: isDark ? "#94a3b8" : "#64748b" }} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Area
+                    type="monotone"
+                    dataKey="Requests"
+                    stroke="#3B82F6"
+                    fill="#3B82F6"
+                    fillOpacity={0.18}
+                    strokeWidth={2}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="Appointments"
+                    stroke="#14B8A6"
+                    fill="#14B8A6"
+                    fillOpacity={0.14}
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </article>
+        </section>
+
+        <section className={`${cardClass} p-4 sm:p-5 space-y-4`}>
+          <div>
+            <h2 className={`text-2xl font-bold ${t.cardText}`}>Issuance Application Factors</h2>
+            <p className={`text-sm mt-1 ${t.subtleText}`}>Volumes, operations, and socio-economy chart groups</p>
           </div>
 
-          {loading ? (
-            <div
-              className={`${chartCardClass} flex items-center justify-center py-20`}
-            >
-              <div className="text-center">
-                <div className="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-                <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                  Loading analytics...
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Bar Chart — Monthly Reports */}
-              <ChartCard
-                title="Monthly Reports (Last 6 Months)"
-                className={chartCardClass}
-                isDark={isDark}
-              >
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={monthlyData}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke={isDark ? "#374151" : "#E5E7EB"}
-                    />
-                    <XAxis
-                      dataKey="name"
-                      tick={{
-                        fontSize: 12,
-                        fill: isDark ? "#9CA3AF" : "#6B7280",
-                      }}
-                    />
-                    <YAxis
-                      allowDecimals={false}
-                      tick={{
-                        fontSize: 12,
-                        fill: isDark ? "#9CA3AF" : "#6B7280",
-                      }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: isDark ? "#1F2937" : "#FFF",
-                        border: `1px solid ${isDark ? "#374151" : "#E5E7EB"}`,
-                        borderRadius: "8px",
-                        fontSize: "13px",
-                        color: isDark ? "#D1D5DB" : "#111827",
-                      }}
-                    />
-                    <Legend content={renderClickableLegend("monthlyReports")} />
-                    <Bar
-                      dataKey="Incidents"
-                      fill="#3B82F6"
-                      radius={[4, 4, 0, 0]}
-                      hide={isHidden("monthlyReports", "Incidents")}
-                    />
-                    <Bar
-                      dataKey="Complaints"
-                      fill="#F59E0B"
-                      radius={[4, 4, 0, 0]}
-                      hide={isHidden("monthlyReports", "Complaints")}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartCard>
+          <div>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Volumes</h3>
+            <VolumesFactors t={t} isDark={isDark} currentTheme={currentTheme} />
+          </div>
 
-              {/* Donut Chart — Status Distribution */}
-              <ChartCard
-                title="Status Distribution"
-                className={chartCardClass}
-                isDark={isDark}
-              >
-                {statusData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={filteredStatusData}
-                        cx="50%"
-                        cy="45%"
-                        innerRadius={50}
-                        outerRadius={85}
-                        paddingAngle={4}
-                        dataKey="value"
-                        label={({ name, percent, x, y, textAnchor }) => (
-                          <text x={x} y={y} textAnchor={textAnchor} dominantBaseline="central" fontSize={12} fill={isDark ? "#D1D5DB" : "#374151"}>
-                            {`${name} ${(percent * 100).toFixed(0)}%`}
-                          </text>
-                        )}
-                      >
-                        {filteredStatusData.map((entry, index) => (
-                          <Cell key={index} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: isDark ? "#1F2937" : "#FFF",
-                          border: `1px solid ${isDark ? "#374151" : "#E5E7EB"}`,
-                          borderRadius: "8px",
-                          fontSize: "13px",
-                        }}
-                      />
-                      <Legend
-                        content={renderClickableLegend(
-                          "statusDist",
-                          statusData.map((d) => ({ value: d.name, color: d.color })),
-                        )}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-[300px]">
-                    <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                      No data available
-                    </p>
-                  </div>
-                )}
-              </ChartCard>
+          <div>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Operations</h3>
+            <OperationsFactors t={t} isDark={isDark} currentTheme={currentTheme} />
+          </div>
 
-              {/* Line Chart — Daily Trend */}
-              <ChartCard
-                title="Report Trend (Last 14 Days)"
-                className={chartCardClass}
-                isDark={isDark}
-              >
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={trendData}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke={isDark ? "#374151" : "#E5E7EB"}
-                    />
-                    <XAxis
-                      dataKey="date"
-                      tick={{
-                        fontSize: 11,
-                        fill: isDark ? "#9CA3AF" : "#6B7280",
-                      }}
-                    />
-                    <YAxis
-                      allowDecimals={false}
-                      tick={{
-                        fontSize: 12,
-                        fill: isDark ? "#9CA3AF" : "#6B7280",
-                      }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: isDark ? "#1F2937" : "#FFF",
-                        border: `1px solid ${isDark ? "#374151" : "#E5E7EB"}`,
-                        borderRadius: "8px",
-                        fontSize: "13px",
-                        color: isDark ? "#D1D5DB" : "#111827",
-                      }}
-                    />
-                    <Legend content={renderClickableLegend("trend")} />
-                    <Line
-                      type="monotone"
-                      dataKey="Incidents"
-                      stroke="#3B82F6"
-                      strokeWidth={2}
-                      dot={{ r: 3 }}
-                      hide={isHidden("trend", "Incidents")}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Complaints"
-                      stroke="#F59E0B"
-                      strokeWidth={2}
-                      dot={{ r: 3 }}
-                      hide={isHidden("trend", "Complaints")}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </ChartCard>
-
-              {/* Pie Chart — Category Breakdown */}
-              <ChartCard
-                title="Report Categories"
-                className={chartCardClass}
-                isDark={isDark}
-              >
-                {categoryData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={filteredCategoryData}
-                        cx="50%"
-                        cy="45%"
-                        outerRadius={85}
-                        paddingAngle={2}
-                        dataKey="value"
-                        label={({ name, percent, x, y, textAnchor }) => (
-                          <text x={x} y={y} textAnchor={textAnchor} dominantBaseline="central" fontSize={12} fill={isDark ? "#D1D5DB" : "#374151"}>
-                            {`${name} ${(percent * 100).toFixed(0)}%`}
-                          </text>
-                        )}
-                      >
-                        {filteredCategoryData.map((d, index) => (
-                          <Cell
-                            key={index}
-                            fill={COLORS[categoryData.indexOf(d) % COLORS.length]}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: isDark ? "#1F2937" : "#FFF",
-                          border: `1px solid ${isDark ? "#374151" : "#E5E7EB"}`,
-                          borderRadius: "8px",
-                          fontSize: "13px",
-                        }}
-                      />
-                      <Legend
-                        content={renderClickableLegend(
-                          "categories",
-                          categoryData.map((d, i) => ({
-                            value: d.name,
-                            color: COLORS[i % COLORS.length],
-                          })),
-                        )}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-[300px]">
-                    <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                      No data available
-                    </p>
-                  </div>
-                )}
-              </ChartCard>
-
-              {/* Donut Chart — Appointment Status */}
-              <ChartCard
-                title="Appointment Status"
-                className={chartCardClass}
-                isDark={isDark}
-              >
-                {appointmentStatusData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={filteredApptStatusData}
-                        cx="50%"
-                        cy="45%"
-                        innerRadius={50}
-                        outerRadius={85}
-                        paddingAngle={4}
-                        dataKey="value"
-                        label={({ name, percent, x, y, textAnchor }) => (
-                          <text x={x} y={y} textAnchor={textAnchor} dominantBaseline="central" fontSize={12} fill={isDark ? "#D1D5DB" : "#374151"}>
-                            {`${name} ${(percent * 100).toFixed(0)}%`}
-                          </text>
-                        )}
-                      >
-                        {filteredApptStatusData.map((entry, index) => (
-                          <Cell key={index} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: isDark ? "#1F2937" : "#FFF",
-                          border: `1px solid ${isDark ? "#374151" : "#E5E7EB"}`,
-                          borderRadius: "8px",
-                          fontSize: "13px",
-                        }}
-                      />
-                      <Legend
-                        content={renderClickableLegend(
-                          "apptStatus",
-                          appointmentStatusData.map((d) => ({ value: d.name, color: d.color })),
-                        )}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-[300px]">
-                    <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                      No appointments yet
-                    </p>
-                  </div>
-                )}
-              </ChartCard>
-
-              {/* Bar Chart — Monthly Appointments */}
-              <ChartCard
-                title="Monthly Appointments (Last 6 Months)"
-                className={chartCardClass}
-                isDark={isDark}
-              >
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={monthlyAppointmentData}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke={isDark ? "#374151" : "#E5E7EB"}
-                    />
-                    <XAxis
-                      dataKey="name"
-                      tick={{
-                        fontSize: 12,
-                        fill: isDark ? "#9CA3AF" : "#6B7280",
-                      }}
-                    />
-                    <YAxis
-                      allowDecimals={false}
-                      tick={{
-                        fontSize: 12,
-                        fill: isDark ? "#9CA3AF" : "#6B7280",
-                      }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: isDark ? "#1F2937" : "#FFF",
-                        border: `1px solid ${isDark ? "#374151" : "#E5E7EB"}`,
-                        borderRadius: "8px",
-                        fontSize: "13px",
-                        color: isDark ? "#D1D5DB" : "#111827",
-                      }}
-                    />
-                    <Legend content={renderClickableLegend("monthlyAppt")} />
-                    <Bar
-                      dataKey="Scheduled"
-                      fill="#3B82F6"
-                      radius={[4, 4, 0, 0]}
-                      hide={isHidden("monthlyAppt", "Scheduled")}
-                    />
-                    <Bar
-                      dataKey="Rescheduled"
-                      fill="#F59E0B"
-                      radius={[4, 4, 0, 0]}
-                      hide={isHidden("monthlyAppt", "Rescheduled")}
-                    />
-                    <Bar
-                      dataKey="Completed"
-                      fill="#10B981"
-                      radius={[4, 4, 0, 0]}
-                      hide={isHidden("monthlyAppt", "Completed")}
-                    />
-                    <Bar
-                      dataKey="Cancelled"
-                      fill="#6B7280"
-                      radius={[4, 4, 0, 0]}
-                      hide={isHidden("monthlyAppt", "Cancelled")}
-                    />
-                    <Bar
-                      dataKey="No Show"
-                      fill="#EF4444"
-                      radius={[4, 4, 0, 0]}
-                      hide={isHidden("monthlyAppt", "No Show")}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartCard>
-            </div>
-          )}
-        </div>
+          <div>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Socio-economy</h3>
+            <SocioEconomyFactors t={t} isDark={isDark} currentTheme={currentTheme} />
+          </div>
+        </section>
       </div>
 
-      <div className={`${t.pageBg} px-6 sm:px-10 lg:px-16 pb-6`}>
-        <div className="max-w-7xl mx-auto w-full space-y-6">
-          <h2
-            className={`text-2xl font-bold ${t.cardText} font-spartan text-left`}
-          >
-            Issuance Application Factors
-          </h2>
-
-          <h3
-            className={`text-xl font-bold ${t.cardText} font-spartan text-left`}
-          >
-            Volumes
-          </h3>
-          <VolumesFactors t={t} isDark={isDark} />
-
-          <h3
-            className={`text-xl font-bold ${t.cardText} font-spartan text-left`}
-          >
-            Operations
-          </h3>
-          <OperationsFactors t={t} isDark={isDark} />
-
-          <h3
-            className={`text-xl font-bold ${t.cardText} font-spartan text-left`}
-          >
-            Socio-Economy
-          </h3>
-          <SocioEconomyFactors t={t} isDark={isDark} />
-        </div>
-      </div>
-
-      {/* ── Announcement Section ───────────────────────────────────────
-      <div className="px-6 sm:px-10 lg:px-16 pb-10">
-        <div className="max-w-5xl rounded-xl overflow-hidden shadow-md">
-          <div className="bg-green-800 px-6 py-4">
-            <h2 className="text-white text-lg font-bold font-spartan uppercase tracking-wide">
-              Barangay Council Meeting
-            </h2>
-          </div>
-
-          <div
-            className={`${t.cardBg} border-l-4 border-green-600 px-6 py-5`}
-          >
-            <h3 className={`font-bold ${t.cardText} font-spartan uppercase mb-2`}>
-              Regular Barangay Council Meeting
-            </h3>
-            <p className={`text-sm ${t.subtleText} font-kumbh leading-relaxed uppercase`}>
-              All barangay officials are hereby informed that a regular barangay
-              council meeting will be held on February 15, 2026 (Thursday) at
-              2:00 PM at the Barangay Hall, Session Room. Attendance is required.
-            </p>
-          </div>
-        </div>
-      </div> */}
-
-      {/* Insights Modal */}
       <InsightsModal
         isOpen={showInsights}
         onClose={() => setShowInsights(false)}
@@ -1204,6 +683,4 @@ const AdminLanding = () => {
       />
     </div>
   );
-};
-
-export default AdminLanding;
+}

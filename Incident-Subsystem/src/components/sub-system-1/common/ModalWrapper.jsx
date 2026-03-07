@@ -39,14 +39,14 @@ const ModalWrapper = ({
 
         {/* Header */}
         <div className={`flex items-center justify-between p-4 border-b ${t ? t.cardBorder : 'border-slate-200'}`}>
-          <h3 className={`text-lg font-bold ${t ? t.cardText : 'text-slate-800'}`}>{title}</h3>
+          <h3 className={`text-lg font-bold font-spartan ${t ? t.cardText : 'text-slate-800'}`}>{title}</h3>
           <button onClick={onClose} className={`p-1.5 hover:${t ? t.inlineBg : 'bg-slate-100'} rounded-lg text-slate-500`}>
             <X size={20} />
           </button>
         </div>
 
         {/* Content */}
-        <div className={`flex-1 overflow-y-auto p-6 ${t ? t.subtleText : 'text-slate-600'}`}>
+        <div className={`flex-1 overflow-y-auto p-6 font-kumbh ${t ? t.subtleText : 'text-slate-600'}`}>
           {children}
         </div>
       </div>

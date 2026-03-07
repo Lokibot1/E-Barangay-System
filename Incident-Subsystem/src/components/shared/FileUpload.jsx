@@ -8,7 +8,7 @@ const FileUpload = ({
   onChange,
   currentTheme,
 }) => {
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
@@ -168,3 +168,4 @@ const FileUpload = ({
 };
 
 export default FileUpload;
+

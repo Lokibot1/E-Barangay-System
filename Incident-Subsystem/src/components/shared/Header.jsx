@@ -88,7 +88,7 @@ const UserAppointmentDetailsModal = ({ notification, onClose, isDark, t }) => {
   const description = data.description || notification.description || "";
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[1600] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className={`${t.cardBg} rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden`}>
 
         {/* Header */}
@@ -388,23 +388,25 @@ const Header = ({ currentTheme, onThemeChange }) => {
   return (
     <>
       <header className={`${t.cardBg} border-b ${t.cardBorder} shadow-sm`}>
-        <div className="container mx-auto px-4 sm:px-6 py-2 sm:py-4">
+        <div className="w-full px-4 sm:px-5 py-2 sm:py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center space-x-2 sm:space-x-3">
               <img
                 src={logo}
                 alt="Barangay Gulod Logo"
-                className="w-9 h-9 sm:w-11 sm:h-11 rounded-full shadow-lg object-cover"
+                className={`w-9 h-9 sm:w-11 sm:h-11 ${isAdminUser ? "rounded-xl" : "rounded-full"} shadow-lg object-cover`}
               />
-              <div className="hidden sm:block">
+              <div className="hidden sm:block text-left">
                 <h1
-                  className={`font-spartan text-lg sm:text-xl font-bold ${t.cardText}`}
+                  className={`font-spartan text-lg sm:text-xl font-bold text-left ${t.cardText}`}
                 >
-                  Barangay Gulod
+                  {isAdminUser ? "Dashboard" : "Barangay Gulod"}
                 </h1>
-                <p className={`text-xs ${t.subtleText} font-kumbh`}>
-                  {isSubSystem2Route
+                <p className={`text-xs text-left ${t.subtleText} font-kumbh`}>
+                  {isAdminUser
+                    ? "Operations and analytics workspace"
+                    : isSubSystem2Route
                     ? "Document Services"
                     : tr.header.incidentReporting}
                 </p>
@@ -412,12 +414,12 @@ const Header = ({ currentTheme, onThemeChange }) => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center space-x-2 sm:space-x-3 relative">
+            <div className="flex items-center space-x-2 sm:space-x-3 relative md:mr-4 lg:mr-5">
               {/* Notification */}
               <div className="relative">
                 <button
                   onClick={toggleNotifications}
-                  className={`p-2 sm:p-2.5 ${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} rounded-full transition-all relative`}
+                  className={`p-2 sm:p-2.5 ${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} ${isAdminUser ? `rounded-xl border ${t.cardBorder}` : "rounded-full"} transition-all relative`}
                   title="Notifications"
                 >
                   <svg
@@ -443,7 +445,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                 {/* Notification Dropdown */}
                 {isNotificationOpen && (
                   <div
-                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-96 ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} rounded-xl shadow-2xl border z-50 overflow-hidden animate-slideDown max-h-[80vh] sm:max-h-[600px]`}
+                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-96 ${t.cardBg} ${t.cardBorder} rounded-xl shadow-2xl border z-[1500] overflow-hidden animate-slideDown max-h-[80vh] sm:max-h-[600px]`}
                   >
                     <div
                       className={`bg-gradient-to-r ${t.primaryGrad} px-4 sm:px-5 py-3 sm:py-4`}
@@ -516,7 +518,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
               <div className="relative">
                 <button
                   onClick={toggleSettings}
-                  className={`p-2 sm:p-2.5 ${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} rounded-full transition-all`}
+                  className={`p-2 sm:p-2.5 ${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} ${isAdminUser ? `rounded-xl border ${t.cardBorder}` : "rounded-full"} transition-all`}
                   title="Settings"
                 >
                   <svg
@@ -542,80 +544,123 @@ const Header = ({ currentTheme, onThemeChange }) => {
 
                 {isSettingsOpen && (
                   <div
-                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-64 ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} rounded-xl shadow-2xl border z-50 overflow-hidden animate-slideDown`}
+                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-[17.5rem] ${t.cardBg} ${t.cardBorder} rounded-[22px] shadow-[0_18px_36px_rgba(15,23,42,0.12)] border z-[1500] overflow-hidden animate-slideDown`}
                   >
                     <div className="p-2">
                       <button
                         onClick={openThemeModal}
-                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors group`}
+                        className={`w-full flex items-center gap-3 px-3 py-2 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-[18px] transition-colors group text-left`}
                       >
+                        <span
+                          className={`w-9 h-9 rounded-[16px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-blue-50"}`}
+                        >
+                          <svg
+                            className="w-4 h-4 text-blue-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
+                            />
+                          </svg>
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <span className={`block text-sm font-medium font-kumbh ${t.cardText}`}>
+                            {tr.header.changeTheme}
+                          </span>
+                          <span className={`block text-[11px] leading-4.5 font-kumbh ${t.subtleText}`}>
+                            Update colors and appearance
+                          </span>
+                        </div>
                         <svg
-                          className="w-5 h-5 text-blue-500 flex-shrink-0"
+                          className={`w-3.5 h-3.5 ${t.subtleText} flex-shrink-0`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
-                          />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                        <span className="font-semibold text-sm font-kumbh">
-                          {tr.header.changeTheme}
-                        </span>
                       </button>
                       <button
                         onClick={() => {
                           setLanguage(language === "en" ? "tl" : "en");
                           setIsSettingsOpen(false);
                         }}
-                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors group`}
+                        className={`mt-1 w-full flex items-center gap-3 px-3 py-2 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-[18px] transition-colors group text-left`}
                       >
-                        <svg
-                          className="w-5 h-5 text-amber-500 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                        <span
+                          className={`w-9 h-9 rounded-[16px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-amber-50"}`}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
-                          />
-                        </svg>
+                          <svg
+                            className="w-4 h-4 text-amber-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
+                            />
+                          </svg>
+                        </span>
                         <div className="flex-1 flex items-center justify-between">
-                          <span className="font-semibold text-sm font-kumbh">
-                            {tr.header.language}
-                          </span>
+                          <div className="min-w-0">
+                            <span className={`block text-sm font-medium font-kumbh ${t.cardText}`}>
+                              {tr.header.language}
+                            </span>
+                            <span className={`block text-[11px] leading-4.5 font-kumbh ${t.subtleText}`}>
+                              Switch between English and Filipino
+                            </span>
+                          </div>
                           <span
-                            className={`text-xs font-medium px-2 py-0.5 rounded-full ${isDark ? "bg-slate-600 text-slate-300" : "bg-slate-100 text-slate-600"} font-kumbh`}
+                            className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${isDark ? "bg-slate-700 text-slate-200" : "bg-slate-100 text-slate-600"} font-kumbh`}
                           >
                             {language === "en" ? "EN" : "TL"}
                           </span>
                         </div>
                       </button>
                       <button
-                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors group`}
+                        className={`mt-1 w-full flex items-center gap-3 px-3 py-2 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-[18px] transition-colors group text-left`}
                       >
+                        <span
+                          className={`w-9 h-9 rounded-[16px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-emerald-50"}`}
+                        >
+                          <svg
+                            className="w-4 h-4 text-emerald-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                            />
+                          </svg>
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <span className={`block text-sm font-medium font-kumbh ${t.cardText}`}>
+                            {tr.header.privacySettings}
+                          </span>
+                          <span className={`block text-[11px] leading-4.5 font-kumbh ${t.subtleText}`}>
+                            Manage access, privacy, and security
+                          </span>
+                        </div>
                         <svg
-                          className="w-5 h-5 text-green-500 flex-shrink-0"
+                          className={`w-3.5 h-3.5 ${t.subtleText} flex-shrink-0`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                          />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                        <span className="font-semibold text-sm font-kumbh">
-                          {tr.header.privacySettings}
-                        </span>
                       </button>
                     </div>
                   </div>
@@ -626,7 +671,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
               <div className="relative">
                 <button
                   onClick={toggleProfile}
-                  className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full ${isDark ? "hover:bg-slate-700" : "hover:bg-slate-100"} transition-all`}
+                  className={`flex items-center space-x-1 sm:space-x-2 px-1 sm:px-1.5 py-1 ${isAdminUser ? "rounded-lg border border-transparent bg-transparent" : "rounded-full"} ${isDark ? "hover:bg-slate-700" : "hover:bg-slate-100"} transition-all`}
                 >
                   <div
                     className={`w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br ${t.primaryGrad} rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm`}
@@ -650,25 +695,25 @@ const Header = ({ currentTheme, onThemeChange }) => {
 
                 {isProfileOpen && (
                   <div
-                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-64 ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} rounded-xl shadow-2xl border z-50 overflow-hidden animate-slideDown`}
+                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-60 ${t.cardBg} ${t.cardBorder} rounded-[22px] shadow-[0_18px_36px_rgba(15,23,42,0.12)] border z-[1500] overflow-hidden animate-slideDown`}
                   >
                     <div
-                      className={`px-3 sm:px-4 py-3 sm:py-4 border-b ${isDark ? "border-slate-700" : "border-slate-100"}`}
+                      className={`px-3.5 py-3.5 border-b ${t.cardBorder} ${isDark ? "bg-slate-900/70" : "bg-slate-50/80"}`}
                     >
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center gap-2.5">
                         <div
-                          className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br ${t.primaryGrad} rounded-full flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0`}
+                          className={`w-10 h-10 bg-gradient-to-br ${t.primaryGrad} rounded-[16px] flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-lg`}
                         >
                           {userInitials}
                         </div>
-                        <div className="min-w-0">
+                        <div className="flex-1 min-w-0 text-left">
                           <p
-                            className={`font-semibold text-sm ${isDark ? "text-slate-100" : "text-slate-900"} font-kumbh truncate`}
+                            className={`font-semibold text-[15px] ${t.cardText} font-spartan truncate`}
                           >
                             {userName}
                           </p>
                           <p
-                            className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"} font-kumbh truncate`}
+                            className={`text-xs ${t.subtleText} font-kumbh truncate`}
                           >
                             {userEmail}
                           </p>
@@ -676,47 +721,59 @@ const Header = ({ currentTheme, onThemeChange }) => {
                       </div>
                     </div>
 
-                    <div className="p-2">
+                    <div className="p-1.5">
                       <button
-                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors`}
+                        className={`w-full flex items-center gap-3 px-3 py-2 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"} rounded-[18px] transition-colors text-left`}
                       >
-                        <svg
-                          className="w-5 h-5 text-blue-500 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                        <span
+                          className={`w-9 h-9 rounded-[16px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-blue-50"}`}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
-                        </svg>
-                        <span className="font-semibold text-sm font-kumbh">
-                          {tr.header.viewProfile}
+                          <svg
+                            className="w-4 h-4 text-blue-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
                         </span>
+                        <div className="flex-1 min-w-0">
+                          <span className={`block text-sm font-medium font-kumbh ${t.cardText}`}>
+                            {tr.header.viewProfile}
+                          </span>
+                        </div>
                       </button>
                       <button
                         onClick={openLogoutModal}
-                        className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 ${isDark ? "hover:bg-slate-700 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-lg transition-colors`}
+                        className={`mt-1 w-full flex items-center gap-3 px-3 py-2 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"} rounded-[18px] transition-colors text-left`}
                       >
-                        <svg
-                          className="w-5 h-5 text-red-500 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                        <span
+                          className={`w-9 h-9 rounded-[16px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-red-50"}`}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                          />
-                        </svg>
-                        <span className="font-semibold text-sm font-kumbh">
-                          {tr.header.logout}
+                          <svg
+                            className="w-4 h-4 text-red-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                            />
+                          </svg>
                         </span>
+                        <div className="flex-1 min-w-0">
+                          <span className={`block text-sm font-medium font-kumbh ${t.cardText}`}>
+                            {tr.header.logout}
+                          </span>
+                        </div>
                       </button>
                     </div>
                   </div>

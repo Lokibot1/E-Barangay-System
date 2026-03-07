@@ -10,7 +10,7 @@ import themeTokens from "../../Themetokens";
 import { useLanguage } from "../../context/LanguageContext";
 
 const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
   const { tr } = useLanguage();
   const cm = tr.complaintModal;
   const navigate = useNavigate();
@@ -366,3 +366,4 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
 };
 
 export default ComplaintModal;
+

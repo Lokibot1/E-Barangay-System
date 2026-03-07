@@ -4,7 +4,7 @@ import themeTokens from '../../Themetokens';
 
 export default function Support() {
   const [currentTheme, setCurrentTheme] = useState(
-    () => localStorage.getItem('appTheme') || 'blue'
+    () => localStorage.getItem('appTheme') || 'modern'
   );
 
   useEffect(() => {

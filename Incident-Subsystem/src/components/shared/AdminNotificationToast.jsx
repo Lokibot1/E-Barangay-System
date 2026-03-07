@@ -10,7 +10,7 @@ const TOAST_DURATION = 5000;
 const SingleToast = memo(({ event, onDismiss, currentTheme }) => {
   const [exiting, setExiting] = useState(false);
   const navigate = useNavigate();
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
 
   useEffect(() => {
@@ -187,3 +187,4 @@ const AdminNotificationToast = ({ currentTheme }) => {
 };
 
 export default AdminNotificationToast;
+

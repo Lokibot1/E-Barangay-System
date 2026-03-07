@@ -6,12 +6,12 @@ import themeTokens from "../../Themetokens";
 
 const MainPage = () => {
   const [currentTheme, setCurrentTheme] = useState(() => {
-    return localStorage.getItem("appTheme") || "blue";
+    return localStorage.getItem("appTheme") || "modern";
   });
 
   useEffect(() => {
     const handleStorageChange = () => {
-      setCurrentTheme(localStorage.getItem("appTheme") || "blue");
+      setCurrentTheme(localStorage.getItem("appTheme") || "modern");
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -54,3 +54,4 @@ const MainPage = () => {
 };
 
 export default MainPage;
+

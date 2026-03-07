@@ -15,7 +15,7 @@ const ComplaintForm = ({
   currentTheme,
   customFieldDefs = [],
 }) => {
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
   const { tr } = useLanguage();
   const cf = tr.complaintForm;
 
@@ -504,3 +504,4 @@ const ComplaintForm = ({
 };
 
 export default ComplaintForm;
+

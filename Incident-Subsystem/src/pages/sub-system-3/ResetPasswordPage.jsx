@@ -19,7 +19,7 @@ const ResetPasswordPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [currentTheme] = useState(() => localStorage.getItem("appTheme") || "blue");
+  const [currentTheme] = useState(() => localStorage.getItem("appTheme") || "modern");
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   const [password, setPassword] = useState("");
@@ -276,3 +276,4 @@ const ResetPasswordPage = () => {
 };
 
 export default ResetPasswordPage;
+

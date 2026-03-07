@@ -336,7 +336,7 @@ const MapComponent = ({
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isOutsideBoundary, setIsOutsideBoundary] = useState(false);
-  const t = themeTokens[currentTheme] || themeTokens.blue;
+  const t = themeTokens[currentTheme] || themeTokens.modern;
 
   // Use barangay center for pin mode, otherwise use provided center
   const mapCenter =
@@ -773,3 +773,4 @@ const MapComponent = ({
 };
 
 export default MapComponent;
+
