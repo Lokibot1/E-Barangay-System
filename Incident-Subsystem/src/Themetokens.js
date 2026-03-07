@@ -113,6 +113,7 @@ const themeTokens = {
     sidebarActiveBorder: "border-blue-600",
     sidebarHoverBg: "hover:bg-slate-100",
     sidebarIconActive: "text-blue-600",
+    sidebarAppName: "text-slate-800",
   },
 
   purple: {
@@ -216,6 +217,7 @@ const themeTokens = {
     sidebarActiveBorder: "border-purple-600",
     sidebarHoverBg: "hover:bg-slate-100",
     sidebarIconActive: "text-purple-600",
+    sidebarAppName: "text-slate-800",
   },
 
   green: {
@@ -319,6 +321,7 @@ const themeTokens = {
     sidebarActiveBorder: "border-green-600",
     sidebarHoverBg: "hover:bg-slate-100",
     sidebarIconActive: "text-green-600",
+    sidebarAppName: "text-slate-800",
   },
 
   dark: {
@@ -422,6 +425,7 @@ const themeTokens = {
     sidebarActiveBorder: "border-slate-400",
     sidebarHoverBg: "hover:bg-slate-200 hover:text-slate-800",
     sidebarIconActive: "text-slate-700",
+    sidebarAppName: "text-slate-100",
   },
 };
 

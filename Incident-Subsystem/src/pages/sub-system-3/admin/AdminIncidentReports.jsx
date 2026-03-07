@@ -19,6 +19,7 @@ import themeTokens from "../../../Themetokens";
 import AdminReportDetailsModal from "../../../components/sub-system-3/AdminReportDetailsModal";
 import InsightsModal from "../../../components/sub-system-3/InsightsModal";
 import UpdateFormModal from "../../../components/sub-system-3/UpdateFormModal";
+import ComplaintModal from "../../../components/sub-system-3/ComplaintModal";
 import Toast from "../../../components/shared/modals/Toast";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
 import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
@@ -420,6 +421,7 @@ const AdminIncidentReports = () => {
 
   // ── Page tab state (Incidents vs Complaints) ───────────────────────
   const [pageTab, setPageTab] = useState("incidents");
+  const [showComplaintModal, setShowComplaintModal] = useState(false);
   const [slideDir, setSlideDir] = useState("right");
 
   const handlePageTab = (tab) => {
@@ -840,38 +842,51 @@ const AdminIncidentReports = () => {
           <div
             className={`${t.cardBg} border ${t.cardBorder} rounded-2xl shadow-lg mb-8 overflow-hidden`}
           >
-            {/* Status Tabs */}
-            <div ref={statusTabsContainerRef} className="relative flex flex-wrap gap-2 px-5 pt-5">
-              {/* Sliding indicator */}
-              <div
-                className={`absolute rounded-lg pointer-events-none shadow-md ${STATUS_CONFIG[activeTab]?.tabBg || "bg-gray-700"}`}
-                style={{
-                  left: tabIndicator.left,
-                  top: tabIndicator.top,
-                  width: tabIndicator.width,
-                  height: tabIndicator.height,
-                  opacity: tabIndicator.initialized ? 1 : 0,
-                  transition: tabIndicator.initialized
-                    ? "left 0.28s ease, top 0.28s ease, width 0.28s ease, background-color 0.28s ease"
-                    : "none",
-                }}
-              />
-              {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+            {/* Status Tabs + Create Complaint button */}
+            <div className="flex items-start justify-between px-5 pt-5 gap-3">
+              <div ref={statusTabsContainerRef} className="relative flex flex-wrap gap-2 flex-1">
+                {/* Sliding indicator */}
+                <div
+                  className={`absolute rounded-lg pointer-events-none shadow-md ${STATUS_CONFIG[activeTab]?.tabBg || "bg-gray-700"}`}
+                  style={{
+                    left: tabIndicator.left,
+                    top: tabIndicator.top,
+                    width: tabIndicator.width,
+                    height: tabIndicator.height,
+                    opacity: tabIndicator.initialized ? 1 : 0,
+                    transition: tabIndicator.initialized
+                      ? "left 0.28s ease, top 0.28s ease, width 0.28s ease, background-color 0.28s ease"
+                      : "none",
+                  }}
+                />
+                {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+                  <button
+                    key={key}
+                    data-tab={key}
+                    onClick={() => setActiveTab(key)}
+                    className={`relative z-10 px-4 py-2 rounded-lg text-xs font-bold font-kumbh uppercase tracking-wide border-2 transition-colors duration-200 ${
+                      activeTab === key
+                        ? `text-white border-transparent`
+                        : isDark
+                          ? "bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-200 hover:text-slate-800 hover:border-slate-400"
+                          : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    {cfg.label} ({statusCounts[key]})
+                  </button>
+                ))}
+              </div>
+              {pageTab === "complaints" && (
                 <button
-                  key={key}
-                  data-tab={key}
-                  onClick={() => setActiveTab(key)}
-                  className={`relative z-10 px-4 py-2 rounded-lg text-xs font-bold font-kumbh uppercase tracking-wide border-2 transition-colors duration-200 ${
-                    activeTab === key
-                      ? `text-white border-transparent`
-                      : isDark
-                        ? "bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-200 hover:text-slate-800 hover:border-slate-400"
-                        : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
-                  }`}
+                  onClick={() => setShowComplaintModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold font-kumbh uppercase tracking-wide transition-colors flex-shrink-0"
                 >
-                  {cfg.label} ({statusCounts[key]})
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  File Complaint
                 </button>
-              ))}
+              )}
             </div>
 
             {/* Search + Date Filters */}
@@ -1493,6 +1508,16 @@ const AdminIncidentReports = () => {
         isOpen={showUpdateForm}
         onClose={() => setShowUpdateForm(false)}
         formType={updateFormType}
+        currentTheme={currentTheme}
+      />
+
+      {/* Create Complaint Modal (admin filing on behalf) */}
+      <ComplaintModal
+        isOpen={showComplaintModal}
+        onClose={() => {
+          setShowComplaintModal(false);
+          fetchData();
+        }}
         currentTheme={currentTheme}
       />
 

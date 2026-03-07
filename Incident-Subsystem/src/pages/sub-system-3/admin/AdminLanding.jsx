@@ -631,7 +631,7 @@ const AdminLanding = () => {
                   flexShrink: 0,
                 }}
               />
-              <span style={{ textDecoration: hidden ? "line-through" : "none" }}>
+              <span style={{ textDecoration: hidden ? "line-through" : "none", color: isDark ? "#D1D5DB" : "#374151" }}>
                 {entry.value}
               </span>
             </li>
@@ -828,6 +828,7 @@ const AdminLanding = () => {
                         border: `1px solid ${isDark ? "#374151" : "#E5E7EB"}`,
                         borderRadius: "8px",
                         fontSize: "13px",
+                        color: isDark ? "#D1D5DB" : "#111827",
                       }}
                     />
                     <Legend content={renderClickableLegend("monthlyReports")} />
@@ -864,9 +865,11 @@ const AdminLanding = () => {
                         outerRadius={85}
                         paddingAngle={4}
                         dataKey="value"
-                        label={({ name, percent }) =>
-                          `${name} ${(percent * 100).toFixed(0)}%`
-                        }
+                        label={({ name, percent, x, y, textAnchor }) => (
+                          <text x={x} y={y} textAnchor={textAnchor} dominantBaseline="central" fontSize={12} fill={isDark ? "#D1D5DB" : "#374151"}>
+                            {`${name} ${(percent * 100).toFixed(0)}%`}
+                          </text>
+                        )}
                       >
                         {filteredStatusData.map((entry, index) => (
                           <Cell key={index} fill={entry.color} />
@@ -929,6 +932,7 @@ const AdminLanding = () => {
                         border: `1px solid ${isDark ? "#374151" : "#E5E7EB"}`,
                         borderRadius: "8px",
                         fontSize: "13px",
+                        color: isDark ? "#D1D5DB" : "#111827",
                       }}
                     />
                     <Legend content={renderClickableLegend("trend")} />
@@ -968,9 +972,11 @@ const AdminLanding = () => {
                         outerRadius={85}
                         paddingAngle={2}
                         dataKey="value"
-                        label={({ name, percent }) =>
-                          `${name} ${(percent * 100).toFixed(0)}%`
-                        }
+                        label={({ name, percent, x, y, textAnchor }) => (
+                          <text x={x} y={y} textAnchor={textAnchor} dominantBaseline="central" fontSize={12} fill={isDark ? "#D1D5DB" : "#374151"}>
+                            {`${name} ${(percent * 100).toFixed(0)}%`}
+                          </text>
+                        )}
                       >
                         {filteredCategoryData.map((d, index) => (
                           <Cell
@@ -1024,9 +1030,11 @@ const AdminLanding = () => {
                         outerRadius={85}
                         paddingAngle={4}
                         dataKey="value"
-                        label={({ name, percent }) =>
-                          `${name} ${(percent * 100).toFixed(0)}%`
-                        }
+                        label={({ name, percent, x, y, textAnchor }) => (
+                          <text x={x} y={y} textAnchor={textAnchor} dominantBaseline="central" fontSize={12} fill={isDark ? "#D1D5DB" : "#374151"}>
+                            {`${name} ${(percent * 100).toFixed(0)}%`}
+                          </text>
+                        )}
                       >
                         {filteredApptStatusData.map((entry, index) => (
                           <Cell key={index} fill={entry.color} />
@@ -1089,6 +1097,7 @@ const AdminLanding = () => {
                         border: `1px solid ${isDark ? "#374151" : "#E5E7EB"}`,
                         borderRadius: "8px",
                         fontSize: "13px",
+                        color: isDark ? "#D1D5DB" : "#111827",
                       }}
                     />
                     <Legend content={renderClickableLegend("monthlyAppt")} />
