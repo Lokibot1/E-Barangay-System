@@ -10,9 +10,8 @@ import themeTokens from "../../../Themetokens";
 import Toast from "../../../components/shared/modals/Toast";
 import {
   rescheduleAppointment,
-  isSlotAvailable,
+  createAppointment,
   getTimeSlots,
-  BUSINESS_DAYS,
 } from "../../../services/sub-system-3/appointmentService";
 import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
 
@@ -263,7 +262,13 @@ const RescheduleModal = ({ appointment, appointments, onSave, onClose, isDark, t
 
   const conflict =
     date && time
-      ? !isSlotAvailable(date, time, appointments, appointment.id)
+      ? appointments.some(
+          (a) =>
+            (a.date || "") === date &&
+            (a.time || "").substring(0, 5) === time &&
+            (a.status || "").toLowerCase().replace(/-/g, "_") !== "cancelled" &&
+            String(a.id) !== String(appointment.id),
+        )
       : false;
 
   const canSave = date && time && !conflict;
@@ -272,7 +277,7 @@ const RescheduleModal = ({ appointment, appointments, onSave, onClose, isDark, t
     if (!canSave) return;
     setSaving(true);
     try {
-      await onSave(appointment.id, date, time);
+      await onSave(appointment, date, time);
       onClose();
     } finally {
       setSaving(false);
@@ -542,6 +547,222 @@ const AppointmentDetailsModal = ({ appointment, onClose, onReschedule, isDark, t
   );
 };
 
+// ── Create Appointment Modal ──────────────────────────────────────────────────
+const CreateAppointmentModal = ({ appointments, onSave, onClose, isDark, t }) => {
+  const [complaints, setComplaints]   = useState([]);
+  const [loadingC, setLoadingC]       = useState(true);
+  const [complaintId, setComplaintId] = useState("");
+  const [title, setTitle]             = useState("");
+  const [description, setDescription] = useState("");
+  const [date, setDate]               = useState("");
+  const [time, setTime]               = useState("");
+  const [saving, setSaving]           = useState(false);
+
+  // Load complaints for the dropdown on mount
+  useEffect(() => {
+    getAllComplaints()
+      .then((data) => {
+        const arr = Array.isArray(data) ? data : data.data || [];
+        setComplaints(arr);
+      })
+      .catch(() => setComplaints([]))
+      .finally(() => setLoadingC(false));
+  }, []);
+
+  const conflict =
+    date && time
+      ? appointments.some(
+          (a) =>
+            (a.date || "") === date &&
+            (a.time || "").substring(0, 5) === time &&
+            (a.status || "").toLowerCase().replace(/-/g, "_") !== "cancelled",
+        )
+      : false;
+
+  const canSave = complaintId && title.trim() && date && time && !conflict;
+
+  const handleSave = async () => {
+    if (!canSave) return;
+    setSaving(true);
+    try {
+      await onSave(complaintId, {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        scheduled_at: `${date}T${time}:00`,
+      });
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const selectCls = `w-full px-4 py-2.5 rounded-lg border ${t.cardBorder} ${isDark ? "bg-slate-700 text-slate-200" : "bg-white text-gray-800"} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className={`${t.cardBg} rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden`}>
+
+        {/* Header */}
+        <div className={`px-6 py-4 border-b ${isDark ? "border-slate-700 bg-slate-900" : "border-gray-200 bg-gray-50"}`}>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className={`text-sm font-bold ${t.cardText} font-spartan`}>Create New Appointment</h3>
+              <p className={`text-xs ${t.subtleText} font-kumbh`}>
+                Mon – Fri · 7:00 AM – 5:00 PM · 1 slot per hour
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-slate-700 text-slate-400" : "hover:bg-gray-200 text-gray-400"}`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+
+            {/* LEFT COLUMN */}
+            <div className="flex flex-col gap-4">
+
+              {/* Complaint select */}
+              <div>
+                <label className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}>
+                  Complaint <span className="text-red-500">*</span>
+                </label>
+                {loadingC ? (
+                  <div className={`${selectCls} flex items-center gap-2 text-sm opacity-60`}>
+                    <div className="w-3.5 h-3.5 border-2 border-green-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                    Loading complaints…
+                  </div>
+                ) : (
+                  <select
+                    value={complaintId}
+                    onChange={(e) => setComplaintId(e.target.value)}
+                    className={selectCls}
+                  >
+                    <option value="">Select a complaint…</option>
+                    {complaints.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        #{c.id} — {c.complainant_name || "Unknown"} vs {c.respondent_name || "Unknown"}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {/* Title */}
+              <div>
+                <label className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}>
+                  Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  maxLength={255}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Follow-up Hearing for Complaint #7"
+                  className={selectCls}
+                />
+              </div>
+
+              {/* Description */}
+              <div className="flex-1">
+                <label className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}>
+                  Description <span className={`normal-case font-normal ${t.subtleText}`}>(optional)</span>
+                </label>
+                <textarea
+                  rows={5}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Brief description of the appointment purpose…"
+                  className={`${selectCls} resize-none`}
+                />
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN */}
+            <div className="flex flex-col gap-4">
+
+              {/* Date picker */}
+              <div>
+                <label className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}>
+                  Date <span className="text-red-500">*</span>{" "}
+                  <span className={`normal-case font-normal ${t.subtleText}`}>(Mon – Fri only)</span>
+                </label>
+                <WeekdayPicker value={date} onChange={setDate} isDark={isDark} t={t} />
+                {date && (
+                  <p className={`text-xs mt-1.5 font-kumbh ${t.subtleText}`}>
+                    Selected: <span className={`font-semibold ${t.cardText}`}>{formatDate(date)}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Time */}
+              <div>
+                <label className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}>
+                  Time <span className="text-red-500">*</span>{" "}
+                  <span className={`normal-case font-normal ${t.subtleText}`}>(7:00 AM – 4:00 PM)</span>
+                </label>
+                <select value={time} onChange={(e) => setTime(e.target.value)} className={selectCls}>
+                  <option value="">Select time</option>
+                  {TIME_SLOTS.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Conflict warning */}
+              {conflict && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <svg className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <p className="text-xs text-red-600 font-kumbh">
+                    This slot is already booked. Please choose a different date or time.
+                  </p>
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className={`px-6 py-4 border-t ${isDark ? "border-slate-700 bg-slate-900" : "border-gray-100 bg-gray-50"} flex gap-3 justify-end`}>
+          <button
+            onClick={onClose}
+            className={`px-5 py-2 rounded-lg text-sm font-kumbh font-semibold transition-colors ${isDark ? "bg-slate-700 text-slate-300 hover:bg-slate-600" : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"}`}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!canSave || saving}
+            className={`px-5 py-2 rounded-lg text-sm font-kumbh font-semibold transition-colors ${
+              !canSave || saving
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-green-600 text-white hover:bg-green-700 shadow-sm"
+            }`}
+          >
+            {saving ? "Creating…" : "Create Appointment"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const AdminAppointments = () => {
   const [currentTheme, setCurrentTheme] = useState(
@@ -622,6 +843,7 @@ const AdminAppointments = () => {
   const [currentPage, setCurrentPage]     = useState(1);
   const [rescheduleTarget, setRescheduleTarget] = useState(null);
   const [detailsTarget, setDetailsTarget]       = useState(null);
+  const [createOpen, setCreateOpen]             = useState(false);
 
   // ── tab sliding indicator ──────────────────────────────────────────────────
   const statusTabsRef = useRef(null);
@@ -676,13 +898,29 @@ const AdminAppointments = () => {
   useEffect(() => { setCurrentPage(1); }, [activeTab, selectedDate, searchQuery, startDate, endDate]);
 
   // ── actions ────────────────────────────────────────────────────────────────
-  const handleReschedule = async (id, date, time) => {
+  const handleReschedule = async (appt, date, time) => {
     try {
-      await rescheduleAppointment(id, date, time);
+      const scheduledAt = `${date}T${time}:00`;
+      await rescheduleAppointment(appt.complaint_id, appt.id, scheduledAt);
       addToast({
         type: "success",
         title: "Rescheduled",
         message: `Appointment rescheduled to ${formatDate(date)} at ${formatTime(time)}. Complainant notified.`,
+      });
+      fetchAppointments();
+    } catch (err) {
+      addToast({ type: "error", title: "Error", message: err.message });
+      throw err;
+    }
+  };
+
+  const handleCreate = async (complaintId, appointmentData) => {
+    try {
+      await createAppointment(complaintId, appointmentData);
+      addToast({
+        type: "success",
+        title: "Created",
+        message: "Appointment created successfully. Complainant notified.",
       });
       fetchAppointments();
     } catch (err) {
@@ -838,8 +1076,9 @@ const AdminAppointments = () => {
           {/* Table card */}
           <div className={`${t.cardBg} border ${t.cardBorder} rounded-2xl shadow-lg overflow-hidden`}>
 
-            {/* Status tabs */}
-            <div ref={statusTabsRef} className="relative flex flex-wrap gap-2 px-5 pt-5">
+            {/* Status tabs + Create button */}
+            <div className="px-5 pt-5 flex items-start justify-between gap-3">
+            <div ref={statusTabsRef} className="relative flex flex-wrap gap-2 flex-1">
               {/* Sliding indicator */}
               <div
                 className={`absolute rounded-lg pointer-events-none shadow-md ${STATUS_CFG[activeTab]?.tabBg || "bg-gray-700"}`}
@@ -868,6 +1107,18 @@ const AdminAppointments = () => {
                   {cfg.label} ({statusCounts[key] ?? 0})
                 </button>
               ))}
+            </div>
+
+              {/* Create New Appointment button */}
+              <button
+                onClick={() => setCreateOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold font-kumbh bg-green-600 text-white hover:bg-green-700 transition-colors shadow-sm whitespace-nowrap flex-shrink-0"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Create New Appointment
+              </button>
             </div>
 
             {/* Filters */}
@@ -1102,6 +1353,17 @@ const AdminAppointments = () => {
           </div>
         </div>
       </div>
+
+      {/* Create appointment modal */}
+      {createOpen && (
+        <CreateAppointmentModal
+          appointments={appointments}
+          onSave={handleCreate}
+          onClose={() => setCreateOpen(false)}
+          isDark={isDark}
+          t={t}
+        />
+      )}
 
       {/* Appointment details modal */}
       {detailsTarget && (

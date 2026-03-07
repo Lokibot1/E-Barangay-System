@@ -54,7 +54,8 @@ const ChartCard = ({ title, className, isDark, children }) => {
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false);
+      if (menuRef.current && !menuRef.current.contains(e.target))
+        setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -63,18 +64,28 @@ const ChartCard = ({ title, className, isDark, children }) => {
   const captureChart = async () => {
     if (!cardRef.current) return null;
     // Wait for dropdown to unmount after setOpen(false)
-    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    await new Promise((r) =>
+      requestAnimationFrame(() => requestAnimationFrame(r)),
+    );
     // Hide the kebab button and any Recharts tooltips/popovers during capture
     if (menuRef.current) menuRef.current.style.display = "none";
-    const tooltips = cardRef.current.querySelectorAll(".recharts-tooltip-wrapper, .recharts-active-dot");
-    tooltips.forEach((el) => { el.dataset.prevDisplay = el.style.display; el.style.display = "none"; });
+    const tooltips = cardRef.current.querySelectorAll(
+      ".recharts-tooltip-wrapper, .recharts-active-dot",
+    );
+    tooltips.forEach((el) => {
+      el.dataset.prevDisplay = el.style.display;
+      el.style.display = "none";
+    });
     const canvas = await html2canvas(cardRef.current, {
       backgroundColor: isDark ? "#1E293B" : "#FFFFFF",
       scale: 2,
       useCORS: true,
     });
     if (menuRef.current) menuRef.current.style.display = "";
-    tooltips.forEach((el) => { el.style.display = el.dataset.prevDisplay || ""; delete el.dataset.prevDisplay; });
+    tooltips.forEach((el) => {
+      el.style.display = el.dataset.prevDisplay || "";
+      delete el.dataset.prevDisplay;
+    });
     return canvas;
   };
 
@@ -103,7 +114,9 @@ const ChartCard = ({ title, className, isDark, children }) => {
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       const isLandscape = imgWidth > imgHeight * 1.3;
-      const doc = new jsPDF({ orientation: isLandscape ? "landscape" : "portrait" });
+      const doc = new jsPDF({
+        orientation: isLandscape ? "landscape" : "portrait",
+      });
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 14;
@@ -117,11 +130,23 @@ const ChartCard = ({ title, className, isDark, children }) => {
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
       doc.text(title, pageWidth / 2, margin + 4, { align: "center" });
-      doc.addImage(imgData, "PNG", (pageWidth - finalW) / 2, margin + 10, finalW, finalH);
+      doc.addImage(
+        imgData,
+        "PNG",
+        (pageWidth - finalW) / 2,
+        margin + 10,
+        finalW,
+        finalH,
+      );
 
       doc.setFontSize(7);
       doc.setTextColor(150);
-      doc.text("E-Barangay Integrated Services Platform", pageWidth / 2, pageHeight - 8, { align: "center" });
+      doc.text(
+        "E-Barangay Integrated Services Platform",
+        pageWidth / 2,
+        pageHeight - 8,
+        { align: "center" },
+      );
 
       doc.save(`${title.replace(/[^a-zA-Z0-9]/g, "-")}.pdf`);
     } finally {
@@ -150,13 +175,25 @@ const ChartCard = ({ title, className, isDark, children }) => {
             </svg>
           </button>
           {open && (
-            <div className={`absolute right-0 top-full mt-1 w-44 rounded-xl shadow-lg border z-20 overflow-hidden ${isDark ? "bg-slate-700 border-slate-600" : "bg-white border-gray-200"}`}>
+            <div
+              className={`absolute right-0 top-full mt-1 w-44 rounded-xl shadow-lg border z-20 overflow-hidden ${isDark ? "bg-slate-700 border-slate-600" : "bg-white border-gray-200"}`}
+            >
               <button
                 onClick={handleSaveImage}
                 className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-kumbh font-semibold transition-colors ${isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"}`}
               >
-                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <svg
+                  className="w-4 h-4 text-blue-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
                 </svg>
                 Save as Image
               </button>
@@ -164,8 +201,18 @@ const ChartCard = ({ title, className, isDark, children }) => {
                 onClick={handleSavePDF}
                 className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-kumbh font-semibold transition-colors ${isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"}`}
               >
-                <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="w-4 h-4 text-red-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
                 Save as PDF
               </button>
@@ -203,7 +250,8 @@ const AdminLanding = () => {
   useEffect(() => {
     if (!showKebab) return;
     const handler = (e) => {
-      if (kebabRef.current && !kebabRef.current.contains(e.target)) setShowKebab(false);
+      if (kebabRef.current && !kebabRef.current.contains(e.target))
+        setShowKebab(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -234,7 +282,9 @@ const AdminLanding = () => {
     // Appointments fetched separately so a failure here never blocks the charts above
     try {
       const apptData = await getAllAppointments();
-      setAppointments(Array.isArray(apptData) ? apptData : apptData?.data || []);
+      setAppointments(
+        Array.isArray(apptData) ? apptData : apptData?.data || [],
+      );
     } catch (err) {
       console.error("Failed to fetch appointments:", err);
     }
@@ -244,7 +294,9 @@ const AdminLanding = () => {
   }, []);
 
   // Initial load
-  useEffect(() => { fetchData(false); }, [fetchData]);
+  useEffect(() => {
+    fetchData(false);
+  }, [fetchData]);
 
   // Auto-polling every 30 s (silent — no full loading spinner)
   useEffect(() => {
@@ -404,7 +456,11 @@ const AdminLanding = () => {
       else if (s === "rejected") counts.rejected++;
       else counts.pending++;
     });
-    const colorMap = { pending: "#F59E0B", approved: "#10B981", rejected: "#EF4444" };
+    const colorMap = {
+      pending: "#F59E0B",
+      approved: "#10B981",
+      rejected: "#EF4444",
+    };
     return Object.entries(counts)
       .filter(([, v]) => v > 0)
       .map(([name, value]) => ({
@@ -545,11 +601,13 @@ const AdminLanding = () => {
         <div className="max-w-7xl mx-auto w-full">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
-              <h2 className={`text-2xl font-bold ${t.cardText} font-spartan text-left`}>
+              <h2
+                className={`text-2xl font-bold ${t.cardText} font-spartan text-left`}
+              >
                 Analytics Dashboard
               </h2>
               <button
-                onClick={() => setIsLive(v => !v)}
+                onClick={() => setIsLive((v) => !v)}
                 title={isLive ? "Pause auto-refresh" : "Resume auto-refresh"}
                 className={`flex items-center gap-1.5 text-xs font-bold font-kumbh px-2.5 py-1 rounded-lg transition-colors ${
                   isLive
@@ -557,7 +615,9 @@ const AdminLanding = () => {
                     : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                 } ${isDark ? (isLive ? "bg-emerald-900/40 text-emerald-400 hover:bg-emerald-800/50" : "bg-slate-700 text-slate-400 hover:bg-slate-600") : ""}`}
               >
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isLive ? "bg-emerald-500 animate-pulse" : "bg-gray-400"}`} />
+                <span
+                  className={`w-2 h-2 rounded-full flex-shrink-0 ${isLive ? "bg-emerald-500 animate-pulse" : "bg-gray-400"}`}
+                />
                 {isLive ? (polling ? "Updating…" : "Live") : "Paused"}
               </button>
             </div>
@@ -566,20 +626,39 @@ const AdminLanding = () => {
                 onClick={() => setShowKebab((prev) => !prev)}
                 className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-slate-700 text-slate-300" : "hover:bg-gray-200 text-gray-600"}`}
               >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <circle cx="12" cy="5" r="2" />
                   <circle cx="12" cy="12" r="2" />
                   <circle cx="12" cy="19" r="2" />
                 </svg>
               </button>
               {showKebab && (
-                <div className={`absolute right-0 top-full mt-1 w-52 rounded-xl shadow-lg border z-20 overflow-hidden ${isDark ? "bg-slate-700 border-slate-600" : "bg-white border-gray-200"}`}>
+                <div
+                  className={`absolute right-0 top-full mt-1 w-52 rounded-xl shadow-lg border z-20 overflow-hidden ${isDark ? "bg-slate-700 border-slate-600" : "bg-white border-gray-200"}`}
+                >
                   <button
-                    onClick={() => { setShowKebab(false); setShowInsights(true); }}
+                    onClick={() => {
+                      setShowKebab(false);
+                      setShowInsights(true);
+                    }}
                     className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-kumbh font-semibold transition-colors ${isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"}`}
                   >
-                    <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    <svg
+                      className="w-4 h-4 text-amber-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                      />
                     </svg>
                     Generate Insights
                   </button>
@@ -635,7 +714,11 @@ const AdminLanding = () => {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Bar Chart — Monthly Reports */}
-              <ChartCard title="Monthly Reports (Last 6 Months)" className={chartCardClass} isDark={isDark}>
+              <ChartCard
+                title="Monthly Reports (Last 6 Months)"
+                className={chartCardClass}
+                isDark={isDark}
+              >
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={monthlyData}>
                     <CartesianGrid
@@ -680,7 +763,11 @@ const AdminLanding = () => {
               </ChartCard>
 
               {/* Donut Chart — Status Distribution */}
-              <ChartCard title="Status Distribution" className={chartCardClass} isDark={isDark}>
+              <ChartCard
+                title="Status Distribution"
+                className={chartCardClass}
+                isDark={isDark}
+              >
                 {statusData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
@@ -721,7 +808,11 @@ const AdminLanding = () => {
               </ChartCard>
 
               {/* Line Chart — Daily Trend */}
-              <ChartCard title="Report Trend (Last 14 Days)" className={chartCardClass} isDark={isDark}>
+              <ChartCard
+                title="Report Trend (Last 14 Days)"
+                className={chartCardClass}
+                isDark={isDark}
+              >
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={trendData}>
                     <CartesianGrid
@@ -770,7 +861,11 @@ const AdminLanding = () => {
               </ChartCard>
 
               {/* Pie Chart — Category Breakdown */}
-              <ChartCard title="Report Categories" className={chartCardClass} isDark={isDark}>
+              <ChartCard
+                title="Report Categories"
+                className={chartCardClass}
+                isDark={isDark}
+              >
                 {categoryData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
@@ -813,7 +908,11 @@ const AdminLanding = () => {
               </ChartCard>
 
               {/* Donut Chart — Appointment Status */}
-              <ChartCard title="Appointment Status" className={chartCardClass} isDark={isDark}>
+              <ChartCard
+                title="Appointment Status"
+                className={chartCardClass}
+                isDark={isDark}
+              >
                 {appointmentStatusData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
@@ -854,7 +953,11 @@ const AdminLanding = () => {
               </ChartCard>
 
               {/* Bar Chart — Monthly Appointments */}
-              <ChartCard title="Monthly Appointments (Last 6 Months)" className={chartCardClass} isDark={isDark}>
+              <ChartCard
+                title="Monthly Appointments (Last 6 Months)"
+                className={chartCardClass}
+                isDark={isDark}
+              >
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={monthlyAppointmentData}>
                     <CartesianGrid
@@ -863,11 +966,17 @@ const AdminLanding = () => {
                     />
                     <XAxis
                       dataKey="name"
-                      tick={{ fontSize: 12, fill: isDark ? "#9CA3AF" : "#6B7280" }}
+                      tick={{
+                        fontSize: 12,
+                        fill: isDark ? "#9CA3AF" : "#6B7280",
+                      }}
                     />
                     <YAxis
                       allowDecimals={false}
-                      tick={{ fontSize: 12, fill: isDark ? "#9CA3AF" : "#6B7280" }}
+                      tick={{
+                        fontSize: 12,
+                        fill: isDark ? "#9CA3AF" : "#6B7280",
+                      }}
                     />
                     <Tooltip
                       contentStyle={{
@@ -878,9 +987,21 @@ const AdminLanding = () => {
                       }}
                     />
                     <Legend wrapperStyle={{ fontSize: "12px" }} />
-                    <Bar dataKey="Pending" fill="#F59E0B" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Approved" fill="#10B981" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Rejected" fill="#EF4444" radius={[4, 4, 0, 0]} />
+                    <Bar
+                      dataKey="Pending"
+                      fill="#F59E0B"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="Approved"
+                      fill="#10B981"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="Rejected"
+                      fill="#EF4444"
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -891,21 +1012,29 @@ const AdminLanding = () => {
 
       <div className={`${t.pageBg} px-6 sm:px-10 lg:px-16 pb-6`}>
         <div className="max-w-7xl mx-auto w-full space-y-6">
-          <h2 className={`text-2xl font-bold ${t.cardText} font-spartan text-left`}>
+          <h2
+            className={`text-2xl font-bold ${t.cardText} font-spartan text-left`}
+          >
             Issuance Application Factors
           </h2>
 
-          <h3 className={`text-xl font-bold ${t.cardText} font-spartan text-left`}>
+          <h3
+            className={`text-xl font-bold ${t.cardText} font-spartan text-left`}
+          >
             Volumes
           </h3>
           <VolumesFactors t={t} isDark={isDark} />
 
-          <h3 className={`text-xl font-bold ${t.cardText} font-spartan text-left`}>
+          <h3
+            className={`text-xl font-bold ${t.cardText} font-spartan text-left`}
+          >
             Operations
           </h3>
           <OperationsFactors t={t} isDark={isDark} />
 
-          <h3 className={`text-xl font-bold ${t.cardText} font-spartan text-left`}>
+          <h3
+            className={`text-xl font-bold ${t.cardText} font-spartan text-left`}
+          >
             Socio-Economy
           </h3>
           <SocioEconomyFactors t={t} isDark={isDark} />

@@ -5,6 +5,38 @@ import {
   getComplaintUpdates,
   addComplaintUpdate,
 } from "../../services/sub-system-3/complaintService";
+import { getComplaintAppointments } from "../../services/sub-system-3/appointmentService";
+
+// ─── Appointment helpers ───────────────────────────────────────────────────────
+const parseApptScheduledAt = (scheduledAt) => {
+  if (!scheduledAt) return { date: null, time: null };
+  const [datePart, timePart] = String(scheduledAt).split(/[T ]/);
+  return { date: datePart || null, time: timePart ? timePart.substring(0, 5) : null };
+};
+
+const fmtApptDate = (ds) => {
+  if (!ds) return "—";
+  return new Date(ds + "T00:00:00").toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric",
+  });
+};
+
+const fmtApptTime = (t) => {
+  if (!t) return "—";
+  const [h, m] = t.split(":");
+  const hour = parseInt(h, 10);
+  const ampm = hour < 12 ? "AM" : "PM";
+  return `${hour % 12 || 12}:${m || "00"} ${ampm}`;
+};
+
+const apptStatusBadge = (status) => {
+  const s = (status || "scheduled").toLowerCase().replace(/-/g, "_");
+  if (s === "completed")   return "bg-green-100 text-green-700";
+  if (s === "cancelled")   return "bg-gray-100 text-gray-500";
+  if (s === "rescheduled") return "bg-amber-100 text-amber-700";
+  if (s === "no_show")     return "bg-red-100 text-red-700";
+  return "bg-blue-100 text-blue-700";
+};
 
 // ─── Media helpers ────────────────────────────────────────────────────────────
 const isVideoUrl = (url) => {
@@ -267,6 +299,8 @@ const AdminReportDetailsModal = ({
   const [mediaViewerOpen, setMediaViewerOpen] = useState(false);
   const [mediaViewerUrl, setMediaViewerUrl] = useState("");
   const [mediaViewerType, setMediaViewerType] = useState("image");
+  const [complaintAppointments, setComplaintAppointments] = useState([]);
+  const [loadingAppts, setLoadingAppts] = useState(false);
 
   // Reset all state and load updates when a different incident is opened
   useEffect(() => {
@@ -282,6 +316,7 @@ const AdminReportDetailsModal = ({
     setUpdateText("");
     setDispatchedTeam(null);
     setLocalUpdates([]);
+    setComplaintAppointments([]);
 
     const loadUpdates = async () => {
       setLoadingUpdates(true);
@@ -307,7 +342,21 @@ const AdminReportDetailsModal = ({
       }
     };
 
+    const loadAppointments = async () => {
+      if (reportType !== "complaints") return;
+      setLoadingAppts(true);
+      try {
+        const appts = await getComplaintAppointments(incident.id);
+        setComplaintAppointments(Array.isArray(appts) ? appts : []);
+      } catch {
+        setComplaintAppointments([]);
+      } finally {
+        setLoadingAppts(false);
+      }
+    };
+
     loadUpdates();
+    loadAppointments();
   }, [incident?.id, reportType]);
 
   if (!incident) return null;
@@ -985,6 +1034,70 @@ const AdminReportDetailsModal = ({
             ) : (
               /* ── Updates Tab ── */
               <div className="px-5 pb-5 animate-fadeIn">
+
+                {/* Appointment History — complaints only */}
+                {reportType === "complaints" && (
+                  <div className="mb-5">
+                    <p className="text-xs font-bold text-gray-900 dark:text-gray-100 font-kumbh uppercase mb-3">
+                      Appointment History
+                    </p>
+                    {loadingAppts ? (
+                      <div className="flex items-center gap-2 py-4 text-gray-400 dark:text-gray-500 text-xs font-kumbh">
+                        <svg className="w-4 h-4 animate-spin flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Loading appointments…
+                      </div>
+                    ) : complaintAppointments.length > 0 ? (
+                      <div className="space-y-2">
+                        {complaintAppointments.map((appt) => {
+                          const { date, time } = parseApptScheduledAt(appt.scheduled_at);
+                          return (
+                            <div
+                              key={appt.id}
+                              className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+                            >
+                              <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                                  <span className="text-xs font-bold text-gray-800 dark:text-gray-100 font-kumbh truncate">
+                                    {appt.title || `Appointment #${appt.id}`}
+                                  </span>
+                                  <span className={`text-[10px] font-bold font-kumbh uppercase px-2 py-0.5 rounded-full ${apptStatusBadge(appt.status)}`}>
+                                    {(appt.status || "scheduled").replace(/-/g, " ")}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 font-kumbh">
+                                  {fmtApptDate(date)} · {fmtApptTime(time)}
+                                </p>
+                                {appt.description && (
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 font-kumbh mt-0.5 leading-relaxed">
+                                    {appt.description}
+                                  </p>
+                                )}
+                              </div>
+                              <span className="text-[10px] text-gray-400 dark:text-gray-500 font-kumbh whitespace-nowrap flex-shrink-0">
+                                #{appt.id}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-400 dark:text-gray-500 font-kumbh py-2">
+                        No appointments scheduled for this complaint.
+                      </p>
+                    )}
+                    <hr className="mt-4 border-gray-200 dark:border-gray-700" />
+                  </div>
+                )}
+
                 {loadingUpdates ? (
                   <div className="text-center py-8 text-gray-400 dark:text-gray-500">
                     <svg
