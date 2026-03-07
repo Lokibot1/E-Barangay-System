@@ -442,7 +442,7 @@ const formatDate = (ds) => {
 const AppointmentDetailsModal = ({ appointment, onClose, onReschedule, onStatusChange, isDark, t }) => {
   const { date, time } = parseScheduledAt(appointment.scheduled_at);
   const status = (appointment.status || "scheduled").toLowerCase().replace(/-/g, "_");
-  const canReschedule = status === "scheduled" || status === "rescheduled";
+  const canReschedule = status === "scheduled";
   const canAct        = status === "scheduled" || status === "rescheduled";
 
   const [confirm, setConfirm] = useState({ open: false, action: null, loading: false });
@@ -807,6 +807,160 @@ const CreateAppointmentModal = ({ appointments, onSave, onClose, isDark, t }) =>
   );
 };
 
+// ── Overdue Alert Modal ───────────────────────────────────────────────────────
+const OverdueAlertModal = ({ appointments, onAction, onClose, isDark, t }) => {
+  const [actioning, setActioning] = useState({});
+  const [done, setDone]           = useState(new Set());
+
+  const remaining = appointments.filter((a) => !done.has(a.id));
+
+  useEffect(() => {
+    if (appointments.length > 0 && done.size === appointments.length) onClose();
+  }, [done, appointments.length, onClose]);
+
+  const handleAction = async (appt, action) => {
+    setActioning((s) => ({ ...s, [appt.id]: action }));
+    try {
+      await onAction(appt, action);
+      setDone((s) => new Set([...s, appt.id]));
+    } catch {
+      /* error toast handled upstream */
+    } finally {
+      setActioning((s) => ({ ...s, [appt.id]: null }));
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className={`${t.cardBg} rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden`}>
+
+        {/* Header */}
+        <div className={`px-6 py-4 border-b ${isDark ? "border-slate-700 bg-slate-900" : "border-gray-200 bg-gray-50"} flex items-center gap-3`}>
+          <div className="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className={`text-sm font-bold ${t.cardText} font-spartan`}>Appointments Requiring Action</h3>
+            <p className={`text-xs ${t.subtleText} font-kumbh`}>
+              {remaining.length} appointment{remaining.length !== 1 ? "s" : ""} past their scheduled date
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${isDark ? "hover:bg-slate-700 text-slate-400" : "hover:bg-gray-200 text-gray-400"}`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* List */}
+        <div className="px-6 py-5 space-y-3 max-h-[60vh] overflow-y-auto">
+          {remaining.map((appt) => {
+            const { date, time } = parseScheduledAt(appt.scheduled_at);
+            const busy = actioning[appt.id];
+            return (
+              <div key={appt.id} className={`rounded-xl border ${t.cardBorder} overflow-hidden`}>
+
+                {/* Info rows */}
+                <div className={`divide-y ${isDark ? "divide-slate-700" : "divide-gray-100"}`}>
+                  {/* Title + status */}
+                  <div className={`flex items-center gap-3 px-4 py-3 ${isDark ? "bg-slate-800" : "bg-white"}`}>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700" : "bg-blue-50"}`}>
+                      <svg className={`w-4 h-4 ${isDark ? "text-slate-300" : "text-blue-500"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-bold font-spartan ${t.cardText} truncate`}>
+                        {appt.title || `Appointment #${appt.id}`}
+                      </p>
+                      <p className={`text-xs font-kumbh ${t.subtleText}`}>
+                        Appointment #{appt.id} · Complaint #{appt.complaint_id}
+                      </p>
+                    </div>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold font-kumbh uppercase flex-shrink-0 ${statusBadgeCls(appt.status)}`}>
+                      {(appt.status || "scheduled").replace(/-/g, " ")}
+                    </span>
+                  </div>
+
+                  {/* Detail fields */}
+                  {[
+                    { label: "Scheduled",   value: `${formatDate(date)} at ${formatTime(time)}` },
+                    { label: "Complainant", value: appt.complainant_name || "—" },
+                  ].map(({ label, value }) => (
+                    <div key={label} className={`flex items-center px-4 py-2.5 ${isDark ? "bg-slate-800" : "bg-white"}`}>
+                      <span className={`text-xs font-semibold w-28 flex-shrink-0 font-kumbh ${t.subtleText}`}>{label}</span>
+                      <span className={`text-xs font-kumbh ${t.cardText}`}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Action buttons */}
+                <div className={`flex gap-2 px-4 py-3 border-t ${isDark ? "border-slate-700 bg-slate-900" : "border-gray-100 bg-gray-50"}`}>
+                  <button
+                    onClick={() => handleAction(appt, "completed")}
+                    disabled={!!busy}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-kumbh font-semibold transition-colors ${
+                      busy === "completed"
+                        ? "bg-green-200 text-green-600 cursor-wait"
+                        : "bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    }`}
+                  >
+                    {busy === "completed" && (
+                      <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    )}
+                    {busy === "completed" ? "Processing…" : "Mark as Completed"}
+                  </button>
+                  <button
+                    onClick={() => handleAction(appt, "no-show")}
+                    disabled={!!busy}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-kumbh font-semibold transition-colors ${
+                      busy === "no-show"
+                        ? "bg-red-200 text-red-600 cursor-wait"
+                        : "bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    }`}
+                  >
+                    {busy === "no-show" && (
+                      <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    )}
+                    {busy === "no-show" ? "Processing…" : "Mark as No Show"}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className={`px-6 py-4 border-t ${isDark ? "border-slate-700 bg-slate-900" : "border-gray-100 bg-gray-50"} flex justify-end`}>
+          <button
+            onClick={onClose}
+            className={`px-5 py-2 rounded-lg text-sm font-kumbh font-semibold border transition-colors ${
+              isDark
+                ? "border-slate-600 text-slate-300 hover:bg-slate-700"
+                : "border-gray-300 text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            Dismiss
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const AdminAppointments = () => {
   const [currentTheme, setCurrentTheme] = useState(
@@ -868,6 +1022,20 @@ const AdminAppointments = () => {
 
   useEffect(() => { fetchAppointments(); }, [fetchAppointments]);
 
+  // ── overdue alert (show once per session after first load) ─────────────────
+  useEffect(() => {
+    if (loading || hasShownOverdueAlert.current) return;
+    const today = new Date().toISOString().split("T")[0];
+    const overdue = appointments.filter((a) => {
+      const s = (a.status || "scheduled").toLowerCase().replace(/-/g, "_");
+      return (s === "scheduled" || s === "rescheduled") && a.date && a.date <= today;
+    });
+    if (overdue.length > 0) {
+      hasShownOverdueAlert.current = true;
+      setOverdueModal({ open: true, appointments: overdue });
+    }
+  }, [loading, appointments]);
+
   // ── toasts ─────────────────────────────────────────────────────────────────
   const [toasts, setToasts] = useState([]);
   const addToast = useCallback((toast) => {
@@ -888,6 +1056,8 @@ const AdminAppointments = () => {
   const [rescheduleTarget, setRescheduleTarget] = useState(null);
   const [detailsTarget, setDetailsTarget]       = useState(null);
   const [createOpen, setCreateOpen]             = useState(false);
+  const [overdueModal, setOverdueModal]         = useState({ open: false, appointments: [] });
+  const hasShownOverdueAlert                    = useRef(false);
 
   // ── tab sliding indicator ──────────────────────────────────────────────────
   const statusTabsRef = useRef(null);
@@ -1320,7 +1490,7 @@ const AdminAppointments = () => {
                           {/* Actions — left (stop propagation so row-click doesn't fire) */}
                           <td className="px-4 py-3 text-left" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center gap-1 flex-wrap">
-                              {(status === "scheduled" || status === "rescheduled") && (
+                              {status === "scheduled" && (
                                 <button
                                   onClick={() => setRescheduleTarget(appt)}
                                   className={`px-2 py-1 text-[10px] font-kumbh font-bold rounded-lg transition-colors ${
@@ -1332,7 +1502,7 @@ const AdminAppointments = () => {
                                   Reschedule
                                 </button>
                               )}
-                              {(status === "completed" || status === "cancelled" || status === "no_show") && (
+                              {status !== "scheduled" && (
                                 <span className={`text-[10px] font-kumbh ${isDark ? "text-slate-500" : "text-gray-400"}`}>—</span>
                               )}
                             </div>
@@ -1448,6 +1618,17 @@ const AdminAppointments = () => {
           appointments={appointments}
           onSave={handleReschedule}
           onClose={() => setRescheduleTarget(null)}
+          isDark={isDark}
+          t={t}
+        />
+      )}
+
+      {/* Overdue alert modal */}
+      {overdueModal.open && (
+        <OverdueAlertModal
+          appointments={overdueModal.appointments}
+          onAction={handleStatusChange}
+          onClose={() => setOverdueModal({ open: false, appointments: [] })}
           isDark={isDark}
           t={t}
         />
