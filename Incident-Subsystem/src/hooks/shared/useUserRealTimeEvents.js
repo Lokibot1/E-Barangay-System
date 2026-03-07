@@ -4,7 +4,7 @@ import { getMyComplaints } from "../../services/sub-system-3/complaintService";
 import {
   isAdmin,
   isAuthenticated,
-} from "../../services/sub-system-3/loginService";
+} from "../../homepage/services/loginService";
 
 const LS_SNAPSHOT_KEY = "userStatusSnapshot";
 

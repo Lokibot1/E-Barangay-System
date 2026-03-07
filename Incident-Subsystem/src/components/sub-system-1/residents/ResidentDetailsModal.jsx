@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Briefcase, IdCard, Save, Edit3, XCircle, User } from 'lucide-react'; 
 import ModalWrapper from '../common/ModalWrapper';
-import { API_BASE_URL } from '../../../config/api';
-import axios from 'axios';
+import api from '../../../services/sub-system-1/Api';
 
 import IdentityTab from './tabs/IdentityTab';
 import AddressTab from './tabs/AddressTab';
@@ -70,9 +69,11 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t }) =>
 
     const fetchReferences = async () => {
         try {
-            const res = await axios.get(`${API_BASE_URL}/reference-data`);
+            const res = await api.get('/reference-data');
             if (res.data) setRefs(prev => ({ ...prev, ...res.data }));
-        } catch (err) { console.error("Reference Fetch Error:", err); }
+        } catch (err) { 
+            console.error("Reference Fetch Error:", err); 
+        }
     };
 
     const calculateAge = (bday) => {
@@ -136,7 +137,6 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t }) =>
             t={t}
             title={
                 <div className="flex items-center gap-4">
-                    {/* AVATAR REMOVED: Replaced with an Icon Badge */}
                     <div className={`h-12 w-12 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-400 shadow-inner ring-2 ring-white dark:ring-slate-700`}>
                         <User size={24} strokeWidth={2.5} />
                     </div>

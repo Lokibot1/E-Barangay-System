@@ -4,7 +4,7 @@ import { getAllComplaints } from "../../services/sub-system-3/complaintService";
 import {
   isAdmin,
   isAuthenticated,
-} from "../../services/sub-system-3/loginService";
+} from "../../homepage/services/loginService";
 
 /**
  * Core polling hook that detects new incidents and complaints.

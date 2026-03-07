@@ -7,7 +7,7 @@ import FAQChatbot from "../../components/shared/FAQChatbot";
 import AdminNotificationToast from "./AdminNotificationToast";
 import UserNotificationToast from "./UserNotificationToast";
 import themeTokens from "../../Themetokens";
-import { isAdmin } from "../../services/sub-system-3/loginService";
+import { isAdmin } from "../../homepage/services/loginService";
 
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);

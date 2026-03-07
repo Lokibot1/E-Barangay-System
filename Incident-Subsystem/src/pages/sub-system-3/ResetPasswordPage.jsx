@@ -4,7 +4,7 @@ import { ArrowLeft, Loader2, Sun, Moon } from "lucide-react";
 import themeTokens from "../../Themetokens";
 import InputField from "../../components/shared/InputField";
 import Toast from "../../components/shared/modals/Toast";
-import { resetPassword } from "../../services/sub-system-3/loginService";
+import { resetPassword } from "../../homepage/services/loginService";
 import bsbPic from "../../assets/images/bgygulod.png";
 import bgyLogo from "../../assets/images/bgylogo.png";
 

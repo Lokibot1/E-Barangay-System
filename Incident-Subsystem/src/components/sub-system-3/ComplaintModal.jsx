@@ -4,7 +4,7 @@ import ComplaintForm from "../../components/sub-system-3/Complaintform";
 import ProgressIndicator from "../../components/sub-system-3/ProgressIndicator";
 import Toast from "../../components/shared/modals/Toast";
 import { fileComplaint } from "../../services/sub-system-3/complaintService";
-import { getUser } from "../../services/sub-system-3/loginService";
+import { getUser } from "../../homepage/services/loginService";
 import { getAllCustomFields } from "../../services/sub-system-3/customFieldService";
 import themeTokens from "../../Themetokens";
 import { useLanguage } from "../../context/LanguageContext";

@@ -1,12 +1,18 @@
+/**
+ * loginService.js
+ * Handles all authentication (login/logout) API calls.
+ * Backend: http://localhost:8000
+ *
+ * NOTE: Registration is handled separately by authService.js (port 8002).
+ */
+
 const API_BASE = "http://localhost:8000/api";
 
 /**
  * Authenticate a user with email and password.
- * Sends a POST request to /api/login and returns the parsed JSON response.
  */
 export const login = async (email, password) => {
-  // Clear any stale session before attempting a fresh login
-  clearAuth();
+  clearAuth(); // Clear stale session before new login
 
   const response = await fetch(`${API_BASE}/login`, {
     method: "POST",
@@ -18,12 +24,9 @@ export const login = async (email, password) => {
   });
 
   const data = await response.json();
-  console.log("[DEBUG] Login API response:", data);
-
   if (!response.ok) {
     throw new Error(data.message || "Invalid email or password.");
   }
-
   return data;
 };
 
@@ -34,33 +37,33 @@ export const saveAuth = (data) => {
   const token = data.token || data.access_token;
   const user = data.user || data.data?.user;
 
-  if (token) {
-    localStorage.setItem("authToken", token);
-  }
-  if (user) {
-    localStorage.setItem("authUser", JSON.stringify(user));
-  }
+  if (token) localStorage.setItem("authToken", token);
+  if (user) localStorage.setItem("authUser", JSON.stringify(user));
 };
 
 /**
- * Log the user out by calling /api/logout, then clear local auth data.
+ * Log the user out — calls /api/logout then clears local storage.
  */
 export const logout = async () => {
   const token = localStorage.getItem("authToken");
 
-  await fetch(`${API_BASE}/logout`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  clearAuth();
+  try {
+    await fetch(`${API_BASE}/logout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    // Proceed with local cleanup even if the server call fails
+  } finally {
+    clearAuth();
+  }
 };
 
 /**
- * Remove auth data from localStorage.
+ * Remove all auth data from localStorage.
  */
 export const clearAuth = () => {
   localStorage.removeItem("authToken");
@@ -68,67 +71,44 @@ export const clearAuth = () => {
   localStorage.removeItem("userStatusSnapshot");
 };
 
-/**
- * Check whether the user is currently authenticated.
- */
-export const isAuthenticated = () => {
-  return !!localStorage.getItem("authToken");
-};
+/** Check whether a session token exists. */
+export const isAuthenticated = () => !!localStorage.getItem("authToken");
 
-/**
- * Retrieve the stored auth token.
- */
-export const getToken = () => {
-  return localStorage.getItem("authToken");
-};
+/** Retrieve the stored bearer token. */
+export const getToken = () => localStorage.getItem("authToken");
 
-/**
- * Retrieve the stored user object.
- */
+/** Retrieve the stored user object. */
 export const getUser = () => {
-  const user = localStorage.getItem("authUser");
-  return user ? JSON.parse(user) : null;
+  const raw = localStorage.getItem("authUser");
+  return raw ? JSON.parse(raw) : null;
 };
 
-/**
- * Check whether the logged-in user has the admin role.
- */
+/** Check whether the logged-in user has the admin role. */
 export const isAdmin = () => {
   const user = getUser();
   return user?.role === "admin";
 };
 
-/**
- * Request a password-reset email for the given address.
- */
+/** Request a password-reset email. */
 export const forgotPassword = async (email) => {
-  const response = await fetch(`http://localhost:8000/api/forgot-password`, {
+  const response = await fetch(`${API_BASE}/forgot-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ email }),
   });
   const data = await response.json();
-  if (!response.ok)
-    throw new Error(data.message || "Failed to send reset email.");
+  if (!response.ok) throw new Error(data.message || "Failed to send reset email.");
   return data;
 };
 
-/**
- * Submit a new password using the reset token from the email link.
- */
-export const resetPassword = async ({
-  token,
-  email,
-  password,
-  password_confirmation,
-}) => {
+/** Submit a new password using the reset token from the emailed link. */
+export const resetPassword = async ({ token, email, password, password_confirmation }) => {
   const response = await fetch(`${API_BASE}/reset-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ token, email, password, password_confirmation }),
   });
   const data = await response.json();
-  if (!response.ok)
-    throw new Error(data.message || "Failed to reset password.");
+  if (!response.ok) throw new Error(data.message || "Failed to reset password.");
   return data;
 };

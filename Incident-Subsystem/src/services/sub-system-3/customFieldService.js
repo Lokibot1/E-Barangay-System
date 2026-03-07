@@ -1,4 +1,4 @@
-import { getToken } from "./loginService";
+import { getToken } from "../../homepage/services/loginService";
 
 const API_BASE = "http://localhost:8000/api";
 

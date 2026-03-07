@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { isAdmin } from "../../services/sub-system-3/loginService";
+import { isAdmin } from "../../homepage/services/loginService";
 import { useLanguage } from "../../context/LanguageContext";
 import themeTokens from "../../Themetokens";
 import logo from "../../assets/images/logo.jpg";

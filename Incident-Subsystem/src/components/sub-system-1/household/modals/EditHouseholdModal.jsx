@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import ModalWrapper from '../../common/ModalWrapper';
 import Button from '../../common/Button'; 
-import axios from 'axios';
-import { API_BASE_URL } from '../../../../config/api';
+import api from '../../../../services/sub-system-1/Api';
 
 const EditHouseholdModal = ({ isOpen, onClose, data, onUpdate, t }) => {
   const [formData, setFormData] = useState({
@@ -31,9 +30,12 @@ const EditHouseholdModal = ({ isOpen, onClose, data, onUpdate, t }) => {
       const fetchRefs = async () => {
         setLoadingRefs(true);
         try {
-          const res = await axios.get(`${API_BASE_URL}/locations/reference`);
+    
+          const res = await api.get('/locations/reference');
           setReferences(res.data);
-        } catch (err) { console.error("Error loading references", err); }
+        } catch (err) { 
+          console.error("Error loading references", err); 
+        }
         setLoadingRefs(false);
       };
       fetchRefs();
@@ -62,6 +64,7 @@ const EditHouseholdModal = ({ isOpen, onClose, data, onUpdate, t }) => {
   useEffect(() => {
     const checkAddress = async () => {
       if (!formData.purok_id || !formData.street_id || !formData.house_number) return;
+      
       if (formData.purok_id === data?.purok_id && 
           formData.street_id === data?.street_id && 
           formData.house_number === data?.house_number) {
@@ -71,20 +74,23 @@ const EditHouseholdModal = ({ isOpen, onClose, data, onUpdate, t }) => {
 
       setIsValidating(true);
       try {
-        const res = await axios.post(`${API_BASE_URL}/households/check-address`, {
+      
+        const res = await api.post('/households/check-address', {
           purok_id: formData.purok_id,
           street_id: formData.street_id,
           house_number: formData.house_number,
           current_id: formData.db_id
         });
         setIsAddressTaken(res.data.exists);
-      } catch (err) { console.error("Validation error", err); }
+      } catch (err) { 
+        console.error("Validation error", err); 
+      }
       setIsValidating(false);
     };
 
     const delay = setTimeout(checkAddress, 500);
     return () => clearTimeout(delay);
-  }, [formData.purok_id, formData.street_id, formData.house_number]);
+  }, [formData.purok_id, formData.street_id, formData.house_number, data]);
 
   const filteredStreets = useMemo(() => {
     if (!formData.purok_id) return [];

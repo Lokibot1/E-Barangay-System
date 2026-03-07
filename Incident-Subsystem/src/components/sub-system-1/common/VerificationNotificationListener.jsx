@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSound } from '../../../hooks/shared/useSound';
 import { verificationService } from '../../../services/sub-system-1/verification';
 
-const POLL_INTERVAL_MS = 1000;
+const POLL_INTERVAL_MS = 5000; 
 
 const VerificationNotificationListener = () => {
   const { playFeedback } = useSound();
@@ -17,19 +17,20 @@ const VerificationNotificationListener = () => {
   const isFetchingRef = useRef(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken'); 
-    if (!token) {
-      sessionStorage.removeItem(lastCountKey);
-    }
-  }, []);
-
-  useEffect(() => {
     const loadPendingCount = async () => {
+  
+      const token = localStorage.getItem('authToken');
+      if (!token) return; 
+
       if (isFetchingRef.current) return;
       
       isFetchingRef.current = true;
       try {
         const submissions = await verificationService.getSubmissions();
+        
+   
+        if (!Array.isArray(submissions)) return;
+
         const pendingCount = submissions.filter(
           (s) => s.status?.toLowerCase() === 'pending'
         ).length;
@@ -37,7 +38,7 @@ const VerificationNotificationListener = () => {
         const savedCount = sessionStorage.getItem(lastCountKey);
         const previousCount = savedCount !== null ? parseInt(savedCount, 10) : null;
 
-        
+  
         if (previousCount !== null && pendingCount > previousCount) {
           const newCount = pendingCount - previousCount;
           
@@ -51,13 +52,21 @@ const VerificationNotificationListener = () => {
         sessionStorage.setItem(lastCountKey, pendingCount.toString());
 
       } catch (error) {
+    
+        if (error.response?.status === 401) {
+            console.warn('[Listener] Unauthorized: Stopping poll.');
+            return;
+        }
         console.error('Notification Listener Error:', error);
       } finally {
         isFetchingRef.current = false;
       }
     };
 
+    // Initial load
     loadPendingCount();
+    
+    // Polling interval
     const interval = setInterval(loadPendingCount, POLL_INTERVAL_MS);
     
     return () => {
@@ -72,24 +81,18 @@ const VerificationNotificationListener = () => {
     const isAlreadyOnPage = location.pathname === targetPath;
 
     if (isAlreadyOnPage) {
-      
       window.dispatchEvent(new CustomEvent('refreshVerificationData', { 
         detail: { switchToTab: 'Pending' } 
       }));
-      
-   
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-  
       navigate(targetPath);
-    
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('refreshVerificationData', { 
           detail: { switchToTab: 'Pending' } 
         }));
       }, 100);
     }
-
     setNotificationBanner(null);
   };
 

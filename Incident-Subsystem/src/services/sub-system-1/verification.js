@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { API_BASE_URL, STORAGE_URL } from '../../config/api';
+import api from "./Api"; 
+import { STORAGE_URL } from '../../config/api'; 
 
 export const calculateAge = (birthdate) => {
   if (!birthdate) return 'N/A';
@@ -24,9 +24,12 @@ const formatDate = (dateStr) => {
 export const verificationService = {
   getSubmissions: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/submissions`);
+   
+      const response = await api.get("/submissions");
 
-      return response.data.map(res => {
+      const data = Array.isArray(response.data) ? response.data : (response.data.data || []);
+
+      return data.map(res => {
         const ageVal = calculateAge(res.birthdate);
         const fullName = `${res.first_name || ''} ${res.middle_name || ''} ${res.last_name || ''} ${res.suffix || ''}`
           .replace(/\s+/g, ' ')
@@ -76,20 +79,20 @@ export const verificationService = {
             incomeSource: res.employment_data?.income_source || 'N/A', 
             educationalStatus: res.education_data?.educational_status || 'N/A',
             schoolType: res.education_data?.school_type || 'N/A',
-            schoolLevel: res.education_data?.school_level || 'N/A',
+            school_level: res.education_data?.school_level || 'N/A',
             highestGrade: res.education_data?.highest_grade_completed || 'N/A',
           },
         };
       });
     } catch (error) {
       console.error("Fetch submissions error:", error);
-      throw new Error(error.response?.data?.message || 'Failed to fetch submissions');
+      throw error;
     }
   },
 
   updateStatus: async (id, status, isIndigent, additionalData) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/residents/${id}/status`, { 
+      const response = await api.put(`/residents/${id}/status`, { 
         status,
         is_indigent: isIndigent,
         wall_material: additionalData?.wallMaterial,

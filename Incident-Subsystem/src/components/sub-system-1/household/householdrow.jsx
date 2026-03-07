@@ -28,7 +28,7 @@ const HouseholdRow = ({ item, onView, onEdit, t }) => {
               </span>
             )}
           </div>
-          <p className={`text-[10px] ${t.subtleText} font-bold mt-1 tracking-widest uppercase font-kumbh`}>ID: {item.id}</p>
+          <p className={`text-[10px] ${t.subtleText} font-bold mt-1 text-left tracking-widest uppercase font-kumbh`}>ID: {item.id}</p>
         </div>
       </td>
 

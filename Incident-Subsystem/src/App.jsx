@@ -11,11 +11,14 @@ import { RealTimeProvider } from "./context/RealTimeContext";
 import { UserRealTimeProvider } from "./context/UserRealTimeContext";
 import { UserProvider } from "./context/UserContext";
 import Layout from "./components/shared/Layout";
+
+// ── Route guards ─────────────────────────────────────────────────────────────
 import ProtectedRoute, {
   AdminRoute,
   UserRoute,
-} from "./components/shared/ProtectedRoute";
-import MainPage from "./pages/sub-system-3/MainPage";
+} from "./homepage/ProtectedRoute";
+
+// ── Sub-System 2 pages ───────────────────────────────────────────────────────
 import SubSystem2MainPage from "./pages/sub-system-2/MainPage";
 import Req_BIDPage from "./pages/sub-system-2/Req_BIDPage";
 import Req_COIPage from "./pages/sub-system-2/Req_COIPage";
@@ -28,6 +31,9 @@ import Track_COI from "./pages/sub-system-2/Track_COI";
 import Track_COR from "./pages/sub-system-2/Track_COR";
 import DocumentsInquiryPage from "./pages/sub-system-2/DocumentsInquiryPage";
 import AccountsSection from "./components/sub-system-2/accounts/AccountsSection";
+
+// ── Sub-System 3 pages ───────────────────────────────────────────────────────
+import MainPage from "./pages/sub-system-3/MainPage";
 import FileComplaintPage from "./pages/sub-system-3/FileComplaintPage";
 import IncidentReportPage from "./pages/sub-system-3/IncidentReportPage";
 import IncidentMapPage from "./pages/sub-system-3/IncidentMapPage";
@@ -35,25 +41,28 @@ import CaseManagementPage from "./pages/sub-system-3/CaseManagementPage";
 import AdminLanding from "./pages/sub-system-3/admin/AdminLanding";
 import AdminIncidentReports from "./pages/sub-system-3/admin/AdminIncidentReports";
 import AdminAppointments from "./pages/sub-system-3/admin/AdminAppointments";
-// RS Routes Imports
-import HomePage from "./homepage/HomePage";
-import AuthPage from "./homepage/AuthPage";
-import LoginPage from "./pages/sub-system-3/LoginPage";
 import ResetPasswordPage from "./pages/sub-system-3/ResetPasswordPage";
+
+// ── Sub-System 1 (RS) pages ──────────────────────────────────────────────────
 import Dashboard from "./pages/sub-system-1/dashboard";
 import Residents from "./pages/sub-system-1/residents";
-
 import Verification from "./pages/sub-system-1/verification";
 import Households from "./pages/sub-system-1/household";
 import Certificates from "./pages/sub-system-1/certificates";
 import Support from "./pages/sub-system-1/support";
 import Settings from "./pages/sub-system-1/settings";
-import Logout from "./pages/sub-system-1/logout";
+import Logout from "./homepage/logout";
 import VerificationNotificationListener from "./components/sub-system-1/common/VerificationNotificationListener";
+
+// ── Homepage / public pages ───────────────────────────────────────────────────
+import HomePage from "./homepage/HomePage";
+import LoginPage from "./homepage/login/LoginPage";
+import SignupPage from "./homepage/signup/SignUpPage";
 
 import "./App.css";
 import "leaflet/dist/leaflet.css";
 
+// ── Scroll-to-top on every route change ──────────────────────────────────────
 function ScrollToTop() {
   const { pathname, key } = useLocation();
 
@@ -80,6 +89,7 @@ function ScrollToTop() {
   return null;
 }
 
+// ── App ───────────────────────────────────────────────────────────────────────
 function App() {
   return (
     <LanguageProvider>
@@ -88,13 +98,16 @@ function App() {
           <ScrollToTop />
           <div className="App">
             <Routes>
-              {/* PUBLIC ROUTES - HomePage as starting point */}
+
+              {/* ── PUBLIC ROUTES ───────────────────────────────────── */}
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+              {/* Legacy alias — old /auth links still work */}
               <Route path="/auth" element={<Navigate to="/login" replace />} />
 
-              {/* User-only routes — admins get redirected to /admin */}
+              {/* ── USER-ONLY ROUTES ─────────────────────────────────── */}
               <Route element={<UserRoute />}>
                 <Route
                   element={
@@ -103,7 +116,7 @@ function App() {
                     </UserRealTimeProvider>
                   }
                 >
-                  {/* Sub-System 2 Routes */}
+                  {/* Sub-System 2 */}
                   <Route path="/sub-system-2" element={<SubSystem2MainPage />} />
                   <Route path="/sub-system-2/req-bid" element={<Req_BIDPage />} />
                   <Route path="/sub-system-2/req-coi" element={<Req_COIPage />} />
@@ -115,17 +128,16 @@ function App() {
                   <Route path="/sub-system-2/track-coi" element={<Track_COI />} />
                   <Route path="/sub-system-2/track-cor" element={<Track_COR />} />
 
-                  {/* Sub-System 3 Routes */}
+                  {/* Sub-System 3 */}
                   <Route path="/incident-complaint" element={<MainPage />} />
                   <Route path="/incident-complaint/file-complaint" element={<FileComplaintPage />} />
                   <Route path="/incident-complaint/incident-report" element={<IncidentReportPage />} />
                   <Route path="/incident-complaint/incident-map" element={<IncidentMapPage />} />
                   <Route path="/incident-complaint/case-management" element={<CaseManagementPage />} />
 
-                  {/* RS Dashboard Routes */}
+                  {/* Sub-System 1 (RS) */}
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/residents" element={<Residents />} />
-            
                   <Route path="/verification" element={<Verification />} />
                   <Route path="/households" element={<Households />} />
                   <Route path="/certificates" element={<Certificates />} />
@@ -136,12 +148,11 @@ function App() {
                 </Route>
               </Route>
 
-              {/* Admin-only routes — regular users get redirected to / */}
+              {/* ── ADMIN-ONLY ROUTES ────────────────────────────────── */}
               <Route element={<AdminRoute />}>
                 <Route
                   element={
                     <RealTimeProvider>
-                      {/* For notifications and sounds */}
                       <VerificationNotificationListener />
                       <Layout />
                     </RealTimeProvider>
@@ -150,7 +161,6 @@ function App() {
                   <Route path="/admin" element={<AdminLanding />} />
                   <Route path="/admin/residents" element={<Residents />} />
                   <Route path="/admin/households" element={<Households />} />
-        
                   <Route path="/admin/user-management" element={<Verification />} />
                   <Route path="/admin/requests" element={<AdminPlaceholder title="Requests" />} />
                   <Route path="/admin/incidents" element={<AdminIncidentReports />} />
@@ -164,8 +174,9 @@ function App() {
                 </Route>
               </Route>
 
-              {/* Catch-all — send unknown paths to home */}
+              {/* ── CATCH-ALL ────────────────────────────────────────── */}
               <Route path="*" element={<Navigate to="/" replace />} />
+
             </Routes>
           </div>
         </Router>

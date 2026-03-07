@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { API_BASE_URL } from '../../../config/api';
+import { API_BASE_URL } from '../../config/api';
 
 const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
   // 1. STATES

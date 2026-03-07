@@ -1,4 +1,4 @@
-import { getToken, isAuthenticated, getUser } from "./loginService";
+import { getToken, isAuthenticated, getUser } from "../../homepage/services/loginService";
 
 const API_BASE = "http://localhost:8000/api";
 

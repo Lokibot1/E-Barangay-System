@@ -28,7 +28,7 @@ const ForgotPasswordModal = ({
     if (!email.trim()) return;
     setLoading(true);
     try {
-      const { forgotPassword } = await import("../../services/sub-system-3/loginService");
+      const { forgotPassword } = await import("../../homepage/services/loginService");
       const data = await forgotPassword(email.trim());
       onToast({
         type: "success",

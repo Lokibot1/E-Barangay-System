@@ -8,10 +8,10 @@ import SectorsTab from '../../components/sub-system-1/analytics/tabs/SectorsTab'
 import RegistrationTab from '../../components/sub-system-1/analytics/tabs/RegistrationTab';
 import LivelihoodTab from '../../components/sub-system-1/analytics/tabs/LivelihoodTab';
 import DecisionGuideTab from '../../components/sub-system-1/analytics/tabs/DecisionguideTab';
-import { API_BASE_URL } from '../../config/api';
-import themeTokens from '../../Themetokens';
 
-const API_BASE = import.meta.env.VITE_API_URL || API_BASE_URL;
+// Import the new service
+import { analyticsService } from '../../services/sub-system-1/analytics';
+import themeTokens from '../../Themetokens';
 
 function renderTab(id, data) {
   switch (id) {
@@ -50,12 +50,9 @@ export default function Dashboard() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/analytics/all`, {
-        headers: { Accept: 'application/json' },
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      setData(await res.json());
+      // Clean and simple service call
+      const result = await analyticsService.getAllData();
+      setData(result);
       setLastUpdated(new Date());
     } catch (err) {
       setError(err.message);
@@ -72,13 +69,12 @@ export default function Dashboard() {
     <div className="flex flex-col min-h-full">
       {/* Tab header bar */}
       <div className={`sticky top-0 z-20 ${t.cardBg} border-b ${t.cardBorder} shadow-sm`}>
-        {/* Title row */}
         <div className="flex items-center justify-between px-6 sm:px-8 py-3">
           <div>
-           <h1 className={`text-base font-spartan font-bold ${t.cardText} flex items-center gap-2`}>
-  {tabMeta?.icon && <tabMeta.icon size={18} strokeWidth={2.5} />} 
-  Analytics — {tabMeta?.label}
-</h1>
+            <h1 className={`text-base font-spartan font-bold ${t.cardText} flex items-center gap-2`}>
+              {tabMeta?.icon && <tabMeta.icon size={18} strokeWidth={2.5} />} 
+              Analytics — {tabMeta?.label}
+            </h1>
             <p className={`text-xs font-kumbh ${t.subtleText}`}>
               {lastUpdated
                 ? `Updated: ${lastUpdated.toLocaleTimeString('en-PH')} · Barangay Gulod`
@@ -94,30 +90,28 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Tabs scroll row */}
         <div className={`px-6 sm:px-8 overflow-x-auto`}>
           <div className="flex gap-1 min-w-max">
-  {TABS.map(tab => {
-    const Icon = tab.icon; 
-    return (
-      <button
-        key={tab.id}
-        onClick={() => setActiveTab(tab.id)}
-        className={`flex items-center gap-2 px-3 py-3 text-sm font-kumbh font-bold whitespace-nowrap border-b-2 transition-colors ${
-          activeTab === tab.id
-            ? `${t.sidebarActiveBorder} ${t.sidebarActiveText}`
-            : `border-transparent ${t.subtleText} hover:${t.sidebarActiveText}`
-        }`}
-      >
-        <Icon size={16} /> {tab.label}
-      </button>
-    );
-  })}
-</div>
+            {TABS.map(tab => {
+              const Icon = tab.icon; 
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-3 py-3 text-sm font-kumbh font-bold whitespace-nowrap border-b-2 transition-colors ${
+                    activeTab === tab.id
+                      ? `${t.sidebarActiveBorder} ${t.sidebarActiveText}`
+                      : `border-transparent ${t.subtleText} hover:${t.sidebarActiveText}`
+                  }`}
+                >
+                  <Icon size={16} /> {tab.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Content */}
       <main className="p-6 sm:p-8 max-w-7xl mx-auto w-full">
         {loading && (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
@@ -137,9 +131,6 @@ export default function Dashboard() {
               Cannot load data
             </h3>
             <p className={`${t.subtleText} font-kumbh text-sm mb-4`}>{error}</p>
-            <p className={`text-xs ${t.subtleText} font-kumbh ${t.inlineBg} rounded p-3 mb-4 text-left font-mono`}>
-              Endpoint: GET {API_BASE}/analytics/all
-            </p>
             <button
               onClick={fetchData}
               className="bg-red-600 text-white font-kumbh font-bold px-4 py-2 rounded-lg text-sm hover:bg-red-700"
