@@ -4,7 +4,7 @@ import themeTokens from "../../../Themetokens";
 import { getUser } from "../../../homepage/services/loginService";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
 import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
-import { getAllAppointments } from "../../../services/sub-system-3/appointmentService";
+// import { getAllAppointments } from "../../../services/sub-system-3/appointmentService";
 import InsightsModal from "../../../components/sub-system-3/InsightsModal";
 import VolumesFactors from "../../../components/sub-system-2/factors/VolumesFactors";
 import OperationsFactors from "../../../components/sub-system-2/factors/OperationsFactors";
