@@ -22,18 +22,12 @@ import ConfirmationModal from "../../../components/shared/ConfirmationModal";
 const ROWS_PER_PAGE = 5;
 
 const STATUS_CFG = {
-  all:         { label: "ALL",         color: "#16a34a" },
-  scheduled:   { label: "SCHEDULED",   color: "#2563eb" },
-  rescheduled: { label: "RESCHEDULED", color: "#f59e0b" },
-  completed:   { label: "COMPLETED",   color: "#16a34a" },
-  cancelled:   { label: "CANCELLED",   color: "#dc2626" },
-  no_show:     { label: "NO SHOW",     color: "#64748b" },
-  all: { label: "ALL", tabBg: "bg-gray-700" },
-  scheduled: { label: "SCHEDULED", tabBg: "bg-blue-600" },
-  rescheduled: { label: "RESCHEDULED", tabBg: "bg-amber-500" },
-  completed: { label: "COMPLETED", tabBg: "bg-green-600" },
-  cancelled: { label: "CANCELLED", tabBg: "bg-gray-500" },
-  no_show: { label: "NO SHOW", tabBg: "bg-red-600" },
+  all:         { label: "ALL",         color: "#16a34a", tabBg: "bg-gray-700" },
+  scheduled:   { label: "SCHEDULED",   color: "#2563eb", tabBg: "bg-blue-600" },
+  rescheduled: { label: "RESCHEDULED", color: "#f59e0b", tabBg: "bg-amber-500" },
+  completed:   { label: "COMPLETED",   color: "#16a34a", tabBg: "bg-green-600" },
+  cancelled:   { label: "CANCELLED",   color: "#dc2626", tabBg: "bg-gray-500" },
+  no_show:     { label: "NO SHOW",     color: "#64748b", tabBg: "bg-red-600" },
 };
 
 const TIME_SLOTS = getTimeSlots();
