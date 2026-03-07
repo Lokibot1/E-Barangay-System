@@ -465,7 +465,7 @@ const ThemeModal = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style >{`
         @keyframes fadeIn {
           from {
             opacity: 0;

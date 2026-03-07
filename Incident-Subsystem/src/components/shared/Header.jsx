@@ -808,7 +808,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
         currentTheme={currentTheme}
       />
 
-      <style jsx>{`
+      <style >{`
         @keyframes slideDown {
           from {
             opacity: 0;

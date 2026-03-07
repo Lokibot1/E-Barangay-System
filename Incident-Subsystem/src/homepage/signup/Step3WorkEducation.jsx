@@ -1,134 +1,277 @@
+/**
+ * Step3WorkEducation.jsx
+ *
+ * FIXED: Added indigency toggle — visible only when:
+ *   - isStaffMode === true
+ *   - isHead === true (householdPosition is Head or Head of Family)
+ *
+ * The toggle is rendered at the bottom of the step, above the Next button.
+ * isIndigent / setIsIndigent are lifted to SignupForm so the value
+ * persists across step navigation and is available at submit time.
+ */
+
 import React from 'react';
+import { ChevronRight, ChevronLeft, ShieldAlert } from 'lucide-react';
 
-const Step3WorkEducation = ({ formData, handleChange, isDarkMode, setStep }) => {
-  const labelClass = `text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`;
-  const requiredStar = <span className="text-rose-500 ml-0.5">*</span>;
+const EMPLOYMENT_STATUSES = [
+  'Employed', 'Self-Employed', 'Unemployed', 'Student',
+  'Retired', 'PWD', 'OFW', 'N/A',
+];
 
-  const isStep3Valid = 
-    formData.educationalStatus && 
-    formData.highestGrade && 
-    formData.employmentStatus && 
-    formData.monthlyIncome;
+const INCOME_SOURCES = [
+  'Employment', 'Business', 'Remittance', 'Investments', 'Others', 'N/A',
+];
+
+const INCOME_RANGES = [
+  'No Income', 'Below 5,000', '5,001-10,000', '10,001-20,000',
+  '20,001-40,000', '40,001-70,000', '70,001-100,000', 'Above 100,000',
+];
+
+const EDU_STATUSES  = ['Currently Studying', 'Graduated', 'Not Studying', 'N/A'];
+const SCHOOL_TYPES  = ['Public', 'Private', 'N/A'];
+const SCHOOL_LEVELS = [
+  'Pre-School', 'Elementary', 'Junior High School',
+  'Senior High School', 'College', 'Vocational', 'Masteral', 'N/A',
+];
+
+const Step3WorkEducation = ({
+  formData,
+  handleChange,
+  isDarkMode,
+  setStep,
+  isStaffMode = false,
+  onNext,
+  // Indigency props — passed from SignupForm
+  isHead       = false,
+  isIndigent   = 0,
+  setIsIndigent = () => {},
+}) => {
+
+  const labelClass = `block text-[10px] font-black uppercase tracking-[0.22em] mb-1.5 ${
+    isDarkMode ? 'text-slate-400' : 'text-slate-500'
+  }`;
+  const inputClass = `w-full px-4 py-3 rounded-2xl border text-sm font-medium transition-all outline-none focus:ring-2 focus:ring-emerald-500/40 ${
+    isDarkMode
+      ? 'bg-slate-800 border-white/10 text-white placeholder-slate-500'
+      : 'bg-white border-black/10 text-slate-900 placeholder-slate-400'
+  }`;
+  const selectClass = inputClass;
+
+  const handleNext = () => {
+    if (onNext) onNext();
+    else setStep(isStaffMode ? null : 4);
+  };
 
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-right-3 duration-300">
-      <p className="text-xs font-black text-green-600 uppercase tracking-widest">Education Information</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label className={labelClass}>Educational Status{requiredStar}</label>
-          <select name="educationalStatus" value={formData.educationalStatus || ""} onChange={handleChange} className="full-input-sm">
-            <option value="">Select</option>
-            <option value="Currently Studying">Currently Studying</option>
-            <option value="Graduated">Graduated</option>
-            <option value="Not Studying">Not Studying</option>
-            <option value="N/A">N/A</option>
-          </select>
-        </div>
-        <div className="space-y-1">
-          <label className={labelClass}>School Type</label>
-          <select name="schoolType" value={formData.schoolType || ""} onChange={handleChange} className="full-input-sm">
-            <option value="">Select</option>
-            <option value="Public">Public</option>
-            <option value="Private">Private</option>
-            <option value="N/A">N/A</option>
-          </select>
-        </div>
-        <div className="space-y-1">
-          <label className={labelClass}>School Level</label>
-          <select name="schoolLevel" value={formData.schoolLevel || ""} onChange={handleChange} className="full-input-sm">
-            <option value="">Select</option>
-            <option value="Elementary">Elementary</option>
-            <option value="Junior High School">Junior High School</option>
-            <option value="Senior High School">Senior High School</option>
-            <option value="College">College</option>
-            <option value="Vocational">Vocational</option>
-            <option value="Graduate School">Masteral / Doctorate</option>
-          </select>
-        </div>
-        <div className="space-y-1">
-          <label className={labelClass}>Highest Grade{requiredStar}</label>
-          <select name="highestGrade" value={formData.highestGrade || ""} onChange={handleChange} className="full-input-sm">
-            <option value="">Select</option>
-            <option value="No Formal Education">No Formal Education</option>
-            <option value="Elementary Undergraduate">Elementary Undergraduate</option>
-            <option value="Elementary Graduate">Elementary Graduate</option>
-            <option value="High School Undergraduate">High School Undergraduate</option>
-            <option value="High School Graduate">High School Graduate</option>
-            <option value="College Undergraduate">College Undergraduate</option>
-            <option value="College Graduate">College Graduate</option>
-            <option value="Vocational Graduate">Vocational Graduate</option>
-            <option value="Post Graduate">Post Graduate</option>
-          </select>
+    <div className="space-y-8">
+
+      {/* ── Employment ─────────────────────────────────────────────────────── */}
+      <div>
+        <h3 className={`text-xs font-black uppercase tracking-[0.3em] mb-4 ${
+          isDarkMode ? 'text-slate-400' : 'text-slate-500'
+        }`}>
+          Employment
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>Work Status</label>
+            <select
+              name="employmentStatus"
+              value={formData.employmentStatus || ''}
+              onChange={handleChange}
+              className={selectClass}
+            >
+              <option value="">Select status</option>
+              {EMPLOYMENT_STATUSES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className={labelClass}>Occupation</label>
+            <input
+              name="occupation"
+              value={formData.occupation || ''}
+              onChange={handleChange}
+              placeholder="e.g. Teacher, Driver"
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>Income Source</label>
+            <select
+              name="incomeSource"
+              value={formData.incomeSource || ''}
+              onChange={handleChange}
+              className={selectClass}
+            >
+              <option value="">Select source</option>
+              {INCOME_SOURCES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className={labelClass}>Monthly Income</label>
+            <select
+              name="monthlyIncome"
+              value={formData.monthlyIncome || ''}
+              onChange={handleChange}
+              className={selectClass}
+            >
+              <option value="">Select range</option>
+              {INCOME_RANGES.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      <div className={`h-px my-2 ${isDarkMode ? "bg-slate-700" : "bg-slate-200"}`} />
+      {/* ── Education ──────────────────────────────────────────────────────── */}
+      <div>
+        <h3 className={`text-xs font-black uppercase tracking-[0.3em] mb-4 ${
+          isDarkMode ? 'text-slate-400' : 'text-slate-500'
+        }`}>
+          Education
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>Educational Status</label>
+            <select
+              name="educationalStatus"
+              value={formData.educationalStatus || ''}
+              onChange={handleChange}
+              className={selectClass}
+            >
+              <option value="">Select status</option>
+              {EDU_STATUSES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
 
-      <p className="text-xs font-black text-green-600 uppercase tracking-widest">Economic Activity</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label className={labelClass}>Work Status{requiredStar}</label>
-          <select name="employmentStatus" value={formData.employmentStatus || ""} onChange={handleChange} className="full-input-sm">
-            <option value="">Select Status</option>
-            <option value="Permanent">Permanent</option>
-            <option value="Contractual">Contractual</option>
-            <option value="Shared">Shared</option>
-            <option value="Business Owner">Business Owner</option>
-            <option value="Self-Employed">Self-Employed</option>
-            <option value="N/A">N/A</option>
-          </select>
-        </div>
-        <div className="space-y-1">
-          <label className={labelClass}>Occupation</label>
-          <input type="text" name="occupation" value={formData.occupation || ""} onChange={handleChange} className="full-input-sm" placeholder="e.g. Teacher, Driver" />
-        </div>
-        <div className="space-y-1">
-          <label className={labelClass}>Income Source</label>
-          <select name="incomeSource" value={formData.incomeSource || ""} onChange={handleChange} className="full-input-sm">
-            <option value="">Select Source</option>
-            <option value="Employment">Employment</option>
-            <option value="Business">Business</option>
-            <option value="Remittance">Remittance</option>
-            <option value="Investments">Investments</option>
-            <option value="Others">Others</option>
-            <option value="N/A">N/A</option>
-          </select>
-        </div>
-        <div className="space-y-1">
-          <label className={labelClass}>Monthly Income{requiredStar}</label>
-          <select name="monthlyIncome" value={formData.monthlyIncome || ""} onChange={handleChange} className="full-input-sm">
-            <option value="">Select Range</option>
-            <option value="No Income">No Income</option>
-            <option value="Below 5,000">Below 5,000</option>
-            <option value="5,001-10,000">5,001-10,000</option>
-            <option value="10,001-20,000">10,001-20,000</option>
-            <option value="20,001-40,000">20,001-40,000</option>
-            <option value="40,001-70,000">40,001-70,000</option>
-            <option value="70,001-100,000">70,001-100,000</option>
-            <option value="Above 100,000">Above 100,000</option>
-          </select>
+          <div>
+            <label className={labelClass}>School Type</label>
+            <select
+              name="schoolType"
+              value={formData.schoolType || ''}
+              onChange={handleChange}
+              className={selectClass}
+            >
+              <option value="">Select type</option>
+              {SCHOOL_TYPES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className={labelClass}>School Level</label>
+            <select
+              name="schoolLevel"
+              value={formData.schoolLevel || ''}
+              onChange={handleChange}
+              className={selectClass}
+            >
+              <option value="">Select level</option>
+              {SCHOOL_LEVELS.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className={labelClass}>Highest Grade / Year Completed</label>
+            <input
+              name="highestGrade"
+              value={formData.highestGrade || ''}
+              onChange={handleChange}
+              placeholder="e.g. Grade 10, 2nd Year College"
+              className={inputClass}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2 pt-4">
+      {/* ── Indigency Toggle — staff + Head only ───────────────────────────── */}
+      {isStaffMode && isHead && (
+        <div>
+          <h3 className={`text-xs font-black uppercase tracking-[0.3em] mb-4 ${
+            isDarkMode ? 'text-slate-400' : 'text-slate-500'
+          }`}>
+            Household Classification
+          </h3>
+
+          <button
+            type="button"
+            onClick={() => setIsIndigent((prev) => (prev ? 0 : 1))}
+            className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border-2 transition-all ${
+              isIndigent
+                ? 'bg-amber-50 border-amber-400 dark:bg-amber-900/20 dark:border-amber-500'
+                : isDarkMode
+                  ? 'bg-slate-800 border-white/10 hover:border-white/20'
+                  : 'bg-white border-black/10 hover:border-black/20'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <ShieldAlert
+                size={18}
+                className={isIndigent ? 'text-amber-500' : isDarkMode ? 'text-slate-500' : 'text-slate-400'}
+              />
+              <div className="text-left">
+                <p className={`text-sm font-black uppercase tracking-wide ${
+                  isIndigent
+                    ? 'text-amber-700 dark:text-amber-400'
+                    : isDarkMode ? 'text-white' : 'text-slate-900'
+                }`}>
+                  {isIndigent ? 'Marked as Indigent' : 'Non-Indigent Household'}
+                </p>
+                <p className={`text-[10px] font-medium mt-0.5 ${
+                  isDarkMode ? 'text-slate-400' : 'text-slate-500'
+                }`}>
+                  {isIndigent
+                    ? 'This household qualifies for indigent programs'
+                    : 'Click to mark this household as indigent'}
+                </p>
+              </div>
+            </div>
+
+            {/* Toggle pill */}
+            <div className={`w-12 h-6 rounded-full transition-colors relative shrink-0 ${
+              isIndigent ? 'bg-amber-400' : isDarkMode ? 'bg-slate-700' : 'bg-slate-200'
+            }`}>
+              <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${
+                isIndigent ? 'left-[26px]' : 'left-0.5'
+              }`} />
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* ── Navigation ─────────────────────────────────────────────────────── */}
+      <div className="flex gap-3 pt-2">
         <button
           type="button"
           onClick={() => setStep(2)}
-          className={`flex-1 py-4 rounded-2xl font-black text-xs uppercase tracking-widest border transition-colors ${
+          className={`flex items-center gap-2 px-6 py-3 rounded-2xl border text-[11px] font-black uppercase tracking-widest transition-all ${
             isDarkMode
-              ? "bg-slate-900 border-white/10 text-slate-200 hover:bg-slate-800"
-              : "bg-slate-100 border-black/10 text-slate-700 hover:bg-slate-200"
+              ? 'border-white/10 text-slate-300 hover:bg-white/5'
+              : 'border-black/10 text-slate-600 hover:bg-black/5'
           }`}
         >
-          Back
+          <ChevronLeft size={14} /> Back
         </button>
+
         <button
           type="button"
-          disabled={!isStep3Valid}
-          onClick={() => setStep(4)}
-          className="sm:flex-[2] py-4 bg-emerald-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest disabled:opacity-30 transition-colors hover:bg-emerald-800"
+          onClick={handleNext}
+          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95"
         >
-          Next: ID Upload
+          {isStaffMode ? 'Review & Submit' : 'Next'} <ChevronRight size={14} />
         </button>
       </div>
     </div>

@@ -1,175 +1,226 @@
 /**
  * useAuthLogic.js
- * Custom hook that manages all registration/signup form state and logic.
- * Used by: LoginPage.jsx and SignupPage.jsx
  *
- * Location: src/homepage/hooks/useAuthLogic.js
+ * FIX: submitAdminEntry now accepts an optional second argument `overrides`.
+ *
+ * WHY: isIndigent is local state in SignupForm, not part of formData in this hook.
+ * Before, SignupForm tried to inject it via handleChange + setTimeout — but
+ * submitAdminEntry closes over the current formData, so the setTimeout-flushed
+ * state update was never seen. The value was always 0 in the payload.
+ *
+ * NOW: SignupForm calls handleSubmit(e, { isIndigent }) directly. This hook
+ * receives that as submitAdminEntry(e, { isIndigent }) and spreads it into
+ * cleanData BEFORE calling authService.adminEntry(). Guaranteed current value.
+ *
+ * Usage from SignupForm:
+ *   handleSubmit(e, { isIndigent: 1 })   ← staff + Head
+ *   handleSubmit(e)                       ← public or non-Head staff
  */
 
 import { useState, useEffect } from "react";
-import { authService } from "../services/authService"; // ← authService.js (port 8002)
+import { authService } from "../services/authService";
 
 export const useAuthLogic = (navigate) => {
-  const [loading, setLoading] = useState(false);
-  const [authSuccess, setAuthSuccess] = useState(null);
-  const [trackingNum, setTrackingNum] = useState("");
-  const [searchResult, setSearchResult] = useState(null);
-  const [purokList, setPurokList] = useState([]);
-  const [allStreets, setAllStreets] = useState([]);
-  const [addressExists, setAddressExists] = useState(false);
+  const [loading,       setLoading]       = useState(false);
+  const [authSuccess,   setAuthSuccess]   = useState(null);
+  const [trackingNum,   setTrackingNum]   = useState("");
+  const [searchResult,  setSearchResult]  = useState(null);
+  const [purokList,     setPurokList]     = useState([]);
+  const [allStreets,    setAllStreets]    = useState([]);
+
+  const [addressExists,      setAddressExists]      = useState(false);
+  const [householdHeadData,  setHouseholdHeadData]  = useState(null);
+  const [addressSearch,      setAddressSearch]      = useState("");
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
 
   const [formData, setFormData] = useState({
-    firstName: "",
-    middleName: "",
-    lastName: "",
-    suffix: "",
-    birthdate: "",
-    age: "",
-    gender: "",
-    sector: "",
-    householdPosition: "",
-    maritalStatus: "",
-    nationality: "Filipino",
-    residencyStatus: "",
-    residencyStartDate: "",
-    isVoter: false,
-    birthRegistration: "Registered",
-    purok: "",
-    street: "",
-    houseNumber: "",
-    contact: "",
-    email: "",
-    employmentStatus: "N/A",
-    occupation: "",
-    incomeSource: "N/A",
-    monthlyIncome: "0",
-    educationalStatus: "N/A",
-    schoolType: "N/A",
-    schoolLevel: "N/A",
-    highestGrade: "N/A",
-    idFront: null,
-    idBack: null,
-    idType: "Barangay ID",
-    username: "",
-    password: "",
-    tenureStatus: "Owned",
-    wallMaterial: "Concrete",
-    roofMaterial: "G.I. Sheet",
-    waterSource: "Maynilad",
+    firstName: "", middleName: "", lastName: "", suffix: "",
+    birthdate: "", age: "", gender: "", sector: "",
+    householdPosition: "", maritalStatus: "", nationality: "Filipino",
+    residencyStatus: "", residencyStartDate: "",
+    isVoter: false, birthRegistration: "Registered",
+    purok: "", street: "", houseNumber: "",
+    contact: "", email: "",
+    employmentStatus: "N/A", occupation: "",
+    incomeSource: "N/A", monthlyIncome: "0",
+    educationalStatus: "N/A", schoolType: "N/A",
+    schoolLevel: "N/A", highestGrade: "N/A",
+    idFront: null, idBack: null, idType: "Barangay ID",
+    username: "", password: "",
+    tenureStatus: "Owned", wallMaterial: "Concrete",
+    roofMaterial: "G.I. Sheet", waterSource: "Maynilad",
     isIndigent: 0,
   });
 
-  // Fetch purok/street locations on mount
+  // ── Fetch locations on mount ──────────────────────────────────────────────
   useEffect(() => {
     const fetchLocations = async () => {
       try {
         const res = await authService.getLocations();
-        setPurokList(Array.isArray(res?.puroks) ? res.puroks : []);
-        setAllStreets(Array.isArray(res?.streets) ? res.streets : []);
-      } catch (err) {
-        console.error("Failed to load locations:", err);
-      }
+        if (res.puroks?.length)
+          setPurokList(res.puroks.map((p) => ({ ...p, id: p.id.toString() })));
+        if (res.streets?.length)
+          setAllStreets(res.streets.map((s) => ({
+            ...s,
+            id: s.id.toString(),
+            purok_id: s.purok_id?.toString() ?? null,
+          })));
+      } catch (err) { console.error("Failed to load locations:", err); }
     };
     fetchLocations();
   }, []);
 
-  // Debounced household-head check whenever address fields change
+  // ── Address autocomplete ──────────────────────────────────────────────────
   useEffect(() => {
-    const checkAddress = async () => {
-      if (formData.houseNumber && formData.street && formData.purok) {
-        try {
-          const res = await authService.checkHouseholdHead({
-            houseNumber: formData.houseNumber,
-            street: formData.street,
-            purok: formData.purok,
-          });
-          setAddressExists(typeof res?.exists !== "undefined" ? !!res.exists : false);
-        } catch {
-          setAddressExists(false);
-        }
-      } else {
+    const search = async () => {
+      if (addressSearch.length < 2) { setAddressSuggestions([]); return; }
+      setIsSearchingAddress(true);
+      try {
+        const res = await authService.searchAddresses(addressSearch);
+        setAddressSuggestions(res.data || []);
+      } catch { console.error("Address search error"); }
+      finally { setIsSearchingAddress(false); }
+    };
+    const t = setTimeout(search, 300);
+    return () => clearTimeout(t);
+  }, [addressSearch]);
+
+  // ── Household head check ──────────────────────────────────────────────────
+  useEffect(() => {
+    const check = async () => {
+      if (!formData.houseNumber || !formData.street || !formData.purok) return;
+      try {
+        const res = await authService.checkHouseholdHead({
+          houseNumber: formData.houseNumber,
+          street: formData.street,
+          purok: formData.purok,
+        });
+        setAddressExists(!!res?.exists);
+        setHouseholdHeadData(res?.exists ? (res.head || null) : null);
+      } catch {
         setAddressExists(false);
+        setHouseholdHeadData(null);
       }
     };
-
-    const timer = setTimeout(checkAddress, 500);
-    return () => clearTimeout(timer);
+    const t = setTimeout(check, 500);
+    return () => clearTimeout(t);
   }, [formData.houseNumber, formData.street, formData.purok]);
 
+  const selectAddress = (addr) => {
+    if (!addr.house_number) {
+      setFormData((prev) => ({ ...prev, houseNumber: "", purok: "", street: "" }));
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      houseNumber: addr.house_number,
+      purok:  addr.purok_id.toString(),
+      street: addr.street_id.toString(),
+    }));
+    setAddressSearch(`${addr.house_number} ${addr.street_name}`);
+    setAddressSuggestions([]);
+  };
+
   const handleChange = (e) => {
-    // Support direct object passing (e.g. from handleFile in SignupForm)
-    if (!e.target && e.name) {
-      setFormData((prev) => ({ ...prev, [e.name]: e.value }));
-      return;
-    }
-
+    if (!e.target && e.name) { updateField(e.name, e.value); return; }
     const { name, value, type, checked, files } = e.target;
+    if (type === "file")     { const f = files[0]; if (f) setFormData((p) => ({ ...p, [name]: f })); return; }
+    if (type === "checkbox") { setFormData((p) => ({ ...p, [name]: checked })); return; }
+    if (name === "purok")    { setFormData((p) => ({ ...p, purok: value, street: "" })); return; }
+    updateField(name, value);
+  };
 
-    if (type === "file") {
-      const file = files[0];
-      if (file) setFormData((prev) => ({ ...prev, [name]: file }));
-      return;
-    }
-
-    if (type === "checkbox") {
-      setFormData((prev) => ({ ...prev, [name]: checked }));
-      return;
-    }
-
-    // Strip non-digits and cap at 11 chars for contact numbers
+  const updateField = (name, value) => {
     if (name === "contact") {
-      const val = value.replace(/\D/g, "").substring(0, 11);
-      setFormData((prev) => ({ ...prev, [name]: val }));
+      setFormData((p) => ({ ...p, contact: value.replace(/\D/g, "").substring(0, 11) }));
       return;
     }
-
-    // Auto-calculate age from birthdate and auto-set Senior Citizen sector
     if (name === "birthdate") {
-      if (!value) {
-        setFormData((prev) => ({ ...prev, birthdate: "", age: "" }));
-        return;
-      }
-      const birthDate = new Date(value);
+      if (!value) { setFormData((p) => ({ ...p, birthdate: "", age: "" })); return; }
+      const bd    = new Date(value);
       const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-
-      setFormData((prev) => ({
-        ...prev,
+      let age     = today.getFullYear() - bd.getFullYear();
+      const m     = today.getMonth() - bd.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) age--;
+      setFormData((p) => ({
+        ...p,
         birthdate: value,
-        age: isNaN(age) || age < 0 ? "" : age,
-        sector: age >= 60 ? "3" : prev.sector,
+        age:    isNaN(age) || age < 0 ? "" : age,
+        sector: age >= 60 ? "3" : p.sector,
       }));
       return;
     }
-
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((p) => ({ ...p, [name]: value }));
   };
 
-  const submitAuth = async () => {
+  // ── STAFF DIRECT ENROLLMENT ───────────────────────────────────────────────
+  /**
+   * @param {Event}  e         - form submit event (optional)
+   * @param {Object} overrides - values merged into payload before API call.
+   *                             Used by SignupForm to pass { isIndigent }
+   *                             synchronously, bypassing React state async flush.
+   */
+  const submitAdminEntry = async (e, overrides = {}) => {
+    if (e?.preventDefault) e.preventDefault();
     setLoading(true);
     try {
-      const res = await authService.register(formData);
-      if (res.success || res.trackingNumber) {
-        setAuthSuccess({
-          title: "Registration Submitted!",
-          msg: "Application is now for review.",
-          code: res.trackingNumber || res.tracking_number,
-          resident: res.resident,
-        });
-      }
+      const { age, ...baseData } = formData;
+
+      // FIX: Merge overrides here — isIndigent is always the value at call time
+      const cleanData = { ...baseData, ...overrides };
+
+      const res = await authService.adminEntry(cleanData);
+
+      const account = res.account || {};
+
+      setAuthSuccess({
+        id:    account.id            || "N/A",
+        user:  account.username      || "N/A",
+        pass:  account.temp_password || "N/A",
+        token: account.token         || "",
+        name:  res.resident?.name    || `${formData.firstName} ${formData.lastName}`.trim(),
+        code:  account.id            || "N/A",
+        type:  "ADMIN_ENTRY",
+        title: "Resident Enrolled",
+        msg:   "The resident account has been successfully created.",
+      });
+      return res;
     } catch (error) {
-      const msg =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Registration failed. Please check your data.";
-      alert(msg);
+      alert(error?.message || "Failed to add resident.");
     } finally {
       setLoading(false);
     }
   };
 
+  // ── PUBLIC REGISTRATION ───────────────────────────────────────────────────
+  const submitAuth = async (e) => {
+    if (e?.preventDefault) e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await authService.register(formData);
+      const trackingCode = res.trackingNumber || res.tracking_number || res.data?.tracking_number;
+      if (res.success || trackingCode) {
+        setAuthSuccess({
+          id:    trackingCode,
+          code:  trackingCode,
+          name:  `${formData.firstName} ${formData.lastName}`,
+          user:  "FOR_REVIEW",
+          pass:  "PENDING",
+          token: "",
+          type:  "PUBLIC_REG",
+          title: "Registration Sent",
+          msg:   "Please save your tracking number below.",
+        });
+      }
+    } catch (error) {
+      alert(error?.message || "Registration failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Tracking search ───────────────────────────────────────────────────────
   const handleTrackSearch = async (val) => {
     const input = val.toUpperCase().trim();
     setTrackingNum(input);
@@ -186,18 +237,14 @@ export const useAuthLogic = (navigate) => {
   };
 
   return {
-    formData,
-    setFormData,
-    handleChange,
-    submitAuth,
-    loading,
-    authSuccess,
-    setAuthSuccess,
-    trackingNum,
-    handleTrackSearch,
-    searchResult,
-    purokList,
-    allStreets,
-    addressExists,
+    formData, setFormData, handleChange,
+    submitAuth, submitAdminEntry,
+    loading, authSuccess, setAuthSuccess,
+    trackingNum, handleTrackSearch, searchResult,
+    purokList, allStreets,
+    addressExists, householdHeadData,
+    addressSearch, setAddressSearch,
+    addressSuggestions, isSearchingAddress,
+    selectAddress,
   };
 };

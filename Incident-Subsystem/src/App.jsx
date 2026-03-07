@@ -1,4 +1,10 @@
-import React, { useEffect, useLayoutEffect } from "react";
+/**
+ * App.js
+ * Root component containing all routing logic and providers.
+ * Location: src/App.js
+ */
+
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -46,6 +52,7 @@ import ResetPasswordPage from "./pages/sub-system-3/ResetPasswordPage";
 // ── Sub-System 1 (RS) pages ──────────────────────────────────────────────────
 import Dashboard from "./pages/sub-system-1/dashboard";
 import Residents from "./pages/sub-system-1/residents";
+import AddResident from "./components/sub-system-1/residents/add/AddResident"; 
 import Verification from "./pages/sub-system-1/verification";
 import Households from "./pages/sub-system-1/household";
 import Certificates from "./pages/sub-system-1/certificates";
@@ -58,6 +65,8 @@ import VerificationNotificationListener from "./components/sub-system-1/common/V
 import HomePage from "./homepage/HomePage";
 import LoginPage from "./homepage/login/LoginPage";
 import SignupPage from "./homepage/signup/SignUpPage";
+
+import { DebugAutofill } from "./homepage/utils/DevAutoFill";
 
 import "./App.css";
 import "leaflet/dist/leaflet.css";
@@ -91,6 +100,24 @@ function ScrollToTop() {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 function App() {
+
+  const [activeSetFormData, setActiveSetFormData] = useState(null);
+
+  useEffect(() => {
+    const handleRegisterSetter = (e) => {
+ 
+      if (typeof e.detail === 'function') {
+        setActiveSetFormData(() => e.detail);
+      }
+    };
+    
+    window.addEventListener('REGISTER_SETTER', handleRegisterSetter);
+ 
+    window.dispatchEvent(new CustomEvent('REQUEST_SETTER_REFRESH'));
+
+    return () => window.removeEventListener('REGISTER_SETTER', handleRegisterSetter);
+  }, []);
+
   return (
     <LanguageProvider>
       <UserProvider>
@@ -104,7 +131,6 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
-              {/* Legacy alias — old /auth links still work */}
               <Route path="/auth" element={<Navigate to="/login" replace />} />
 
               {/* ── USER-ONLY ROUTES ─────────────────────────────────── */}
@@ -116,7 +142,6 @@ function App() {
                     </UserRealTimeProvider>
                   }
                 >
-                  {/* Sub-System 2 */}
                   <Route path="/sub-system-2" element={<SubSystem2MainPage />} />
                   <Route path="/sub-system-2/req-bid" element={<Req_BIDPage />} />
                   <Route path="/sub-system-2/req-coi" element={<Req_COIPage />} />
@@ -128,14 +153,12 @@ function App() {
                   <Route path="/sub-system-2/track-coi" element={<Track_COI />} />
                   <Route path="/sub-system-2/track-cor" element={<Track_COR />} />
 
-                  {/* Sub-System 3 */}
                   <Route path="/incident-complaint" element={<MainPage />} />
                   <Route path="/incident-complaint/file-complaint" element={<FileComplaintPage />} />
                   <Route path="/incident-complaint/incident-report" element={<IncidentReportPage />} />
                   <Route path="/incident-complaint/incident-map" element={<IncidentMapPage />} />
                   <Route path="/incident-complaint/case-management" element={<CaseManagementPage />} />
 
-                  {/* Sub-System 1 (RS) */}
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/residents" element={<Residents />} />
                   <Route path="/verification" element={<Verification />} />
@@ -160,6 +183,7 @@ function App() {
                 >
                   <Route path="/admin" element={<AdminLanding />} />
                   <Route path="/admin/residents" element={<Residents />} />
+                  <Route path="/admin/residents/add" element={<AddResident />} />
                   <Route path="/admin/households" element={<Households />} />
                   <Route path="/admin/user-management" element={<Verification />} />
                   <Route path="/admin/requests" element={<AdminPlaceholder title="Requests" />} />
@@ -174,10 +198,12 @@ function App() {
                 </Route>
               </Route>
 
-              {/* ── CATCH-ALL ────────────────────────────────────────── */}
               <Route path="*" element={<Navigate to="/" replace />} />
 
             </Routes>
+            
+            <DebugAutofill setFormData={activeSetFormData} />
+            
           </div>
         </Router>
       </UserProvider>
@@ -185,7 +211,6 @@ function App() {
   );
 }
 
-/** Temporary placeholder for admin pages not yet built */
 const AdminPlaceholder = ({ title }) => (
   <div className="h-full flex items-center justify-center">
     <h1 className="text-2xl font-bold text-gray-400 font-spartan">{title}</h1>

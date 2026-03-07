@@ -1,95 +1,103 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, X } from 'lucide-react'; 
-import { useNavigate, useLocation } from 'react-router-dom'; 
+import { Bell, X } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSound } from '../../../hooks/shared/useSound';
 import { verificationService } from '../../../services/sub-system-1/verification';
 
-const POLL_INTERVAL_MS = 5000; 
+const POLL_INTERVAL_MS = 5000;
 
 const VerificationNotificationListener = () => {
-  const { playFeedback } = useSound();
-  const navigate = useNavigate(); 
-  const location = useLocation(); 
+  const { playFeedback }      = useSound();
+  const navigate              = useNavigate();
+  const location              = useLocation();
   const [notificationBanner, setNotificationBanner] = useState(null);
-  
-  const lastCountKey = 'admin_last_pending_count';
-  const bannerTimerRef = useRef(null);
-  const isFetchingRef = useRef(false);
+
+  const lastCountKey    = 'admin_last_pending_count';
+  const bannerTimerRef  = useRef(null);
+  const isFetchingRef   = useRef(false);
 
   useEffect(() => {
     const loadPendingCount = async () => {
-  
       const token = localStorage.getItem('authToken');
-      if (!token) return; 
-
+      if (!token) return;
       if (isFetchingRef.current) return;
-      
+
       isFetchingRef.current = true;
       try {
-        const submissions = await verificationService.getSubmissions();
-        
-   
-        if (!Array.isArray(submissions)) return;
+        const raw = await verificationService.getSubmissions();
 
+        // ── FIX: getSubmissions() may return either:
+        //   • an array directly: [{ status, ... }, ...]
+        //   • an object with a data/submissions key: { data: [...] } or { submissions: [...] }
+        // We normalize here so the rest of the logic is safe.
+        let submissions;
+        if (Array.isArray(raw)) {
+          submissions = raw;
+        } else if (raw && Array.isArray(raw.data)) {
+          submissions = raw.data;
+        } else if (raw && Array.isArray(raw.submissions)) {
+          submissions = raw.submissions;
+        } else {
+          // Unexpected shape — log and bail gracefully, don't crash the poller
+          console.warn('[NotifListener] Unexpected getSubmissions() shape:', raw);
+          return;
+        }
+
+        // Count Pending (public registrations waiting for review)
         const pendingCount = submissions.filter(
           (s) => s.status?.toLowerCase() === 'pending'
         ).length;
 
-        const savedCount = sessionStorage.getItem(lastCountKey);
+        const savedCount    = sessionStorage.getItem(lastCountKey);
         const previousCount = savedCount !== null ? parseInt(savedCount, 10) : null;
 
-  
         if (previousCount !== null && pendingCount > previousCount) {
           const newCount = pendingCount - previousCount;
-          
           playFeedback('notify');
           setNotificationBanner({ newCount, totalPending: pendingCount });
 
           if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
-          bannerTimerRef.current = setTimeout(() => setNotificationBanner(null), 10000); 
+          bannerTimerRef.current = setTimeout(() => setNotificationBanner(null), 10000);
         }
 
         sessionStorage.setItem(lastCountKey, pendingCount.toString());
 
       } catch (error) {
-    
-        if (error.response?.status === 401) {
-            console.warn('[Listener] Unauthorized: Stopping poll.');
-            return;
+        if (error?.response?.status === 401) {
+          console.warn('[NotifListener] Unauthorized — stopping poll.');
+          return;
         }
-        console.error('Notification Listener Error:', error);
+        // Non-401 errors (network hiccup, etc.) are silently ignored so the
+        // interval keeps running and retries on the next tick.
+        console.error('[NotifListener] Poll error:', error);
       } finally {
         isFetchingRef.current = false;
       }
     };
 
-    // Initial load
     loadPendingCount();
-    
-    // Polling interval
     const interval = setInterval(loadPendingCount, POLL_INTERVAL_MS);
-    
+
     return () => {
       clearInterval(interval);
       if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
     };
   }, [playFeedback]);
 
-
   const handleViewPending = () => {
-    const targetPath = '/admin/user-management';
+    const targetPath     = '/admin/user-management';
     const isAlreadyOnPage = location.pathname === targetPath;
 
     if (isAlreadyOnPage) {
-      window.dispatchEvent(new CustomEvent('refreshVerificationData', { 
-        detail: { switchToTab: 'Pending' } 
+      window.dispatchEvent(new CustomEvent('refreshVerificationData', {
+        detail: { switchToTab: 'Pending' },
       }));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       navigate(targetPath);
       setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('refreshVerificationData', { 
-          detail: { switchToTab: 'Pending' } 
+        window.dispatchEvent(new CustomEvent('refreshVerificationData', {
+          detail: { switchToTab: 'Pending' },
         }));
       }, 100);
     }
@@ -123,7 +131,7 @@ const VerificationNotificationListener = () => {
             <X size={18} />
           </button>
         </div>
-        
+
         <button
           onClick={handleViewPending}
           className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black rounded-xl transition-all shadow-md active:scale-95 uppercase tracking-wider"
