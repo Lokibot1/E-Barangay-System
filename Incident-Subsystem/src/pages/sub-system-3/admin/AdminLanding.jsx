@@ -4,7 +4,6 @@ import themeTokens from "../../../Themetokens";
 import { getUser } from "../../../homepage/services/loginService";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
 import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
-// import { getAllAppointments } from "../../../services/sub-system-3/appointmentService";
 import InsightsModal from "../../../components/sub-system-3/InsightsModal";
 import VolumesFactors from "../../../components/sub-system-2/factors/VolumesFactors";
 import OperationsFactors from "../../../components/sub-system-2/factors/OperationsFactors";
@@ -273,20 +272,22 @@ const AdminLanding = () => {
         incidentService.getAllIncidents(),
         getAllComplaints(),
       ]);
+      const compArray = Array.isArray(compData) ? compData : compData.data || [];
       setIncidents(Array.isArray(incData) ? incData : incData.data || []);
-      setComplaints(Array.isArray(compData) ? compData : compData.data || []);
-    } catch (err) {
-      console.error("Failed to fetch incidents/complaints:", err);
-    }
+      setComplaints(compArray);
 
-    // Appointments fetched separately so a failure here never blocks the charts above
-    try {
-      const apptData = await getAllAppointments();
-      setAppointments(
-        Array.isArray(apptData) ? apptData : apptData?.data || [],
-      );
+      // Flatten appointments nested inside each complaint (mirrors AdminAppointments.jsx)
+      const allAppts = [];
+      compArray.forEach((complaint) => {
+        if (Array.isArray(complaint.appointments)) {
+          complaint.appointments.forEach((appt) => {
+            allAppts.push({ ...appt, complaint_id: appt.complaint_id ?? complaint.id });
+          });
+        }
+      });
+      setAppointments(allAppts);
     } catch (err) {
-      console.error("Failed to fetch appointments:", err);
+      console.error("Failed to fetch dashboard data:", err);
     }
 
     if (!silent) setLoading(false);
@@ -449,22 +450,30 @@ const AdminLanding = () => {
 
   // Appointment status donut data
   const getAppointmentStatusData = () => {
-    const counts = { pending: 0, approved: 0, rejected: 0 };
+    const counts = { scheduled: 0, rescheduled: 0, completed: 0, cancelled: 0, "no-show": 0 };
     appointments.forEach((a) => {
-      const s = (a.status || "pending").toLowerCase();
-      if (s === "approved") counts.approved++;
-      else if (s === "rejected") counts.rejected++;
-      else counts.pending++;
+      const s = (a.status || "scheduled").toLowerCase();
+      if (s in counts) counts[s]++;
+      else counts.scheduled++;
     });
     const colorMap = {
-      pending: "#F59E0B",
-      approved: "#10B981",
-      rejected: "#EF4444",
+      scheduled: "#3B82F6",
+      rescheduled: "#F59E0B",
+      completed: "#10B981",
+      cancelled: "#6B7280",
+      "no-show": "#EF4444",
+    };
+    const labelMap = {
+      scheduled: "Scheduled",
+      rescheduled: "Rescheduled",
+      completed: "Completed",
+      cancelled: "Cancelled",
+      "no-show": "No Show",
     };
     return Object.entries(counts)
       .filter(([, v]) => v > 0)
       .map(([name, value]) => ({
-        name: name.charAt(0).toUpperCase() + name.slice(1),
+        name: labelMap[name],
         value,
         color: colorMap[name],
       }));
@@ -480,27 +489,33 @@ const AdminLanding = () => {
         month: d.toLocaleString("default", { month: "short" }),
         year: d.getFullYear(),
         monthNum: d.getMonth(),
-        Pending: 0,
-        Approved: 0,
-        Rejected: 0,
+        Scheduled: 0,
+        Rescheduled: 0,
+        Completed: 0,
+        Cancelled: 0,
+        "No Show": 0,
       });
     }
     appointments.forEach((a) => {
-      const d = new Date(a.date || a.created_at);
+      const d = new Date(a.scheduled_at || a.date || a.created_at);
       const entry = months.find(
         (m) => m.monthNum === d.getMonth() && m.year === d.getFullYear(),
       );
       if (!entry) return;
-      const s = (a.status || "pending").toLowerCase();
-      if (s === "approved") entry.Approved++;
-      else if (s === "rejected") entry.Rejected++;
-      else entry.Pending++;
+      const s = (a.status || "scheduled").toLowerCase();
+      if (s === "rescheduled") entry.Rescheduled++;
+      else if (s === "completed") entry.Completed++;
+      else if (s === "cancelled") entry.Cancelled++;
+      else if (s === "no-show") entry["No Show"]++;
+      else entry.Scheduled++;
     });
-    return months.map(({ month, Pending, Approved, Rejected }) => ({
+    return months.map(({ month, Scheduled, Rescheduled, Completed, Cancelled, "No Show": NoShow }) => ({
       name: month,
-      Pending,
-      Approved,
-      Rejected,
+      Scheduled,
+      Rescheduled,
+      Completed,
+      Cancelled,
+      "No Show": NoShow,
     }));
   };
 
@@ -510,9 +525,10 @@ const AdminLanding = () => {
   const totalPending = [...incidents, ...complaints].filter(
     (r) => normalizeStatus(r.status) === "ongoing",
   ).length;
-  const pendingAppointments = appointments.filter(
-    (a) => (a.status || "pending").toLowerCase() === "pending",
-  ).length;
+  const pendingAppointments = appointments.filter((a) => {
+    const s = (a.status || "scheduled").toLowerCase();
+    return s === "scheduled" || s === "rescheduled";
+  }).length;
 
   const stats = [
     {
@@ -988,17 +1004,27 @@ const AdminLanding = () => {
                     />
                     <Legend wrapperStyle={{ fontSize: "12px" }} />
                     <Bar
-                      dataKey="Pending"
+                      dataKey="Scheduled"
+                      fill="#3B82F6"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="Rescheduled"
                       fill="#F59E0B"
                       radius={[4, 4, 0, 0]}
                     />
                     <Bar
-                      dataKey="Approved"
+                      dataKey="Completed"
                       fill="#10B981"
                       radius={[4, 4, 0, 0]}
                     />
                     <Bar
-                      dataKey="Rejected"
+                      dataKey="Cancelled"
+                      fill="#6B7280"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="No Show"
                       fill="#EF4444"
                       radius={[4, 4, 0, 0]}
                     />
