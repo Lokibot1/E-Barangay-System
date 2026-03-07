@@ -236,6 +236,7 @@ const AdminLanding = () => {
   const [polling, setPolling] = useState(false);
   const [showKebab, setShowKebab] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
+  const [hiddenSeries, setHiddenSeries] = useState({});
   const kebabRef = useRef(null);
   const pollIntervalRef = useRef(null);
 
@@ -580,6 +581,72 @@ const AdminLanding = () => {
   const appointmentStatusData = getAppointmentStatusData();
   const monthlyAppointmentData = getMonthlyAppointmentData();
 
+  // ── Legend toggle helpers ──
+  const toggleSeries = (chartId, key) =>
+    setHiddenSeries((prev) => {
+      const cur = new Set(prev[chartId]);
+      cur.has(key) ? cur.delete(key) : cur.add(key);
+      return { ...prev, [chartId]: cur };
+    });
+
+  const isHidden = (chartId, key) => !!(hiddenSeries[chartId]?.has(key));
+
+  // Custom clickable legend renderer (works for bar, line, and pie charts)
+  const renderClickableLegend = (chartId, overridePayload) => (props) => {
+    const items = overridePayload ?? props.payload ?? [];
+    return (
+      <ul
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          gap: "4px 14px",
+          padding: 0,
+          margin: 0,
+          listStyle: "none",
+        }}
+      >
+        {items.map((entry, i) => {
+          const hidden = isHidden(chartId, entry.value);
+          return (
+            <li
+              key={i}
+              onClick={() => toggleSeries(chartId, entry.value)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                cursor: "pointer",
+                userSelect: "none",
+                opacity: hidden ? 0.35 : 1,
+                fontSize: 12,
+              }}
+            >
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  backgroundColor: entry.color,
+                  flexShrink: 0,
+                }}
+              />
+              <span style={{ textDecoration: hidden ? "line-through" : "none" }}>
+                {entry.value}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  };
+
+  // Pre-filter pie/donut data so hidden slices are removed from the chart
+  // but the full payload is still passed to the legend so items remain clickable
+  const filteredStatusData = statusData.filter((d) => !isHidden("statusDist", d.name));
+  const filteredCategoryData = categoryData.filter((d) => !isHidden("categories", d.name));
+  const filteredApptStatusData = appointmentStatusData.filter((d) => !isHidden("apptStatus", d.name));
+
   const chartCardClass = `${t.cardBg} border ${isDark ? "border-slate-700" : "border-gray-200"} rounded-xl p-4 shadow-md`;
 
   return (
@@ -763,16 +830,18 @@ const AdminLanding = () => {
                         fontSize: "13px",
                       }}
                     />
-                    <Legend wrapperStyle={{ fontSize: "12px" }} />
+                    <Legend content={renderClickableLegend("monthlyReports")} />
                     <Bar
                       dataKey="Incidents"
                       fill="#3B82F6"
                       radius={[4, 4, 0, 0]}
+                      hide={isHidden("monthlyReports", "Incidents")}
                     />
                     <Bar
                       dataKey="Complaints"
                       fill="#F59E0B"
                       radius={[4, 4, 0, 0]}
+                      hide={isHidden("monthlyReports", "Complaints")}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -788,7 +857,7 @@ const AdminLanding = () => {
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
-                        data={statusData}
+                        data={filteredStatusData}
                         cx="50%"
                         cy="45%"
                         innerRadius={50}
@@ -799,7 +868,7 @@ const AdminLanding = () => {
                           `${name} ${(percent * 100).toFixed(0)}%`
                         }
                       >
-                        {statusData.map((entry, index) => (
+                        {filteredStatusData.map((entry, index) => (
                           <Cell key={index} fill={entry.color} />
                         ))}
                       </Pie>
@@ -811,7 +880,12 @@ const AdminLanding = () => {
                           fontSize: "13px",
                         }}
                       />
-                      <Legend wrapperStyle={{ fontSize: "12px" }} />
+                      <Legend
+                        content={renderClickableLegend(
+                          "statusDist",
+                          statusData.map((d) => ({ value: d.name, color: d.color })),
+                        )}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
@@ -857,13 +931,14 @@ const AdminLanding = () => {
                         fontSize: "13px",
                       }}
                     />
-                    <Legend wrapperStyle={{ fontSize: "12px" }} />
+                    <Legend content={renderClickableLegend("trend")} />
                     <Line
                       type="monotone"
                       dataKey="Incidents"
                       stroke="#3B82F6"
                       strokeWidth={2}
                       dot={{ r: 3 }}
+                      hide={isHidden("trend", "Incidents")}
                     />
                     <Line
                       type="monotone"
@@ -871,6 +946,7 @@ const AdminLanding = () => {
                       stroke="#F59E0B"
                       strokeWidth={2}
                       dot={{ r: 3 }}
+                      hide={isHidden("trend", "Complaints")}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -886,7 +962,7 @@ const AdminLanding = () => {
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
-                        data={categoryData}
+                        data={filteredCategoryData}
                         cx="50%"
                         cy="45%"
                         outerRadius={85}
@@ -896,10 +972,10 @@ const AdminLanding = () => {
                           `${name} ${(percent * 100).toFixed(0)}%`
                         }
                       >
-                        {categoryData.map((_, index) => (
+                        {filteredCategoryData.map((d, index) => (
                           <Cell
                             key={index}
-                            fill={COLORS[index % COLORS.length]}
+                            fill={COLORS[categoryData.indexOf(d) % COLORS.length]}
                           />
                         ))}
                       </Pie>
@@ -911,7 +987,15 @@ const AdminLanding = () => {
                           fontSize: "13px",
                         }}
                       />
-                      <Legend wrapperStyle={{ fontSize: "12px" }} />
+                      <Legend
+                        content={renderClickableLegend(
+                          "categories",
+                          categoryData.map((d, i) => ({
+                            value: d.name,
+                            color: COLORS[i % COLORS.length],
+                          })),
+                        )}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
@@ -933,7 +1017,7 @@ const AdminLanding = () => {
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
-                        data={appointmentStatusData}
+                        data={filteredApptStatusData}
                         cx="50%"
                         cy="45%"
                         innerRadius={50}
@@ -944,7 +1028,7 @@ const AdminLanding = () => {
                           `${name} ${(percent * 100).toFixed(0)}%`
                         }
                       >
-                        {appointmentStatusData.map((entry, index) => (
+                        {filteredApptStatusData.map((entry, index) => (
                           <Cell key={index} fill={entry.color} />
                         ))}
                       </Pie>
@@ -956,7 +1040,12 @@ const AdminLanding = () => {
                           fontSize: "13px",
                         }}
                       />
-                      <Legend wrapperStyle={{ fontSize: "12px" }} />
+                      <Legend
+                        content={renderClickableLegend(
+                          "apptStatus",
+                          appointmentStatusData.map((d) => ({ value: d.name, color: d.color })),
+                        )}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
@@ -1002,31 +1091,36 @@ const AdminLanding = () => {
                         fontSize: "13px",
                       }}
                     />
-                    <Legend wrapperStyle={{ fontSize: "12px" }} />
+                    <Legend content={renderClickableLegend("monthlyAppt")} />
                     <Bar
                       dataKey="Scheduled"
                       fill="#3B82F6"
                       radius={[4, 4, 0, 0]}
+                      hide={isHidden("monthlyAppt", "Scheduled")}
                     />
                     <Bar
                       dataKey="Rescheduled"
                       fill="#F59E0B"
                       radius={[4, 4, 0, 0]}
+                      hide={isHidden("monthlyAppt", "Rescheduled")}
                     />
                     <Bar
                       dataKey="Completed"
                       fill="#10B981"
                       radius={[4, 4, 0, 0]}
+                      hide={isHidden("monthlyAppt", "Completed")}
                     />
                     <Bar
                       dataKey="Cancelled"
                       fill="#6B7280"
                       radius={[4, 4, 0, 0]}
+                      hide={isHidden("monthlyAppt", "Cancelled")}
                     />
                     <Bar
                       dataKey="No Show"
                       fill="#EF4444"
                       radius={[4, 4, 0, 0]}
+                      hide={isHidden("monthlyAppt", "No Show")}
                     />
                   </BarChart>
                 </ResponsiveContainer>
