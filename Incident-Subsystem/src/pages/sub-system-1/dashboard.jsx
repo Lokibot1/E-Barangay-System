@@ -7,6 +7,7 @@ import SectorsTab from '../../components/sub-system-1/analytics/tabs/SectorsTab'
 import RegistrationTab from '../../components/sub-system-1/analytics/tabs/RegistrationTab';
 import LivelihoodTab from '../../components/sub-system-1/analytics/tabs/LivelihoodTab';
 import DecisionGuideTab from '../../components/sub-system-1/analytics/tabs/DecisionguideTab';
+import { analyticsService } from '../../services/sub-system-1/analytics';
 import { API_BASE_URL } from '../../config/api';
 import themeTokens from '../../Themetokens';
 
@@ -55,15 +56,11 @@ export default function Dashboard() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/analytics/all`, {
-        headers: { Accept: 'application/json' },
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      setData(await res.json());
+      const result = await analyticsService.getAllData();
+      setData(result);
       setLastUpdated(new Date());
     } catch (err) {
-      setError(err.message);
+      setError(err?.message || 'Failed to fetch analytics data');
     } finally {
       setLoading(false);
     }
