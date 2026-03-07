@@ -14,6 +14,7 @@ import {
   completeAppointment,
   markNoShow,
   getTimeSlots,
+  getAvailability,
 } from "../../../services/sub-system-3/appointmentService";
 import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
 import ConfirmationModal from "../../../components/shared/ConfirmationModal";
@@ -43,6 +44,7 @@ const MiniCalendar = ({
   selectedDate,
   onSelectDate,
   currentTheme,
+  availability = {},
 }) => {
   const t = themeTokens[currentTheme] || themeTokens.blue;
   const isDark = currentTheme === "dark";
@@ -62,6 +64,14 @@ const MiniCalendar = ({
     });
     return s;
   }, [appointments]);
+
+  const fullDates = useMemo(() => {
+    const s = new Set();
+    Object.values(availability).forEach((d) => {
+      if (d.is_full) s.add(d.date);
+    });
+    return s;
+  }, [availability]);
 
   const MONTH_NAMES = [
     "January",
@@ -177,8 +187,11 @@ const MiniCalendar = ({
               }`}
             >
               {day}
-              {has && !sel && (
+              {has && !sel && !fullDates.has(ds) && (
                 <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-amber-500" />
+              )}
+              {fullDates.has(ds) && !sel && (
+                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-red-500" />
               )}
             </button>
           );
@@ -204,9 +217,60 @@ const MiniCalendar = ({
   );
 };
 
+// ── Time Slot Picker ──────────────────────────────────────────────────────────
+const TimeSlotPicker = ({ date, value, onChange, availability = {}, isDark, t }) => {
+  const slots = useMemo(() => {
+    if (date && availability[date]?.slots) {
+      return availability[date].slots.map((s) => ({
+        value: s.time,
+        label: formatTime(s.time),
+        available: s.available,
+      }));
+    }
+    return TIME_SLOTS.map((s) => ({ value: s.value, label: s.label, available: true }));
+  }, [date, availability]);
+
+  if (!date) {
+    return (
+      <p className={`text-xs ${t.subtleText} font-kumbh italic py-2`}>
+        Select a date first to see available slots.
+      </p>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-5 gap-1.5">
+      {slots.map((slot) => {
+        const selected = value === slot.value;
+        const taken = !slot.available;
+        return (
+          <button
+            key={slot.value}
+            type="button"
+            disabled={taken}
+            onClick={() => !taken && onChange(slot.value)}
+            title={taken ? "Slot already taken" : slot.label}
+            className={`py-1.5 rounded-lg text-[11px] font-kumbh font-semibold text-center transition-all ${
+              taken
+                ? `cursor-not-allowed line-through ${isDark ? "bg-slate-700 text-slate-600" : "bg-gray-100 text-gray-400"}`
+                : selected
+                  ? "bg-green-600 text-white shadow-sm"
+                  : isDark
+                    ? "bg-slate-700 text-slate-200 hover:bg-green-700/60 hover:text-white"
+                    : "bg-white border border-gray-200 text-gray-700 hover:border-green-400 hover:text-green-700"
+            }`}
+          >
+            {slot.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
 // ── Reschedule Modal ──────────────────────────────────────────────────────────
 // ── Inline weekday-only date picker used by RescheduleModal ───────────────────
-const WeekdayPicker = ({ value, onChange, isDark, t }) => {
+const WeekdayPicker = ({ value, onChange, isDark, t, availability = {} }) => {
   const today = new Date().toISOString().split("T")[0];
   const [viewMonth, setViewMonth] = useState(() => {
     if (value) return new Date(value + "T00:00:00");
@@ -309,7 +373,8 @@ const WeekdayPicker = ({ value, onChange, isDark, t }) => {
           const dow = new Date(year, month, day).getDay();
           const isWeekend = dow === 0 || dow === 6;
           const isPast = ds < today;
-          const disabled = isWeekend || isPast;
+          const isFull = !isWeekend && !isPast && availability[ds]?.is_full === true;
+          const disabled = isWeekend || isPast || isFull;
           const selected = value === ds;
           const isToday = ds === today;
 
@@ -319,21 +384,29 @@ const WeekdayPicker = ({ value, onChange, isDark, t }) => {
               type="button"
               disabled={disabled}
               onClick={() => !disabled && onChange(ds)}
+              title={isFull ? "Fully booked" : undefined}
               className={`relative w-full aspect-square flex items-center justify-center rounded-lg text-[11px] font-kumbh font-medium transition-all ${
-                disabled
-                  ? `opacity-30 cursor-not-allowed ${isDark ? "text-slate-500" : "text-gray-400"}`
-                  : selected
-                    ? "bg-green-600 text-white shadow"
-                    : isToday
-                      ? isDark
-                        ? "bg-slate-600 text-slate-100 font-bold hover:bg-slate-500"
-                        : "bg-blue-50 text-blue-700 font-bold border border-blue-300 hover:bg-blue-100"
-                      : isDark
-                        ? "text-slate-300 hover:bg-slate-700"
-                        : "text-gray-700 hover:bg-gray-100"
+                selected
+                  ? "bg-green-600 text-white shadow"
+                  : isFull
+                    ? isDark
+                      ? "bg-red-900/30 text-red-400 cursor-not-allowed"
+                      : "bg-red-50 text-red-400 cursor-not-allowed"
+                    : disabled
+                      ? `opacity-30 cursor-not-allowed ${isDark ? "text-slate-500" : "text-gray-400"}`
+                      : isToday
+                        ? isDark
+                          ? "bg-slate-600 text-slate-100 font-bold hover:bg-slate-500"
+                          : "bg-blue-50 text-blue-700 font-bold border border-blue-300 hover:bg-blue-100"
+                        : isDark
+                          ? "text-slate-300 hover:bg-slate-700"
+                          : "text-gray-700 hover:bg-gray-100"
               }`}
             >
               {day}
+              {isFull && !selected && (
+                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-red-400" />
+              )}
             </button>
           );
         })}
@@ -349,6 +422,7 @@ const RescheduleModal = ({
   onClose,
   isDark,
   t,
+  availability = {},
 }) => {
   const { date: initDate, time: initTime } = parseScheduledAt(
     appointment.scheduled_at,
@@ -359,16 +433,20 @@ const RescheduleModal = ({
   );
   const [saving, setSaving] = useState(false);
 
-  const conflict =
-    date && time
-      ? appointments.some(
-          (a) =>
-            (a.date || "") === date &&
-            (a.time || "").substring(0, 5) === time &&
-            (a.status || "").toLowerCase().replace(/-/g, "_") !== "cancelled" &&
-            String(a.id) !== String(appointment.id),
-        )
-      : false;
+  const conflict = (() => {
+    if (!date || !time) return false;
+    if (availability[date]?.slots) {
+      const slot = availability[date].slots.find((s) => s.time === time);
+      if (slot) return !slot.available;
+    }
+    return appointments.some(
+      (a) =>
+        (a.date || "") === date &&
+        (a.time || "").substring(0, 5) === time &&
+        (a.status || "").toLowerCase().replace(/-/g, "_") !== "cancelled" &&
+        String(a.id) !== String(appointment.id),
+    );
+  })();
 
   const canSave = date && time && !conflict;
 
@@ -384,9 +462,9 @@ const RescheduleModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div
-        className={`${t.cardBg} rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden`}
+        className={`${t.cardBg} rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden`}
       >
         {/* Header */}
         <div
@@ -442,104 +520,105 @@ const RescheduleModal = ({
           </div>
         </div>
 
-        {/* Body */}
-        <div className="px-6 py-5 space-y-4">
-          {/* Date picker */}
-          <div>
-            <label
-              className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
-            >
-              New Date{" "}
-              <span className={`normal-case ${t.subtleText}`}>
-                (Mon – Fri only)
-              </span>
-            </label>
-            <WeekdayPicker
-              value={date}
-              onChange={setDate}
-              isDark={isDark}
-              t={t}
-            />
-            {date && (
-              <p className={`text-xs mt-1.5 font-kumbh ${t.subtleText}`}>
-                Selected:{" "}
-                <span className={`font-semibold ${t.cardText}`}>
-                  {formatDate(date)}
-                </span>
-              </p>
-            )}
-          </div>
-
-          {/* Time */}
-          <div>
-            <label
-              className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
-            >
-              New Time{" "}
-              <span className={`normal-case ${t.subtleText}`}>
-                (7:00 AM – 4:00 PM)
-              </span>
-            </label>
-            <select
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className={`w-full px-4 py-2.5 rounded-lg border ${t.cardBorder} ${isDark ? "bg-slate-700 text-slate-200" : "bg-white text-gray-800"} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
-            >
-              <option value="">Select time</option>
-              {TIME_SLOTS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Conflict warning */}
-          {conflict && (
-            <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <svg
-                className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+        {/* Body — two-column layout matching CreateAppointmentModal */}
+        <div className="px-6 py-5">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+            {/* LEFT — Date picker */}
+            <div className="flex flex-col gap-3">
+              <div>
+                <label
+                  className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
+                >
+                  New Date{" "}
+                  <span className={`normal-case font-normal ${t.subtleText}`}>
+                    (Mon – Fri only)
+                  </span>
+                </label>
+                <WeekdayPicker
+                  value={date}
+                  onChange={(d) => { setDate(d); setTime(""); }}
+                  isDark={isDark}
+                  t={t}
+                  availability={availability}
                 />
-              </svg>
-              <p className="text-xs text-red-600 font-kumbh">
-                This slot is already booked. Please choose a different date or
-                time.
-              </p>
+                {date && (
+                  <p className={`text-xs mt-1.5 font-kumbh ${t.subtleText}`}>
+                    Selected:{" "}
+                    <span className={`font-semibold ${t.cardText}`}>
+                      {formatDate(date)}
+                    </span>
+                  </p>
+                )}
+              </div>
             </div>
-          )}
 
-          {/* Info note */}
-          <div
-            className={`flex items-start gap-2 p-3 rounded-lg border ${isDark ? "bg-slate-700 border-slate-600" : "bg-blue-50 border-blue-200"}`}
-          >
-            <svg
-              className={`w-4 h-4 flex-shrink-0 mt-0.5 ${isDark ? "text-slate-300" : "text-blue-500"}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <p
-              className={`text-xs ${isDark ? "text-slate-300" : "text-blue-700"} font-kumbh`}
-            >
-              The complainant will be notified of this schedule change
-              automatically.
-            </p>
+            {/* RIGHT — Time slots + notes */}
+            <div className="flex flex-col gap-4">
+              <div>
+                <label
+                  className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
+                >
+                  New Time{" "}
+                  <span className={`normal-case font-normal ${t.subtleText}`}>
+                    (7:00 AM – 5:00 PM)
+                  </span>
+                </label>
+                <TimeSlotPicker
+                  date={date}
+                  value={time}
+                  onChange={setTime}
+                  availability={availability}
+                  isDark={isDark}
+                  t={t}
+                />
+              </div>
+
+              {/* Conflict warning */}
+              {conflict && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <svg
+                    className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                  <p className="text-xs text-red-600 font-kumbh">
+                    This slot is already booked. Please choose a different date or time.
+                  </p>
+                </div>
+              )}
+
+              {/* Info note */}
+              <div
+                className={`flex items-start gap-2 p-3 rounded-lg border ${isDark ? "bg-slate-700 border-slate-600" : "bg-blue-50 border-blue-200"}`}
+              >
+                <svg
+                  className={`w-4 h-4 flex-shrink-0 mt-0.5 ${isDark ? "text-slate-300" : "text-blue-500"}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <p
+                  className={`text-xs ${isDark ? "text-slate-300" : "text-blue-700"} font-kumbh`}
+                >
+                  The complainant will be notified of this schedule change automatically.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -559,7 +638,7 @@ const RescheduleModal = ({
             className={`px-5 py-2 rounded-lg text-sm font-kumbh font-semibold transition-colors ${
               !canSave || saving
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-green-600 text-white hover:bg-green-700 shadow-sm"
+                : "bg-amber-500 text-white hover:bg-amber-600 shadow-sm"
             }`}
           >
             {saving ? "Saving…" : "Confirm Reschedule"}
@@ -884,6 +963,7 @@ const CreateAppointmentModal = ({
   onClose,
   isDark,
   t,
+  availability = {},
 }) => {
   const [complaints, setComplaints] = useState([]);
   const [loadingC, setLoadingC] = useState(true);
@@ -905,15 +985,19 @@ const CreateAppointmentModal = ({
       .finally(() => setLoadingC(false));
   }, []);
 
-  const conflict =
-    date && time
-      ? appointments.some(
-          (a) =>
-            (a.date || "") === date &&
-            (a.time || "").substring(0, 5) === time &&
-            (a.status || "").toLowerCase().replace(/-/g, "_") !== "cancelled",
-        )
-      : false;
+  const conflict = (() => {
+    if (!date || !time) return false;
+    if (availability[date]?.slots) {
+      const slot = availability[date].slots.find((s) => s.time === time);
+      if (slot) return !slot.available;
+    }
+    return appointments.some(
+      (a) =>
+        (a.date || "") === date &&
+        (a.time || "").substring(0, 5) === time &&
+        (a.status || "").toLowerCase().replace(/-/g, "_") !== "cancelled",
+    );
+  })();
 
   const canSave = complaintId && title.trim() && date && time && !conflict;
 
@@ -1075,9 +1159,10 @@ const CreateAppointmentModal = ({
                 </label>
                 <WeekdayPicker
                   value={date}
-                  onChange={setDate}
+                  onChange={(d) => { setDate(d); setTime(""); }}
                   isDark={isDark}
                   t={t}
+                  availability={availability}
                 />
                 {date && (
                   <p className={`text-xs mt-1.5 font-kumbh ${t.subtleText}`}>
@@ -1096,21 +1181,17 @@ const CreateAppointmentModal = ({
                 >
                   Time <span className="text-red-500">*</span>{" "}
                   <span className={`normal-case font-normal ${t.subtleText}`}>
-                    (7:00 AM – 4:00 PM)
+                    (7:00 AM – 5:00 PM)
                   </span>
                 </label>
-                <select
+                <TimeSlotPicker
+                  date={date}
                   value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className={selectCls}
-                >
-                  <option value="">Select time</option>
-                  {TIME_SLOTS.map((s) => (
-                    <option key={s.value} value={s.value}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setTime}
+                  availability={availability}
+                  isDark={isDark}
+                  t={t}
+                />
               </div>
 
               {/* Conflict warning */}
@@ -1433,6 +1514,7 @@ const AdminAppointments = () => {
   // ── data ───────────────────────────────────────────────────────────────────
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [availability, setAvailability] = useState({});
 
   const fetchAppointments = useCallback(async () => {
     setLoading(true);
@@ -1486,9 +1568,25 @@ const AdminAppointments = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const fetchAvailability = useCallback(async () => {
+    try {
+      const start = new Date().toISOString().split("T")[0];
+      const end = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0];
+      const days = await getAvailability(start, end);
+      const map = {};
+      days.forEach((d) => { map[d.date] = d; });
+      setAvailability(map);
+    } catch (err) {
+      console.error("Failed to fetch availability:", err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchAppointments();
-  }, [fetchAppointments]);
+    fetchAvailability();
+  }, [fetchAppointments, fetchAvailability]);
 
   // ── overdue alert (show once per session after first load) ─────────────────
   useEffect(() => {
@@ -1623,6 +1721,7 @@ const AdminAppointments = () => {
         message: `Appointment rescheduled to ${formatDate(date)} at ${formatTime(time)}. Complainant notified.`,
       });
       fetchAppointments();
+      fetchAvailability();
     } catch (err) {
       addToast({ type: "error", title: "Error", message: err.message });
       throw err;
@@ -1638,6 +1737,7 @@ const AdminAppointments = () => {
         message: "Appointment created successfully. Complainant notified.",
       });
       fetchAppointments();
+      fetchAvailability();
     } catch (err) {
       addToast({ type: "error", title: "Error", message: err.message });
       throw err;
@@ -1711,6 +1811,7 @@ const AdminAppointments = () => {
                 setCurrentPage(1);
               }}
               currentTheme={currentTheme}
+              availability={availability}
             />
 
             {/* Legend */}
@@ -1722,6 +1823,7 @@ const AdminAppointments = () => {
               </p>
               {[
                 { label: "Has Appointment", dot: "bg-amber-400" },
+                { label: "Fully Booked", dot: "bg-red-500" },
                 { label: "Selected", dot: "bg-green-500" },
                 { label: "Today", dot: "bg-blue-400" },
               ].map((x) => (
@@ -2300,6 +2402,7 @@ const AdminAppointments = () => {
           onClose={() => setCreateOpen(false)}
           isDark={isDark}
           t={t}
+          availability={availability}
         />
       )}
 
@@ -2324,6 +2427,7 @@ const AdminAppointments = () => {
           onClose={() => setRescheduleTarget(null)}
           isDark={isDark}
           t={t}
+          availability={availability}
         />
       )}
 
