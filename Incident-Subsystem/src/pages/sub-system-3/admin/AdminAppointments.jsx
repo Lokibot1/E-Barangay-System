@@ -11,9 +11,12 @@ import Toast from "../../../components/shared/modals/Toast";
 import {
   rescheduleAppointment,
   createAppointment,
+  completeAppointment,
+  markNoShow,
   getTimeSlots,
 } from "../../../services/sub-system-3/appointmentService";
 import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
+import ConfirmationModal from "../../../components/shared/ConfirmationModal";
 
 const ROWS_PER_PAGE = 10;
 
@@ -436,10 +439,27 @@ const formatDate = (ds) => {
 };
 
 // ── Appointment Details Modal ─────────────────────────────────────────────────
-const AppointmentDetailsModal = ({ appointment, onClose, onReschedule, isDark, t }) => {
+const AppointmentDetailsModal = ({ appointment, onClose, onReschedule, onStatusChange, isDark, t }) => {
   const { date, time } = parseScheduledAt(appointment.scheduled_at);
   const status = (appointment.status || "scheduled").toLowerCase().replace(/-/g, "_");
   const canReschedule = status === "scheduled" || status === "rescheduled";
+  const canAct        = status === "scheduled" || status === "rescheduled";
+
+  const [confirm, setConfirm] = useState({ open: false, action: null, loading: false });
+
+  const openConfirm = (action) => setConfirm({ open: true, action, loading: false });
+  const closeConfirm = () => setConfirm({ open: false, action: null, loading: false });
+
+  const handleConfirm = async () => {
+    setConfirm((s) => ({ ...s, loading: true }));
+    try {
+      await onStatusChange(appointment, confirm.action);
+      closeConfirm();
+      onClose();
+    } catch {
+      setConfirm((s) => ({ ...s, loading: false }));
+    }
+  };
 
   const fullDate = date
     ? new Date(date + "T00:00:00").toLocaleDateString("en-US", {
@@ -524,7 +544,23 @@ const AppointmentDetailsModal = ({ appointment, onClose, onReschedule, isDark, t
         </div>
 
         {/* Footer */}
-        <div className={`px-6 py-4 border-t ${isDark ? "border-slate-700 bg-slate-900" : "border-gray-100 bg-gray-50"} flex gap-3 justify-end`}>
+        <div className={`px-6 py-4 border-t ${isDark ? "border-slate-700 bg-slate-900" : "border-gray-100 bg-gray-50"} flex flex-wrap gap-2 justify-end`}>
+          {canAct && (
+            <>
+              <button
+                onClick={() => openConfirm("completed")}
+                className="px-4 py-2 rounded-lg text-sm font-kumbh font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors shadow-sm"
+              >
+                Mark as Completed
+              </button>
+              <button
+                onClick={() => openConfirm("no-show")}
+                className="px-4 py-2 rounded-lg text-sm font-kumbh font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm"
+              >
+                Mark as No Show
+              </button>
+            </>
+          )}
           {canReschedule && (
             <button
               onClick={() => { onClose(); onReschedule(appointment); }}
@@ -533,16 +569,24 @@ const AppointmentDetailsModal = ({ appointment, onClose, onReschedule, isDark, t
               Reschedule
             </button>
           )}
-          <button
-            onClick={onClose}
-            className={`px-4 py-2 rounded-lg text-sm font-kumbh font-semibold transition-colors ${
-              isDark ? "bg-slate-700 text-slate-300 hover:bg-slate-600" : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-            }`}
-          >
-            Close
-          </button>
         </div>
       </div>
+
+      {/* Confirmation modal */}
+      <ConfirmationModal
+        isOpen={confirm.open}
+        loading={confirm.loading}
+        variant={confirm.action === "completed" ? "success" : "danger"}
+        title={confirm.action === "completed" ? "Mark as Completed?" : "Mark as No Show?"}
+        message={
+          confirm.action === "completed"
+            ? `This will mark Appointment #${appointment.id} as completed. This action cannot be undone.`
+            : `This will mark Appointment #${appointment.id} as no-show. This action cannot be undone.`
+        }
+        confirmLabel={confirm.action === "completed" ? "Yes, Mark Completed" : "Yes, Mark No Show"}
+        onConfirm={handleConfirm}
+        onCancel={closeConfirm}
+      />
     </div>
   );
 };
@@ -901,7 +945,7 @@ const AdminAppointments = () => {
   const handleReschedule = async (appt, date, time) => {
     try {
       const scheduledAt = `${date}T${time}:00`;
-      await rescheduleAppointment(appt.complaint_id, appt.id, scheduledAt);
+      await rescheduleAppointment(appt.complaint_id, appt, scheduledAt);
       addToast({
         type: "success",
         title: "Rescheduled",
@@ -925,6 +969,26 @@ const AdminAppointments = () => {
       fetchAppointments();
     } catch (err) {
       addToast({ type: "error", title: "Error", message: err.message });
+      throw err;
+    }
+  };
+
+  const handleStatusChange = async (appt, status) => {
+    try {
+      if (status === "completed") {
+        await completeAppointment(appt.complaint_id, appt.id);
+      } else if (status === "no-show") {
+        await markNoShow(appt.complaint_id, appt.id);
+      }
+      const label = status === "completed" ? "Completed" : "No Show";
+      addToast({
+        type: "success",
+        title: label,
+        message: `Appointment #${appt.id} marked as ${label.toLowerCase()}.`,
+      });
+      fetchAppointments();
+    } catch (err) {
+      addToast({ type: "error", title: "Action Failed", message: err.message });
       throw err;
     }
   };
@@ -1371,6 +1435,7 @@ const AdminAppointments = () => {
           appointment={detailsTarget}
           onClose={() => setDetailsTarget(null)}
           onReschedule={(appt) => setRescheduleTarget(appt)}
+          onStatusChange={handleStatusChange}
           isDark={isDark}
           t={t}
         />

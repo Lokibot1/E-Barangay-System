@@ -73,16 +73,16 @@ export const createAppointment = async (complaintId, appointmentData) => {
 };
 
 /**
- * PUT /api/complaints/{complaintId}/appointments/{appointmentId}
- * All fields are optional (sometimes). Valid statuses: scheduled, rescheduled,
- * completed, cancelled, no-show.
+ * PATCH /api/complaints/{complaintId}/appointments/{appointmentId}
+ * Partial update — primarily used for status changes.
+ * Valid statuses: scheduled, rescheduled, completed, cancelled, no-show.
  */
 export const updateAppointment = async (complaintId, appointmentId, updates) => {
   if (!isAuthenticated()) throw new Error("Not authenticated.");
   const res = await fetch(
     `${API_BASE}/complaints/${complaintId}/appointments/${appointmentId}`,
     {
-      method: "PUT",
+      method: "PATCH",
       headers: authHeaders(),
       body: JSON.stringify(updates),
     }
@@ -96,13 +96,22 @@ export const updateAppointment = async (complaintId, appointmentId, updates) => 
 
 /**
  * Reschedule an appointment.
- * @param {string} scheduledAt - ISO datetime string e.g. "2025-03-10T09:00:00"
+ * Creates a new appointment (POST) with the updated schedule, then marks the
+ * original as "rescheduled" via PATCH.
+ *
+ * @param {string} complaintId  - complaint the appointment belongs to
+ * @param {object} appointment  - full original appointment object (needs .id, .title, .description)
+ * @param {string} scheduledAt  - ISO datetime string e.g. "2025-03-10T09:00:00"
  */
-export const rescheduleAppointment = async (complaintId, appointmentId, scheduledAt) =>
-  updateAppointment(complaintId, appointmentId, {
+export const rescheduleAppointment = async (complaintId, appointment, scheduledAt) => {
+  const newAppt = await createAppointment(complaintId, {
+    title: appointment.title || "Rescheduled Hearing",
+    ...(appointment.description ? { description: appointment.description } : {}),
     scheduled_at: scheduledAt,
-    status: "rescheduled",
   });
+  await updateAppointment(complaintId, appointment.id, { status: "rescheduled" });
+  return newAppt;
+};
 
 export const completeAppointment = async (complaintId, appointmentId) =>
   updateAppointment(complaintId, appointmentId, { status: "completed" });
