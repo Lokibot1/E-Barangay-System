@@ -24,6 +24,25 @@ import Toast from "../../../components/shared/modals/Toast";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
 import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
 import { useRealTime } from "../../../context/RealTimeContext";
+import jsPDF from "jspdf";
+import barangayLogoUrl from "../../../assets/images/logo.jpg";
+import quezonCityLogoUrl from "../../../assets/images/quezon-city-logo.png";
+
+// Load an image URL as base64 for jsPDF
+const loadImageAsBase64 = (url) =>
+  new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext("2d").drawImage(img, 0, 0);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
 
 // ── Barangay Gulod boundary (OSM Relation 270990) ──────────────────────
 const BARANGAY_BOUNDARY = [
@@ -213,6 +232,14 @@ const BARANGAY_BOUNDARY = [
 ];
 
 const MAP_CENTER = [14.7118, 121.0404];
+
+// Outer rectangle for the inverse mask (dims everything outside Barangay Gulod)
+const MASK_OUTER = [
+  [14.660, 121.000],
+  [14.660, 121.090],
+  [14.760, 121.090],
+  [14.760, 121.000],
+];
 
 // Point-in-polygon check
 const isPointInPolygon = (point, polygon) => {
@@ -514,6 +541,10 @@ const AdminIncidentReports = () => {
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [updateFormType, setUpdateFormType] = useState("incident");
   const kebabRef = useRef(null);
+  const mapWrapperRef = useRef(null);
+  const mapDownloadMenuRef = useRef(null);
+  const [showMapDownloadMenu, setShowMapDownloadMenu] = useState(false);
+  const [isDownloadingMap, setIsDownloadingMap] = useState(false);
 
   // Close kebab on outside click
   useEffect(() => {
@@ -525,6 +556,17 @@ const AdminIncidentReports = () => {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [showKebab]);
+
+  // Close map download menu on outside click
+  useEffect(() => {
+    if (!showMapDownloadMenu) return;
+    const handler = (e) => {
+      if (mapDownloadMenuRef.current && !mapDownloadMenuRef.current.contains(e.target))
+        setShowMapDownloadMenu(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showMapDownloadMenu]);
 
   // ── Filter state ───────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState("all");
@@ -647,6 +689,143 @@ const AdminIncidentReports = () => {
     });
     return counts;
   }, [dataSource]);
+
+  // ── Map download helpers ───────────────────────────────────────────────
+  const captureMapCanvas = async () => {
+    const { default: html2canvas } = await import("html2canvas");
+    return html2canvas(mapWrapperRef.current, {
+      useCORS: true,
+      scale: 2,
+      backgroundColor: "#f8fafc",
+      logging: false,
+    });
+  };
+
+  const handleDownloadMapPNG = async () => {
+    if (!mapWrapperRef.current) return;
+    setIsDownloadingMap(true);
+    setShowMapDownloadMenu(false);
+    try {
+      const canvas = await captureMapCanvas();
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL("image/png");
+      link.download = `Barangay-Gulod-${pageTab === "incidents" ? "Incident" : "Complaint"}-Map-${new Date().toISOString().split("T")[0]}.png`;
+      link.click();
+    } finally {
+      setIsDownloadingMap(false);
+    }
+  };
+
+  const handleDownloadMapPDF = async () => {
+    if (!mapWrapperRef.current) return;
+    setIsDownloadingMap(true);
+    setShowMapDownloadMenu(false);
+    try {
+      const [canvas, brgyLogo, qcLogo] = await Promise.all([
+        captureMapCanvas(),
+        loadImageAsBase64(barangayLogoUrl),
+        loadImageAsBase64(quezonCityLogoUrl),
+      ]);
+
+      const doc = new jsPDF({ orientation: "landscape" });
+      const pageWidth = doc.internal.pageSize.getWidth();   // 297mm
+      const pageHeight = doc.internal.pageSize.getHeight(); // 210mm
+      const margin = 14;
+      const logoSize = 18;
+
+      // ── Header ──────────────────────────────────────────────────────
+      if (brgyLogo) doc.addImage(brgyLogo, "JPEG", margin, 6, logoSize, logoSize);
+      if (qcLogo) doc.addImage(qcLogo, "PNG", pageWidth - margin - logoSize, 6, logoSize, logoSize);
+
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(80);
+      doc.text("Republic of the Philippines", pageWidth / 2, 9, { align: "center" });
+      doc.text("Quezon City", pageWidth / 2, 13, { align: "center" });
+
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0);
+      doc.text("Barangay Gulod", pageWidth / 2, 18, { align: "center" });
+
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(80);
+      doc.text("Sangguniang Kabataan", pageWidth / 2, 22, { align: "center" });
+
+      doc.setDrawColor(180);
+      doc.setLineWidth(0.5);
+      doc.line(margin, 26, pageWidth - margin, 26);
+
+      // ── Title & metadata ─────────────────────────────────────────────
+      const tabLabel = pageTab === "incidents" ? "Incident" : "Complaint";
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0);
+      doc.text(`${tabLabel} Map Report — Barangay Gulod`, pageWidth / 2, 32, { align: "center" });
+
+      const generatedAt = new Date().toLocaleString("en-US", {
+        month: "long", day: "numeric", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+      });
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100);
+      doc.text(`Generated: ${generatedAt}`, pageWidth / 2, 37, { align: "center" });
+      doc.text(
+        `Showing ${filteredMapData.length} ${pageTab} on map`,
+        pageWidth / 2, 41, { align: "center" },
+      );
+
+      // ── Status summary ───────────────────────────────────────────────
+      const statusEntries = [
+        { key: "pending",    label: "New/Active", color: [220, 38, 38] },
+        { key: "dispatched", label: "Dispatched", color: [245, 158, 11] },
+        { key: "active",     label: "On-Site",    color: [37, 99, 235] },
+        { key: "resolved",   label: "Resolved",   color: [22, 163, 74] },
+        { key: "rejected",   label: "Rejected",   color: [107, 114, 128] },
+      ];
+      const summaryParts = statusEntries.map(({ key, label }) => {
+        const count = filteredMapData.filter((d) => toDisplayStatusKey(d.status) === key).length;
+        return `${label}: ${count}`;
+      });
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0);
+      doc.text(summaryParts.join("   |   "), margin, 47);
+
+      doc.setDrawColor(180);
+      doc.line(margin, 50, pageWidth - margin, 50);
+
+      // ── Map image ────────────────────────────────────────────────────
+      const mapImg = canvas.toDataURL("image/png");
+      const mapY = 53;
+      const mapH = pageHeight - mapY - 16;
+      const mapW = pageWidth - 2 * margin;
+      const aspect = canvas.width / canvas.height;
+      let imgW = mapW;
+      let imgH = imgW / aspect;
+      if (imgH > mapH) { imgH = mapH; imgW = imgH * aspect; }
+      const imgX = margin + (mapW - imgW) / 2;
+      doc.addImage(mapImg, "PNG", imgX, mapY, imgW, imgH);
+
+      // ── Footer ───────────────────────────────────────────────────────
+      const footerY = pageHeight - 6;
+      doc.setDrawColor(180);
+      doc.setLineWidth(0.3);
+      doc.line(margin, footerY - 4, pageWidth - margin, footerY - 4);
+      doc.setFontSize(7);
+      doc.setTextColor(130);
+      doc.text(
+        "Generated by E-Barangay Integrated Services Platform  •  Barangay Gulod, Quezon City",
+        pageWidth / 2, footerY, { align: "center" },
+      );
+
+      doc.save(`Barangay-Gulod-${tabLabel}-Map-${new Date().toISOString().split("T")[0]}.pdf`);
+    } finally {
+      setIsDownloadingMap(false);
+    }
+  };
 
   return (
     <div className={`min-h-full ${t.pageBg} pb-10`}>
@@ -1098,6 +1277,66 @@ const AdminIncidentReports = () => {
                   >
                     Map Legend
                   </h3>
+
+                  {/* Map download dropdown */}
+                  <div className="relative ml-auto" ref={mapDownloadMenuRef}>
+                    <button
+                      onClick={() => setShowMapDownloadMenu((p) => !p)}
+                      disabled={isDownloadingMap}
+                      title="Download Map"
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        isDark
+                          ? "text-slate-400 hover:text-slate-200 hover:bg-slate-700"
+                          : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                      } ${isDownloadingMap ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      {isDownloadingMap ? (
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                      )}
+                    </button>
+
+                    {showMapDownloadMenu && (
+                      <div
+                        className={`absolute right-0 top-full mt-1 w-44 rounded-xl shadow-lg border z-30 overflow-hidden ${
+                          isDark ? "bg-slate-700 border-slate-600" : "bg-white border-gray-200"
+                        }`}
+                      >
+                        <button
+                          onClick={handleDownloadMapPNG}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-kumbh font-semibold transition-colors ${
+                            isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          Download as PNG
+                        </button>
+                        <div className={`border-t ${isDark ? "border-slate-600" : "border-gray-100"}`} />
+                        <button
+                          onClick={handleDownloadMapPDF}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-kumbh font-semibold transition-colors ${
+                            isDark ? "text-slate-200 hover:bg-slate-600" : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          Download as PDF
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Type Filter */}
@@ -1391,12 +1630,14 @@ const AdminIncidentReports = () => {
               </div>
 
               {/* Map */}
-              <div className="flex-1 min-h-[450px]">
+              <div className="flex-1 min-h-[450px]" ref={mapWrapperRef}>
                 <MapContainer
                   center={MAP_CENTER}
                   zoom={15}
-                  minZoom={13}
+                  minZoom={14}
                   maxZoom={18}
+                  maxBounds={[[14.695, 121.025], [14.730, 121.057]]}
+                  maxBoundsViscosity={0.9}
                   scrollWheelZoom={true}
                   style={{ height: "100%", width: "100%", minHeight: "450px" }}
                   className="z-0"
@@ -1404,6 +1645,7 @@ const AdminIncidentReports = () => {
                   <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    crossOrigin="anonymous"
                   />
 
                   {/* Barangay boundary */}
@@ -1415,6 +1657,17 @@ const AdminIncidentReports = () => {
                       fillOpacity: 0.05,
                       weight: 3,
                       dashArray: "8 4",
+                    }}
+                  />
+
+                  {/* Inverse mask — dims surrounding areas outside Barangay Gulod */}
+                  <Polygon
+                    positions={[MASK_OUTER, BARANGAY_BOUNDARY]}
+                    pathOptions={{
+                      stroke: false,
+                      fillColor: "#1e293b",
+                      fillOpacity: 0.42,
+                      fillRule: "evenodd",
                     }}
                   />
 
