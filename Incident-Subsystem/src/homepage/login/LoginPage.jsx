@@ -123,6 +123,9 @@ const LoginPage = () => {
         Barangay<br />Gulod<br />Novaliches
       </h2>
       <div className={`mt-2.5 w-12 h-1 rounded-full bg-gradient-to-r ${t.primaryGrad}`} />
+      <p className={`mt-3 text-[10px] sm:text-[11px] font-black leading-relaxed font-kumbh uppercase ${mutedClass}`}>
+        OFFICE HOURS: 7:00 AM - 5:00 PM MONDAY - FRIDAY
+      </p>
     </div>
   );
 
