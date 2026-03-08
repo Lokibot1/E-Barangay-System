@@ -227,6 +227,8 @@ const LogSkeleton = ({ isDark }) => (
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+const POLL_INTERVAL = 15000; // 15 seconds
+
 const ActivityLogsView = ({ t, isDark, onBack }) => {
   const [logs, setLogs] = useState([]);
   const [page, setPage] = useState(1);
@@ -237,11 +239,13 @@ const ActivityLogsView = ({ t, isDark, onBack }) => {
   const [search, setSearch] = useState("");
   const [userType, setUserType] = useState(""); // "" | "admin" | "user"
   const [filters, setFilters] = useState({ action: "", start_date: "", end_date: "" });
+  const [newCount, setNewCount] = useState(0); // pending new logs from polling
 
   const filtersRef = useRef(filters);
   const loadingRef = useRef(false);
   const sentinelRef = useRef(null);
   const listRef = useRef(null);
+  const knownIdsRef = useRef(new Set()); // track ids we already have
 
   const applyFilters = (next) => {
     filtersRef.current = next;
@@ -250,6 +254,8 @@ const ActivityLogsView = ({ t, isDark, onBack }) => {
     setPage(1);
     setHasMore(true);
     setError(null);
+    setNewCount(0);
+    knownIdsRef.current = new Set();
     setResetKey((k) => k + 1);
   };
 
@@ -280,6 +286,7 @@ const ActivityLogsView = ({ t, isDark, onBack }) => {
         if (cancelled) return;
 
         const items = data.data || [];
+        items.forEach((item) => knownIdsRef.current.add(item.id));
         setLogs((prev) => (page === 1 ? items : [...prev, ...items]));
         setHasMore(page < (data.meta?.last_page ?? 1));
       } catch (e) {
@@ -314,6 +321,41 @@ const ActivityLogsView = ({ t, isDark, onBack }) => {
     obs.observe(el);
     return () => obs.disconnect();
   }, [hasMore, resetKey]);
+
+  // ── Real-time polling ──
+  useEffect(() => {
+    const poll = async () => {
+      if (loadingRef.current) return;
+      try {
+        const f = filtersRef.current;
+        const params = { page: 1, per_page: 20 };
+        if (f.action) params.action = f.action;
+        if (f.start_date) params.start_date = f.start_date;
+        if (f.end_date) params.end_date = f.end_date;
+
+        const data = await fetchAuditLogs(params);
+        const items = data.data || [];
+
+        const genuinelyNew = items.filter((item) => !knownIdsRef.current.has(item.id));
+        if (genuinelyNew.length === 0) return;
+
+        genuinelyNew.forEach((item) => knownIdsRef.current.add(item.id));
+        setLogs((prev) => {
+          const existingIds = new Set(prev.map((l) => l.id));
+          const fresh = genuinelyNew.filter((l) => !existingIds.has(l.id));
+          if (fresh.length === 0) return prev;
+          return [...fresh, ...prev];
+        });
+        setNewCount((c) => c + genuinelyNew.length);
+      } catch {
+        // silently ignore polling errors — main error state handles initial load
+      }
+    };
+
+    const id = setInterval(poll, POLL_INTERVAL);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Client-side filter ──
   const displayed = logs.filter((log) => {
@@ -518,6 +560,23 @@ const ActivityLogsView = ({ t, isDark, onBack }) => {
             {hasActiveFilters ? "No logs match your current filters." : "No activity logs found."}
           </p>
         </div>
+      )}
+
+      {/* New logs banner */}
+      {newCount > 0 && (
+        <button
+          onClick={() => {
+            setNewCount(0);
+            listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+          className={`w-full rounded-xl border px-4 py-2.5 text-[12px] font-semibold font-kumbh transition-all animate-pulse ${
+            isDark
+              ? "border-emerald-800/40 bg-emerald-900/20 text-emerald-300 hover:bg-emerald-900/30"
+              : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+          }`}
+        >
+          ↑ {newCount} new {newCount === 1 ? "log" : "logs"} — click to dismiss
+        </button>
       )}
 
       {/* Log list */}
