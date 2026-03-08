@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import ComplaintForm from "../../components/sub-system-3/Complaintform";
 import ProgressIndicator from "../../components/sub-system-3/ProgressIndicator";
@@ -9,6 +9,44 @@ import { getAllCustomFields } from "../../services/sub-system-3/customFieldServi
 import themeTokens from "../../Themetokens";
 import { useLanguage } from "../../context/LanguageContext";
 
+const COMPLAINT_DRAFT_KEY = "complaint_draft";
+
+const getLoggedInName = () => {
+  const user = getUser();
+  if (!user) return "";
+  const parts = [user.first_name, user.middle_name, user.last_name].filter(Boolean);
+  return parts.join(" ");
+};
+
+const defaultComplaintForm = () => ({
+  complaintDate: "",
+  complaintTime: "",
+  location: "",
+  latitude: null,
+  longitude: null,
+  complaintType: "",
+  severity: "",
+  description: "",
+  complainantName: getLoggedInName(),
+  complainantContact: "",
+  respondentName: "",
+  respondentAddress: "",
+  witnesses: [""],
+  desiredResolution: "",
+  attachments: [],
+  additionalNotes: "",
+  customFieldValues: {},
+});
+
+const hasComplaintDraftContent = (data) =>
+  data?.complaintDate?.trim() ||
+  data?.complaintType?.trim() ||
+  data?.description?.trim() ||
+  data?.respondentName?.trim() ||
+  data?.complainantContact?.trim() ||
+  data?.desiredResolution?.trim() ||
+  data?.additionalNotes?.trim();
+
 const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
   const t = themeTokens[currentTheme] || themeTokens.modern;
   const { tr } = useLanguage();
@@ -16,33 +54,10 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
   const navigate = useNavigate();
 
   const [currentStep, setCurrentStep] = useState(1);
-
-  const getLoggedInName = () => {
-    const user = getUser();
-    if (!user) return "";
-    const parts = [user.first_name, user.middle_name, user.last_name].filter(Boolean);
-    return parts.join(" ");
-  };
-
-  const [formData, setFormData] = useState({
-    complaintDate: "",
-    complaintTime: "",
-    location: "",
-    latitude: null,
-    longitude: null,
-    complaintType: "",
-    severity: "",
-    description: "",
-    complainantName: getLoggedInName(),
-    complainantContact: "",
-    respondentName: "",
-    respondentAddress: "",
-    witnesses: [""],
-    desiredResolution: "",
-    attachments: [],
-    additionalNotes: "",
-    customFieldValues: {},
-  });
+  const [formData, setFormData] = useState(defaultComplaintForm);
+  const [showDraftPrompt, setShowDraftPrompt] = useState(false);
+  const pendingDraftRef = useRef(null);
+  const submittedRef = useRef(false);
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,12 +75,28 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
     setToasts((prev) => prev.filter((x) => x.id !== id));
   }, []);
 
-  // ─── Auto-fill complainant name + fetch custom fields on open ───────────────
+  // ─── Auto-fill complainant name + fetch custom fields + check draft on open ─
   useEffect(() => {
     if (isOpen) {
       const name = getLoggedInName();
       if (name) {
         setFormData((prev) => ({ ...prev, complainantName: name }));
+      }
+
+      // Check for saved draft
+      try {
+        const saved = localStorage.getItem(COMPLAINT_DRAFT_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (hasComplaintDraftContent(parsed.formData)) {
+            pendingDraftRef.current = parsed;
+            setShowDraftPrompt(true);
+          } else {
+            localStorage.removeItem(COMPLAINT_DRAFT_KEY);
+          }
+        }
+      } catch {
+        localStorage.removeItem(COMPLAINT_DRAFT_KEY);
       }
 
       getAllCustomFields()
@@ -79,34 +110,44 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
     }
   }, [isOpen]);
 
-  // ─── Reset on close ─────────────────────────────────────────────────────────
+  // ─── Reset on close (save draft first) ─────────────────────────────────────
   useEffect(() => {
     if (!isOpen) {
+      if (!submittedRef.current && hasComplaintDraftContent(formData)) {
+        const serializable = { ...formData, attachments: [] };
+        localStorage.setItem(
+          COMPLAINT_DRAFT_KEY,
+          JSON.stringify({ formData: serializable, step: currentStep })
+        );
+      }
+      submittedRef.current = false;
       setTimeout(() => {
         setCurrentStep(1);
         setErrors({});
-        setFormData({
-          complaintDate: "",
-          complaintTime: "",
-          location: "",
-          latitude: null,
-          longitude: null,
-          complaintType: "",
-          severity: "",
-          description: "",
-          complainantName: getLoggedInName(),
-          complainantContact: "",
-          respondentName: "",
-          respondentAddress: "",
-          witnesses: [""],
-          desiredResolution: "",
-          attachments: [],
-          additionalNotes: "",
-          customFieldValues: {},
-        });
+        setShowDraftPrompt(false);
+        pendingDraftRef.current = null;
+        setFormData(defaultComplaintForm());
       }, 300);
     }
-  }, [isOpen]);
+  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Draft actions ──────────────────────────────────────────────────────────
+  const handleContinueDraft = () => {
+    if (pendingDraftRef.current) {
+      setFormData({ ...defaultComplaintForm(), ...pendingDraftRef.current.formData });
+      setCurrentStep(pendingDraftRef.current.step || 1);
+    }
+    setShowDraftPrompt(false);
+    pendingDraftRef.current = null;
+  };
+
+  const handleStartOver = () => {
+    localStorage.removeItem(COMPLAINT_DRAFT_KEY);
+    setFormData(defaultComplaintForm());
+    setCurrentStep(1);
+    setShowDraftPrompt(false);
+    pendingDraftRef.current = null;
+  };
 
   // ─── Body scroll lock ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -191,6 +232,8 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
     setIsSubmitting(true);
     try {
       await fileComplaint(formData);
+      submittedRef.current = true;
+      localStorage.removeItem(COMPLAINT_DRAFT_KEY);
 
       addToast({
         type: "success",
@@ -307,7 +350,42 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="relative flex-1 overflow-y-auto">
+            {/* Draft restore prompt */}
+            {showDraftPrompt && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                <div className={`${t.modalBg} rounded-xl p-6 mx-4 max-w-sm w-full shadow-2xl`}>
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </div>
+                    <h3 className={`text-lg font-bold ${t.modalTitle} font-spartan`}>Unsaved Draft Found</h3>
+                  </div>
+                  <p className={`text-sm ${t.modalSubtext} font-kumbh mb-1`}>
+                    You have a draft complaint. Would you like to continue where you left off?
+                  </p>
+                  <p className={`text-xs ${t.subtleText} font-kumbh mb-5`}>
+                    Note: uploaded attachments are not saved in drafts and will need to be re-attached.
+                  </p>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={handleStartOver}
+                      className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium font-kumbh border ${t.cardBorder} ${t.modalSubtext} ${t.footerPrevActiveBg} hover:opacity-80 transition-all`}
+                    >
+                      Start Over
+                    </button>
+                    <button
+                      onClick={handleContinueDraft}
+                      className="flex-1 px-4 py-2 rounded-lg text-sm font-medium font-kumbh text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:shadow-lg transition-all"
+                    >
+                      Continue Draft
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             <ComplaintForm
               currentStep={currentStep}
               formData={formData}
