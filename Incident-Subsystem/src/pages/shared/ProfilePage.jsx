@@ -14,6 +14,7 @@ import { authService } from "../../homepage/services/authService";
 import { getUser, isAdmin, logout } from "../../homepage/services/loginService";
 import { getInitials } from "../../utils/avatar";
 import ChangePasswordModal from "../../components/shared/ChangePasswordModal";
+import ActivityLogsView from "../../components/shared/ActivityLogsView";
 import Toast from "../../components/shared/modals/Toast";
 
 const MARITAL_STATUS_LABELS = {
@@ -338,6 +339,8 @@ export default function ProfilePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const [view, setView] = useState("profile");
+  const [logsEverOpened, setLogsEverOpened] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
@@ -633,7 +636,8 @@ export default function ProfilePage() {
                     <button
                       onClick={() => {
                         setMenuOpen(false);
-                        navigate("/admin/activity-logs");
+                        setView("logs");
+                        setLogsEverOpened(true);
                       }}
                       className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[13px] font-semibold font-kumbh transition ${
                         isDark
@@ -651,41 +655,66 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* Panels: Personal (left, wider) + Residency & Account (right column) */}
-        <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
-          <ProfilePanel
-            title="Personal information"
-            subtitle="Identity and contact details based on the user registration record."
-            icon={UserRound}
-            fields={personalFields}
-            gridClassName="grid-cols-2 sm:grid-cols-3"
-            fullClassName="col-span-2 sm:col-span-3"
-            t={t}
-            isDark={isDark}
-          />
+        {/* Slide container — profile ←→ activity logs */}
+        <div className="overflow-x-hidden">
+          <div
+            className="flex will-change-transform transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
+            style={{
+              width: "200%",
+              transform: view === "profile" ? "translateX(0%)" : "translateX(-50%)",
+            }}
+          >
+            {/* Profile panels */}
+            <div className="min-w-0" style={{ width: "50%" }}>
+              <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
+                <ProfilePanel
+                  title="Personal information"
+                  subtitle="Identity and contact details based on the user registration record."
+                  icon={UserRound}
+                  fields={personalFields}
+                  gridClassName="grid-cols-2 sm:grid-cols-3"
+                  fullClassName="col-span-2 sm:col-span-3"
+                  t={t}
+                  isDark={isDark}
+                />
 
-          <div className="flex flex-col gap-4">
-            <ProfilePanel
-              title="Residency information"
-              subtitle="Registered household and barangay address."
-              icon={MapPinned}
-              fields={residencyFields}
-              gridClassName="grid-cols-2"
-              fullClassName="col-span-2"
-              t={t}
-              isDark={isDark}
-            />
+                <div className="flex flex-col gap-4">
+                  <ProfilePanel
+                    title="Residency information"
+                    subtitle="Registered household and barangay address."
+                    icon={MapPinned}
+                    fields={residencyFields}
+                    gridClassName="grid-cols-2"
+                    fullClassName="col-span-2"
+                    t={t}
+                    isDark={isDark}
+                  />
 
-            <ProfilePanel
-              title="Account information"
-              subtitle="System access, role, and login details."
-              icon={ShieldCheck}
-              fields={accountFields}
-              gridClassName="grid-cols-2"
-              fullClassName="col-span-2"
-              t={t}
-              isDark={isDark}
-            />
+                  <ProfilePanel
+                    title="Account information"
+                    subtitle="System access, role, and login details."
+                    icon={ShieldCheck}
+                    fields={accountFields}
+                    gridClassName="grid-cols-2"
+                    fullClassName="col-span-2"
+                    t={t}
+                    isDark={isDark}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Activity logs panel */}
+            <div className="min-w-0" style={{ width: "50%" }}>
+              {logsEverOpened && (
+                <ActivityLogsView
+                  t={t}
+                  isDark={isDark}
+                  currentTheme={currentTheme}
+                  onBack={() => setView("profile")}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
