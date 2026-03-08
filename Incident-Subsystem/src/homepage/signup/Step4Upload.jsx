@@ -286,6 +286,109 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAgree, alreadyAgreed, isDarkMod
   );
 };
 
+const TermsAndConditionModal = ({ isOpen, onClose, onAgree, alreadyAgreed, isDarkMode }) => {
+  const [agreed, setAgreed] = useState(alreadyAgreed);
+
+  useEffect(() => {
+    if (isOpen) setAgreed(alreadyAgreed);
+  }, [isOpen, alreadyAgreed]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isOpen, onClose]);
+
+  const handleConfirm = () => {
+    if (!agreed) return;
+    onAgree();
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className={`relative w-full max-w-lg flex flex-col rounded-[2rem] shadow-2xl overflow-hidden max-h-[90vh] ${
+        isDarkMode ? "bg-slate-900 border border-slate-700" : "bg-white border border-slate-200"
+      }`}>
+        <div className={`flex items-center gap-3 px-6 py-4 border-b ${
+          isDarkMode ? "border-slate-700 bg-slate-800/60" : "border-slate-100 bg-slate-50"
+        }`}>
+          <div className="p-2 rounded-xl bg-emerald-600">
+            <FileText size={18} className="text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className={`text-xs font-black uppercase tracking-widest ${isDarkMode ? "text-slate-100" : "text-slate-800"}`}>
+              Terms and Condition
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className={`p-1.5 rounded-xl transition-colors ${isDarkMode ? "hover:bg-slate-700 text-slate-400" : "hover:bg-slate-100 text-slate-500"}`}
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className={`px-6 py-5 space-y-4 text-[11px] leading-relaxed overflow-y-auto ${
+          isDarkMode ? "text-slate-300" : "text-slate-600"
+        }`}>
+          <p>
+            By continuing your registration, you confirm that all information and uploaded documents are true,
+            complete, and belong to you.
+          </p>
+          <p>
+            False declarations, misuse of this portal, or submission of invalid requirements may result in
+            delayed processing, denial of application, or legal action.
+          </p>
+          <p>
+            Barangay Gulod may verify submitted details and supporting records in accordance with applicable
+            Philippine laws and local government procedures.
+          </p>
+        </div>
+
+        <div className={`px-6 py-4 border-t space-y-4 ${
+          isDarkMode ? "border-slate-700 bg-slate-800/60" : "border-slate-100 bg-slate-50"
+        }`}>
+          <label className="flex items-start gap-3 cursor-pointer">
+            <div className="mt-0.5 flex-shrink-0">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="h-5 w-5 rounded border-2 border-slate-300 dark:border-slate-600 cursor-pointer accent-emerald-600"
+              />
+            </div>
+            <p className={`text-[11px] font-bold leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>
+              I have read and understood the Terms and Condition.
+            </p>
+          </label>
+          <button
+            type="button"
+            onClick={handleConfirm}
+            disabled={!agreed}
+            className={`w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
+              agreed
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white active:scale-[0.98]"
+                : "bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed"
+            }`}
+          >
+            {agreed ? "I Agree & Continue" : "Read and Confirm Above"}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
+
 // ── Step4Upload ───────────────────────────────────────────────────────────────
 const Step4Upload = ({
   formData,
@@ -299,6 +402,8 @@ const Step4Upload = ({
 }) => {
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [privacyAgreed,    setPrivacyAgreed]    = useState(false);
+  const [termsModalOpen,   setTermsModalOpen]   = useState(false);
+  const [termsAgreed,      setTermsAgreed]      = useState(false);
 
   const labelClass = `text-[11px] font-black uppercase tracking-widest ${isDarkMode ? "text-slate-400" : "text-slate-500"}`;
 
@@ -308,7 +413,7 @@ const Step4Upload = ({
   const contactStr     = formData.contact ? String(formData.contact).replace(/\D/g, "") : "";
   const isContactValid = contactStr.length === 11 && contactStr.startsWith("09");
 
-  const isReady = hasFront && hasBack && isContactValid && privacyAgreed && !loading;
+  const isReady = hasFront && hasBack && isContactValid && privacyAgreed && termsAgreed && !loading;
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -319,6 +424,13 @@ const Step4Upload = ({
         onClose={() => setPrivacyModalOpen(false)}
         onAgree={() => setPrivacyAgreed(true)}
         alreadyAgreed={privacyAgreed}
+        isDarkMode={isDarkMode}
+      />
+      <TermsAndConditionModal
+        isOpen={termsModalOpen}
+        onClose={() => setTermsModalOpen(false)}
+        onAgree={() => setTermsAgreed(true)}
+        alreadyAgreed={termsAgreed}
         isDarkMode={isDarkMode}
       />
 
@@ -447,7 +559,68 @@ const Step4Upload = ({
         )}
       </section>
 
-      {/* 3. FINAL ACTIONS — unchanged from original */}
+      {/* 3. TERMS AND CONDITION SECTION */}
+      <section>
+        {!termsAgreed ? (
+          <button
+            type="button"
+            onClick={() => setTermsModalOpen(true)}
+            className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-dashed transition-all hover:scale-[1.01] active:scale-[0.99] ${
+              isDarkMode
+                ? "border-slate-600 hover:border-emerald-500 bg-slate-800/40"
+                : "border-slate-300 hover:border-emerald-500 bg-slate-50"
+            }`}
+          >
+            <div className={`p-3 rounded-xl flex-shrink-0 ${isDarkMode ? "bg-slate-700" : "bg-slate-200"}`}>
+              <FileText size={18} className={isDarkMode ? "text-slate-400" : "text-slate-500"} />
+            </div>
+            <div className="text-left flex-1 min-w-0">
+              <p className={`text-xs font-black uppercase tracking-wide ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+                Terms and Condition
+              </p>
+              <p className={`text-[9px] font-bold mt-0.5 uppercase tracking-wider ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
+                Required - Tap to read before submitting
+              </p>
+            </div>
+            <div className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl flex-shrink-0 ${
+              isDarkMode ? "bg-emerald-900/40 text-emerald-400" : "bg-emerald-100 text-emerald-700"
+            }`}>
+              Open
+            </div>
+          </button>
+        ) : (
+          <div className={`flex items-center gap-4 p-4 rounded-2xl border-2 ${
+            isDarkMode
+              ? "border-emerald-700 bg-emerald-900/20"
+              : "border-emerald-400 bg-emerald-50"
+          }`}>
+            <div className="p-3 rounded-xl bg-emerald-500 flex-shrink-0">
+              <CheckCircle2 size={18} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-xs font-black uppercase tracking-wide ${isDarkMode ? "text-emerald-300" : "text-emerald-700"}`}>
+                Terms and Condition Accepted
+              </p>
+              <p className={`text-[9px] font-bold mt-0.5 ${isDarkMode ? "text-emerald-600" : "text-emerald-600"}`}>
+                You can review this anytime
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setTermsModalOpen(true)}
+              className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl flex-shrink-0 transition-colors ${
+                isDarkMode
+                  ? "bg-slate-800 text-slate-400 hover:text-slate-200"
+                  : "bg-white text-slate-500 hover:text-slate-700 border border-slate-200"
+              }`}
+            >
+              Re-read
+            </button>
+          </div>
+        )}
+      </section>
+
+      {/* 4. FINAL ACTIONS — unchanged from original */}
       <div className="space-y-3 pt-2">
         <button
           type="button"
@@ -469,6 +642,8 @@ const Step4Upload = ({
             "Check Contact Number (Step 1)"
           ) : !hasFront || !hasBack ? (
             "Upload Both ID Photos"
+          ) : !termsAgreed ? (
+            "Accept the Terms and Condition to Continue"
           ) : !privacyAgreed ? (
             "Accept the Privacy Agreement to Continue"
           ) : (

@@ -8,7 +8,7 @@ import {
   LineChart, Line, CartesianGrid, XAxis, YAxis, ResponsiveContainer,
   BarChart, Bar,
 } from 'recharts';
-import { Users, ShieldCheck, Clock, UserCheck, Home, Landmark, XCircle, IdCard } from 'lucide-react';
+import { ShieldCheck, UserCheck, Home, Landmark } from 'lucide-react';
 import { StatCard, Card, SectionHeader } from '../AnalyticsInterface';
 import { COLORS, pct } from '../analyticsConfig';
 
@@ -63,29 +63,13 @@ export default function OverviewTab({ raw, t }) {
         t={t}
       />
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard
-          icon={Users}
-          label="Total Residents"
-          value={ov.total_residents ?? 0}
-          sub={`${ov.total_households ?? 0} households`}
-          color="primary"
-          t={t}
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         <StatCard
           icon={ShieldCheck}
           label="Verified"
           value={ov.verified ?? 0}
           sub={`${pct(ov.verified, ov.total_residents)}% of total`}
           color="success"
-          t={t}
-        />
-        <StatCard
-          icon={Clock}
-          label="Pending"
-          value={ov.pending ?? 0}
-          sub="Needs verification"
-          color="warning"
           t={t}
         />
         <StatCard
@@ -96,13 +80,11 @@ export default function OverviewTab({ raw, t }) {
           color="teal"
           t={t}
         />
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard
           icon={Home}
           label="Active Households"
           value={ov.total_households ?? 0}
+          sub={`${pct(ov.total_households, ov.total_residents)}% of total residents`}
           color="secondary"
           t={t}
         />
@@ -112,21 +94,6 @@ export default function OverviewTab({ raw, t }) {
           value={ov.indigent_households ?? 0}
           sub={`${pct(ov.indigent_households, ov.total_households)}% of HH`}
           color="warning"
-          t={t}
-        />
-        <StatCard
-          icon={XCircle}
-          label="Rejected"
-          value={ov.rejected ?? 0}
-          color="danger"
-          t={t}
-        />
-        <StatCard
-          icon={IdCard}
-          label="No Barangay ID"
-          value={ov.no_id ?? 0}
-          sub="Needs enrollment"
-          color="gray"
           t={t}
         />
       </div>

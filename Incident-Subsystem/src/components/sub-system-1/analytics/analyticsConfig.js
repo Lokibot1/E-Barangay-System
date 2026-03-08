@@ -77,7 +77,6 @@ export const TABS = [
 // ─── HEATMAP METRICS ─────────────────────────────────────────
 export const HEATMAP_METRICS = [
   { key: 'verified',     label: 'Verified',     icon: CheckCircle2 },
-  { key: 'total',        label: 'Total',        icon: Users2 },
   { key: 'seniors',      label: 'Seniors',      icon: UserRound },
   { key: 'pwd',          label: 'PWD',          icon: Accessibility },
   { key: 'unregistered', label: 'Unregistered', icon: AlertTriangle },
@@ -178,13 +177,66 @@ export const BARANGAY_BOUNDARY = [
 
 // Purok circle marker positions for the heatmap.
 export const PUROK_CENTERS = {
-  'Purok 1': { center: [14.7169, 121.0413], label: 'Purok 1' },
-  'Purok 2': { center: [14.7125, 121.0432], label: 'Purok 2' },
-  'Purok 3': { center: [14.7072, 121.0440], label: 'Purok 3' },
-  'Purok 4': { center: [14.7108, 121.0463], label: 'Purok 4' },
-  'Purok 5': { center: [14.7070, 121.0375], label: 'Purok 5' },
-  'Purok 6': { center: [14.7115, 121.0368], label: 'Purok 6' },
-  'Purok 7': { center: [14.7155, 121.0362], label: 'Purok 7' },
+  'Purok 1': { center: [14.7161, 121.0412], label: 'Purok 1' },
+  'Purok 2': { center: [14.7131, 121.0423], label: 'Purok 2' },
+  'Purok 3': { center: [14.7076, 121.0432], label: 'Purok 3' },
+  'Purok 4': { center: [14.7110, 121.0437], label: 'Purok 4' },
+  'Purok 5': { center: [14.7098, 121.0398], label: 'Purok 5' },
+  'Purok 6': { center: [14.7114, 121.0408], label: 'Purok 6' },
+  'Purok 7': { center: [14.7140, 121.0403], label: 'Purok 7' },
+};
+
+// Purok zone polygons (all points inside Barangay Gulod boundary)
+export const PUROK_ZONES = {
+  'Purok 1': [
+    [14.7154, 121.0404],
+    [14.7166, 121.0408],
+    [14.7164, 121.0420],
+    [14.7152, 121.0420],
+    [14.7148, 121.0411],
+  ],
+  'Purok 2': [
+    [14.7125, 121.0418],
+    [14.7138, 121.0418],
+    [14.7140, 121.0430],
+    [14.7130, 121.0436],
+    [14.7122, 121.0429],
+  ],
+  'Purok 3': [
+    [14.7069, 121.0422],
+    [14.7081, 121.0423],
+    [14.7084, 121.0439],
+    [14.7074, 121.0445],
+    [14.7067, 121.0437],
+  ],
+  'Purok 4': [
+    [14.7103, 121.0428],
+    [14.7115, 121.0428],
+    [14.7118, 121.0441],
+    [14.7110, 121.0447],
+    [14.7101, 121.0440],
+  ],
+  'Purok 5': [
+    [14.7092, 121.0391],
+    [14.7102, 121.0392],
+    [14.7105, 121.0404],
+    [14.7097, 121.0410],
+    [14.7089, 121.0403],
+  ],
+  'Purok 6': [
+    [14.7108, 121.0400],
+    [14.7120, 121.0402],
+    [14.7122, 121.0413],
+    [14.7115, 121.0419],
+    [14.7105, 121.0414],
+  ],
+  'Purok 7': [
+    [14.7133, 121.0394],
+    [14.7145, 121.0396],
+    [14.7148, 121.0407],
+    [14.7142, 121.0414],
+    [14.7131, 121.0410],
+  ],
 };
 
 // ─── UTILITY FUNCTIONS ────────────────────────────────────────

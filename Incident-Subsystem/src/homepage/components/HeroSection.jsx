@@ -1,15 +1,10 @@
 import { ShieldCheck } from "lucide-react";
 
-export default function HeroSection({
-  isDarkMode,
-  backgroundImage,
-  onGetDigitalId,
-  onLatestNews,
-}) {
+export default function HeroSection({ isDarkMode, backgroundImage, onLatestNews }) {
   return (
     <section
       id="about"
-      className="relative min-h-screen pt-20 flex items-center justify-center overflow-hidden"
+      className="relative min-h-screen pt-4 flex items-center justify-center overflow-hidden"
     >
       <div className="absolute inset-0 z-0">
         <img
@@ -41,13 +36,7 @@ export default function HeroSection({
           Ang portal para sa mas mabilis at modernong serbisyo publiko. Register
           your profile and access documents digitally.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button
-            onClick={onGetDigitalId}
-            className="w-full sm:w-auto px-10 md:px-12 py-5 md:py-6 bg-emerald-700 text-white rounded-[20px] md:rounded-[24px] font-black uppercase tracking-widest text-xs md:text-sm shadow-2xl hover:bg-emerald-800 transition-all"
-          >
-            Get Digital ID
-          </button>
+        <div className="flex justify-center">
           <button
             onClick={onLatestNews}
             className={`w-full sm:w-auto px-10 md:px-12 py-5 md:py-6 rounded-[20px] md:rounded-[24px] font-black uppercase tracking-widest text-xs md:text-sm border transition-all ${

@@ -48,33 +48,71 @@ function buildRecommendedAction(insight) {
   return 'Keep this item under monitoring and review trend movement during the next reporting cycle.';
 }
 
+function getPriorityStyles(priority, isDark) {
+  const p = String(priority ?? '').toUpperCase();
+  if (p === 'HIGH') {
+    return isDark
+      ? { iconBg: '#3f1d1d', iconText: '#fca5a5', badgeBg: '#7f1d1d', badgeText: '#fecaca', actionBg: '#3f1d1d', actionBorder: '#7f1d1d' }
+      : { iconBg: '#fee2e2', iconText: '#b91c1c', badgeBg: '#fee2e2', badgeText: '#b91c1c', actionBg: '#fff1f2', actionBorder: '#fecdd3' };
+  }
+  if (p === 'MEDIUM') {
+    return isDark
+      ? { iconBg: '#3b2a14', iconText: '#fcd34d', badgeBg: '#78350f', badgeText: '#fde68a', actionBg: '#3b2a14', actionBorder: '#78350f' }
+      : { iconBg: '#ffedd5', iconText: '#c2410c', badgeBg: '#ffedd5', badgeText: '#c2410c', actionBg: '#fff7ed', actionBorder: '#fed7aa' };
+  }
+  return isDark
+    ? { iconBg: '#1e293b', iconText: '#93c5fd', badgeBg: '#1e3a8a', badgeText: '#bfdbfe', actionBg: '#0f172a', actionBorder: '#334155' }
+    : { iconBg: '#dbeafe', iconText: '#1d4ed8', badgeBg: '#dbeafe', badgeText: '#1d4ed8', actionBg: '#eff6ff', actionBorder: '#bfdbfe' };
+}
+
 function PriorityInsightCard({ insight, t }) {
   const autoAction = buildRecommendedAction(insight);
+  const resolvedTheme =
+    typeof window !== 'undefined' ? localStorage.getItem('appTheme') || 'modern' : 'modern';
+  const isDark = resolvedTheme === 'dark';
+  const priorityStyle = getPriorityStyles(insight.priority, isDark);
+  const priorityText = String(insight.priority ?? 'N/A').toUpperCase();
 
   return (
     <Card className="mb-3" t={t}>
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-start gap-3 min-w-0">
-          <div className="h-10 w-10 rounded-xl bg-[#1a5276]/10 text-[#1a5276] flex items-center justify-center text-lg font-bold">
+          <div
+            className="h-10 w-10 rounded-xl flex items-center justify-center text-lg font-bold"
+            style={{ backgroundColor: priorityStyle.iconBg, color: priorityStyle.iconText }}
+          >
             {insight.icon ?? '!'}
           </div>
           <div className="min-w-0">
-            <h4 className="text-base font-black text-slate-900">{insight.title}</h4>
-            <p className="text-sm text-slate-600 mt-1">
+            <h4 className={`text-base font-black ${t ? t.cardText : 'text-slate-900'}`}>{insight.title}</h4>
+            <p className={`text-sm mt-1 ${t ? t.subtleText : 'text-slate-600'}`}>
               {insight.metric ?? 0} {insight.metric_label ?? 'items'} | Priority: {insight.priority ?? 'N/A'}
             </p>
           </div>
         </div>
+        <span
+          className="px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide"
+          style={{ backgroundColor: priorityStyle.badgeBg, color: priorityStyle.badgeText }}
+        >
+          {priorityText}
+        </span>
       </div>
 
-      <div className="mt-4 rounded-lg border border-gray-200 p-3 bg-gray-50">
-        <p className="text-xs font-black uppercase tracking-wider text-[#1a5276] mb-1">Actionable Reason</p>
-        <p className="text-sm text-slate-700">{insight.description}</p>
+      <div className={`mt-4 rounded-lg border p-3 ${t ? t.cardBorder : 'border-gray-200'} ${t ? t.inlineBg : 'bg-gray-50'}`}>
+        <p className={`text-xs font-black uppercase tracking-wider mb-1 ${t ? t.primaryText : 'text-blue-700'}`}>
+          Actionable Reason
+        </p>
+        <p className={`text-sm leading-relaxed ${t ? t.cardText : 'text-slate-700'}`}>{insight.description}</p>
       </div>
 
-      <div className="mt-3 rounded-lg border border-[#1a5276]/20 p-3 bg-[#1a5276]/5">
-        <p className="text-xs font-black uppercase tracking-wider text-[#1a5276] mb-1">Recommended Action (Auto-Generated)</p>
-        <p className="text-sm font-semibold text-[#1a5276]">{autoAction}</p>
+      <div
+        className="mt-3 rounded-lg border p-3"
+        style={{ backgroundColor: priorityStyle.actionBg, borderColor: priorityStyle.actionBorder }}
+      >
+        <p className={`text-xs font-black uppercase tracking-wider mb-1 ${t ? t.primaryText : 'text-blue-700'}`}>
+          Recommended Action (Auto-Generated)
+        </p>
+        <p className={`text-sm font-semibold leading-relaxed ${t ? t.cardText : 'text-slate-800'}`}>{autoAction}</p>
       </div>
     </Card>
   );
@@ -120,7 +158,7 @@ export default function DecisionGuideTab({ raw, t }) {
         const filtered = insights.filter((i) => i.priority === pg.key);
         if (!filtered.length) return null;
         return (
-          <Card key={pg.key} title={pg.label} t={t}>
+          <Card key={pg.key} title={pg.label} className="space-y-3" t={t}>
             {filtered.map((insight, idx) => (
               <PriorityInsightCard key={`${pg.key}-${idx}`} insight={insight} t={t} />
             ))}
@@ -133,7 +171,7 @@ export default function DecisionGuideTab({ raw, t }) {
       )}
 
       {summary.computed_at && (
-        <p className="text-xs text-gray-400 text-right mt-4">
+        <p className={`text-xs text-right mt-4 ${t ? t.subtleText : 'text-gray-400'}`}>
           Computed: {new Date(summary.computed_at).toLocaleString('en-PH')}
         </p>
       )}
