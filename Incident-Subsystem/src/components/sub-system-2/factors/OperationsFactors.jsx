@@ -40,7 +40,7 @@ const OperationsFactors = ({ t, isDark, currentTheme = "modern" }) => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <ChartCard title="Queue Processing Time" subtitle="Average minutes per request type" rightLabel="Ops" t={t} currentTheme={currentTheme}>
+   {/*    <ChartCard title="Queue Processing Time" subtitle="Average minutes per request type" rightLabel="Ops" t={t} currentTheme={currentTheme}>
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={queueProcessingTime}>
           <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#334155" : "#E5E7EB"} />
@@ -55,8 +55,8 @@ const OperationsFactors = ({ t, isDark, currentTheme = "modern" }) => {
         </BarChart>
       </ResponsiveContainer>
     </ChartCard>
-
-    <ChartCard title="Backlog Rate" subtitle="Weekly pending ratio" rightLabel="Weekly" t={t} currentTheme={currentTheme}>
+ */}
+    {/* <ChartCard title="Backlog Rate" subtitle="Weekly pending ratio" rightLabel="Weekly" t={t} currentTheme={currentTheme}>
       <ResponsiveContainer width="100%" height={250}>
         <LineChart data={backlogRate}>
           <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#334155" : "#E5E7EB"} />
@@ -70,8 +70,8 @@ const OperationsFactors = ({ t, isDark, currentTheme = "modern" }) => {
         </LineChart>
       </ResponsiveContainer>
     </ChartCard>
-
-    <ChartCard title="Queue Heatmap (Busiest Time of Day)" subtitle="Weekly activity intensity" rightLabel="Heatmap" t={t} currentTheme={currentTheme}>
+ */}
+    {/* <ChartCard title="Queue Heatmap (Busiest Time of Day)" subtitle="Weekly activity intensity" rightLabel="Heatmap" t={t} currentTheme={currentTheme}>
       <div className="grid grid-cols-6 gap-2 text-center">
         <div className={`text-xs font-kumbh font-bold ${t.subtleText}`} />
         {["Mon", "Tue", "Wed", "Thu", "Fri"].map((day) => (
@@ -88,7 +88,7 @@ const OperationsFactors = ({ t, isDark, currentTheme = "modern" }) => {
           </React.Fragment>
         ))}
       </div>
-    </ChartCard>
+    </ChartCard> */}
     </div>
   );
 };

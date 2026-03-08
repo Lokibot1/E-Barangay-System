@@ -664,7 +664,7 @@ export default function AdminLanding() {
           </div>
 
           <div>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Operations</h3>
+          
             <OperationsFactors t={t} isDark={isDark} currentTheme={currentTheme} />
           </div>
 

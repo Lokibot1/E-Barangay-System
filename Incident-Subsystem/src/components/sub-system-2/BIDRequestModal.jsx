@@ -275,15 +275,7 @@ const BIDRequestModal = ({ isOpen, onClose, currentTheme }) => {
 />
 							<Field label="Contact Number" name="contactNumber" value={formData.contactNumber} onChange={handleFieldChange} t={t} placeholder="09XXXXXXXXX" required icon="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
 							<Field label="Date of Birth" type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleFieldChange} t={t} required icon="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-							<SelectField
-	label="Gender"
-	name="gender"
-	options={["Male", "Female", "Other"]}
-	value={formData.gender}
-	onChange={handleFieldChange}
-	t={t}
-	icon="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z"
-/>
+							<SelectField label="Gender" name="gender" options={["Male", "Female", "Other"]} value={formData.gender} onChange={handleFieldChange} t={t} icon="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z"/>
 							<SelectField
 								label="Civil Status"
 								name="civilStatus"

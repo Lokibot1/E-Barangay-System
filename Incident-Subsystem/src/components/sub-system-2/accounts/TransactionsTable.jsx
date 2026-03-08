@@ -4,7 +4,7 @@ import themeTokens from "../../../Themetokens";
 
 const ROWS_PER_PAGE = 10;
 
-const statusTabs = ["All", "Pending", "Paid", "Failed", "Refunded"];
+const statusTabs = ["All", "Pending", "Paid"];
 
 const STATUS_TAB_CONFIG = {
   All:      { bg: "bg-gray-700",    text: "text-white", border: "border-gray-700" },

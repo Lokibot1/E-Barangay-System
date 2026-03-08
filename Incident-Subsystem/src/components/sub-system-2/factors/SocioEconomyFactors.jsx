@@ -34,24 +34,7 @@ const SocioEconomyFactors = ({ t, isDark, currentTheme = "modern" }) => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <ChartCard title="Indigency Demographic" subtitle="Primary profile segments" rightLabel="Demographic" t={t} currentTheme={currentTheme}>
-      <ResponsiveContainer width="100%" height={250}>
-        <BarChart data={indigencyDemographic}>
-          <defs>
-            <linearGradient id="indigencyGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#FDBA74" />
-              <stop offset="100%" stopColor="#F97316" />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#334155" : "#E5E7EB"} />
-          <XAxis dataKey="group" tick={{ fontSize: 11, fill: isDark ? "#CBD5E1" : "#475569" }} />
-          <YAxis tick={{ fontSize: 12, fill: isDark ? "#CBD5E1" : "#475569" }} />
-          <Tooltip contentStyle={tooltipStyle} />
-          <Bar dataKey="value" fill="url(#indigencyGradient)" radius={[8, 8, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-    </ChartCard>
-
+      
     <ChartCard title="Age / Gender Distribution" subtitle="Population split by cohort" rightLabel="Cohorts" t={t} currentTheme={currentTheme}>
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={ageGenderDistribution}>
