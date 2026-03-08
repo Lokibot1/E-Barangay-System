@@ -7,6 +7,14 @@ const Req_Sub_BID = () => {
   const currentTheme = localStorage.getItem("appTheme") || "modern";
   const t = themeTokens[currentTheme];
 
+  // Get current date in format: Month Day, Year
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   return (
     <div className={`${t.pageBg} min-h-full p-4 sm:p-6 lg:p-8`}>
       <div className="max-w-4xl mx-auto">
@@ -15,6 +23,7 @@ const Req_Sub_BID = () => {
         </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1.9fr_0.8fr] gap-3">
+          {/* Main card */}
           <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-4`}>
             <div className="flex flex-col items-center text-center">
               <div className="w-28 h-28 rounded-full bg-green-500 flex items-center justify-center mb-5">
@@ -30,17 +39,12 @@ const Req_Sub_BID = () => {
 
             <div className={`border-t ${t.cardBorder} my-6`} />
 
-            <h2 className={`font-spartan text-xl font-bold ${t.cardText} mb-2`}>Request Summary</h2>
-            <div className={`font-kumbh text-sm ${t.cardText} space-y-1`}>
-              <p><span className="font-bold">Reference Number:</span> BID-2026-1099-619</p>
-              <p><span className="font-bold">Date Submitted:</span> February 25, 2026</p>
-              <p><span className="font-bold">Document Type:</span> Barangay ID</p>
-              <p><span className="font-bold">Applicant Name:</span> Renz Aggabao</p>
-            </div>
+            <p><span className="font-bold">Date Submitted:</span> {formattedDate}</p>
 
             <div className={`border-t ${t.cardBorder} my-6`} />
+
             <p className={`font-kumbh text-sm ${t.cardText}`}>
-              Please wait for an email notification regarding the status of your request. You may also track its progress.
+              Please wait for an email notification regarding the status of your request. You will receive an email once it has been processed.
             </p>
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center items-center">
@@ -59,6 +63,7 @@ const Req_Sub_BID = () => {
             </div>
           </div>
 
+          {/* Sidebar */}
           <div className="space-y-4">
             <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-3`}>
               <h3 className={`font-spartan text-xl font-bold ${t.cardText} mb-2`}>Service Information</h3>

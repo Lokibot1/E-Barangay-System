@@ -190,7 +190,7 @@ const handleConfirmSubmit = async () => {
   }
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/cor-requests", {
+    const response = await fetch("http://127.0.0.1:8001/api/cor-requests", {
       method: "POST",
       body: data,
       headers: {

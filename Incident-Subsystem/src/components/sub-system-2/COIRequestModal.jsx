@@ -152,7 +152,7 @@ const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
     if (uploadedFile) data.append("uploaded_file", uploadedFile);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/coi-requests", {
+      const res = await fetch("http://127.0.0.1:8001/api/coi-requests", {
         method: "POST",
         body: data,
         headers: { Accept: "application/json" },

@@ -336,6 +336,7 @@ export default function AdminLanding() {
     border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
     borderRadius: "10px",
     fontSize: "12px",
+    color: isDark ? "#e2e8f0" : "#1e293b",
   };
   const heroClass = isDark
     ? `${cardClass} relative overflow-hidden p-5 sm:p-6 bg-slate-800/80`
@@ -532,7 +533,7 @@ export default function AdminLanding() {
           </article>
 
           <article className={`${cardClass} p-4`}>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Status Distribution</h3>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Case Resolution Status</h3>
             <div className="h-[290px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>

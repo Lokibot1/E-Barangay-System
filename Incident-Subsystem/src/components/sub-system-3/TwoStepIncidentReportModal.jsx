@@ -1,29 +1,40 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import TwoStepIncidentForm from "../../components/sub-system-3/TwoStepIncidentForm";
 import ProgressIndicator from "../../components/sub-system-3/ProgressIndicator";
 import Toast from "../../components/shared/modals/Toast";
 import themeTokens from "../../Themetokens";
 import { incidentService } from "../../services/sub-system-3/incidentService";
 import { getAllCustomFields } from "../../services/sub-system-3/customFieldService";
-import { useLanguage } from "../../context/LanguageContext";
+
+const INCIDENT_DRAFT_KEY = "incident_report_draft";
+
+const defaultIncidentForm = {
+  incidentTypes: [],
+  customTypes: [],
+  attachments: [],
+  description: "",
+  latitude: null,
+  longitude: null,
+  location: "",
+  additionalNotes: "",
+  customFieldValues: {},
+};
+
+const hasIncidentDraftContent = (data) =>
+  data?.description?.trim() ||
+  data?.incidentTypes?.length > 0 ||
+  data?.customTypes?.length > 0 ||
+  data?.location?.trim() ||
+  data?.additionalNotes?.trim() ||
+  Object.keys(data?.customFieldValues || {}).length > 0;
 
 const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
   const t = themeTokens[currentTheme] || themeTokens.modern;
-  const { tr } = useLanguage();
-  const im = tr.incidentModal;
-
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
-    incidentTypes: [],
-    customTypes: [],
-    attachments: [],
-    description: "",
-    latitude: null,
-    longitude: null,
-    location: "",
-    additionalNotes: "",
-    customFieldValues: {},
-  });
+  const [formData, setFormData] = useState(defaultIncidentForm);
+  const [showDraftPrompt, setShowDraftPrompt] = useState(false);
+  const pendingDraftRef = useRef(null);
+  const submittedRef = useRef(false);
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,6 +57,22 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
   // ─── Fetch incident types and custom fields from backend ───────────────────
   useEffect(() => {
     if (isOpen) {
+      // Check for saved draft
+      try {
+        const saved = localStorage.getItem(INCIDENT_DRAFT_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (hasIncidentDraftContent(parsed.formData)) {
+            pendingDraftRef.current = parsed;
+            setShowDraftPrompt(true);
+          } else {
+            localStorage.removeItem(INCIDENT_DRAFT_KEY);
+          }
+        }
+      } catch {
+        localStorage.removeItem(INCIDENT_DRAFT_KEY);
+      }
+
       setTypesLoading(true);
       incidentService
         .getIncidentTypes()
@@ -74,26 +101,44 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     }
   }, [isOpen, addToast]);
 
-  // ─── Reset on close ─────────────────────────────────────────────────────────
+  // ─── Reset on close (save draft first) ─────────────────────────────────────
   useEffect(() => {
     if (!isOpen) {
+      if (!submittedRef.current && hasIncidentDraftContent(formData)) {
+        const serializable = { ...formData, attachments: [] };
+        localStorage.setItem(
+          INCIDENT_DRAFT_KEY,
+          JSON.stringify({ formData: serializable, step: currentStep })
+        );
+      }
+      submittedRef.current = false;
       setTimeout(() => {
         setCurrentStep(1);
         setErrors({});
-        setFormData({
-          incidentTypes: [],
-          customTypes: [],
-          attachments: [],
-          description: "",
-          latitude: null,
-          longitude: null,
-          location: "",
-          additionalNotes: "",
-          customFieldValues: {},
-        });
+        setShowDraftPrompt(false);
+        pendingDraftRef.current = null;
+        setFormData(defaultIncidentForm);
       }, 300);
     }
-  }, [isOpen]);
+  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Draft actions ──────────────────────────────────────────────────────────
+  const handleContinueDraft = () => {
+    if (pendingDraftRef.current) {
+      setFormData({ ...defaultIncidentForm, ...pendingDraftRef.current.formData });
+      setCurrentStep(pendingDraftRef.current.step || 1);
+    }
+    setShowDraftPrompt(false);
+    pendingDraftRef.current = null;
+  };
+
+  const handleStartOver = () => {
+    localStorage.removeItem(INCIDENT_DRAFT_KEY);
+    setFormData(defaultIncidentForm);
+    setCurrentStep(1);
+    setShowDraftPrompt(false);
+    pendingDraftRef.current = null;
+  };
 
   // ─── Body scroll lock ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -180,6 +225,8 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     setIsSubmitting(true);
     try {
       await incidentService.submitReport(formData);
+      submittedRef.current = true;
+      localStorage.removeItem(INCIDENT_DRAFT_KEY);
       addToast({
         type: "success",
         title: "Report Submitted Successfully",
@@ -293,7 +340,42 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="relative flex-1 overflow-y-auto">
+            {/* Draft restore prompt */}
+            {showDraftPrompt && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                <div className={`${t.modalBg} rounded-xl p-6 mx-4 max-w-sm w-full shadow-2xl`}>
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className={`w-10 h-10 rounded-full ${t.primaryLight} flex items-center justify-center flex-shrink-0`}>
+                      <svg className={`w-5 h-5 ${t.primaryText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </div>
+                    <h3 className={`text-lg font-bold ${t.modalTitle} font-spartan`}>Unsaved Draft Found</h3>
+                  </div>
+                  <p className={`text-sm ${t.modalSubtext} font-kumbh mb-1`}>
+                    You have a draft incident report. Would you like to continue where you left off?
+                  </p>
+                  <p className={`text-xs ${t.subtleText} font-kumbh mb-5`}>
+                    Note: uploaded photos are not saved in drafts and will need to be re-attached.
+                  </p>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={handleStartOver}
+                      className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium font-kumbh border ${t.cardBorder} ${t.modalSubtext} ${t.footerPrevActiveBg} hover:opacity-80 transition-all`}
+                    >
+                      Start Over
+                    </button>
+                    <button
+                      onClick={handleContinueDraft}
+                      className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium font-kumbh text-white bg-gradient-to-r ${t.submitGrad} hover:shadow-lg transition-all`}
+                    >
+                      Continue Draft
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             <TwoStepIncidentForm
               currentStep={currentStep}
               formData={formData}

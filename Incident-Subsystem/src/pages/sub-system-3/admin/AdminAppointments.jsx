@@ -166,11 +166,11 @@ const MiniCalendar = ({
               onClick={() => handleDay(day)}
               className={`relative w-full aspect-square flex items-center justify-center rounded-lg text-[11px] font-kumbh font-medium transition-all ${
                 sel
-                  ? "bg-green-600 text-white shadow"
+                  ? `${isDark ? "bg-slate-500" : t.primarySolid} text-white shadow`
                   : tod
                     ? isDark
                       ? "bg-slate-600 text-slate-100 font-bold"
-                      : "bg-blue-50 text-blue-700 font-bold border border-blue-300"
+                      : `${t.primaryLight} ${t.primaryText} font-bold border border-current`
                     : wkd
                       ? isDark
                         ? "text-slate-600"
@@ -381,7 +381,7 @@ const WeekdayPicker = ({ value, onChange, isDark, t, availability = {} }) => {
               title={isFull ? "Fully booked" : undefined}
               className={`relative w-full aspect-square flex items-center justify-center rounded-lg text-[11px] font-kumbh font-medium transition-all ${
                 selected
-                  ? "bg-green-600 text-white shadow"
+                  ? `${isDark ? "bg-slate-500" : t.primarySolid} text-white shadow`
                   : isFull
                     ? isDark
                       ? "bg-red-900/30 text-red-400 cursor-not-allowed"
@@ -391,7 +391,7 @@ const WeekdayPicker = ({ value, onChange, isDark, t, availability = {} }) => {
                       : isToday
                         ? isDark
                           ? "bg-slate-600 text-slate-100 font-bold hover:bg-slate-500"
-                          : "bg-blue-50 text-blue-700 font-bold border border-blue-300 hover:bg-blue-100"
+                          : `${t.primaryLight} ${t.primaryText} font-bold border border-current ${t.primaryLightHover}`
                         : isDark
                           ? "text-slate-300 hover:bg-slate-700"
                           : "text-gray-700 hover:bg-gray-100"
@@ -1946,7 +1946,7 @@ const AdminAppointments = () => {
                 onClick={() => setActiveTab(s.key)}
                 className={`${t.cardBg} border-l-4 ${s.border} rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm cursor-pointer hover:shadow-md transition-all ${
                   activeTab === s.key
-                    ? "ring-2 ring-offset-1 ring-green-400"
+                    ? `ring-2 ring-offset-1 ${isDark ? "ring-slate-500" : t.selectorRing}`
                     : ""
                 }`}
               >
@@ -1995,7 +1995,7 @@ const AdminAppointments = () => {
               >
                 {/* Sliding indicator */}
                 <div
-                  className={`absolute rounded-lg pointer-events-none shadow-md ${STATUS_CFG[activeTab]?.tabBg || "bg-gray-700"}`}
+                  className={`absolute rounded-lg pointer-events-none shadow-md ${isDark ? (STATUS_CFG[activeTab]?.tabBg || "bg-gray-700") : t.primarySolid}`}
                   style={{
                     left: tabInd.left,
                     top: tabInd.top,
@@ -2016,8 +2016,8 @@ const AdminAppointments = () => {
                       activeTab === key
                         ? "text-white border-transparent"
                         : isDark
-                          ? "bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-200 hover:text-slate-800"
-                          : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
+                          ? "bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600 hover:text-slate-100 hover:border-slate-500"
+                          : `bg-white text-gray-500 border-gray-200 ${t.primaryHoverBorder}`
                     }`}
                   >
                     {cfg.label} ({statusCounts[key] ?? 0})
@@ -2028,7 +2028,7 @@ const AdminAppointments = () => {
               {/* Create New Appointment button */}
               <button
                 onClick={() => setCreateOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold font-kumbh bg-green-600 text-white hover:bg-green-700 transition-colors shadow-sm whitespace-nowrap flex-shrink-0"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold font-kumbh ${t.primarySolid} text-white ${t.primaryHover} transition-colors shadow-sm whitespace-nowrap flex-shrink-0`}
               >
                 <svg
                   className="w-3.5 h-3.5"
