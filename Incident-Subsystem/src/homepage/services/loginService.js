@@ -105,8 +105,8 @@ export const forgotPassword = async (email) => {
 /** Change password for an authenticated user. */
 export const changePassword = async ({
   current_password,
-  password,
-  password_confirmation,
+  new_password,
+  new_password_confirmation,
 }) => {
   const token = localStorage.getItem("authToken");
   const response = await fetch(`${API_BASE}/change-password`, {
@@ -116,7 +116,7 @@ export const changePassword = async ({
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ current_password, password, password_confirmation }),
+    body: JSON.stringify({ current_password, new_password, new_password_confirmation }),
   });
   const data = await response.json();
   if (!response.ok)

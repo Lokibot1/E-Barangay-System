@@ -133,8 +133,8 @@ const ChangePasswordModal = ({ isOpen, onClose, currentTheme, onToast, onLogout 
     try {
       await changePassword({
         current_password: fields.current,
-        password: fields.next,
-        password_confirmation: fields.confirm,
+        new_password: fields.next,
+        new_password_confirmation: fields.confirm,
       });
       onToast({
         type: "success",
