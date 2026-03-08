@@ -51,6 +51,7 @@ import Households from "./pages/sub-system-1/household";
 import Certificates from "./pages/sub-system-1/certificates";
 import Support from "./pages/sub-system-1/support";
 import Settings from "./pages/sub-system-1/settings";
+import ProfilePage from "./pages/shared/ProfilePage";
 import Logout from "./homepage/logout";
 import VerificationNotificationListener from "./components/sub-system-1/common/VerificationNotificationListener";
 
@@ -143,6 +144,7 @@ function App() {
                   <Route path="/certificates" element={<Certificates />} />
                   <Route path="/support" element={<Support />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/logout" element={<Logout />} />
                   <Route path="/documents-inquiry" element={<DocumentsInquiryPage />} />
                 </Route>
@@ -170,6 +172,7 @@ function App() {
                   <Route path="/admin/documents-inquiry" element={<DocumentsInquiryPage />} />
                   <Route path="/admin/certificates" element={<Certificates />} />
                   <Route path="/admin/settings" element={<Settings />} />
+                  <Route path="/admin/profile" element={<ProfilePage />} />
                   <Route path="/admin/support" element={<Support />} />
                 </Route>
               </Route>
