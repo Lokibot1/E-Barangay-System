@@ -251,29 +251,18 @@ const VideoPlayer = ({ url }) => {
 };
 
 const STATUS_CONFIG = {
-  all: { label: "ALL", color: "#374151" },
-  pending: { label: "NEW (PENDING)", color: "#dc2626" },
-  dispatched: { label: "DISPATCHED", color: "#f59e0b" },
-  active: { label: "ON-SITE (ACTIVE)", color: "#2563eb" },
-  "in-progress": { label: "IN PROGRESS", color: "#2563eb" },
-  "on-site": { label: "ON-SITE", color: "#2563eb" },
-  resolved: { label: "RESOLVED", color: "#16a34a" },
-  rejected: { label: "REJECTED", color: "#6b7280" },
+  pending:       { label: "PENDING",     color: "#dc2626" },
+  "in-progress": { label: "IN-PROGRESS", color: "#2563eb" },
+  dispatched:    { label: "DISPATCHED",  color: "#f59e0b" },
+  "on-site":     { label: "ON-SITE",     color: "#0891b2" },
+  resolved:      { label: "RESOLVED",    color: "#16a34a" },
+  rejected:      { label: "REJECTED",    color: "#6b7280" },
 };
 
-// Map backend complaint statuses (in-progress / on-site) → frontend STATUS_CONFIG key
-const toDisplayStatus = (backendStatus, isComplaint) => {
-  if (!isComplaint) return backendStatus || "pending";
-  if (backendStatus === "in-progress" || backendStatus === "on-site") return "active";
-  return backendStatus || "pending";
-};
+// Backend and frontend keys are identical — no mapping needed
+const toDisplayStatus = (backendStatus) => backendStatus || "pending";
 
-// Map frontend STATUS_CONFIG key → backend status (complaints only)
-const toBackendStatus = (displayStatus, isComplaint) => {
-  if (!isComplaint) return displayStatus;
-  if (displayStatus === "active") return "in-progress";
-  return displayStatus;
-};
+const toBackendStatus = (displayStatus) => displayStatus;
 
 const AdminReportDetailsModal = ({
   incident,
@@ -289,10 +278,12 @@ const AdminReportDetailsModal = ({
   const [noteText, setNoteText] = useState("");
   const [dispatchedTeam, setDispatchedTeam] = useState(null);
   const [currentStatus, setCurrentStatus] = useState(
-    toDisplayStatus(incident?.status, reportType === "complaints"),
+    toDisplayStatus(incident?.status),
   );
   const [showUpdate, setShowUpdate] = useState(false);
   const [updateText, setUpdateText] = useState("");
+  const [updateAttachment, setUpdateAttachment] = useState(null);
+  const updateAttachmentRef = useRef(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [localUpdates, setLocalUpdates] = useState([]);
   const [loadingUpdates, setLoadingUpdates] = useState(false);
@@ -305,7 +296,7 @@ const AdminReportDetailsModal = ({
   // Reset all state and load updates when a different incident is opened
   useEffect(() => {
     if (!incident) return;
-    setCurrentStatus(toDisplayStatus(incident.status, reportType === "complaints"));
+    setCurrentStatus(toDisplayStatus(incident.status));
     setModalTab("details");
     setPhotoIndex(0);
     setShowDispatch(false);
@@ -327,12 +318,28 @@ const AdminReportDetailsModal = ({
             : await incidentService.getIncidentUpdates(incident.id);
         const arr = Array.isArray(data) ? data : data?.data || [];
         setLocalUpdates(
-          arr.map((u) => ({
-            timestamp: u.created_at || u.timestamp || new Date().toISOString(),
-            text: u.text || u.description || u.notes || "",
-            type: u.type || "update",
-            author: u.author || u.admin_name || "",
-          })),
+          arr.map((u) => {
+            const eventType = u.event_type || "update";
+            let type = "update";
+            if (eventType === "status_change" || eventType === "status_changed") type = "status";
+            else if (eventType === "note_added") type = "note";
+            else if (eventType === "attachment_added") type = "attachment";
+            else if (eventType === "dispatch") type = "dispatch";
+            else if (eventType === "complaint_created" || eventType === "incident_created") type = "created";
+
+            let text = u.message || "";
+            if (!text && type === "status" && (u.old_status || u.new_status)) {
+              text = `Status changed: ${u.old_status || "—"} → ${u.new_status || "—"}`;
+            }
+
+            return {
+              timestamp: u.created_at || new Date().toISOString(),
+              text,
+              type,
+              author: u.user?.name || "",
+              attachment: u.attachment || null,
+            };
+          }),
         );
       } catch {
         // Endpoint may not exist yet; fail silently
@@ -363,7 +370,8 @@ const AdminReportDetailsModal = ({
 
   const isDispatched =
     currentStatus === "dispatched" ||
-    currentStatus === "active" ||
+    currentStatus === "in-progress" ||
+    currentStatus === "on-site" ||
     currentStatus === "resolved" ||
     dispatchedTeam;
   const isTerminal =
@@ -372,12 +380,12 @@ const AdminReportDetailsModal = ({
 
   // Call the correct update API based on report type
   const updateReport = async (updates) => {
+    const mapped = { ...updates };
+    if (mapped.status) mapped.status = toBackendStatus(mapped.status);
     if (reportType === "complaints") {
-      const mapped = { ...updates };
-      if (mapped.status) mapped.status = toBackendStatus(mapped.status, true);
       return updateComplaint(incident.id, mapped);
     }
-    return incidentService.updateIncident(incident.id, updates);
+    return incidentService.updateIncident(incident.id, mapped);
   };
 
   // Optimistically add an update entry to local state, then persist to backend
@@ -385,10 +393,11 @@ const AdminReportDetailsModal = ({
     const newUpdate = { ...entry, timestamp: new Date().toISOString() };
     setLocalUpdates((prev) => [newUpdate, ...prev]);
     try {
+      const payload = { message: entry.text, attachment: entry.attachment };
       if (reportType === "complaints") {
-        await addComplaintUpdate(incident.id, entry);
+        await addComplaintUpdate(incident.id, payload);
       } else {
-        await incidentService.addIncidentUpdate(incident.id, entry);
+        await incidentService.addIncidentUpdate(incident.id, payload);
       }
     } catch (err) {
       console.error("Failed to persist update entry:", err);
@@ -407,7 +416,7 @@ const AdminReportDetailsModal = ({
     try {
       await updateReport({ status: newStatus });
       setCurrentStatus(newStatus);
-      if (onStatusUpdate) onStatusUpdate(incident.id, toBackendStatus(newStatus, reportType === "complaints"));
+      if (onStatusUpdate) onStatusUpdate(incident.id, newStatus);
       await pushUpdate({
         text: `Status updated to: ${STATUS_CONFIG[newStatus]?.label || newStatus.toUpperCase()}`,
         type: "status",
@@ -483,9 +492,11 @@ const AdminReportDetailsModal = ({
         text: updateText.trim(),
         type: "update",
         author: "Admin",
+        attachment: updateAttachment || undefined,
       });
       setShowUpdate(false);
       setUpdateText("");
+      setUpdateAttachment(null);
     } catch (err) {
       console.error("Failed to save update:", err);
       alert(err.message || "Failed to save update.");
@@ -808,9 +819,32 @@ const AdminReportDetailsModal = ({
                   rows={6}
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-kumbh text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200"
                 />
-                <button className="w-full mt-3 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200">
-                  + Add Attachment
+                <input
+                  ref={updateAttachmentRef}
+                  type="file"
+                  accept="image/*,.pdf"
+                  className="hidden"
+                  onChange={(e) => setUpdateAttachment(e.target.files?.[0] || null)}
+                />
+                <button
+                  type="button"
+                  onClick={() => updateAttachmentRef.current?.click()}
+                  className="w-full mt-3 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                  {updateAttachment ? updateAttachment.name : "+ Add Attachment"}
                 </button>
+                {updateAttachment && (
+                  <button
+                    type="button"
+                    onClick={() => { setUpdateAttachment(null); if (updateAttachmentRef.current) updateAttachmentRef.current.value = ""; }}
+                    className="w-full mt-1.5 text-xs text-red-500 dark:text-red-400 font-kumbh hover:underline"
+                  >
+                    Remove attachment
+                  </button>
+                )}
                 <button
                   onClick={handleSaveUpdate}
                   disabled={isUpdating}
@@ -1157,21 +1191,14 @@ const AdminReportDetailsModal = ({
                                 {dateStr} &nbsp; {timeStr} &nbsp; {dayStr}
                               </span>
                             </div>
-                            {update.type === "note" && (
-                              <span className="text-xs font-bold text-gray-700 dark:text-gray-300 font-kumbh uppercase px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
-                                Note
-                              </span>
-                            )}
-                            {update.type === "dispatch" && (
-                              <span className="text-xs font-bold text-amber-700 dark:text-amber-400 font-kumbh uppercase px-2 py-0.5 bg-amber-50 dark:bg-amber-900/30 rounded">
-                                Dispatch
-                              </span>
-                            )}
-                            {update.type === "status" && (
-                              <span className="text-xs font-bold text-blue-700 dark:text-blue-400 font-kumbh uppercase px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 rounded">
-                                Status
-                              </span>
-                            )}
+                            {{
+                              note:       <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">NOTE</span>,
+                              status:     <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">STATUS CHANGE</span>,
+                              dispatch:   <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">DISPATCH</span>,
+                              attachment: <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">ATTACHMENT</span>,
+                              created:    <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400">CREATED</span>,
+                              update:     <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400">UPDATE</span>,
+                            }[update.type]}
                           </div>
                           {/* Description */}
                           <p className="text-xs text-gray-700 dark:text-gray-300 font-kumbh uppercase leading-relaxed">
@@ -1185,6 +1212,20 @@ const AdminReportDetailsModal = ({
                                 {update.author}
                               </p>
                             </div>
+                          )}
+                          {/* Attachment */}
+                          {update.attachment && (
+                            <a
+                              href={update.attachment}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 mt-2 text-xs text-blue-600 dark:text-blue-400 font-kumbh hover:underline"
+                            >
+                              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                              </svg>
+                              View Attachment
+                            </a>
                           )}
                         </div>
                       );
@@ -1238,6 +1279,7 @@ const AdminReportDetailsModal = ({
                   setShowUpdate(true);
                   setShowNotes(false);
                   setShowDispatch(false);
+                  setUpdateAttachment(null);
                 }}
                 disabled={isUpdating || isTerminal}
                 className="w-full py-2.5 rounded-lg bg-blue-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-blue-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1247,8 +1289,8 @@ const AdminReportDetailsModal = ({
 
               {/* Bottom row – post-dispatch */}
               <button
-                onClick={() => handleStatusChange("active")}
-                disabled={isUpdating || currentStatus === "active" || isTerminal}
+                onClick={() => handleStatusChange("in-progress")}
+                disabled={isUpdating || currentStatus === "in-progress" || isTerminal}
                 className="w-full py-2.5 rounded-lg bg-amber-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-amber-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isUpdating ? "Updating..." : "Mark as In-Progress"}

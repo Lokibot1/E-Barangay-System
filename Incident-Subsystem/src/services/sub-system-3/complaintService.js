@@ -171,14 +171,17 @@ export const addComplaintUpdate = async (id, updateData) => {
     throw new Error("You must be logged in to add an update.");
   }
 
+  const body = new FormData();
+  if (updateData.message) body.append("message", updateData.message);
+  if (updateData.attachment) body.append("attachment", updateData.attachment);
+
   const response = await fetch(`${API_BASE}/complaints/${id}/updates`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
       Accept: "application/json",
       Authorization: `Bearer ${getToken()}`,
     },
-    body: JSON.stringify(updateData),
+    body,
   });
 
   const data = await response.json();

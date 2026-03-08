@@ -11,7 +11,7 @@ const API_BASE = "http://localhost:8000/api";
 /**
  * Authenticate a user with email and password.
  */
-export const login = async (email, password) => {
+export const login = async (identifier, password) => {
   clearAuth(); // Clear stale session before new login
 
   const response = await fetch(`${API_BASE}/login`, {
@@ -20,7 +20,7 @@ export const login = async (email, password) => {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ identifier, password }),
   });
 
   const data = await response.json();
@@ -103,7 +103,11 @@ export const forgotPassword = async (email) => {
 };
 
 /** Change password for an authenticated user. */
-export const changePassword = async ({ current_password, password, password_confirmation }) => {
+export const changePassword = async ({
+  current_password,
+  password,
+  password_confirmation,
+}) => {
   const token = localStorage.getItem("authToken");
   const response = await fetch(`${API_BASE}/change-password`, {
     method: "POST",
@@ -115,7 +119,8 @@ export const changePassword = async ({ current_password, password, password_conf
     body: JSON.stringify({ current_password, password, password_confirmation }),
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Failed to change password.");
+  if (!response.ok)
+    throw new Error(data.message || "Failed to change password.");
   return data;
 };
 
