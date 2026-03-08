@@ -74,7 +74,7 @@ const IconActionButtons = ({
   onStatusUpdated,
 }) => {
   const updateStatus = async (action) => {
-    const url = `http://127.0.0.1:8000/api/documents/${referenceNumber}/${action}`;
+    const url = `http://127.0.0.1:8001/api/documents/${referenceNumber}/${action}`;
     try {
       const res = await fetch(url, { method: "POST" });
       const data = await res.json();
@@ -148,7 +148,7 @@ const DocumentsInquiryPage = () => {
 
   // ── Fetch API data ────────────────────────────────────────────────
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/document-status/counts")
+    fetch("http://127.0.0.1:8001/api/document-status/counts")
       .then((res) => res.json())
       .then((data) => {
         setSummaryCounts({
@@ -158,7 +158,7 @@ const DocumentsInquiryPage = () => {
         });
       });
 
-    fetch("http://127.0.0.1:8000/api/documents")
+    fetch("http://127.0.0.1:8001/api/documents")
       .then((res) => res.json())
       .then((data) => {
         setDocumentCardsData(data);
