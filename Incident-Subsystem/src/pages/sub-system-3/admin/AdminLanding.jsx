@@ -532,7 +532,7 @@ export default function AdminLanding() {
           </article>
 
           <article className={`${cardClass} p-4`}>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Status Distribution</h3>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Case Resolution Status</h3>
             <div className="h-[290px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
