@@ -66,7 +66,7 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
       .bindTooltip('Barangay Gulod, Novaliches, Quezon City');
 
     const hallIcon = L.divIcon({
-      html: `<div style="background:${COLORS.primary};color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3)">BH</div>`,
+      html: `<div style="background:#334155;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:10px;border:2px solid #ffffff;box-shadow:0 2px 5px rgba(0,0,0,.25)">BH</div>`,
       iconSize: [26, 26],
       iconAnchor: [13, 13],
       className: '',
@@ -159,7 +159,7 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
       }
     }
 
-    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.fillStyle = 'rgba(15,23,42,0.55)';
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         const current = assignments[row][col];
@@ -192,13 +192,12 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
 
       const val = Number(p[metric] ?? 0);
       const ratio = Math.min(val / maxVal, 1);
-      const level = ratio >= 0.67 ? 'HIGH' : ratio >= 0.34 ? 'MED' : 'LOW';
       const labelColor = metricStyle.accent;
       const offset = LABEL_OFFSETS[p.purok] ?? [0, 0];
       const labelPosition = [meta.center[0] + offset[0], meta.center[1] + offset[1]];
 
       const labelIcon = L.divIcon({
-        html: `<div style="background:rgba(15,23,42,0.88);color:#fff;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:900;white-space:nowrap;border:1.5px solid rgba(255,255,255,.55);box-shadow:0 3px 8px rgba(0,0,0,.35);text-shadow:0 1px 1px rgba(0,0,0,.55)"><span style="display:inline-block;width:8px;height:8px;border-radius:9999px;background:${labelColor};margin-right:6px;vertical-align:middle"></span>${p.purok} - ${val} <span style="opacity:.95">(${level})</span></div>`,
+        html: `<div style="background:rgba(255,255,255,0.9);color:#0f172a;border-radius:16px;padding:3px 9px;font-size:12px;font-weight:800;white-space:nowrap;border:1px solid rgba(148,163,184,.7);box-shadow:0 2px 5px rgba(0,0,0,.2)">${p.purok} - <span style="color:${labelColor};font-weight:900">${val}</span></div>`,
         className: '',
         iconAnchor: [45, 12],
       });
@@ -532,21 +531,6 @@ export default function HeatmapTab({ raw, t }) {
                 <div className={`${t ? t.inlineBg : 'bg-gray-50'} rounded-lg p-3`}>
                   <p className={`text-[10px] uppercase ${t ? t.subtleText : 'text-gray-500'}`}>Verification Rate</p>
                   <p className={`font-bold ${t ? t.cardText : 'text-gray-800'}`}>{calcVerifRate(selectedPurok)}%</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <div className={`${t ? t.inlineBg : 'bg-gray-50'} rounded-lg p-2 text-center`}>
-                  <p className={`text-[10px] uppercase ${t ? t.subtleText : 'text-gray-500'}`}>Total</p>
-                  <p className={`font-bold ${t ? t.cardText : 'text-gray-800'}`}>{selectedPurok.total ?? 0}</p>
-                </div>
-                <div className={`${t ? t.inlineBg : 'bg-gray-50'} rounded-lg p-2 text-center`}>
-                  <p className={`text-[10px] uppercase ${t ? t.subtleText : 'text-gray-500'}`}>Verified</p>
-                  <p className="font-bold text-emerald-600">{selectedPurok.verified ?? 0}</p>
-                </div>
-                <div className={`${t ? t.inlineBg : 'bg-gray-50'} rounded-lg p-2 text-center`}>
-                  <p className={`text-[10px] uppercase ${t ? t.subtleText : 'text-gray-500'}`}>Unregistered</p>
-                  <p className="font-bold text-rose-600">{selectedPurok.unregistered ?? 0}</p>
                 </div>
               </div>
 
