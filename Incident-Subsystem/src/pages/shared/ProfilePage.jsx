@@ -1,16 +1,20 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
+  ActivitySquare,
   BadgeCheck,
+  KeyRound,
   MapPinned,
+  MoreVertical,
   ShieldCheck,
   UserRound,
 } from "lucide-react";
 import themeTokens from "../../Themetokens";
 import { authService } from "../../homepage/services/authService";
-import { getUser, isAdmin } from "../../homepage/services/loginService";
+import { getUser, isAdmin, logout } from "../../homepage/services/loginService";
 import { getInitials } from "../../utils/avatar";
+import ChangePasswordModal from "../../components/shared/ChangePasswordModal";
+import Toast from "../../components/shared/modals/Toast";
 
 const MARITAL_STATUS_LABELS = {
   1: "Single",
@@ -331,7 +335,29 @@ export default function ProfilePage() {
     () => localStorage.getItem("appTheme") || "modern",
   );
   const [locationRefs, setLocationRefs] = useState({ puroks: [], streets: [] });
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const menuRef = useRef(null);
   const navigate = useNavigate();
+
+  const addToast = (toast) => setToasts((prev) => [...prev, { ...toast, id: Date.now() }]);
+  const removeToast = (id) => setToasts((prev) => prev.filter((t) => t.id !== id));
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const handler = (e) => setCurrentTheme(e.detail);
@@ -502,10 +528,18 @@ export default function ProfilePage() {
 
   return (
     <div className={`min-h-full ${t.pageBg} p-4 sm:p-5 lg:p-6`}>
+      <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
+      <ChangePasswordModal
+        isOpen={changePasswordOpen}
+        onClose={() => setChangePasswordOpen(false)}
+        currentTheme={currentTheme}
+        onToast={addToast}
+        onLogout={handleLogout}
+      />
       <div className="mx-auto max-w-7xl space-y-4">
         {/* Compact header */}
         <section
-          className={`${t.cardBg} relative overflow-hidden rounded-[22px] border ${t.cardBorder} shadow-[0_24px_58px_-36px_rgba(15,23,42,0.35)]`}
+          className={`${t.cardBg} relative rounded-[22px] border ${t.cardBorder} shadow-[0_24px_58px_-36px_rgba(15,23,42,0.35)]`}
         >
           <div
             className={`absolute inset-0 bg-gradient-to-br ${t.primaryGrad} opacity-10`}
@@ -559,18 +593,61 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Back button */}
-            <button
-              onClick={() => navigate(-1)}
-              className={`inline-flex shrink-0 items-center gap-1.5 self-start rounded-lg border px-3 py-1.5 text-[12px] font-semibold font-kumbh transition ${
-                isDark
-                  ? "border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back
-            </button>
+            {/* Kebab menu */}
+            <div ref={menuRef} className="relative self-start">
+              <button
+                onClick={() => setMenuOpen((v) => !v)}
+                className={`flex h-8 w-8 items-center justify-center rounded-lg border transition ${
+                  isDark
+                    ? "border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
+                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                <MoreVertical className="h-4 w-4" />
+              </button>
+
+              {menuOpen && (
+                <div
+                  className={`absolute right-0 top-9 z-50 min-w-[180px] overflow-hidden rounded-xl border shadow-lg ${
+                    isDark
+                      ? "border-slate-700 bg-slate-900"
+                      : "border-slate-200 bg-white"
+                  }`}
+                >
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setChangePasswordOpen(true);
+                    }}
+                    className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[13px] font-semibold font-kumbh transition ${
+                      isDark
+                        ? "text-slate-200 hover:bg-slate-800"
+                        : "text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    <KeyRound className="h-4 w-4 shrink-0" />
+                    Change Password
+                  </button>
+
+                  {adminAccount && (
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false);
+                        navigate("/admin/activity-logs");
+                      }}
+                      className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[13px] font-semibold font-kumbh transition ${
+                        isDark
+                          ? "text-slate-200 hover:bg-slate-800"
+                          : "text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      <ActivitySquare className="h-4 w-4 shrink-0" />
+                      View Activity Logs
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </section>
 

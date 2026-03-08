@@ -97,18 +97,42 @@ export const forgotPassword = async (email) => {
     body: JSON.stringify({ email }),
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Failed to send reset email.");
+  if (!response.ok)
+    throw new Error(data.message || "Failed to send reset email.");
+  return data;
+};
+
+/** Change password for an authenticated user. */
+export const changePassword = async ({ current_password, password, password_confirmation }) => {
+  const token = localStorage.getItem("authToken");
+  const response = await fetch(`${API_BASE}/change-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ current_password, password, password_confirmation }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "Failed to change password.");
   return data;
 };
 
 /** Submit a new password using the reset token from the emailed link. */
-export const resetPassword = async ({ token, email, password, password_confirmation }) => {
+export const resetPassword = async ({
+  token,
+  email,
+  password,
+  password_confirmation,
+}) => {
   const response = await fetch(`${API_BASE}/reset-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ token, email, password, password_confirmation }),
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Failed to reset password.");
+  if (!response.ok)
+    throw new Error(data.message || "Failed to reset password.");
   return data;
 };
