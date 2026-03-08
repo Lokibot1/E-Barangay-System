@@ -243,19 +243,19 @@ const ProfileField = ({
   return (
     <div className={`${full ? fullClassName : ""} text-left`}>
       <div
-        className={`h-full rounded-2xl border px-4 py-3.5 sm:px-5 ${
+        className={`h-full rounded-xl border px-3 py-2.5 ${
           isDark
             ? "border-slate-700 bg-slate-900/50"
             : "border-slate-200/70 bg-slate-50/85"
         }`}
       >
         <p
-          className={`text-left text-[10px] font-semibold uppercase tracking-[0.18em] font-kumbh ${t.subtleText}`}
+          className={`text-left text-[9px] font-semibold uppercase tracking-[0.18em] font-kumbh ${t.subtleText}`}
         >
           {label}
         </p>
         <p
-          className={`mt-1.5 break-words text-left text-[15px] font-semibold leading-6 font-kumbh ${
+          className={`mt-1 break-words text-left text-[13px] font-semibold leading-5 font-kumbh ${
             isMissing ? t.subtleText : t.cardText
           }`}
         >
@@ -277,10 +277,10 @@ const ProfilePanel = ({
   isDark,
 }) => (
   <section
-    className={`${t.cardBg} overflow-hidden rounded-[26px] border ${t.cardBorder} text-left shadow-[0_18px_45px_-32px_rgba(15,23,42,0.28)]`}
+    className={`${t.cardBg} overflow-hidden rounded-[22px] border ${t.cardBorder} text-left shadow-[0_18px_45px_-32px_rgba(15,23,42,0.28)]`}
   >
     <div
-      className={`border-b px-4 py-4 sm:px-5 ${
+      className={`border-b px-4 py-3 ${
         isDark ? "border-slate-700" : "border-slate-200"
       }`}
       style={{
@@ -289,28 +289,28 @@ const ProfilePanel = ({
           : "linear-gradient(135deg, rgba(248,250,252,0.98), rgba(241,245,249,0.88))",
       }}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-2.5">
         <div
-          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl ${
+          className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl ${
             isDark
               ? "bg-slate-900 text-slate-200"
               : "bg-white text-slate-700 shadow-sm"
           }`}
         >
-          <Icon className="h-[18px] w-[18px]" />
+          <Icon className="h-4 w-4" />
         </div>
         <div className="min-w-0">
-          <h2 className={`text-base font-bold font-spartan sm:text-lg ${t.cardText}`}>
+          <h2 className={`text-[14px] font-bold font-spartan leading-tight ${t.cardText}`}>
             {title}
           </h2>
-          <p className={`mt-1 text-sm leading-6 font-kumbh ${t.subtleText}`}>
+          <p className={`text-[12px] font-kumbh leading-4 ${t.subtleText}`}>
             {subtitle}
           </p>
         </div>
       </div>
     </div>
 
-    <div className={`grid gap-3 px-4 py-4 sm:px-5 sm:py-5 ${gridClassName}`}>
+    <div className={`grid gap-2 px-3 py-3 sm:px-4 sm:py-4 ${gridClassName}`}>
       {fields.map((field) => (
         <ProfileField
           key={`${title}-${field.label}`}
@@ -502,120 +502,110 @@ export default function ProfilePage() {
 
   return (
     <div className={`min-h-full ${t.pageBg} p-4 sm:p-5 lg:p-6`}>
-      <div className="mx-auto max-w-6xl space-y-5">
-        <div className="flex w-full justify-start">
-          <button
-            onClick={() => navigate(-1)}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-semibold font-kumbh transition ${
-              isDark
-                ? "border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
-                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-            }`}
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back
-          </button>
-        </div>
-
+      <div className="mx-auto max-w-7xl space-y-4">
+        {/* Compact header */}
         <section
-          className={`${t.cardBg} relative overflow-hidden rounded-[30px] border ${t.cardBorder} shadow-[0_24px_58px_-36px_rgba(15,23,42,0.35)]`}
+          className={`${t.cardBg} relative overflow-hidden rounded-[22px] border ${t.cardBorder} shadow-[0_24px_58px_-36px_rgba(15,23,42,0.35)]`}
         >
           <div
-            className={`relative h-[108px] bg-gradient-to-br sm:h-[132px] ${t.primaryGrad}`}
-          >
-            <div className="absolute inset-0 bg-slate-950/45" />
-            <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/30 to-transparent" />
-            <div className="absolute -left-10 top-4 h-28 w-28 rounded-full bg-white/10 blur-3xl" />
-            <div className="absolute right-4 top-3 h-20 w-20 rounded-full border border-white/10 bg-white/10 blur-2xl" />
-            <div className="absolute inset-x-6 bottom-4 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
-          </div>
-          <div className="relative px-5 pb-5 pt-0 sm:px-6 sm:pb-6 lg:px-7">
-            <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
-              <div
-                className={`relative -mt-9 flex h-[72px] w-[72px] items-center justify-center rounded-[24px] border-4 ${
-                  isDark ? "border-slate-800" : "border-white"
-                } bg-gradient-to-br ${t.primaryGrad} text-white shadow-[0_22px_40px_-22px_rgba(15,23,42,0.55)] sm:-mt-11 sm:h-[84px] sm:w-[84px]`}
-              >
-                <div className="absolute inset-1 rounded-[18px] bg-white/10 sm:rounded-[20px]" />
-                <span className="relative text-[23px] font-black font-spartan sm:text-[26px]">
-                  {getInitials(userName)}
-                </span>
-              </div>
+            className={`absolute inset-0 bg-gradient-to-br ${t.primaryGrad} opacity-10`}
+          />
+          <div className="relative flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-5 sm:py-4">
+            {/* Avatar */}
+            <div
+              className={`flex h-[60px] w-[60px] flex-shrink-0 items-center justify-center self-start rounded-[18px] border-2 ${
+                isDark ? "border-slate-700" : "border-white"
+              } bg-gradient-to-br ${t.primaryGrad} text-white shadow-[0_8px_24px_-12px_rgba(15,23,42,0.45)]`}
+            >
+              <div className="absolute inset-1 rounded-[14px] bg-white/10" />
+              <span className="relative text-[20px] font-black font-spartan">
+                {getInitials(userName)}
+              </span>
+            </div>
 
-              <div className="mt-3 min-w-0">
-                <h1
-                  className={`text-[24px] font-bold leading-tight font-spartan sm:text-[30px] ${t.cardText}`}
-                >
+            {/* Identity */}
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <h1 className={`text-[20px] font-bold leading-tight font-spartan sm:text-[22px] ${t.cardText}`}>
                   {userName}
                 </h1>
-                <p
-                  className={`mt-1 break-words text-[13px] font-medium font-kumbh sm:text-sm ${t.subtleText}`}
+                <span className={`text-[13px] font-semibold font-kumbh ${infoAccent}`}>
+                  {roleLabel}
+                </span>
+              </div>
+              <p className={`mt-0.5 break-words text-[12px] font-medium font-kumbh ${t.subtleText}`}>
+                {headerIdentity}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <div
+                  className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold font-kumbh ${
+                    isDark
+                      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+                      : "border-emerald-200 bg-emerald-50 text-emerald-600"
+                  }`}
                 >
-                  {headerIdentity}
-                </p>
-                <div className="mt-1.5 flex flex-wrap items-center justify-center gap-2 text-[13px] font-kumbh sm:text-sm">
-                  <span className={`font-semibold ${infoAccent}`}>{roleLabel}</span>
-                  <span className={t.subtleText}>|</span>
-                  <span className={t.subtleText}>{workspaceLabel}</span>
+                  <BadgeCheck className="h-3 w-3" />
+                  {accountStatus}
                 </div>
-
-                <div className="mt-3 flex flex-wrap justify-center gap-1.5">
-                  <div
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold font-kumbh sm:px-3 sm:text-[13px] ${
-                      isDark
-                        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
-                        : "border-emerald-200 bg-emerald-50 text-emerald-600"
-                    }`}
-                  >
-                    <BadgeCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                    {accountStatus}
-                  </div>
-                  <div
-                    className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold font-kumbh sm:px-3 sm:text-[13px] ${
-                      isDark
-                        ? "border-slate-700 bg-slate-900/60 text-slate-200"
-                        : "border-slate-200 bg-white text-slate-700"
-                    }`}
-                  >
-                    {protectionLabel}
-                  </div>
+                <div
+                  className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold font-kumbh ${
+                    isDark
+                      ? "border-slate-700 bg-slate-900/60 text-slate-200"
+                      : "border-slate-200 bg-white text-slate-700"
+                  }`}
+                >
+                  {protectionLabel}
                 </div>
               </div>
             </div>
+
+            {/* Back button */}
+            <button
+              onClick={() => navigate(-1)}
+              className={`inline-flex shrink-0 items-center gap-1.5 self-start rounded-lg border px-3 py-1.5 text-[12px] font-semibold font-kumbh transition ${
+                isDark
+                  ? "border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back
+            </button>
           </div>
         </section>
 
-        <div className="grid gap-5 xl:grid-cols-2">
+        {/* Panels: Personal (left, wider) + Residency & Account (right column) */}
+        <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
           <ProfilePanel
             title="Personal information"
             subtitle="Identity and contact details based on the user registration record."
             icon={UserRound}
             fields={personalFields}
-            gridClassName="sm:grid-cols-2 xl:grid-cols-3"
-            fullClassName="sm:col-span-2 xl:col-span-3"
+            gridClassName="grid-cols-2 sm:grid-cols-3"
+            fullClassName="col-span-2 sm:col-span-3"
             t={t}
             isDark={isDark}
           />
 
-          <ProfilePanel
-            title="Residency information"
-            subtitle="Registered household and barangay address information."
-            icon={MapPinned}
-            fields={residencyFields}
-            gridClassName="sm:grid-cols-2"
-            fullClassName="sm:col-span-2"
-            t={t}
-            isDark={isDark}
-          />
+          <div className="flex flex-col gap-4">
+            <ProfilePanel
+              title="Residency information"
+              subtitle="Registered household and barangay address."
+              icon={MapPinned}
+              fields={residencyFields}
+              gridClassName="grid-cols-2"
+              fullClassName="col-span-2"
+              t={t}
+              isDark={isDark}
+            />
 
-          <div className="xl:col-span-2">
             <ProfilePanel
               title="Account information"
-              subtitle="System access, account role, and login-related details."
+              subtitle="System access, role, and login details."
               icon={ShieldCheck}
               fields={accountFields}
-              gridClassName="sm:grid-cols-2 xl:grid-cols-3"
-              fullClassName="sm:col-span-2 xl:col-span-3"
+              gridClassName="grid-cols-2"
+              fullClassName="col-span-2"
               t={t}
               isDark={isDark}
             />
