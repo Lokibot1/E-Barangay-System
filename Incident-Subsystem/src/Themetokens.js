@@ -104,6 +104,8 @@ const themeTokens = {
     dragBg: "bg-blue-50",
     dragHoverBorder: "hover:border-blue-400",
 
+    selectorRing: "ring-blue-400",
+
     // ── Sidebar ──────────────────────────────────────────────
     sidebarBg: "bg-slate-50",
     sidebarBorder: "border-slate-200",
@@ -207,6 +209,8 @@ const themeTokens = {
     dragBorder: "border-purple-500",
     dragBg: "bg-purple-50",
     dragHoverBorder: "hover:border-purple-400",
+
+    selectorRing: "ring-purple-400",
 
     // ── Sidebar ──────────────────────────────────────────────
     sidebarBg: "bg-slate-50",
@@ -312,6 +316,8 @@ const themeTokens = {
     dragBg: "bg-green-50",
     dragHoverBorder: "hover:border-green-400",
 
+    selectorRing: "ring-green-400",
+
     // ── Sidebar ──────────────────────────────────────────────
     sidebarBg: "bg-slate-50",
     sidebarBorder: "border-slate-200",
@@ -415,6 +421,8 @@ const themeTokens = {
     dragBorder: "border-slate-500",
     dragBg: "bg-slate-700",
     dragHoverBorder: "hover:border-slate-400",
+
+    selectorRing: "ring-slate-500",
 
     // ── Sidebar ──────────────────────────────────────────────
     sidebarBg: "bg-slate-900",

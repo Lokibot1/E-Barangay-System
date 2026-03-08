@@ -951,7 +951,7 @@ const AdminIncidentReports = () => {
         >
           {/* Sliding pill indicator */}
           <div
-            className={`absolute top-1 bottom-1 rounded-xl shadow-md transition-all duration-300 ease-in-out ${isDark ? "bg-slate-600" : "bg-gray-800"}`}
+            className={`absolute top-1 bottom-1 rounded-xl shadow-md transition-all duration-300 ease-in-out ${isDark ? "bg-slate-600" : t.primarySolid}`}
             style={{
               left:
                 pageTab === "incidents" ? "0.25rem" : "calc(50% + 0.125rem)",
@@ -1026,7 +1026,7 @@ const AdminIncidentReports = () => {
               <div ref={statusTabsContainerRef} className="relative flex flex-wrap gap-2 flex-1">
                 {/* Sliding indicator */}
                 <div
-                  className={`absolute rounded-lg pointer-events-none shadow-md ${STATUS_CONFIG[activeTab]?.tabBg || "bg-gray-700"}`}
+                  className={`absolute rounded-lg pointer-events-none shadow-md ${isDark ? (STATUS_CONFIG[activeTab]?.tabBg || "bg-gray-700") : t.primarySolid}`}
                   style={{
                     left: tabIndicator.left,
                     top: tabIndicator.top,
@@ -1047,8 +1047,8 @@ const AdminIncidentReports = () => {
                       activeTab === key
                         ? `text-white border-transparent`
                         : isDark
-                          ? "bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-200 hover:text-slate-800 hover:border-slate-400"
-                          : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
+                          ? "bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600 hover:text-slate-100 hover:border-slate-500"
+                          : `bg-white text-gray-500 border-gray-200 ${t.primaryHoverBorder}`
                     }`}
                   >
                     {cfg.label} ({statusCounts[key]})
@@ -1202,7 +1202,7 @@ const AdminIncidentReports = () => {
                             ? "text-slate-600 cursor-not-allowed"
                             : "text-gray-300 cursor-not-allowed"
                           : isDark
-                            ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800"
+                            ? "text-slate-300 hover:bg-slate-700 hover:text-slate-100"
                             : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
@@ -1215,10 +1215,10 @@ const AdminIncidentReports = () => {
                           onClick={() => setCurrentPage(page)}
                           className={`w-8 h-8 rounded-lg text-xs font-kumbh font-bold transition-colors ${
                             page === currentPage
-                              ? "bg-green-700 text-white"
+                              ? `${isDark ? "bg-slate-500" : t.primarySolid} text-white`
                               : isDark
-                                ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800"
-                                : "text-gray-600 hover:bg-gray-100"
+                                ? "text-slate-300 hover:bg-slate-700 hover:text-slate-100"
+                                : `${t.primaryText} ${t.primaryLight} ${t.primaryLightHover}`
                           }`}
                         >
                           {page}
@@ -1236,7 +1236,7 @@ const AdminIncidentReports = () => {
                             ? "text-slate-600 cursor-not-allowed"
                             : "text-gray-300 cursor-not-allowed"
                           : isDark
-                            ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800"
+                            ? "text-slate-300 hover:bg-slate-700 hover:text-slate-100"
                             : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >

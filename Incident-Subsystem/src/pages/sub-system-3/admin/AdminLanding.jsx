@@ -336,6 +336,7 @@ export default function AdminLanding() {
     border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
     borderRadius: "10px",
     fontSize: "12px",
+    color: isDark ? "#e2e8f0" : "#1e293b",
   };
   const heroClass = isDark
     ? `${cardClass} relative overflow-hidden p-5 sm:p-6 bg-slate-800/80`
