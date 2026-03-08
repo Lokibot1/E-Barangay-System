@@ -205,6 +205,37 @@ const SignupPage = () => {
       </main>
 
       <style dangerouslySetInnerHTML={{ __html: `
+        .full-input-sm {
+          width: 100%;
+          min-height: 3.15rem;
+          padding: 0.95rem 1rem;
+          border: 2px solid ${isDarkMode ? "rgba(148,163,184,0.22)" : "rgba(15,23,42,0.12)"};
+          border-radius: 16px;
+          background: ${isDarkMode ? "rgba(2,6,23,0.72)" : "rgba(255,255,255,0.96)"};
+          color: ${isDarkMode ? "#f8fafc" : "#0f172a"};
+          outline: none;
+          transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+          font-size: 0.82rem;
+          font-weight: 700;
+          letter-spacing: 0.01em;
+          line-height: 1.2;
+          box-sizing: border-box;
+          display: block;
+        }
+        .full-input-sm::placeholder {
+          color: ${isDarkMode ? "rgba(148,163,184,0.78)" : "rgba(100,116,139,0.85)"};
+          font-weight: 600;
+        }
+        .full-input-sm:focus {
+          border-color: #059669;
+          box-shadow: 0 0 0 4px rgba(5,150,105,0.12);
+        }
+        select.full-input-sm {
+          cursor: pointer;
+        }
+        input[type="date"].full-input-sm {
+          padding-right: 0.85rem;
+        }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
