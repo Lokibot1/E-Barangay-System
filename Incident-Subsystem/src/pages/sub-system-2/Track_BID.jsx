@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import themeTokens from "../../Themetokens";
 
@@ -7,113 +7,101 @@ const Track_BID = () => {
   const currentTheme = localStorage.getItem("appTheme") || "modern";
   const t = themeTokens[currentTheme];
 
+  const [refNumber, setRefNumber] = useState("");
+  const [requestData, setRequestData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleTrack = async () => {
+    if (!refNumber.trim()) {
+      setError("Please enter a reference number.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setRequestData(null);
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/track-request/${refNumber}`,
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Reference number not found");
+      }
+
+      setRequestData(data);
+    } catch (err) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className={`${t.pageBg} min-h-full p-4 sm:p-6 lg:p-8`}>
       <div className="max-w-5xl mx-auto text-left">
-        <p className={`font-kumbh text-lg ${t.subtleText} mb-2`}>
-          Home › Request Submitted › <span className={`font-semibold ${t.cardText}`}>Track Request Status</span>
-        </p>
-        <h1 className={`font-spartan text-2xl font-bold ${t.cardText} mb-4`}>Track Request Status</h1>
+        <h1 className={`text-2xl font-bold ${t.cardText} mb-4`}>
+          Track Request Status
+        </h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[2fr_0.9fr] gap-4">
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex rounded-2xl overflow-hidden border border-gray-300">
-              <input
-                readOnly
-                value="BID-2026-1099-619"
-                className={`flex-1 px-3 py-2 text-lg font-kumbh ${t.inputBg} ${t.inputText} outline-none`}
-              />
-              <button className="px-4 bg-green-500 text-white font-kumbh text-lg">Track</button>
-            </div>
+        <div className="flex rounded-2xl overflow-hidden border border-gray-300 mb-4">
+          <input
+            placeholder="Enter Reference Number"
+            value={refNumber}
+            onChange={(e) => setRefNumber(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleTrack()}
+            className={`flex-1 px-3 py-2 text-lg ${t.inputBg} ${t.inputText} outline-none`}
+          />
+          <button
+            onClick={handleTrack}
+            className="px-4 bg-green-500 text-white text-lg"
+            disabled={loading}
+          >
+            {loading ? "Searching..." : "Track"}
+          </button>
+        </div>
 
-            <div className={`${t.cardBg} border-2 border-blue-500 rounded-3xl p-4`}>
-              <div className="bg-lime-100 rounded-xl p-3 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full border-2 border-black flex items-center justify-center">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l2.5 2.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h2 className="font-spartan text-xl font-bold text-black">Status: Under Review</h2>
-              </div>
+        {error && <p className="text-red-500 mb-4">{error}</p>}
 
-              <div className="mt-6">
-                <div className="flex items-start">
-                  <div className="flex-1 flex flex-col items-center text-center">
-                    <Step number="✓" active />
-                    <StepLabel title="Request Submitted" sub="Date: February 20, 2026" />
-                  </div>
-                  <div className="flex-1 h-1 bg-green-500 mt-10" />
-                  <div className="flex-1 flex flex-col items-center text-center">
-                    <Step number="2" current />
-                    <StepLabel title="Under Review" sub="Current Step" />
-                  </div>
-                  <div className="flex-1 h-1 bg-gray-300 mt-10" />
-                  <div className="flex-1 flex flex-col items-center text-center">
-                    <Step number="3" />
-                    <StepLabel title="Ready for Pick-Up" sub="Pending" />
-                  </div>
-                  <div className="flex-1 h-1 bg-gray-300 mt-10" />
-                  <div className="flex-1 flex flex-col items-center text-center">
-                    <Step number="4" />
-                    <StepLabel title="Completed" sub="Pending" />
-                  </div>
-                </div>
-              </div>
+        {requestData && (
+          <div className={`${t.cardBg} border rounded-2xl p-6`}>
+            <h2 className="text-xl font-bold mb-4">
+              Status: {requestData.status}
+            </h2>
 
-              <div className={`border-t ${t.cardBorder} my-4`} />
-              <h3 className={`font-spartan text-xl font-bold ${t.cardText} mb-2`}>Request Details</h3>
-              <div className={`font-kumbh text-base ${t.cardText} space-y-1`}>
-                <p><span className="font-bold">Reference Number:</span> BID-2026-1099-619</p>
-                <p><span className="font-bold">Date Submitted:</span> February 25, 2026</p>
-                <p><span className="font-bold">Document Type:</span> Barangay ID</p>
-                <p><span className="font-bold">Applicants Name:</span> Renz Aggabao</p>
-              </div>
-
-              <div className="mt-6 flex justify-center">
-                <button
-                  onClick={() => navigate("/sub-system-2")}
-                  className={`font-kumbh text-base px-8 py-2 rounded-full ${t.inputBg} ${t.cardText}`}
-                >
-                  Return to Home
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-3 text-left`}>
-              <h3 className={`font-spartan text-xl font-bold ${t.cardText} mb-2`}>Service Information</h3>
-              <p className={`font-kumbh text-sm ${t.cardText}`}>
-                Your Barangay ID request has been received and is currently under review.
+            <div className="space-y-2">
+              {/* <p>
+                <strong>Reference Number:</strong>{" "}
+                {requestData.reference_number}
+              </p> */}
+              <p>
+                <strong>Date Submitted:</strong> {requestData.date_submitted}
+              </p>
+              <p>
+                <strong>Document Type:</strong> {"Barangay ID"}
+              </p>
+              <p>
+                <strong>Applicant Name:</strong> {requestData.full_name}
               </p>
             </div>
-            <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-3 text-left`}>
-              <h3 className={`font-spartan text-lg font-bold ${t.cardText} mb-2`}>Need Help?</h3>
-              <p className={`font-kumbh text-sm ${t.cardText}`}>8-3663-198</p>
-              <p className={`font-kumbh text-sm ${t.cardText} mt-1`}>teamtolentino@gmail.com</p>
+
+            <div className="mt-6">
+              <button
+                onClick={() => navigate("/sub-system-2")}
+                className="px-6 py-2 bg-blue-500 text-white rounded-full"
+              >
+                Return to Home
+              </button>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
 };
-
-const Step = ({ number, active = false, current = false }) => (
-  <div
-    className={`w-10 h-10 rounded-full flex items-center justify-center font-spartan text-lg font-bold ${
-      active ? "bg-green-500 text-white" : current ? "bg-lime-200 text-black" : "bg-gray-400 text-white"
-    }`}
-  >
-    {number}
-  </div>
-);
-
-const StepLabel = ({ title, sub }) => (
-  <div>
-    <p className="font-kumbh text-sm font-bold text-black leading-tight">{title}</p>
-    <p className="font-kumbh text-xs text-gray-600 leading-tight mt-1">{sub}</p>
-  </div>
-);
 
 export default Track_BID;

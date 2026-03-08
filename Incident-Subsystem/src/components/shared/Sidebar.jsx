@@ -114,13 +114,13 @@ const getAdminNavItems = (s) => [
     icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
     path: "/admin/user-management",
     children: [
-        {
+      {
         id: "reports",
         label: s.reports,
         icon: "M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
         path: "/admin/reports",
       },
-        {
+      {
         id: "verification",
         label: s.userManagement,
         icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
@@ -307,15 +307,14 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
           const next = {};
           NAV_ITEMS.forEach((navItem) => {
             if (navItem.children && navItem.children.length > 0) {
-              next[navItem.id] = navItem.id === item.id ? !prev[item.id] : false;
+              next[navItem.id] =
+                navItem.id === item.id ? !prev[item.id] : false;
             }
           });
           return next;
         });
 
-        setFlyoutMenu((prev) =>
-          prev?.itemId === item.id ? null : nextFlyout,
-        );
+        setFlyoutMenu((prev) => (prev?.itemId === item.id ? null : nextFlyout));
         return;
       }
 
@@ -398,8 +397,18 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
     const Icon = iconMap[itemId];
     if (Icon) return <Icon className={className} strokeWidth={2} />;
     return (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={pathData} />
+      <svg
+        className={className}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d={pathData}
+        />
       </svg>
     );
   };
@@ -488,49 +497,47 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             className={`hidden md:inline-flex flex-shrink-0 items-center justify-center ${t.subtleText} transition-colors ${
               collapsed ? "h-7 w-7" : "h-8 w-8"
-            } ${
-              isDark ? "hover:text-slate-200" : "hover:text-slate-700"
-            }`}
+            } ${isDark ? "hover:text-slate-200" : "hover:text-slate-700"}`}
           >
             <Menu className={collapsed ? "h-3.5 w-3.5" : "h-[14px] w-[14px]"} />
           </button>
 
           {!collapsed && (
             <>
-          {/* Logo mark */}
-          <button className="w-8 h-8 rounded-full shadow-sm flex-shrink-0 overflow-hidden">
-            <img
-              src={logo}
-              alt="Barangay Gulod Logo"
-              className="w-full h-full object-cover"
-            />
-          </button>
+              {/* Logo mark */}
+              <button className="w-8 h-8 rounded-full shadow-sm flex-shrink-0 overflow-hidden">
+                <img
+                  src={logo}
+                  alt="Barangay Gulod Logo"
+                  className="w-full h-full object-cover"
+                />
+              </button>
 
-          {/* App name — fades out when collapsed */}
-          <div
-            className="min-w-0 flex-1 overflow-hidden text-left"
-          >
-            <p
-              className={`font-spartan text-[14px] font-bold leading-none ${t.sidebarAppName || t.cardText} whitespace-nowrap truncate text-left`}
-            >
-              {adminMode ? tr.sidebar.adminPanel : "Barangay Gulod"}
-            </p>
-            <p
-              className={`mt-1 font-kumbh text-[11px] leading-none ${t.sidebarText} whitespace-nowrap truncate text-left`}
-            >
-              {adminMode
-                ? tr.sidebar.eBarangaySystem
-                : showDocumentServices
-                  ? "Document Services"
-                  : tr.sidebar.incidentReporting}
-            </p>
-          </div>
+              {/* App name — fades out when collapsed */}
+              <div className="min-w-0 flex-1 overflow-hidden text-left">
+                <p
+                  className={`font-spartan text-[14px] font-bold leading-none ${t.sidebarAppName || t.cardText} whitespace-nowrap truncate text-left`}
+                >
+                  {adminMode ? tr.sidebar.adminPanel : "Barangay Gulod"}
+                </p>
+                <p
+                  className={`mt-1 font-kumbh text-[11px] leading-none ${t.sidebarText} whitespace-nowrap truncate text-left`}
+                >
+                  {adminMode
+                    ? tr.sidebar.eBarangaySystem
+                    : showDocumentServices
+                      ? "Document Services"
+                      : tr.sidebar.incidentReporting}
+                </p>
+              </div>
             </>
           )}
         </div>
 
         {/* ── Nav links ───────────────────────────────────────────────────── */}
-        <nav className={`flex-1 overflow-y-auto ${collapsed ? "py-3 px-2" : "py-3 px-2"}`}>
+        <nav
+          className={`flex-1 overflow-y-auto ${collapsed ? "py-3 px-2" : "py-3 px-2"}`}
+        >
           <ul className={`flex flex-col ${collapsed ? "gap-2" : "gap-1"}`}>
             {NAV_ITEMS.map((item) => {
               const active = item.path ? isParentActive(item) : false;
@@ -543,7 +550,9 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                   key={item.id}
                   className={`relative ${
                     item.id === "settings"
-                      ? (collapsed ? `mt-3 pt-3 border-t ${t.sidebarBorder}` : "mt-1 pt-1")
+                      ? collapsed
+                        ? `mt-3 pt-3 border-t ${t.sidebarBorder}`
+                        : "mt-1 pt-1"
                       : ""
                   }`}
                 >
@@ -580,7 +589,9 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                             }`
                       } ${collapsed ? "mx-auto" : ""}`}
                     >
-                      <span className={`transition-colors duration-150 ${active ? t.sidebarIconActive : "text-current"}`}>
+                      <span
+                        className={`transition-colors duration-150 ${active ? t.sidebarIconActive : "text-current"}`}
+                      >
                         {renderMenuIcon(item.id, item.icon, "w-4 h-4")}
                       </span>
                     </span>
@@ -598,8 +609,8 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                     {/* Badge (admin items) */}
                     {item.badge && !collapsed && (
                       <span
-                      className={`text-xs font-semibold font-kumbh px-2 py-0.5 rounded-md flex-shrink-0 ${
-                        active
+                        className={`text-xs font-semibold font-kumbh px-2 py-0.5 rounded-md flex-shrink-0 ${
+                          active
                             ? `${t.primarySolid} text-white`
                             : `${isDark ? "bg-slate-800 text-slate-300" : "bg-slate-200 text-slate-600"}`
                         }`}
@@ -646,7 +657,9 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                               <span
                                 aria-hidden="true"
                                 className={`pointer-events-none absolute -left-4 top-1/2 h-4 w-3 -translate-y-1/2 rounded-bl-[10px] border-b border-l ${
-                                  isDark ? "border-slate-700/80" : "border-slate-300"
+                                  isDark
+                                    ? "border-slate-700/80"
+                                    : "border-slate-300"
                                 }`}
                               />
                               <button
@@ -661,8 +674,14 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                                   }
                                 `}
                               >
-                                <span className={`flex-shrink-0 transition-colors duration-150 ${childActive ? t.sidebarIconActive : "text-current"}`}>
-                                  {renderMenuIcon(child.id, child.icon, "w-3.5 h-3.5")}
+                                <span
+                                  className={`flex-shrink-0 transition-colors duration-150 ${childActive ? t.sidebarIconActive : "text-current"}`}
+                                >
+                                  {renderMenuIcon(
+                                    child.id,
+                                    child.icon,
+                                    "w-3.5 h-3.5",
+                                  )}
                                 </span>
 
                                 <span className="font-kumbh text-xs font-medium whitespace-nowrap truncate">
@@ -675,7 +694,6 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                       </ul>
                     </div>
                   )}
-
                 </li>
               );
             })}
@@ -683,47 +701,60 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
         </nav>
 
         {/* Floating sublinks (collapsed mode) - portal layer to stay above page content */}
-        {collapsed && flyoutMenu && typeof document !== "undefined" && (() => {
-          const parent = NAV_ITEMS.find((i) => i.id === flyoutMenu.itemId);
-          if (!parent || !parent.children || parent.children.length === 0) return null;
+        {collapsed &&
+          flyoutMenu &&
+          typeof document !== "undefined" &&
+          (() => {
+            const parent = NAV_ITEMS.find((i) => i.id === flyoutMenu.itemId);
+            if (!parent || !parent.children || parent.children.length === 0)
+              return null;
 
-          return createPortal(
-            <div
-              data-flyout-menu="true"
-              className={`hidden md:block fixed z-[1300] w-[200px] rounded-2xl border ${t.cardBorder} ${t.cardBg} shadow-2xl p-2`}
-              style={{ left: `${flyoutMenu.left}px`, top: `${flyoutMenu.top}px` }}
-            >
-              <p className={`px-2 py-1 text-[10px] font-kumbh font-bold uppercase tracking-wide ${t.subtleText}`}>
-                {parent.label}
-              </p>
-              <ul className="mt-1 space-y-1">
-                {parent.children.map((child) => {
-                  const childActive = isPathActive(child.path);
-                  return (
-                    <li key={child.id}>
-                      <button
-                        onClick={(e) => handleSubItemClick(e, child)}
-                        className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left transition-colors ${
-                          childActive
-                            ? `${t.sidebarActiveBg} ${t.sidebarActiveText}`
-                            : `${t.sidebarText} ${t.sidebarHoverBg}`
-                        }`}
-                      >
-                        <span className="flex-shrink-0">
-                          {renderMenuIcon(child.id, child.icon, "w-3.5 h-3.5")}
-                        </span>
-                        <span className="font-kumbh text-xs font-medium whitespace-nowrap truncate">
-                          {child.label}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>,
-            document.body,
-          );
-        })()}
+            return createPortal(
+              <div
+                data-flyout-menu="true"
+                className={`hidden md:block fixed z-[1300] w-[200px] rounded-2xl border ${t.cardBorder} ${t.cardBg} shadow-2xl p-2`}
+                style={{
+                  left: `${flyoutMenu.left}px`,
+                  top: `${flyoutMenu.top}px`,
+                }}
+              >
+                <p
+                  className={`px-2 py-1 text-[10px] font-kumbh font-bold uppercase tracking-wide ${t.subtleText}`}
+                >
+                  {parent.label}
+                </p>
+                <ul className="mt-1 space-y-1">
+                  {parent.children.map((child) => {
+                    const childActive = isPathActive(child.path);
+                    return (
+                      <li key={child.id}>
+                        <button
+                          onClick={(e) => handleSubItemClick(e, child)}
+                          className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left transition-colors ${
+                            childActive
+                              ? `${t.sidebarActiveBg} ${t.sidebarActiveText}`
+                              : `${t.sidebarText} ${t.sidebarHoverBg}`
+                          }`}
+                        >
+                          <span className="flex-shrink-0">
+                            {renderMenuIcon(
+                              child.id,
+                              child.icon,
+                              "w-3.5 h-3.5",
+                            )}
+                          </span>
+                          <span className="font-kumbh text-xs font-medium whitespace-nowrap truncate">
+                            {child.label}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>,
+              document.body,
+            );
+          })()}
       </aside>
     </>
   );
