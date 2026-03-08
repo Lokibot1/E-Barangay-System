@@ -361,6 +361,11 @@ const Header = ({ currentTheme, onThemeChange }) => {
     setIsProfileOpen(false);
   };
 
+  const openProfilePage = () => {
+    setIsProfileOpen(false);
+    navigate(isAdminUser ? "/admin/profile" : "/profile");
+  };
+
   const handleLogout = async () => {
     setLogoutLoading(true);
     try {
@@ -723,6 +728,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
 
                     <div className="p-1.5">
                       <button
+                        onClick={openProfilePage}
                         className={`w-full flex items-center gap-3 px-3 py-2 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"} rounded-[18px] transition-colors text-left`}
                       >
                         <span
@@ -745,6 +751,9 @@ const Header = ({ currentTheme, onThemeChange }) => {
                         <div className="flex-1 min-w-0">
                           <span className={`block text-sm font-medium font-kumbh ${t.cardText}`}>
                             {tr.header.viewProfile}
+                          </span>
+                          <span className={`block text-[11px] font-kumbh ${t.subtleText}`}>
+                            Account details and access
                           </span>
                         </div>
                       </button>
