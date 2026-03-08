@@ -14,6 +14,15 @@ const UserRealTimeContext = createContext(null);
 
 const LS_USER_NOTIFICATIONS_KEY = "userNotifications";
 
+const getUserNotifKey = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem("authUser") || "{}");
+    return user?.id ? `${LS_USER_NOTIFICATIONS_KEY}_${user.id}` : LS_USER_NOTIFICATIONS_KEY;
+  } catch {
+    return LS_USER_NOTIFICATIONS_KEY;
+  }
+};
+
 // ── Safe defaults returned when outside the provider (admin routes) ──────
 const SAFE_DEFAULTS = {
   notifications: [],
@@ -69,13 +78,16 @@ export const UserRealTimeProvider = ({ children }) => {
       batchDelay: 2000,
     });
 
+  // User-specific localStorage key — computed once at mount
+  const notifKeyRef = useRef(getUserNotifKey());
+
   // Capture localStorage IDs at mount to detect truly new backend notifications
   const initialNotifIdsRef = useRef(null);
 
-  // Initialize from localStorage so notifications survive refreshes and logouts
+  // Initialize from localStorage so notifications survive refreshes
   const [notifications, setNotifications] = useState(() => {
     try {
-      const saved = localStorage.getItem(LS_USER_NOTIFICATIONS_KEY);
+      const saved = localStorage.getItem(notifKeyRef.current);
       const parsed = saved ? JSON.parse(saved) : [];
       initialNotifIdsRef.current = new Set(parsed.map((n) => n.id));
       return parsed;
@@ -90,10 +102,7 @@ export const UserRealTimeProvider = ({ children }) => {
 
   // Persist notifications to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem(
-      LS_USER_NOTIFICATIONS_KEY,
-      JSON.stringify(notifications),
-    );
+    localStorage.setItem(notifKeyRef.current, JSON.stringify(notifications));
   }, [notifications]);
 
   // On mount: fetch backend notifications to hydrate any that arrived while offline.
@@ -105,12 +114,8 @@ export const UserRealTimeProvider = ({ children }) => {
 
       const backendItems = response.data.map(mapUserBackendNotification);
 
-      setNotifications((prev) => {
-        const existingIds = new Set(prev.map((n) => n.id));
-        const newOnes = backendItems.filter((n) => !existingIds.has(n.id));
-        if (newOnes.length === 0) return prev;
-        return [...newOnes, ...prev];
-      });
+      // Replace cache with backend data — keeps it in sync (handles DB clears, etc.)
+      setNotifications(backendItems);
 
       // Show toasts for unread notifications that weren't cached locally at mount
       if (initialNotifIdsRef.current) {
@@ -200,7 +205,7 @@ export const UserRealTimeProvider = ({ children }) => {
     setLatestBatch([]);
     clearEvents();
     prevEventsLengthRef.current = 0;
-    localStorage.removeItem(LS_USER_NOTIFICATIONS_KEY);
+    localStorage.removeItem(notifKeyRef.current);
   }, [clearEvents]);
 
   const value = useMemo(
