@@ -37,6 +37,7 @@ const SignupForm = ({
   addressSuggestions = [],
   isSearchingAddress,
   selectAddress,
+  compactMode = false,
 }) => {
   const [step,         setStep]         = useState(1);
   const [previews,     setPreviews]     = useState({ front: null, back: null });
@@ -66,15 +67,26 @@ const SignupForm = ({
   const handleHouseNumberChange = (e) =>
     handleChange({ target: { name: e.target.name, value: e.target.value } });
 
-  const handleFile = (e, side) => {
+  const processSelectedFile = (file, side) => {
     if (isStaffMode) return;
-    const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert('Maximum file size is 5MB.'); e.target.value = ''; return; }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Maximum file size is 5MB.');
+      return;
+    }
     if (previews[side]) URL.revokeObjectURL(previews[side]);
     const url = URL.createObjectURL(file);
     setPreviews((prev) => ({ ...prev, [side]: url }));
     handleChange({ target: { name: side === 'front' ? 'idFront' : 'idBack', value: file } });
+  };
+
+  const handleFile = (e, side) => {
+    processSelectedFile(e.target.files[0], side);
+    if (e.target) e.target.value = '';
+  };
+
+  const handleCapturedFile = (file, side) => {
+    processSelectedFile(file, side);
   };
 
   // ── Submit ─────────────────────────────────────────────────────────────────
@@ -162,10 +174,10 @@ const SignupForm = ({
   const commonProps = { formData, handleChange, isDarkMode, setStep, isStaffMode };
 
   return (
-    <div className="space-y-6">
+    <div className={compactMode ? "space-y-4" : "space-y-6"}>
 
       {/* Step indicator */}
-      <div className="flex items-center justify-between mb-8 px-2 max-w-xl mx-auto">
+      <div className={`flex items-center justify-between px-2 max-w-xl mx-auto ${compactMode ? "mb-5" : "mb-8"}`}>
         {(isStaffMode ? [1,2,3] : [1,2,3,4]).map((num) => (
           <div key={num} className="flex items-center flex-1 last:flex-none">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-black transition-all duration-500
@@ -180,7 +192,7 @@ const SignupForm = ({
       </div>
 
       {/* Step content */}
-      <div className="min-h-[400px]">
+      <div className={compactMode ? "min-h-0" : "min-h-[400px]"}>
         {step === 1 && <Step1PersonalInfo {...commonProps} />}
 
         {step === 2 && (
@@ -216,6 +228,7 @@ const SignupForm = ({
             {...commonProps}
             previews={previews}
             handleFile={handleFile}
+            handleCapturedFile={handleCapturedFile}
             onReviewSubmit={() => setIsReviewOpen(true)}
             loading={loading}
           />

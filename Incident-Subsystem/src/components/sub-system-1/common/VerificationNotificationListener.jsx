@@ -107,7 +107,7 @@ const VerificationNotificationListener = () => {
   if (!notificationBanner) return null;
 
   return (
-    <div className="fixed top-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm z-[999] animate-in slide-in-from-top-3 duration-300">
+    <div className="fixed top-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm z-[2600] animate-in slide-in-from-top-3 duration-300">
       <div className="flex flex-col gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/95 backdrop-blur-md p-4 shadow-2xl shadow-emerald-900/20">
         <div className="flex items-start gap-3">
           <div className="mt-0.5 p-2 rounded-xl bg-emerald-600 text-white shadow-lg">

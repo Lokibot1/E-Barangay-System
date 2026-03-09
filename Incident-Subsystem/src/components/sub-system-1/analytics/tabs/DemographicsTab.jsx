@@ -7,12 +7,16 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
-  PieChart,
-  Pie,
   Legend,
 } from 'recharts';
-import { Card, SectionHeader } from '../AnalyticsInterface';
-import { COLORS, AGE_ORDER } from '../analyticsConfig';
+import {
+  ChartCard,
+  DonutSummaryCard,
+  SectionHeader,
+  analyticsChartTheme,
+  AnalyticsTooltip,
+} from '../AnalyticsInterface';
+import { COLORS, REGISTRY_STATUS_COLORS, AGE_ORDER } from '../analyticsConfig';
 
 export default function DemographicsTab({ raw, t }) {
   const demo = raw?.demographics ?? {};
@@ -44,26 +48,31 @@ export default function DemographicsTab({ raw, t }) {
     color: r.birth_registration === 'Registered' ? COLORS.success : COLORS.danger,
   }));
 
-  const gridStroke = '#e9ecf7';
-  const axisTick = { fontSize: 11, fill: '#64748b' };
-  const tooltipStyle = {
-    borderRadius: '10px',
-    border: '1px solid #e2e8f0',
-    backgroundColor: '#ffffff',
-    fontSize: '12px',
-  };
+  const { gridStroke, axisTick, legendStyle, barRadius, horizontalBarRadius } = analyticsChartTheme;
 
   return (
     <div className="space-y-6">
       <SectionHeader title="Demographic Analysis" subtitle="Age groups, gender, marital status, household positions" t={t} />
 
-      <Card title="Age Group Distribution" t={t}>
+      <ChartCard
+        title="Age Group Distribution"
+        subtitle="Resident count across major age brackets, with senior citizens highlighted."
+        rightLabel="Age view"
+        t={t}
+      >
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={ageData} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-            <XAxis dataKey="group" tick={axisTick} />
-            <YAxis tick={axisTick} />
-            <Tooltip formatter={(v) => [`${v} residents`]} contentStyle={tooltipStyle} />
+            <CartesianGrid vertical={false} strokeDasharray="2 10" stroke={gridStroke} />
+            <XAxis dataKey="group" tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+            <YAxis tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+            <Tooltip
+              content={(
+                <AnalyticsTooltip
+                  valueFormatter={(value) => `${Number(value).toLocaleString()} residents`}
+                />
+              )}
+              wrapperStyle={{ outline: 'none' }}
+            />
             <Bar dataKey="count" radius={[8, 8, 0, 0]}>
               {ageData.map((e, i) => (
                 <Cell key={i} fill={e.group === '60+' ? COLORS.danger : COLORS.secondary} />
@@ -72,103 +81,90 @@ export default function DemographicsTab({ raw, t }) {
           </BarChart>
         </ResponsiveContainer>
         <p className="text-xs text-slate-500 mt-2">* Senior citizens (60+) highlighted in red</p>
-      </Card>
+      </ChartCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <Card title="Marital Status" t={t}>
-          <ResponsiveContainer width="100%" height={240}>
-            <PieChart>
-              <Pie data={maritalData} cx="50%" cy="50%" outerRadius={90} dataKey="value" paddingAngle={2}>
-                {maritalData.map((_, i) => (
-                  <Cell key={i} fill={maritalColors[i % maritalColors.length]} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={tooltipStyle} />
-              <Legend iconType="circle" iconSize={10} layout="vertical" align="right" verticalAlign="middle" wrapperStyle={{ fontSize: 11 }} />
-            </PieChart>
-          </ResponsiveContainer>
-        </Card>
+        <DonutSummaryCard
+          title="Marital Status"
+          subtitle="Civil status breakdown across registered residents."
+          rightLabel="Distribution"
+          centerLabel="Residents"
+          data={maritalData.map((item, index) => ({
+            ...item,
+            color: maritalColors[index % maritalColors.length],
+          }))}
+          t={t}
+        />
 
-        <Card title="Voter Status" t={t}>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={voterChart}
-                cx="50%"
-                cy="50%"
-                innerRadius={45}
-                outerRadius={80}
-                dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              >
-                {voterChart.map((e, i) => (
-                  <Cell key={i} fill={e.color} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={tooltipStyle} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="flex gap-4 mt-2 justify-center">
-            <div className="text-center">
-              <div className="text-2xl font-black text-emerald-600">{voters.toLocaleString()}</div>
-              <div className="text-xs text-slate-500">Registered Voters</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-black text-slate-500">{nonVoters.toLocaleString()}</div>
-              <div className="text-xs text-slate-500">Non-Voters</div>
-            </div>
-          </div>
-        </Card>
+        <DonutSummaryCard
+          title="Voter Status"
+          subtitle="Voting eligibility and registration coverage from demographic records."
+          rightLabel="Coverage"
+          centerLabel="Voter file"
+          data={voterChart}
+          t={t}
+        />
 
-        <Card title="Household Position Breakdown" t={t}>
+        <ChartCard
+          title="Household Position Breakdown"
+          subtitle="Resident roles within households, displayed by volume."
+          rightLabel="Roles"
+          t={t}
+        >
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={housePos} layout="vertical" margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} horizontal={false} />
-              <XAxis type="number" tick={axisTick} />
-              <YAxis type="category" dataKey="name" tick={axisTick} width={90} />
-              <Tooltip contentStyle={tooltipStyle} />
+              <CartesianGrid strokeDasharray="2 10" stroke={gridStroke} horizontal={false} />
+              <XAxis type="number" tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <YAxis type="category" dataKey="name" tick={axisTick} width={90} axisLine={false} tickLine={false} />
+              <Tooltip
+                content={(
+                  <AnalyticsTooltip
+                    valueFormatter={(value) => `${Number(value).toLocaleString()} residents`}
+                  />
+                )}
+                wrapperStyle={{ outline: 'none' }}
+              />
               <Bar dataKey="count" name="Count" fill={COLORS.secondary} radius={[0, 8, 8, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </Card>
+        </ChartCard>
 
-        <Card title="Residents per Purok - Status Stacked" t={t}>
+        <ChartCard
+          title="Residents per Purok - Status Stacked"
+          subtitle="Verification status mix per purok within the demographic dataset."
+          rightLabel="Stacked"
+          t={t}
+        >
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={hm} layout="vertical" margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} horizontal={false} />
-              <XAxis type="number" tick={axisTick} />
-              <YAxis type="category" dataKey="purok" tick={axisTick} width={60} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="verified" name="Verified" stackId="a" fill={COLORS.success} />
-              <Bar dataKey="pending" name="Pending" stackId="a" fill={COLORS.warning} />
-              <Bar dataKey="rejected" name="Rejected" stackId="a" fill={COLORS.danger} />
-              <Bar dataKey="unregistered" name="Unregistered" stackId="a" fill={COLORS.gray} radius={[0, 8, 8, 0]} />
+            <BarChart
+              data={hm}
+              layout="vertical"
+              margin={{ top: 8, right: 12, bottom: 12, left: 6 }}
+              barCategoryGap="26%"
+              barSize={24}
+            >
+              <CartesianGrid stroke={gridStroke} horizontal={false} vertical={true} />
+              <XAxis type="number" tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <YAxis type="category" dataKey="purok" tick={axisTick} width={60} axisLine={false} tickLine={false} />
+              <Tooltip content={<AnalyticsTooltip />} wrapperStyle={{ outline: 'none' }} />
+              <Legend iconType="circle" iconSize={10} wrapperStyle={legendStyle} />
+              <Bar dataKey="verified" name="Verified" stackId="a" fill={REGISTRY_STATUS_COLORS.verified.solid} radius={horizontalBarRadius} />
+              <Bar dataKey="pending" name="Pending" stackId="a" fill={REGISTRY_STATUS_COLORS.pending.solid} radius={horizontalBarRadius} />
+              <Bar dataKey="rejected" name="Rejected" stackId="a" fill={REGISTRY_STATUS_COLORS.rejected.solid} radius={horizontalBarRadius} />
+              <Bar dataKey="unregistered" name="Unregistered" stackId="a" fill={REGISTRY_STATUS_COLORS.unregistered.solid} radius={horizontalBarRadius} />
             </BarChart>
           </ResponsiveContainer>
-        </Card>
+        </ChartCard>
 
         {birthReg.length > 0 && (
-          <Card title="Birth Registration Status" t={t}>
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={birthReg}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={45}
-                  outerRadius={80}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {birthReg.map((e, i) => (
-                    <Cell key={i} fill={e.color} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
+          <DonutSummaryCard
+            title="Birth Registration Status"
+            subtitle="Resident birth certificate registration coverage."
+            rightLabel="Coverage"
+            centerLabel="Residents"
+            data={birthReg}
+            t={t}
+          />
         )}
       </div>
     </div>

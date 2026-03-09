@@ -19,6 +19,7 @@ import {
   ChevronDown,
   CheckCircle2,
   FileText,
+  Camera,
 } from "lucide-react";
 
 // ── Policy Section sub-component ─────────────────────────────────────────────
@@ -390,6 +391,243 @@ const TermsAndConditionModal = ({ isOpen, onClose, onAgree, alreadyAgreed, isDar
 };
 
 // ── Step4Upload ───────────────────────────────────────────────────────────────
+const CameraCaptureModal = ({ isOpen, onClose, onCapture, side, isDarkMode }) => {
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const [cameraError, setCameraError] = useState("");
+  const [isStarting, setIsStarting] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
+
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      stopCamera();
+      setCameraError("");
+      setIsCapturing(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const startCamera = async () => {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setCameraError("This device or browser does not support camera access.");
+        return;
+      }
+
+      setIsStarting(true);
+      setCameraError("");
+
+      try {
+        let stream = null;
+        const constraintsList = [
+          { video: { facingMode: { ideal: "environment" } }, audio: false },
+          { video: true, audio: false },
+        ];
+
+        for (const constraints of constraintsList) {
+          try {
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+            break;
+          } catch (error) {
+            stream = null;
+          }
+        }
+
+        if (!stream) {
+          throw new Error("Unable to access the device camera.");
+        }
+
+        if (cancelled) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+
+        streamRef.current = stream;
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+        }
+      } catch (error) {
+        setCameraError(
+          error?.name === "NotAllowedError"
+            ? "Camera permission was blocked. Allow access and try again."
+            : "Unable to start the camera on this device.",
+        );
+      } finally {
+        if (!cancelled) {
+          setIsStarting(false);
+        }
+      }
+    };
+
+    startCamera();
+
+    return () => {
+      cancelled = true;
+      stopCamera();
+    };
+  }, [isOpen, stopCamera]);
+
+  const handleTakePhoto = async () => {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth || !video.videoHeight) return;
+
+    setIsCapturing(true);
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Canvas is not available.");
+
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const blob = await new Promise((resolve) => {
+        canvas.toBlob(resolve, "image/jpeg", 0.92);
+      });
+
+      if (!blob) {
+        throw new Error("Failed to capture image.");
+      }
+
+      const safeSide = side === "front" ? "front" : "back";
+      const file = new File([blob], `barangay-id-${safeSide}-${Date.now()}.jpg`, {
+        type: "image/jpeg",
+      });
+
+      onCapture(file);
+      onClose();
+    } catch (error) {
+      setCameraError("Failed to capture photo. Please try again.");
+    } finally {
+      setIsCapturing(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div
+        className={`relative w-full max-w-2xl overflow-hidden rounded-[2rem] border shadow-2xl ${
+          isDarkMode ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"
+        }`}
+      >
+        <div
+          className={`flex items-center justify-between border-b px-6 py-4 ${
+            isDarkMode ? "border-slate-700 bg-slate-800/70" : "border-slate-200 bg-slate-50"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-emerald-600 p-2">
+              <Camera size={18} className="text-white" />
+            </div>
+            <div>
+              <p className={`text-xs font-black uppercase tracking-widest ${isDarkMode ? "text-slate-100" : "text-slate-800"}`}>
+                Use Camera
+              </p>
+              <p className={`text-[10px] font-bold ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                Capture the {side} side of your ID
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className={`rounded-xl p-2 transition-colors ${
+              isDarkMode ? "text-slate-400 hover:bg-slate-700" : "text-slate-500 hover:bg-slate-100"
+            }`}
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="space-y-4 p-5">
+          <div
+            className={`relative aspect-[4/3] overflow-hidden rounded-[1.5rem] border ${
+              isDarkMode ? "border-slate-700 bg-slate-950" : "border-slate-200 bg-slate-100"
+            }`}
+          >
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="h-full w-full object-cover"
+            />
+            {(isStarting || cameraError) && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950/75 px-6 text-center">
+                {isStarting && !cameraError && (
+                  <>
+                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+                    <p className="text-sm font-bold text-white">Starting camera...</p>
+                  </>
+                )}
+                {cameraError && (
+                  <>
+                    <p className="text-sm font-bold text-white">{cameraError}</p>
+                    <p className="text-xs text-slate-300">
+                      If camera access is unavailable here, use `UPLOAD PHOTO` as fallback.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between gap-3">
+            <p className={`text-[11px] font-bold ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+              Position the ID clearly inside the frame before taking the photo.
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className={`rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-wider ${
+                  isDarkMode
+                    ? "bg-slate-800 text-slate-200 hover:bg-slate-700"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleTakePhoto}
+                disabled={isStarting || !!cameraError || isCapturing}
+                className={`rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-wider text-white ${
+                  isStarting || cameraError || isCapturing
+                    ? "cursor-not-allowed bg-emerald-400"
+                    : "bg-emerald-600 hover:bg-emerald-700"
+                }`}
+              >
+                {isCapturing ? "Capturing..." : "Take Photo"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
+
 const Step4Upload = ({
   formData,
   handleChange,
@@ -397,6 +635,7 @@ const Step4Upload = ({
   setStep,
   previews,
   handleFile,
+  handleCapturedFile,
   onReviewSubmit,
   loading = false,
 }) => {
@@ -404,6 +643,8 @@ const Step4Upload = ({
   const [privacyAgreed,    setPrivacyAgreed]    = useState(false);
   const [termsModalOpen,   setTermsModalOpen]   = useState(false);
   const [termsAgreed,      setTermsAgreed]      = useState(false);
+  const galleryInputRefs = useRef({});
+  const [cameraTarget, setCameraTarget] = useState(null);
 
   const labelClass = `text-[11px] font-black uppercase tracking-widest ${isDarkMode ? "text-slate-400" : "text-slate-500"}`;
 
@@ -414,6 +655,19 @@ const Step4Upload = ({
   const isContactValid = contactStr.length === 11 && contactStr.startsWith("09");
 
   const isReady = hasFront && hasBack && isContactValid && privacyAgreed && termsAgreed && !loading;
+  const openPicker = (fieldName, source) => {
+    if (source === "camera") {
+      const side = fieldName === "idFront" ? "front" : "back";
+      setCameraTarget({ fieldName, side });
+      return;
+    }
+
+    const targetInput = galleryInputRefs.current[fieldName];
+    if (targetInput) {
+      targetInput.value = "";
+      targetInput.click();
+    }
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -435,6 +689,17 @@ const Step4Upload = ({
       />
 
       {/* 1. DOCUMENT UPLOAD SECTION — unchanged from original */}
+      <CameraCaptureModal
+        isOpen={!!cameraTarget}
+        onClose={() => setCameraTarget(null)}
+        onCapture={(file) => {
+          if (!cameraTarget) return;
+          handleCapturedFile(file, cameraTarget.side);
+        }}
+        side={cameraTarget?.side || "front"}
+        isDarkMode={isDarkMode}
+      />
+
       <section className="space-y-3">
         <header className="flex justify-between items-end px-1">
           <h3 className={labelClass}>Identification Documents</h3>
@@ -452,9 +717,9 @@ const Step4Upload = ({
 
             return (
               <div key={fieldName} className="group relative">
-                <label className={`
+                <div className={`
                   relative h-40 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center
-                  overflow-hidden transition-all duration-300 cursor-pointer
+                  overflow-hidden transition-all duration-300
                   ${!hasImage
                     ? "border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 hover:border-emerald-500"
                     : "border-emerald-500 bg-emerald-50/10 dark:bg-emerald-500/5"}
@@ -462,14 +727,25 @@ const Step4Upload = ({
                   {previews[side] ? (
                     <>
                       <img src={previews[side]} className="w-full h-full object-cover" alt={`${side} view`} />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
-                        <span className="text-white text-[10px] font-black uppercase tracking-widest bg-emerald-600 px-3 py-2 rounded-xl shadow-lg">
-                          Change Photo
-                        </span>
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 px-3">
+                        <button
+                          type="button"
+                          onClick={() => openPicker(fieldName, "upload")}
+                          className="w-full max-w-[150px] text-white text-[10px] font-black uppercase tracking-widest bg-emerald-600 px-3 py-2 rounded-xl shadow-lg hover:bg-emerald-700"
+                        >
+                          Upload Photo
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openPicker(fieldName, "camera")}
+                          className="w-full max-w-[150px] text-white text-[10px] font-black uppercase tracking-widest bg-slate-700 px-3 py-2 rounded-xl shadow-lg hover:bg-slate-800"
+                        >
+                          Use Camera
+                        </button>
                       </div>
                     </>
                   ) : (
-                    <div className="text-center space-y-2">
+                    <div className="text-center space-y-2 px-3">
                       <div className="w-12 h-12 bg-white dark:bg-slate-800 shadow-sm rounded-2xl flex items-center justify-center mx-auto transition-transform group-hover:scale-110">
                         <ImageIcon size={20} className={isDarkMode ? "text-emerald-500" : "text-emerald-600"} />
                       </div>
@@ -479,17 +755,33 @@ const Step4Upload = ({
                         </p>
                         <p className="text-[9px] text-slate-400 italic mt-0.5 font-bold">Max 5MB • JPG/PNG</p>
                       </div>
+                      <div className="flex items-center justify-center gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => openPicker(fieldName, "upload")}
+                          className="text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700"
+                        >
+                          Upload Photo
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openPicker(fieldName, "camera")}
+                          className="text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-xl bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                        >
+                          Use Camera
+                        </button>
+                      </div>
                     </div>
                   )}
                   <input
                     type="file"
                     name={fieldName}
-                    id={fieldName}
                     accept="image/jpeg,image/png,image/jpg"
                     onChange={(e) => handleFile(e, side)}
-                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                    ref={(el) => { galleryInputRefs.current[fieldName] = el; }}
+                    className="hidden"
                   />
-                </label>
+                </div>
               </div>
             );
           })}

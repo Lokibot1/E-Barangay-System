@@ -99,6 +99,15 @@ function ScrollToTop() {
   return null;
 }
 
+function DebugAutofillGate({ setFormData }) {
+  const { pathname } = useLocation();
+  const allowedPaths = ["/signup", "/admin/residents/add", "/residents/add"];
+  const shouldShow = allowedPaths.some((path) => pathname.startsWith(path));
+
+  if (!shouldShow) return null;
+  return <DebugAutofill setFormData={setFormData} />;
+}
+
 // ── App ───────────────────────────────────────────────────────────────────────
 function App() {
 
@@ -205,7 +214,7 @@ function App() {
 
             </Routes>
             
-            <DebugAutofill setFormData={activeSetFormData} />
+            <DebugAutofillGate setFormData={activeSetFormData} />
             
           </div>
         </Router>

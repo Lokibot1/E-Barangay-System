@@ -4,6 +4,14 @@
 // Import from: './AnalyticsUI'
 // ============================================================
 
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+} from 'recharts';
+
 // STAT CARD
 export function StatCard({ icon, label, value, sub, color = 'primary', trend, t }) {
   const resolvedTheme =
@@ -117,14 +125,260 @@ export function StatCard({ icon, label, value, sub, color = 'primary', trend, t 
 // CARD
 export function Card({ title, children, className = '', t }) {
   return (
-    <div className={`${t ? t.cardBg : 'bg-white'} rounded-2xl p-3.5 shadow-sm border ${t ? t.cardBorder : 'border-[#e6e8f1]'} ${className}`}>
-      {title && (
-        <h3 className={`text-base font-bold ${t ? t.cardText : 'text-slate-900'} mb-2.5`}>
-          {title}
-        </h3>
-      )}
+    <div className={`${t ? t.cardBg : 'bg-white'} rounded-[28px] border ${t ? t.cardBorder : 'border-[#e7ecf3]'} p-5 sm:p-6 shadow-[0_16px_34px_rgba(15,23,42,0.06)] ${className}`}>
+      {title ? (
+        <div className={`mb-4 border-b pb-4 ${t ? t.cardBorder : 'border-[#edf1f7]'}`}>
+          <h3 className={`text-[1.02rem] font-bold tracking-tight ${t ? t.cardText : 'text-slate-900'}`}>
+            {title}
+          </h3>
+        </div>
+      ) : null}
       {children}
     </div>
+  );
+}
+
+export const analyticsChartTheme = {
+  gridStroke: '#e7edf4',
+  axisTick: { fontSize: 11, fill: '#71829b' },
+  axisTickSmall: { fontSize: 10, fill: '#71829b' },
+  legendStyle: { fontSize: 12, paddingTop: 10, color: '#64748b' },
+  barRadius: [12, 12, 0, 0],
+  horizontalBarRadius: [0, 12, 12, 0],
+};
+
+export function formatChartDateLabel(value) {
+  if (!value) return '';
+  if (typeof value === 'string' && /^\d{2}\/\d{2}$/.test(value)) return value;
+
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+
+  return String(value);
+}
+
+export function AnalyticsTooltip({
+  active,
+  payload,
+  label,
+  labelFormatter,
+  valueFormatter,
+  dark = false,
+}) {
+  if (!active || !payload?.length) return null;
+
+  const resolvedLabel = labelFormatter ? labelFormatter(label, payload) : label;
+
+  return (
+    <div className={`min-w-[160px] rounded-[14px] border px-3 py-2.5 shadow-[0_16px_40px_rgba(15,23,42,0.16)] ${
+      dark ? 'border-black/10 bg-slate-950 text-white' : 'border-[#e7eaf5] bg-white text-slate-900'
+    }`}>
+      {resolvedLabel ? (
+        <p className={`text-[10px] font-black uppercase tracking-[0.24em] ${dark ? 'text-slate-400' : 'text-slate-400'}`}>
+          {resolvedLabel}
+        </p>
+      ) : null}
+      <div className={`${resolvedLabel ? 'mt-2' : ''} space-y-2`}>
+        {payload.map((entry, index) => {
+          const marker = entry.payload?.color || entry.payload?.fill || entry.color || entry.fill || entry.stroke || '#94a3b8';
+          const resolvedValue = valueFormatter
+            ? valueFormatter(entry.value, entry.name, entry.payload, entry)
+            : typeof entry.value === 'number'
+              ? entry.value.toLocaleString()
+              : entry.value;
+
+          return (
+            <div key={`${entry.dataKey || entry.name || 'value'}-${index}`} className="flex items-center justify-between gap-4">
+              <span className={`flex items-center gap-2 text-[12px] ${dark ? 'text-slate-300' : 'text-slate-500'}`}>
+                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: marker }} />
+                <span>{entry.name || entry.dataKey}</span>
+              </span>
+              <span className={`text-[13px] font-semibold ${dark ? 'text-white' : 'text-slate-700'}`}>{resolvedValue}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export function ChartCard({
+  title,
+  subtitle,
+  rightLabel,
+  rightContent,
+  note,
+  className = '',
+  children,
+  t,
+}) {
+  return (
+    <div className={`${t ? t.cardBg : 'bg-white'} rounded-[30px] border ${t ? t.cardBorder : 'border-[#e7ecf3]'} p-5 sm:p-6 shadow-[0_16px_36px_rgba(15,23,42,0.06)] ${className}`}>
+      <div className={`border-b pb-4 ${t ? t.cardBorder : 'border-[#edf1f7]'}`}>
+        <div className="flex flex-col items-start gap-3 text-left sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 text-left">
+            <h3 className={`text-left text-[1.08rem] font-bold tracking-tight ${t ? t.cardText : 'text-slate-900'}`}>
+              {title}
+            </h3>
+            {subtitle ? (
+              <p className={`mt-2 max-w-2xl text-left text-[13px] leading-6 ${t ? t.subtleText : 'text-slate-500'}`}>
+                {subtitle}
+              </p>
+            ) : null}
+          </div>
+          {rightContent ? rightContent : rightLabel ? (
+            <span className={`inline-flex items-center rounded-full border px-4 py-2 text-[12px] font-semibold ${
+              t ? `${t.cardBorder} ${t.subtleText}` : 'border-[#dbe3ee] bg-[#fbfcfe] text-slate-600 shadow-[0_4px_12px_rgba(15,23,42,0.05)]'
+            }`}>
+              {rightLabel}
+            </span>
+          ) : null}
+        </div>
+        {note ? (
+          <p className={`mt-3 text-[11px] leading-5 ${t ? t.subtleText : 'text-slate-500'}`}>
+            {note}
+          </p>
+        ) : null}
+      </div>
+      <div className="pt-5">{children}</div>
+    </div>
+  );
+}
+
+export function DonutSummaryCard({
+  title,
+  subtitle,
+  rightLabel,
+  note,
+  t,
+  data,
+  valueFormatter = (value) => (typeof value === 'number' ? value.toLocaleString() : value),
+  centerLabel = 'Total',
+  centerValue,
+  innerRadius = 42,
+  outerRadius = 92,
+  className = '',
+}) {
+  const total = centerValue ?? data.reduce((sum, item) => sum + Number(item.value ?? 0), 0);
+  const formattedTotal = valueFormatter(total);
+  const centerDiskSize = Math.max(84, Math.min(innerRadius * 2 - 6, outerRadius * 2 - 52));
+  const centerValueSize = String(formattedTotal).length > 6 ? 'text-[1.02rem]' : 'text-[1.58rem]';
+
+  return (
+    <ChartCard
+      title={title}
+      subtitle={subtitle}
+      rightLabel={rightLabel}
+      note={note}
+      className={className}
+      t={t}
+    >
+      <div className="space-y-5">
+        <div className="relative mx-auto h-[236px] w-full max-w-[268px] overflow-visible">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={innerRadius}
+                outerRadius={outerRadius}
+                paddingAngle={3}
+                cornerRadius={8}
+                dataKey="value"
+                labelLine={false}
+                label={({ percent, cx, cy, midAngle, innerRadius: ir, outerRadius: or }) => {
+                  if (!percent || percent < 0.08) return null;
+                  const angle = (-midAngle * Math.PI) / 180;
+                  const label = `${Math.round(percent * 100)}%`;
+                  const pillWidth = Math.max(30, label.length * 7 + 10);
+                  const pillHeight = 20;
+                  const halfW = pillWidth / 2;
+                  const halfH = pillHeight / 2;
+                  const radialHalfExtent = Math.abs(Math.cos(angle)) * halfW + Math.abs(Math.sin(angle)) * halfH;
+                  const labelPadding = 4;
+                  const minRadius = ir + radialHalfExtent + labelPadding;
+                  const maxRadius = or - radialHalfExtent - labelPadding;
+                  if (minRadius >= maxRadius) return null;
+                  const radius = Math.min(maxRadius, Math.max(ir + (or - ir) * 0.5, minRadius));
+                  const x = cx + radius * Math.cos(angle);
+                  const y = cy + radius * Math.sin(angle);
+                  return (
+                    <g>
+                      <rect
+                        x={x - pillWidth / 2}
+                        y={y - pillHeight / 2}
+                        width={pillWidth}
+                        height={pillHeight}
+                        rx={pillHeight / 2}
+                        fill="rgba(255,255,255,0.82)"
+                        stroke="rgba(148,163,184,0.28)"
+                      />
+                      <text
+                        x={x}
+                        y={y}
+                        fill="#1f2937"
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        fontSize="11"
+                        fontWeight="700"
+                      >
+                        {label}
+                      </text>
+                    </g>
+                  );
+                }}
+              >
+                {data.map((item) => (
+                  <Cell key={item.name} fill={item.color} />
+                ))}
+              </Pie>
+              <Tooltip
+                content={(
+                  <AnalyticsTooltip
+                    labelFormatter={(_, payload) => payload?.[0]?.name}
+                    valueFormatter={(value) => valueFormatter(value)}
+                  />
+                )}
+                allowEscapeViewBox={{ x: true, y: true }}
+                offset={20}
+                wrapperStyle={{ outline: 'none', zIndex: 40 }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+            <div
+              className="flex items-center justify-center rounded-full border border-white bg-white/95 text-center shadow-[0_10px_28px_rgba(15,23,42,0.10)]"
+              style={{ width: `${centerDiskSize}px`, height: `${centerDiskSize}px` }}
+            >
+              <div className="px-2.5">
+                <div className={`${centerValueSize} font-bold tracking-tight ${t ? t.cardText : 'text-slate-900'} font-spartan leading-none`}>
+                  {formattedTotal}
+                </div>
+                <div className={`mt-1 text-[8px] font-black uppercase tracking-[0.15em] ${t ? t.subtleText : 'text-slate-400'}`}>
+                  {centerLabel}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+          {data.map((item) => (
+            <div key={item.name} className="inline-flex items-center gap-2">
+              <span className="h-3.5 w-3.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+              <span className={`text-sm font-medium ${t ? t.cardText : 'text-slate-800'}`}>{item.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </ChartCard>
   );
 }
 

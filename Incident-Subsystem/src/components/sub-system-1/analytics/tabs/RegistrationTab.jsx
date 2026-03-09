@@ -7,10 +7,18 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
+  Legend,
 } from 'recharts';
-import { StatCard, Card, SectionHeader } from '../AnalyticsInterface';
+import {
+  StatCard,
+  Card,
+  ChartCard,
+  SectionHeader,
+  analyticsChartTheme,
+  AnalyticsTooltip,
+} from '../AnalyticsInterface';
 import { FileText, CheckCircle, Clock, XCircle, AlertTriangle, Circle } from 'lucide-react';
-import { COLORS, pct, calcVerifRate } from '../analyticsConfig';
+import { COLORS, REGISTRY_STATUS_COLORS, pct, calcVerifRate } from '../analyticsConfig';
 
 export default function RegistrationTab({ raw, t }) {
   const ov = raw?.overview ?? {};
@@ -39,14 +47,7 @@ export default function RegistrationTab({ raw, t }) {
 
   const totalSubmitted = (ov.verified ?? 0) + (ov.pending ?? 0) + (ov.rejected ?? 0);
 
-  const gridStroke = '#e9ecf7';
-  const axisTick = { fontSize: 11, fill: '#64748b' };
-  const tooltipStyle = {
-    borderRadius: '10px',
-    border: '1px solid #e2e8f0',
-    backgroundColor: '#ffffff',
-    fontSize: '12px',
-  };
+  const { gridStroke, axisTick, barRadius, horizontalBarRadius, legendStyle } = analyticsChartTheme;
 
   return (
     <div className="space-y-6">
@@ -91,26 +92,50 @@ export default function RegistrationTab({ raw, t }) {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <Card title="Daily Registration Submissions" t={t}>
-          <ResponsiveContainer width="100%" height={220}>
+        <ChartCard
+          title="Daily Registration Submissions"
+          subtitle="Daily submission volume across the current registration timeline."
+          rightLabel="Daily"
+          t={t}
+        >
+          <ResponsiveContainer width="100%" height={240}>
             <BarChart data={trend} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-              <XAxis dataKey="date" tick={axisTick} />
-              <YAxis tick={axisTick} />
-              <Tooltip contentStyle={tooltipStyle} />
+              <CartesianGrid vertical={false} strokeDasharray="2 10" stroke={gridStroke} />
+              <XAxis dataKey="date" tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <YAxis tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <Tooltip
+                content={(
+                  <AnalyticsTooltip
+                    valueFormatter={(value) => `${Number(value).toLocaleString()} submissions`}
+                  />
+                )}
+                wrapperStyle={{ outline: 'none' }}
+              />
               <Bar dataKey="count" name="Submissions" fill={COLORS.primary} radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </Card>
+        </ChartCard>
 
-        <Card title="Unregistered Residents per Purok" t={t}>
-          <ResponsiveContainer width="100%" height={220}>
+        <ChartCard
+          title="Unregistered Residents per Purok"
+          subtitle="Residents without a barangay ID application, grouped by purok."
+          rightLabel="Gap view"
+          t={t}
+        >
+          <ResponsiveContainer width="100%" height={240}>
             <BarChart data={unregByPurok} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-              <XAxis dataKey="purok" tick={axisTick} />
-              <YAxis tick={axisTick} />
-              <Tooltip formatter={(v, _, { payload }) => [`${v} (${payload?.pct}% of total)`, 'Unregistered']} contentStyle={tooltipStyle} />
-              <Bar dataKey="unregistered" name="Unregistered" fill={COLORS.accent} radius={[8, 8, 0, 0]} />
+              <CartesianGrid vertical={false} strokeDasharray="2 10" stroke={gridStroke} />
+              <XAxis dataKey="purok" tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <YAxis tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <Tooltip
+                content={(
+                  <AnalyticsTooltip
+                    valueFormatter={(value, _name, payload) => `${Number(value).toLocaleString()} (${payload?.pct ?? 0}% of total)`}
+                  />
+                )}
+                wrapperStyle={{ outline: 'none' }}
+              />
+              <Bar dataKey="unregistered" name="Unregistered" fill={REGISTRY_STATUS_COLORS.unregistered.solid} radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
           {worstUnreg && (
@@ -118,31 +143,70 @@ export default function RegistrationTab({ raw, t }) {
               <AlertTriangle className="inline-block w-4 h-4 mr-1 text-orange-500" /> {worstUnreg.purok} has the most unregistered ({worstUnreg.unregistered})
             </p>
           )}
-        </Card>
+        </ChartCard>
 
-        <Card title="Submission Status per Purok" t={t}>
+        <ChartCard
+          title="Submission Status per Purok"
+          subtitle="Verification progress split into verified, pending, and rejected records."
+          rightLabel="Stacked"
+          t={t}
+        >
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={purokVerif} layout="vertical" margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} horizontal={false} />
-              <XAxis type="number" tick={axisTick} />
-              <YAxis type="category" dataKey="purok" tick={axisTick} width={60} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="verified" name="Verified" stackId="a" fill={COLORS.success} />
-              <Bar dataKey="pending" name="Pending" stackId="a" fill={COLORS.warning} />
-              <Bar dataKey="rejected" name="Rejected" stackId="a" fill={COLORS.danger} radius={[0, 8, 8, 0]} />
+            <BarChart
+              data={purokVerif}
+              layout="vertical"
+              margin={{ top: 8, right: 12, bottom: 12, left: 6 }}
+              barCategoryGap="26%"
+              barSize={24}
+            >
+              <CartesianGrid stroke={gridStroke} horizontal={false} vertical={true} />
+              <XAxis
+                type="number"
+                tick={axisTick}
+                axisLine={false}
+                tickLine={false}
+                tickMargin={10}
+              />
+              <YAxis
+                type="category"
+                dataKey="purok"
+                tick={axisTick}
+                axisLine={false}
+                tickLine={false}
+                width={64}
+              />
+              <Tooltip
+                content={<AnalyticsTooltip />}
+                wrapperStyle={{ outline: 'none' }}
+              />
+              <Legend iconType="circle" iconSize={10} wrapperStyle={legendStyle} />
+              <Bar dataKey="verified" name="Verified" stackId="a" fill={REGISTRY_STATUS_COLORS.verified.solid} radius={horizontalBarRadius} />
+              <Bar dataKey="pending" name="Pending" stackId="a" fill={REGISTRY_STATUS_COLORS.pending.solid} radius={horizontalBarRadius} />
+              <Bar dataKey="rejected" name="Rejected" stackId="a" fill={REGISTRY_STATUS_COLORS.rejected.solid} radius={horizontalBarRadius} />
             </BarChart>
           </ResponsiveContainer>
-        </Card>
+        </ChartCard>
 
-        <Card title="Verification Rate per Purok (Submitted Only)" t={t}>
-          <p className="text-[11px] text-slate-500 mb-3">Rate = Verified / (Verified + Pending + Rejected). Unregistered residents are excluded.</p>
-          <ResponsiveContainer width="100%" height={200}>
+        <ChartCard
+          title="Verification Rate per Purok (Submitted Only)"
+          subtitle="Rate = Verified / (Verified + Pending + Rejected). Unregistered residents are excluded."
+          rightLabel="Rate"
+          t={t}
+        >
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={purokRates} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-              <XAxis dataKey="purok" tick={axisTick} />
-              <YAxis tick={axisTick} domain={[0, 100]} unit="%" />
-              <Tooltip formatter={(v) => [`${v}%`, 'Verif. Rate']} contentStyle={tooltipStyle} />
-              <Bar dataKey="rate" name="Verif. Rate" radius={[8, 8, 0, 0]}>
+              <CartesianGrid vertical={false} strokeDasharray="2 10" stroke={gridStroke} />
+              <XAxis dataKey="purok" tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <YAxis tick={axisTick} domain={[0, 100]} unit="%" axisLine={false} tickLine={false} tickMargin={10} />
+              <Tooltip
+                content={(
+                  <AnalyticsTooltip
+                    valueFormatter={(value) => `${Number(value)}%`}
+                  />
+                )}
+                wrapperStyle={{ outline: 'none' }}
+              />
+              <Bar dataKey="rate" name="Verif. Rate" radius={barRadius}>
                 {purokRates.map((p, i) => (
                   <Cell key={i} fill={p.rate >= 80 ? COLORS.success : p.rate >= 50 ? COLORS.warning : COLORS.danger} />
                 ))}
@@ -154,7 +218,7 @@ export default function RegistrationTab({ raw, t }) {
             <span className="text-amber-500"><Circle className="inline-block w-3 h-3 mr-1" /> 50-79% Moderate</span>
             <span className="text-red-500"><Circle className="inline-block w-3 h-3 mr-1" /> &lt;50% Needs Action</span>
           </div>
-        </Card>
+        </ChartCard>
       </div>
     </div>
   );

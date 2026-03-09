@@ -550,56 +550,7 @@ export default function HeatmapTab({ raw, t }) {
 
           {view === 'map' ? (
             leafletReady ? (
-              <div className="relative isolate z-0">
-                <HeatmapMap purokData={purokData} metric={metric} t={t} onAreaClick={setSelectedPurok} />
-
-                {selectedPurok ? (
-                  <div className="pointer-events-none absolute inset-x-0 top-4 z-10 flex justify-center px-3">
-                    <div className={`pointer-events-auto w-full max-w-[244px] rounded-[24px] border shadow-[0_18px_36px_rgba(15,23,42,0.14)] ${t ? `${t.cardBg} ${t.cardBorder}` : 'bg-white border-gray-200'}`}>
-                      <div className={`px-4 py-3 border-b ${t ? t.cardBorder : 'border-gray-200'} flex items-center justify-between`}>
-                        <div>
-                          <h3 className={`text-[13px] font-bold ${t ? t.cardText : 'text-gray-800'}`}>{selectedPurok.purok}</h3>
-                        </div>
-                        <button
-                          className={`text-[12px] font-semibold ${t ? t.subtleText : 'text-gray-500'}`}
-                          onClick={() => setSelectedPurok(null)}
-                        >
-                          Close
-                        </button>
-                      </div>
-
-                      <div className="p-3 space-y-2">
-                        <div className="grid grid-cols-2 gap-2 text-[11px]">
-                          <div className={`${t ? t.inlineBg : 'bg-gray-50'} rounded-lg p-3 text-center`}>
-                            <p className={`text-[9px] uppercase ${t ? t.subtleText : 'text-gray-500'}`}>Selected Metric</p>
-                            <p className="mt-1 font-bold" style={{ color: currentMetricStyle.text }}>
-                              {selectedMetric.label}: {Number(selectedPurok[metric] ?? 0)}
-                            </p>
-                          </div>
-                          <div className={`${t ? t.inlineBg : 'bg-gray-50'} rounded-lg p-3 text-center`}>
-                            <p className={`text-[9px] uppercase ${t ? t.subtleText : 'text-gray-500'}`}>Verification Rate</p>
-                            <p className={`mt-1 font-bold ${t ? t.cardText : 'text-gray-800'}`}>{calcVerifRate(selectedPurok)}%</p>
-                          </div>
-                        </div>
-
-                        {selectedInsight ? (
-                          <div className={`${t ? t.inlineBg : 'bg-gray-50'} rounded-lg border ${t ? t.cardBorder : 'border-gray-200'} p-3 text-center`}>
-                            <p className={`text-[9px] uppercase font-bold mb-1 ${t ? t.subtleText : 'text-gray-500'}`}>Decision Guide</p>
-                            <p className={`text-[12px] font-bold ${t ? t.cardText : 'text-gray-800'}`}>{selectedInsight.title}</p>
-                            <p className={`text-[11px] mt-1 ${t ? t.subtleText : 'text-gray-600'}`}>{selectedInsight.summary}</p>
-                            <p className={`text-[11px] mt-2 ${t ? t.cardText : 'text-gray-700'}`}>
-                              <span className="font-bold">Priority:</span> {selectedInsight.priorityText}
-                            </p>
-                            <p className={`text-[11px] mt-1 ${t ? t.cardText : 'text-gray-700'}`}>
-                              <span className="font-bold">Recommended action:</span> {selectedInsight.recommendation}
-                            </p>
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+              <HeatmapMap purokData={purokData} metric={metric} t={t} onAreaClick={setSelectedPurok} />
             ) : (
               <div className="flex h-64 items-center justify-center gap-3 text-gray-400">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
@@ -647,6 +598,57 @@ export default function HeatmapTab({ raw, t }) {
         </ChartCard>
       </div>
 
+      {selectedPurok && (
+        <div className="fixed inset-0 z-[1400] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setSelectedPurok(null)}
+          />
+          <div className={`relative w-full max-w-lg rounded-2xl border shadow-xl ${t ? `${t.cardBg} ${t.cardBorder}` : 'bg-white border-gray-200'}`}>
+            <div className={`px-5 py-4 border-b ${t ? t.cardBorder : 'border-gray-200'} flex items-center justify-between`}>
+              <div>
+                <p className={`text-[11px] uppercase font-bold ${t ? t.subtleText : 'text-gray-500'}`}>Purok Details</p>
+                <h3 className={`text-lg font-bold ${t ? t.cardText : 'text-gray-800'}`}>{selectedPurok.purok}</h3>
+              </div>
+              <button
+                className={`text-sm font-semibold ${t ? t.subtleText : 'text-gray-500'}`}
+                onClick={() => setSelectedPurok(null)}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="p-5 space-y-3">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className={`${t ? t.inlineBg : 'bg-gray-50'} rounded-lg p-3`}>
+                  <p className={`text-[10px] uppercase ${t ? t.subtleText : 'text-gray-500'}`}>Selected Metric</p>
+                  <p className="font-bold" style={{ color: currentMetricStyle.text }}>
+                    {selectedMetric.label}: {Number(selectedPurok[metric] ?? 0)}
+                  </p>
+                </div>
+                <div className={`${t ? t.inlineBg : 'bg-gray-50'} rounded-lg p-3`}>
+                  <p className={`text-[10px] uppercase ${t ? t.subtleText : 'text-gray-500'}`}>Verification Rate</p>
+                  <p className={`font-bold ${t ? t.cardText : 'text-gray-800'}`}>{calcVerifRate(selectedPurok)}%</p>
+                </div>
+              </div>
+
+              {selectedInsight && (
+                <div className={`${t ? t.inlineBg : 'bg-gray-50'} rounded-lg border ${t ? t.cardBorder : 'border-gray-200'} p-3`}>
+                  <p className={`text-[10px] uppercase font-bold mb-1 ${t ? t.subtleText : 'text-gray-500'}`}>Decision Guide</p>
+                  <p className={`text-sm font-bold ${t ? t.cardText : 'text-gray-800'}`}>{selectedInsight.title}</p>
+                  <p className={`text-xs mt-1 ${t ? t.subtleText : 'text-gray-600'}`}>{selectedInsight.summary}</p>
+                  <p className={`text-xs mt-2 ${t ? t.cardText : 'text-gray-700'}`}>
+                    <span className="font-bold">Priority:</span> {selectedInsight.priorityText}
+                  </p>
+                  <p className={`text-xs mt-1 ${t ? t.cardText : 'text-gray-700'}`}>
+                    <span className="font-bold">Recommended action:</span> {selectedInsight.recommendation}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

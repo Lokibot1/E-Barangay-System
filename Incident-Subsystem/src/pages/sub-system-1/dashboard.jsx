@@ -74,7 +74,7 @@ export default function Dashboard() {
 
   return (
     <div className={`flex flex-col min-h-full ${t.pageBg}`}>
-      <div className={`sticky top-0 z-[1200] ${t.cardBg} border-b ${t.cardBorder} shadow-sm`}>
+      <div className={`sticky top-0 z-[2000] isolate ${t.cardBg} border-b ${t.cardBorder} shadow-sm`}>
         <div className="flex items-center justify-between px-6 sm:px-8 py-4">
           <div>
             <h1 className={`text-base sm:text-lg font-spartan font-bold ${t.cardText} flex items-center gap-2`}>
@@ -120,7 +120,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <main className="p-3 sm:p-5 w-full">
+      <main className="relative z-0 p-3 sm:p-5 w-full">
         {loading && (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <div
