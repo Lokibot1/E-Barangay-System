@@ -66,15 +66,26 @@ const SignupForm = ({
   const handleHouseNumberChange = (e) =>
     handleChange({ target: { name: e.target.name, value: e.target.value } });
 
-  const handleFile = (e, side) => {
+  const processSelectedFile = (file, side) => {
     if (isStaffMode) return;
-    const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert('Maximum file size is 5MB.'); e.target.value = ''; return; }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Maximum file size is 5MB.');
+      return;
+    }
     if (previews[side]) URL.revokeObjectURL(previews[side]);
     const url = URL.createObjectURL(file);
     setPreviews((prev) => ({ ...prev, [side]: url }));
     handleChange({ target: { name: side === 'front' ? 'idFront' : 'idBack', value: file } });
+  };
+
+  const handleFile = (e, side) => {
+    processSelectedFile(e.target.files[0], side);
+    if (e.target) e.target.value = '';
+  };
+
+  const handleCapturedFile = (file, side) => {
+    processSelectedFile(file, side);
   };
 
   // ── Submit ─────────────────────────────────────────────────────────────────
@@ -216,6 +227,7 @@ const SignupForm = ({
             {...commonProps}
             previews={previews}
             handleFile={handleFile}
+            handleCapturedFile={handleCapturedFile}
             onReviewSubmit={() => setIsReviewOpen(true)}
             loading={loading}
           />
