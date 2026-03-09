@@ -24,6 +24,7 @@ const SAFE_DEFAULTS = {
   eventVersion: 0,
   markAsRead: () => {},
   markAllAsRead: () => {},
+  pushNotification: () => {},
   clearNotifications: () => {},
 };
 
@@ -176,6 +177,17 @@ export const RealTimeProvider = ({ children }) => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   }, []);
 
+  const pushNotification = useCallback((notification) => {
+    if (!notification?.id) return;
+
+    setNotifications((prev) => {
+      if (prev.some((item) => item.id === notification.id)) {
+        return prev;
+      }
+      return [notification, ...prev];
+    });
+  }, []);
+
   const clearNotifications = useCallback(() => {
     setNotifications([]);
     setLatestBatch([]);
@@ -195,6 +207,7 @@ export const RealTimeProvider = ({ children }) => {
       eventVersion,
       markAsRead,
       markAllAsRead,
+      pushNotification,
       clearNotifications,
     }),
     [
@@ -206,6 +219,7 @@ export const RealTimeProvider = ({ children }) => {
       eventVersion,
       markAsRead,
       markAllAsRead,
+      pushNotification,
       clearNotifications,
     ],
   );

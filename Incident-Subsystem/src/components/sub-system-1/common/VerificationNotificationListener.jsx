@@ -3,6 +3,7 @@ import { Bell, X } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSound } from '../../../hooks/shared/useSound';
 import { verificationService } from '../../../services/sub-system-1/verification';
+import { useRealTime } from '../../../context/RealTimeContext';
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -10,6 +11,7 @@ const VerificationNotificationListener = () => {
   const { playFeedback }      = useSound();
   const navigate              = useNavigate();
   const location              = useLocation();
+  const { pushNotification }  = useRealTime();
   const [notificationBanner, setNotificationBanner] = useState(null);
 
   const lastCountKey    = 'admin_last_pending_count';
@@ -55,6 +57,20 @@ const VerificationNotificationListener = () => {
           const newCount = pendingCount - previousCount;
           playFeedback('notify');
           setNotificationBanner({ newCount, totalPending: pendingCount });
+          pushNotification({
+            id: `registration-pending-${Date.now()}-${pendingCount}`,
+            source: 'registration',
+            type: 'registration_pending',
+            description: `${newCount} new registration${newCount > 1 ? 's' : ''} submitted for review. Total pending: ${pendingCount}.`,
+            timestamp: new Date().toISOString(),
+            read: false,
+            data: {
+              newCount,
+              totalPending: pendingCount,
+              route: '/admin/user-management',
+              switchToTab: 'Pending',
+            },
+          });
 
           if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
           bannerTimerRef.current = setTimeout(() => setNotificationBanner(null), 10000);
@@ -82,7 +98,7 @@ const VerificationNotificationListener = () => {
       clearInterval(interval);
       if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
     };
-  }, [playFeedback]);
+  }, [playFeedback, pushNotification]);
 
   const handleViewPending = () => {
     const targetPath     = '/admin/user-management';

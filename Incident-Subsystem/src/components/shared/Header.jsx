@@ -208,17 +208,26 @@ const getRelativeTime = (date) => {
 };
 
 // ── Memoized notification list item ─────────────────────────────────────
-const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppointment }) => {
+const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppointment, onViewRegistration, onCloseMenu }) => {
   const statusColor = notification.read ? "bg-gray-400" : "bg-amber-500";
   const statusLabel = notification.read ? "Read" : "New";
   const timeAgo = getRelativeTime(notification.timestamp);
   const isIncident = notification.source === "incident";
   const isAppointment = notification.source === "appointment";
+  const isRegistration = notification.source === "registration";
   const isStatusChange = !!notification.oldStatus;
 
-  const sourceLabel = isAppointment ? "Appointment" : isIncident ? "Incident" : "Complaint";
+  const sourceLabel = isRegistration
+    ? "Registration"
+    : isAppointment
+      ? "Appointment"
+      : isIncident
+        ? "Incident"
+        : "Complaint";
   const displayType = notification.type === "appointment_scheduled"
     ? "Appointment Scheduled"
+    : notification.type === "registration_pending"
+      ? "New Resident Registration"
     : notification.type;
 
   const capitalize = (str) =>
@@ -227,8 +236,16 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
   const handleClick = () => {
     onMarkAsRead(notification.id);
     if (isAppointment && onViewAppointment) {
+      onCloseMenu?.();
       onViewAppointment(notification);
+      return;
     }
+    if (isRegistration && onViewRegistration) {
+      onCloseMenu?.();
+      onViewRegistration(notification);
+      return;
+    }
+    onCloseMenu?.();
   };
 
   return (
@@ -279,9 +296,9 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
         <p className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"} font-kumbh`}>
           {timeAgo}{notification.reportedBy ? ` · Reported by ${notification.reportedBy}` : ""}
         </p>
-        {isAppointment && (
+        {(isAppointment || isRegistration) && (
           <span className={`text-[10px] font-semibold font-kumbh ${isDark ? "text-blue-400" : "text-blue-500"}`}>
-            View details →
+            {isRegistration ? "View pending list →" : "View details →"}
           </span>
         )}
       </div>
@@ -290,6 +307,127 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
 });
 
 // ── Header ──────────────────────────────────────────────────────────────
+const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onViewAppointment, onViewRegistration, onCloseMenu }) => {
+  const unread = !notification.read;
+  const timeAgo = getRelativeTime(notification.timestamp);
+  const isIncident = notification.source === "incident";
+  const isAppointment = notification.source === "appointment";
+  const isRegistration = notification.source === "registration";
+  const isStatusChange = !!notification.oldStatus;
+
+  const sourceLabel = isRegistration
+    ? "Registration"
+    : isAppointment
+      ? "Appointment"
+      : isIncident
+        ? "Incident"
+        : "Complaint";
+
+  const displayType = notification.type === "appointment_scheduled"
+    ? "Appointment Scheduled"
+    : notification.type === "registration_pending"
+      ? "New Resident Registration"
+      : notification.type;
+
+  const actionLabel = isRegistration
+    ? "Open pending list"
+    : isAppointment
+      ? "Open details"
+      : null;
+
+  const capitalize = (str) =>
+    str ? str.replace(/\b\w/g, (c) => c.toUpperCase()) : str;
+
+  const handleClick = () => {
+    onMarkAsRead(notification.id);
+    if (isAppointment && onViewAppointment) {
+      onCloseMenu?.();
+      onViewAppointment(notification);
+      return;
+    }
+    if (isRegistration && onViewRegistration) {
+      onCloseMenu?.();
+      onViewRegistration(notification);
+      return;
+    }
+    onCloseMenu?.();
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={`w-full rounded-xl border p-3 text-left transition-all ${
+        unread
+          ? isDark
+            ? "border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/15"
+            : "border-violet-200 bg-violet-50/80 hover:bg-violet-50"
+          : isDark
+            ? "border-slate-700 bg-slate-800/70 hover:bg-slate-800"
+            : "border-slate-200 bg-white hover:bg-slate-50"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`inline-flex items-center rounded-full px-2 py-1 text-[10px] font-bold font-kumbh uppercase tracking-wide ${
+              isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-600"
+            }`}>
+              {sourceLabel}
+            </span>
+            <span className={`inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold font-kumbh ${
+              unread
+                ? isDark
+                  ? "border border-violet-400/30 bg-violet-500/20 text-violet-200"
+                  : "border border-violet-200 bg-violet-100 text-violet-700"
+                : isDark
+                  ? "border border-slate-600 bg-slate-700 text-slate-300"
+                  : "border border-slate-200 bg-slate-100 text-slate-500"
+            }`}>
+              {unread ? "Unread" : "Read"}
+            </span>
+            {isStatusChange && (
+              <span className={`rounded-full px-2 py-1 text-[10px] font-medium font-kumbh ${
+                isDark ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-600"
+              }`}>
+                {capitalize(notification.oldStatus)} {"->"} {capitalize(notification.newStatus)}
+              </span>
+            )}
+          </div>
+
+          <p className={`mt-2.5 text-[13px] font-semibold leading-4.5 font-kumbh ${
+            isDark ? "text-slate-100" : "text-slate-900"
+          }`}>
+            {displayType}
+          </p>
+
+          <p className={`mt-1 text-[11px] leading-4.5 font-kumbh ${
+            isDark ? "text-slate-400" : "text-slate-600"
+          }`}>
+            {notification.description || "No description provided"}
+          </p>
+
+          <div className="mt-2.5 flex items-center justify-between gap-3">
+            <p className={`text-[10px] font-kumbh ${
+              isDark ? "text-slate-500" : "text-slate-500"
+            }`}>
+              {timeAgo}{notification.reportedBy ? ` · Reported by ${notification.reportedBy}` : ""}
+            </p>
+
+            {actionLabel && (
+              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[9px] font-semibold font-kumbh ${
+                isDark ? "bg-slate-700 text-violet-200" : "bg-violet-50 text-violet-700"
+              }`}>
+                {actionLabel}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+});
+
 const Header = ({ currentTheme, onThemeChange }) => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -298,6 +436,9 @@ const Header = ({ currentTheme, onThemeChange }) => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [appointmentDetail, setAppointmentDetail] = useState(null);
+  const notificationRef = useRef(null);
+  const settingsRef = useRef(null);
+  const profileRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { language, setLanguage, tr } = useLanguage();
@@ -307,7 +448,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
   const adminRT = useRealTime();
   const userRT = useUserRealTime();
   const isAdminUser = isAdmin();
-  const { notifications, unreadCount, markAsRead, markAllAsRead } =
+  const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications } =
     isAdminUser ? adminRT : userRT;
 
   const user = getUser();
@@ -326,12 +467,44 @@ const Header = ({ currentTheme, onThemeChange }) => {
   // ── Notification sound on new unread items ────────────────────────────
   const prevUnreadRef = useRef(unreadCount);
 
+  const closeAllMenus = useCallback(() => {
+    setIsNotificationOpen(false);
+    setIsSettingsOpen(false);
+    setIsProfileOpen(false);
+  }, []);
+
   useEffect(() => {
     if (unreadCount > prevUnreadRef.current) {
       playNotificationSound();
     }
     prevUnreadRef.current = unreadCount;
   }, [unreadCount]);
+
+  useEffect(() => {
+    const handlePointerDown = (event) => {
+      const target = event.target;
+      if (
+        notificationRef.current?.contains(target) ||
+        settingsRef.current?.contains(target) ||
+        profileRef.current?.contains(target)
+      ) {
+        return;
+      }
+      closeAllMenus();
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, [closeAllMenus]);
+
+  useEffect(() => {
+    closeAllMenus();
+  }, [location.pathname, closeAllMenus]);
 
   const toggleNotifications = () => {
     setIsNotificationOpen(!isNotificationOpen);
@@ -390,6 +563,39 @@ const Header = ({ currentTheme, onThemeChange }) => {
     markAllAsRead();
   }, [markAllAsRead]);
 
+  const handleClearHistory = useCallback(() => {
+    clearNotifications();
+    setIsNotificationOpen(false);
+  }, [clearNotifications]);
+
+  const handleViewRegistration = useCallback(
+    (notification) => {
+      const targetPath = notification?.data?.route || "/admin/user-management";
+      const targetTab = notification?.data?.switchToTab || "Pending";
+      const isAlreadyOnPage = location.pathname === targetPath;
+
+      if (isAlreadyOnPage) {
+        window.dispatchEvent(
+          new CustomEvent("refreshVerificationData", {
+            detail: { switchToTab: targetTab },
+          }),
+        );
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
+      navigate(targetPath);
+      setTimeout(() => {
+        window.dispatchEvent(
+          new CustomEvent("refreshVerificationData", {
+            detail: { switchToTab: targetTab },
+          }),
+        );
+      }, 100);
+    },
+    [location.pathname, navigate],
+  );
+
   return (
     <>
       <header className={`${t.cardBg} border-b ${t.cardBorder} shadow-sm relative z-20`}>
@@ -421,7 +627,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
             {/* Action Buttons */}
             <div className="flex items-center space-x-2 sm:space-x-3 relative md:mr-4 lg:mr-5">
               {/* Notification */}
-              <div className="relative">
+              <div ref={notificationRef} className="relative">
                 <button
                   onClick={toggleNotifications}
                   className={`p-2 sm:p-2.5 ${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} ${isAdminUser ? `rounded-xl border ${t.cardBorder}` : "rounded-full"} transition-all relative`}
@@ -450,35 +656,39 @@ const Header = ({ currentTheme, onThemeChange }) => {
                 {/* Notification Dropdown */}
                 {isNotificationOpen && (
                   <div
-                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-96 ${t.cardBg} ${t.cardBorder} rounded-xl shadow-2xl border z-40 overflow-hidden animate-slideDown max-h-[80vh] sm:max-h-[600px]`}
+                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-[22rem] ${t.cardBg} ${t.cardBorder} rounded-xl shadow-2xl border z-40 overflow-hidden animate-slideDown max-h-[80vh] sm:max-h-[540px]`}
                   >
                     <div
-                      className={`bg-gradient-to-r ${t.primaryGrad} px-4 sm:px-5 py-3 sm:py-4`}
+                      className={`bg-gradient-to-r ${t.primaryGrad} px-4 py-3.5`}
                     >
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-white font-bold text-base sm:text-lg font-spartan">
-                          {tr.header.reportUpdates}
-                        </h3>
-                        <span className="bg-white/20 text-white text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full font-kumbh">
-                          {unreadCount} {tr.header.active}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="text-left">
+                          <h3 className="text-white font-bold text-[15px] sm:text-base font-spartan">
+                            Notifications
+                          </h3>
+                        </div>
+                        <span className="bg-white/20 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full font-kumbh whitespace-nowrap">
+                          {unreadCount} unread
                         </span>
                       </div>
                     </div>
 
-                    <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto">
+                    <div className={`max-h-[60vh] sm:max-h-[20rem] overflow-y-auto p-3 space-y-2.5 ${isDark ? "bg-slate-900/40" : "bg-slate-50/70"}`}>
                       {notifications.length > 0 ? (
                         notifications.slice(0, 15).map((notification) => (
-                          <NotificationItem
+                          <NotificationHistoryItem
                             key={notification.id}
                             notification={notification}
                             isDark={isDark}
                             onMarkAsRead={handleMarkAsRead}
                             onViewAppointment={setAppointmentDetail}
+                            onViewRegistration={handleViewRegistration}
+                            onCloseMenu={closeAllMenus}
                           />
                         ))
                       ) : (
                         <div
-                          className={`p-8 text-center ${t.subtleText}`}
+                          className={`rounded-2xl border p-8 text-center ${t.subtleText} ${isDark ? "border-slate-700 bg-slate-800/60" : "border-slate-200 bg-white"}`}
                         >
                           <svg
                             className="w-12 h-12 mx-auto mb-3 opacity-30"
@@ -493,11 +703,11 @@ const Header = ({ currentTheme, onThemeChange }) => {
                               d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                             />
                           </svg>
-                          <p className="text-sm font-kumbh">
-                            No notifications yet
+                          <p className="text-sm font-kumbh font-semibold">
+                            No history yet
                           </p>
                           <p className="text-xs mt-1 font-kumbh opacity-60">
-                            New reports will appear here in real-time
+                            New updates will be saved here automatically.
                           </p>
                         </div>
                       )}
@@ -505,13 +715,27 @@ const Header = ({ currentTheme, onThemeChange }) => {
 
                     {notifications.length > 0 && (
                       <div
-                        className={`p-3 sm:p-4 border-t ${isDark ? "border-slate-700 bg-slate-800/50" : "border-slate-100 bg-slate-50"}`}
+                        className={`p-3 border-t ${isDark ? "border-slate-700 bg-slate-900/70" : "border-slate-200 bg-white"} flex items-center gap-2`}
                       >
                         <button
                           onClick={handleMarkAllAsRead}
-                          className={`w-full text-center text-sm font-semibold ${t.primaryText} hover:opacity-80 transition-opacity font-kumbh`}
+                          className={`flex-1 rounded-xl px-3 py-2 text-[12px] font-semibold transition-colors font-kumbh ${
+                            isDark
+                              ? "bg-violet-500/15 text-violet-200 hover:bg-violet-500/25"
+                              : "bg-violet-50 text-violet-700 hover:bg-violet-100"
+                          }`}
                         >
                           Mark All as Read
+                        </button>
+                        <button
+                          onClick={handleClearHistory}
+                          className={`rounded-xl px-3 py-2 text-[12px] font-semibold transition-colors font-kumbh ${
+                            isDark
+                              ? "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800"
+                          }`}
+                        >
+                          Clear
                         </button>
                       </div>
                     )}
@@ -520,7 +744,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
               </div>
 
               {/* Settings */}
-              <div className="relative">
+              <div ref={settingsRef} className="relative">
                 <button
                   onClick={toggleSettings}
                   className={`p-2 sm:p-2.5 ${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} ${isAdminUser ? `rounded-xl border ${t.cardBorder}` : "rounded-full"} transition-all`}
@@ -673,7 +897,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
               </div>
 
               {/* Profile */}
-              <div className="relative">
+              <div ref={profileRef} className="relative">
                 <button
                   onClick={toggleProfile}
                   className={`flex items-center space-x-1 sm:space-x-2 px-1 sm:px-1.5 py-1 ${isAdminUser ? "rounded-lg border border-transparent bg-transparent" : "rounded-full"} ${isDark ? "hover:bg-slate-700" : "hover:bg-slate-100"} transition-all`}
