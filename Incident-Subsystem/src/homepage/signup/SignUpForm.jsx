@@ -37,6 +37,7 @@ const SignupForm = ({
   addressSuggestions = [],
   isSearchingAddress,
   selectAddress,
+  compactMode = false,
 }) => {
   const [step,         setStep]         = useState(1);
   const [previews,     setPreviews]     = useState({ front: null, back: null });
@@ -173,10 +174,10 @@ const SignupForm = ({
   const commonProps = { formData, handleChange, isDarkMode, setStep, isStaffMode };
 
   return (
-    <div className="space-y-6">
+    <div className={compactMode ? "space-y-4" : "space-y-6"}>
 
       {/* Step indicator */}
-      <div className="flex items-center justify-between mb-8 px-2 max-w-xl mx-auto">
+      <div className={`flex items-center justify-between px-2 max-w-xl mx-auto ${compactMode ? "mb-5" : "mb-8"}`}>
         {(isStaffMode ? [1,2,3] : [1,2,3,4]).map((num) => (
           <div key={num} className="flex items-center flex-1 last:flex-none">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-black transition-all duration-500
@@ -191,7 +192,7 @@ const SignupForm = ({
       </div>
 
       {/* Step content */}
-      <div className="min-h-[400px]">
+      <div className={compactMode ? "min-h-0" : "min-h-[400px]"}>
         {step === 1 && <Step1PersonalInfo {...commonProps} />}
 
         {step === 2 && (

@@ -72,6 +72,7 @@ const AddResident = () => {
   }, []);
 
   const t = themeTokens[currentTheme] || themeTokens.blue;
+  const isDarkMode = currentTheme === 'dark';
 
   const handleCloseModal = () => {
     setAuthSuccess(null);
@@ -101,7 +102,7 @@ const AddResident = () => {
   };
 
   return (
-    <div className={`p-6 sm:p-8 min-h-screen ${t.pageBg} transition-colors duration-300 pb-24`}>
+    <div className={`p-5 sm:p-6 min-h-screen ${t.pageBg} transition-colors duration-300 pb-16`}>
       <div className="max-w-4xl mx-auto space-y-6">
 
         {/* Header */}
@@ -125,7 +126,7 @@ const AddResident = () => {
 
         {/* Form */}
         <div className={`${t.cardBg} border ${t.cardBorder} rounded-[2.5rem] shadow-2xl overflow-hidden`}>
-          <div className="p-1 sm:p-8">
+          <div className="p-3 sm:p-5 lg:p-6">
             <SignupForm
               isStaffMode={true}
               formData={formData}
@@ -136,12 +137,13 @@ const AddResident = () => {
               allStreets={allStreets}
               addressExists={addressExists}
               householdHeadData={householdHeadData}
-              isDarkMode={currentTheme === 'dark'}
+              isDarkMode={isDarkMode}
               addressSearch={addressSearch}
               setAddressSearch={setAddressSearch}
               addressSuggestions={addressSuggestions || []}
               isSearchingAddress={isSearchingAddress}
               selectAddress={selectAddress}
+              compactMode={true}
             />
           </div>
         </div>
@@ -167,6 +169,44 @@ const AddResident = () => {
           onClose={handleCloseModal}
         />
       )}
+
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .full-input-sm {
+              width: 100%;
+              min-height: 2.75rem;
+              padding: 0.72rem 0.9rem;
+              border: 2px solid ${isDarkMode ? "rgba(148,163,184,0.22)" : "rgba(15,23,42,0.12)"};
+              border-radius: 14px;
+              background: ${isDarkMode ? "rgba(2,6,23,0.72)" : "rgba(255,255,255,0.96)"};
+              color: ${isDarkMode ? "#f8fafc" : "#0f172a"};
+              outline: none;
+              transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+              font-size: 0.8rem;
+              font-weight: 700;
+              letter-spacing: 0.01em;
+              line-height: 1.2;
+              box-sizing: border-box;
+              display: block;
+            }
+            .full-input-sm::placeholder {
+              color: ${isDarkMode ? "rgba(148,163,184,0.78)" : "rgba(100,116,139,0.85)"};
+              font-weight: 600;
+            }
+            .full-input-sm:focus {
+              border-color: #059669;
+              box-shadow: 0 0 0 4px rgba(5,150,105,0.12);
+            }
+            select.full-input-sm {
+              cursor: pointer;
+            }
+            input[type="date"].full-input-sm {
+              padding-right: 0.8rem;
+            }
+          `,
+        }}
+      />
     </div>
   );
 };
