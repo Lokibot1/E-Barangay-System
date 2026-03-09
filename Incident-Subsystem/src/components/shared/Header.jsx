@@ -392,7 +392,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
 
   return (
     <>
-      <header className={`${t.cardBg} border-b ${t.cardBorder} shadow-sm relative z-[2100]`}>
+      <header className={`${t.cardBg} border-b ${t.cardBorder} shadow-sm relative z-20`}>
         <div className="w-full px-4 sm:px-5 py-2 sm:py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -450,7 +450,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                 {/* Notification Dropdown */}
                 {isNotificationOpen && (
                   <div
-                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-96 ${t.cardBg} ${t.cardBorder} rounded-xl shadow-2xl border z-[2300] overflow-hidden animate-slideDown max-h-[80vh] sm:max-h-[600px]`}
+                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-96 ${t.cardBg} ${t.cardBorder} rounded-xl shadow-2xl border z-40 overflow-hidden animate-slideDown max-h-[80vh] sm:max-h-[600px]`}
                   >
                     <div
                       className={`bg-gradient-to-r ${t.primaryGrad} px-4 sm:px-5 py-3 sm:py-4`}
@@ -549,7 +549,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
 
                 {isSettingsOpen && (
                   <div
-                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-[17.5rem] ${t.cardBg} ${t.cardBorder} rounded-[22px] shadow-[0_18px_36px_rgba(15,23,42,0.12)] border z-[2300] overflow-hidden animate-slideDown`}
+                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-[17.5rem] ${t.cardBg} ${t.cardBorder} rounded-[22px] shadow-[0_18px_36px_rgba(15,23,42,0.12)] border z-40 overflow-hidden animate-slideDown`}
                   >
                     <div className="p-2">
                       <button
@@ -700,7 +700,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
 
                 {isProfileOpen && (
                   <div
-                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-60 ${t.cardBg} ${t.cardBorder} rounded-[22px] shadow-[0_18px_36px_rgba(15,23,42,0.12)] border z-[2300] overflow-hidden animate-slideDown`}
+                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-60 ${t.cardBg} ${t.cardBorder} rounded-[22px] shadow-[0_18px_36px_rgba(15,23,42,0.12)] border z-40 overflow-hidden animate-slideDown`}
                   >
                     <div
                       className={`px-3.5 py-3.5 border-b ${t.cardBorder} ${isDark ? "bg-slate-900/70" : "bg-slate-50/80"}`}
