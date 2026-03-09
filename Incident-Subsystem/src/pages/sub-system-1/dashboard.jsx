@@ -105,13 +105,13 @@ export default function Dashboard() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-3 py-2.5 text-sm font-kumbh font-normal whitespace-nowrap border rounded-xl transition-all ${
+                  className={`flex items-center gap-1.5 px-2.5 py-2 text-[13px] font-kumbh font-normal whitespace-nowrap border rounded-lg transition-all ${
                     active
                       ? 'border-blue-200 bg-blue-50 text-blue-700'
                       : `border-transparent ${t.subtleText} hover:border-slate-200 hover:bg-slate-50`
                   }`}
                 >
-                  <Icon size={16} />
+                  <Icon size={14} />
                   {tab.label}
                 </button>
               );
