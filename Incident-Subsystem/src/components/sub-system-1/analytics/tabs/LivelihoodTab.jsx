@@ -7,11 +7,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
-  PieChart,
-  Pie,
-  Legend,
 } from 'recharts';
-import { Card, SectionHeader } from '../AnalyticsInterface';
+import { ChartCard, DonutSummaryCard, SectionHeader, analyticsChartTheme, AnalyticsTooltip } from '../AnalyticsInterface';
 import { COLORS, INCOME_ORDER, pct } from '../analyticsConfig';
 
 const LOW_INCOME = ['No Income', 'Below 5,000', '0'];
@@ -45,27 +42,32 @@ export default function LivelihoodTab({ raw, t }) {
     color: r.type === 'Public' ? COLORS.primary : COLORS.accent,
   }));
 
-  const gridStroke = '#e9ecf7';
-  const axisTick = { fontSize: 11, fill: '#64748b' };
-  const tooltipStyle = {
-    borderRadius: '10px',
-    border: '1px solid #e2e8f0',
-    backgroundColor: '#ffffff',
-    fontSize: '12px',
-  };
+  const { gridStroke, axisTick, barRadius, horizontalBarRadius } = analyticsChartTheme;
 
   return (
     <div className="space-y-6">
       <SectionHeader title="Livelihood and Socioeconomic Profile" subtitle="Income, employment, education, occupations" t={t} />
 
-      <Card title="Monthly Income Distribution" t={t}>
+      <ChartCard
+        title="Monthly Income Distribution"
+        subtitle="Resident counts across reported monthly income brackets."
+        rightLabel="Income"
+        t={t}
+      >
         <ResponsiveContainer width="100%" height={240}>
           <BarChart data={incomeData} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-            <XAxis dataKey="bracket" tick={{ ...axisTick, fontSize: 9 }} interval={0} angle={-30} textAnchor="end" height={55} />
-            <YAxis tick={axisTick} />
-            <Tooltip contentStyle={tooltipStyle} />
-            <Bar dataKey="count" name="Residents" radius={[8, 8, 0, 0]}>
+            <CartesianGrid vertical={false} strokeDasharray="2 10" stroke={gridStroke} />
+            <XAxis dataKey="bracket" tick={{ ...axisTick, fontSize: 9 }} interval={0} angle={-30} textAnchor="end" height={55} axisLine={false} tickLine={false} />
+            <YAxis tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+            <Tooltip
+              content={(
+                <AnalyticsTooltip
+                  valueFormatter={(value) => `${Number(value).toLocaleString()} residents`}
+                />
+              )}
+              wrapperStyle={{ outline: 'none' }}
+            />
+            <Bar dataKey="count" name="Residents" radius={barRadius}>
               {incomeData.map((e, i) => (
                 <Cell
                   key={i}
@@ -80,98 +82,133 @@ export default function LivelihoodTab({ raw, t }) {
             {lowIncome} residents ({pct(lowIncome, totalIncome)}%) have no income or below PHP 5k/mo - qualify for livelihood programs
           </p>
         )}
-      </Card>
+      </ChartCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <Card title="Employment Status" t={t}>
+        <ChartCard
+          title="Employment Status"
+          subtitle="Resident employment standing based on submitted livelihood records."
+          rightLabel="Status"
+          t={t}
+        >
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={employData} layout="vertical" margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} horizontal={false} />
-              <XAxis type="number" tick={axisTick} />
-              <YAxis type="category" dataKey="status" tick={axisTick} width={90} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="count" name="Residents" fill={COLORS.secondary} radius={[0, 8, 8, 0]} />
+              <CartesianGrid strokeDasharray="2 10" stroke={gridStroke} horizontal={false} />
+              <XAxis type="number" tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <YAxis type="category" dataKey="status" tick={axisTick} width={90} axisLine={false} tickLine={false} />
+              <Tooltip
+                content={(
+                  <AnalyticsTooltip
+                    valueFormatter={(value) => `${Number(value).toLocaleString()} residents`}
+                  />
+                )}
+                wrapperStyle={{ outline: 'none' }}
+              />
+              <Bar dataKey="count" name="Residents" fill={COLORS.secondary} radius={horizontalBarRadius} />
             </BarChart>
           </ResponsiveContainer>
-        </Card>
+        </ChartCard>
 
-        <Card title="Educational Attainment" t={t}>
+        <ChartCard
+          title="Educational Attainment"
+          subtitle="Highest recorded educational level across residents."
+          rightLabel="Education"
+          t={t}
+        >
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={eduData} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-              <XAxis dataKey="level" tick={{ ...axisTick, fontSize: 9 }} interval={0} angle={-25} textAnchor="end" height={50} />
-              <YAxis tick={axisTick} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="count" name="Residents" fill={COLORS.purple} radius={[8, 8, 0, 0]} />
+              <CartesianGrid vertical={false} strokeDasharray="2 10" stroke={gridStroke} />
+              <XAxis dataKey="level" tick={{ ...axisTick, fontSize: 9 }} interval={0} angle={-25} textAnchor="end" height={50} axisLine={false} tickLine={false} />
+              <YAxis tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <Tooltip
+                content={(
+                  <AnalyticsTooltip
+                    valueFormatter={(value) => `${Number(value).toLocaleString()} residents`}
+                  />
+                )}
+                wrapperStyle={{ outline: 'none' }}
+              />
+              <Bar dataKey="count" name="Residents" fill={COLORS.purple} radius={barRadius} />
             </BarChart>
           </ResponsiveContainer>
-        </Card>
+        </ChartCard>
 
         {eduStatus.length > 0 && (
-          <Card title="Educational Status" t={t}>
+          <ChartCard
+            title="Educational Status"
+            subtitle="Current schooling status of residents in the education dataset."
+            rightLabel="Status"
+            t={t}
+          >
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={eduStatus} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-                <XAxis dataKey="status" tick={axisTick} />
-                <YAxis tick={axisTick} />
-                <Tooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="count" name="Residents" fill={COLORS.teal} radius={[8, 8, 0, 0]} />
+                <CartesianGrid vertical={false} strokeDasharray="2 10" stroke={gridStroke} />
+                <XAxis dataKey="status" tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+                <YAxis tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+                <Tooltip
+                  content={(
+                    <AnalyticsTooltip
+                      valueFormatter={(value) => `${Number(value).toLocaleString()} residents`}
+                    />
+                  )}
+                  wrapperStyle={{ outline: 'none' }}
+                />
+                <Bar dataKey="count" name="Residents" fill={COLORS.teal} radius={barRadius} />
               </BarChart>
             </ResponsiveContainer>
-          </Card>
+          </ChartCard>
         )}
 
         {srcData.length > 0 && (
-          <Card title="Income Source" t={t}>
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie data={srcData} cx="50%" cy="50%" innerRadius={40} outerRadius={85} dataKey="value" paddingAngle={2}>
-                  {srcData.map((_, i) => (
-                    <Cell key={i} fill={srcColors[i % srcColors.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
-                <Legend iconType="circle" iconSize={10} layout="vertical" align="right" verticalAlign="middle" wrapperStyle={{ fontSize: 11 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
+          <DonutSummaryCard
+            title="Income Source"
+            subtitle="Source mix for household and personal income declarations."
+            rightLabel="Distribution"
+            centerLabel="Sources"
+            data={srcData.map((item, index) => ({
+              ...item,
+              color: srcColors[index % srcColors.length],
+            }))}
+            t={t}
+          />
         )}
 
         {schoolType.length > 1 && (
-          <Card title="School Type (Public vs Private)" t={t}>
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={schoolType}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={44}
-                  outerRadius={80}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {schoolType.map((e, i) => (
-                    <Cell key={i} fill={e.color} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
+          <DonutSummaryCard
+            title="School Type (Public vs Private)"
+            subtitle="Public versus private school participation among applicable residents."
+            rightLabel="Distribution"
+            centerLabel="Students"
+            data={schoolType}
+            t={t}
+          />
         )}
 
         {topOcc.length > 0 && (
-          <Card title="Top Occupations" className="lg:col-span-2" t={t}>
+          <ChartCard
+            title="Top Occupations"
+            subtitle="Most frequently recorded occupations in the livelihood registry."
+            rightLabel="Top list"
+            className="lg:col-span-2"
+            t={t}
+          >
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={topOcc} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-                <XAxis dataKey="occupation" tick={axisTick} />
-                <YAxis tick={axisTick} />
-                <Tooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="count" name="Residents" fill={COLORS.teal} radius={[8, 8, 0, 0]} />
+                <CartesianGrid vertical={false} strokeDasharray="2 10" stroke={gridStroke} />
+                <XAxis dataKey="occupation" tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+                <YAxis tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+                <Tooltip
+                  content={(
+                    <AnalyticsTooltip
+                      valueFormatter={(value) => `${Number(value).toLocaleString()} residents`}
+                    />
+                  )}
+                  wrapperStyle={{ outline: 'none' }}
+                />
+                <Bar dataKey="count" name="Residents" fill={COLORS.teal} radius={barRadius} />
               </BarChart>
             </ResponsiveContainer>
-          </Card>
+          </ChartCard>
         )}
       </div>
     </div>

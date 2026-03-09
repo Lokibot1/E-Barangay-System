@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   BarChart,
   Bar,
@@ -7,13 +6,10 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
   Legend,
 } from 'recharts';
 import { Baby, Accessibility, UserRound, Rainbow, AlertTriangle } from 'lucide-react';
-import { StatCard, Card, SectionHeader } from '../AnalyticsInterface';
+import { StatCard, ChartCard, DonutSummaryCard, SectionHeader, analyticsChartTheme, AnalyticsTooltip } from '../AnalyticsInterface';
 import { COLORS, SECTOR_COLORS } from '../analyticsConfig';
 
 export default function SectorsTab({ raw, t }) {
@@ -34,14 +30,7 @@ export default function SectorsTab({ raw, t }) {
   const totalPwd = pwdByPurok.reduce((a, b) => a + b.count, 0);
   const worstPurokSenior = [...seniorByPurok].sort((a, b) => b.count - a.count)[0];
 
-  const gridStroke = '#e9ecf7';
-  const axisTick = { fontSize: 11, fill: '#64748b' };
-  const tooltipStyle = {
-    borderRadius: '10px',
-    border: '1px solid #e2e8f0',
-    backgroundColor: '#ffffff',
-    fontSize: '12px',
-  };
+  const { gridStroke, axisTick, legendStyle, barRadius } = analyticsChartTheme;
 
   return (
     <div className="space-y-6">
@@ -67,28 +56,35 @@ export default function SectorsTab({ raw, t }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <Card title="All Sectors" t={t}>
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <Pie data={sectorChartData} cx="50%" cy="50%" innerRadius={52} outerRadius={95} dataKey="value" paddingAngle={2}>
-                {sectorChartData.map((e, i) => (
-                  <Cell key={i} fill={e.color} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={tooltipStyle} />
-              <Legend iconType="circle" iconSize={10} layout="vertical" align="right" verticalAlign="middle" wrapperStyle={{ fontSize: 11 }} />
-            </PieChart>
-          </ResponsiveContainer>
-        </Card>
+        <DonutSummaryCard
+          title="All Sectors"
+          subtitle="Current sector mix across the resident population."
+          rightLabel="Distribution"
+          centerLabel="Residents"
+          data={sectorChartData}
+          t={t}
+        />
 
-        <Card title="Senior Citizens per Purok" t={t}>
+        <ChartCard
+          title="Senior Citizens per Purok"
+          subtitle="Counts of senior citizens across puroks for service prioritization."
+          rightLabel="Per purok"
+          t={t}
+        >
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={seniorByPurok} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-              <XAxis dataKey="purok" tick={axisTick} />
-              <YAxis tick={axisTick} />
-              <Tooltip formatter={(v) => [`${v} seniors`]} contentStyle={tooltipStyle} />
-              <Bar dataKey="count" name="Seniors" fill={COLORS.danger} radius={[8, 8, 0, 0]} />
+              <CartesianGrid vertical={false} strokeDasharray="2 10" stroke={gridStroke} />
+              <XAxis dataKey="purok" tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <YAxis tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <Tooltip
+                content={(
+                  <AnalyticsTooltip
+                    valueFormatter={(value) => `${Number(value).toLocaleString()} seniors`}
+                  />
+                )}
+                wrapperStyle={{ outline: 'none' }}
+              />
+              <Bar dataKey="count" name="Seniors" fill={COLORS.danger} radius={barRadius} />
             </BarChart>
           </ResponsiveContainer>
           {worstPurokSenior && (
@@ -97,61 +93,109 @@ export default function SectorsTab({ raw, t }) {
               <span>{worstPurokSenior.purok} has the most seniors ({worstPurokSenior.count}) - priority for ayuda</span>
             </div>
           )}
-        </Card>
+        </ChartCard>
 
-        <Card title="PWD Residents per Purok" t={t}>
+        <ChartCard
+          title="PWD Residents per Purok"
+          subtitle="Persons with disability counted across purok clusters."
+          rightLabel="Per purok"
+          t={t}
+        >
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={pwdByPurok} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-              <XAxis dataKey="purok" tick={axisTick} />
-              <YAxis tick={axisTick} />
-              <Tooltip formatter={(v) => [`${v} PWD`]} contentStyle={tooltipStyle} />
-              <Bar dataKey="count" name="PWD" fill={COLORS.warning} radius={[8, 8, 0, 0]} />
+              <CartesianGrid vertical={false} strokeDasharray="2 10" stroke={gridStroke} />
+              <XAxis dataKey="purok" tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <YAxis tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <Tooltip
+                content={(
+                  <AnalyticsTooltip
+                    valueFormatter={(value) => `${Number(value).toLocaleString()} PWD`}
+                  />
+                )}
+                wrapperStyle={{ outline: 'none' }}
+              />
+              <Bar dataKey="count" name="PWD" fill={COLORS.warning} radius={barRadius} />
             </BarChart>
           </ResponsiveContainer>
-        </Card>
+        </ChartCard>
 
-        <Card title="OFW and Solo Parent per Purok" t={t}>
+        <ChartCard
+          title="OFW and Solo Parent per Purok"
+          subtitle="Grouped comparison between OFW and solo parent households per purok."
+          rightLabel="Grouped"
+          t={t}
+        >
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={hm} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-              <XAxis dataKey="purok" tick={axisTick} />
-              <YAxis tick={axisTick} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="ofw" name="OFW" fill={COLORS.accent} radius={[8, 8, 0, 0]} />
-              <Bar dataKey="solo_parent" name="Solo Parent" fill={COLORS.teal} radius={[8, 8, 0, 0]} />
+              <CartesianGrid vertical={false} strokeDasharray="2 10" stroke={gridStroke} />
+              <XAxis dataKey="purok" tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <YAxis tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <Tooltip
+                content={(
+                  <AnalyticsTooltip
+                    valueFormatter={(value) => `${Number(value).toLocaleString()} residents`}
+                  />
+                )}
+                wrapperStyle={{ outline: 'none' }}
+              />
+              <Legend iconType="circle" iconSize={10} wrapperStyle={legendStyle} />
+              <Bar dataKey="ofw" name="OFW" fill={COLORS.accent} radius={barRadius} />
+              <Bar dataKey="solo_parent" name="Solo Parent" fill={COLORS.teal} radius={barRadius} />
             </BarChart>
           </ResponsiveContainer>
-        </Card>
+        </ChartCard>
 
         {soloByPurok.length > 0 && (
-          <Card title="Solo Parent per Purok" t={t}>
+          <ChartCard
+            title="Solo Parent per Purok"
+            subtitle="Solo parent distribution by purok."
+            rightLabel="Per purok"
+            t={t}
+          >
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={soloByPurok} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-                <XAxis dataKey="purok" tick={axisTick} />
-                <YAxis tick={axisTick} />
-                <Tooltip formatter={(v) => [`${v} solo parents`]} contentStyle={tooltipStyle} />
-                <Bar dataKey="count" name="Solo Parent" fill={COLORS.teal} radius={[8, 8, 0, 0]} />
+                <CartesianGrid vertical={false} strokeDasharray="2 10" stroke={gridStroke} />
+                <XAxis dataKey="purok" tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+                <YAxis tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+                <Tooltip
+                  content={(
+                    <AnalyticsTooltip
+                      valueFormatter={(value) => `${Number(value).toLocaleString()} solo parents`}
+                    />
+                  )}
+                  wrapperStyle={{ outline: 'none' }}
+                />
+                <Bar dataKey="count" name="Solo Parent" fill={COLORS.teal} radius={barRadius} />
               </BarChart>
             </ResponsiveContainer>
-          </Card>
+          </ChartCard>
         )}
 
-        <Card title="Kasambahay and LGBTQIA+ per Purok" t={t}>
+        <ChartCard
+          title="Kasambahay and LGBTQIA+ per Purok"
+          subtitle="Grouped comparison of kasambahay and LGBTQIA+ counts per purok."
+          rightLabel="Grouped"
+          t={t}
+        >
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={hm} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-              <XAxis dataKey="purok" tick={axisTick} />
-              <YAxis tick={axisTick} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="kasambahay" name="Kasambahay" fill={COLORS.success} radius={[8, 8, 0, 0]} />
-              <Bar dataKey="lgbtqia" name="LGBTQIA+" fill={COLORS.purple} radius={[8, 8, 0, 0]} />
+              <CartesianGrid vertical={false} strokeDasharray="2 10" stroke={gridStroke} />
+              <XAxis dataKey="purok" tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <YAxis tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <Tooltip
+                content={(
+                  <AnalyticsTooltip
+                    valueFormatter={(value) => `${Number(value).toLocaleString()} residents`}
+                  />
+                )}
+                wrapperStyle={{ outline: 'none' }}
+              />
+              <Legend iconType="circle" iconSize={10} wrapperStyle={legendStyle} />
+              <Bar dataKey="kasambahay" name="Kasambahay" fill={COLORS.success} radius={barRadius} />
+              <Bar dataKey="lgbtqia" name="LGBTQIA+" fill={COLORS.purple} radius={barRadius} />
             </BarChart>
           </ResponsiveContainer>
-        </Card>
+        </ChartCard>
       </div>
     </div>
   );

@@ -4,13 +4,26 @@
 // ============================================================
 
 import {
-  PieChart, Pie, Cell, Legend, Tooltip,
-  LineChart, Line, CartesianGrid, XAxis, YAxis, ResponsiveContainer,
+  Tooltip,
+  AreaChart, Area, CartesianGrid, XAxis, YAxis, ResponsiveContainer,
   BarChart, Bar,
 } from 'recharts';
 import { ShieldCheck, UserCheck, Home, Landmark } from 'lucide-react';
-import { StatCard, Card, SectionHeader } from '../AnalyticsInterface';
-import { COLORS, pct } from '../analyticsConfig';
+import {
+  StatCard,
+  ChartCard,
+  DonutSummaryCard,
+  SectionHeader,
+  analyticsChartTheme,
+  AnalyticsTooltip,
+  formatChartDateLabel,
+} from '../AnalyticsInterface';
+import { COLORS, REGISTRY_STATUS_COLORS, pct } from '../analyticsConfig';
+
+const compactFormatter = new Intl.NumberFormat('en-US', {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
 
 export default function OverviewTab({ raw, t }) {
   const ov = raw?.overview ?? {};
@@ -18,10 +31,10 @@ export default function OverviewTab({ raw, t }) {
   const reg = raw?.registration;
 
   const statusColorMap = {
-    verified: COLORS.success,
-    pending: COLORS.warning,
-    rejected: COLORS.danger,
-    unregistered: COLORS.gray,
+    verified: REGISTRY_STATUS_COLORS.verified.solid,
+    pending: REGISTRY_STATUS_COLORS.pending.solid,
+    rejected: REGISTRY_STATUS_COLORS.rejected.solid,
+    unregistered: REGISTRY_STATUS_COLORS.unregistered.solid,
     voters: COLORS.teal,
   };
 
@@ -32,7 +45,11 @@ export default function OverviewTab({ raw, t }) {
       color: statusColorMap[key] || entry.color || COLORS.primary,
     };
   });
-  const trendData = reg?.registration_trend ?? [];
+  const trendData = (reg?.registration_trend ?? []).map((entry) => ({
+    ...entry,
+    count: Number(entry.count ?? 0),
+    displayDate: formatChartDateLabel(entry.date),
+  }));
 
   const genderData = (ov.gender_breakdown ?? []).map(g => ({
     name: g.gender,
@@ -43,17 +60,16 @@ export default function OverviewTab({ raw, t }) {
   const residencyData = (ov.residency_breakdown ?? []).map(r => ({
     name: r.residency_status,
     value: Number(r.count),
-    color: r.residency_status === 'Old Resident' ? COLORS.teal : COLORS.secondary,
+    color: r.residency_status === 'Old Resident' ? COLORS.primary : COLORS.secondary,
   }));
 
-  const gridStroke = '#e9ecf7';
-  const axisTick = { fontSize: 11, fill: '#64748b' };
-  const tooltipStyle = {
-    borderRadius: '10px',
-    border: '1px solid #e2e8f0',
-    backgroundColor: '#ffffff',
-    fontSize: '12px',
-  };
+  const { gridStroke, axisTick, barRadius } = analyticsChartTheme;
+  const trendAccent = COLORS.primary;
+  const rangeChip = (
+    <div className="inline-flex items-center rounded-full border border-[#dbe3ee] bg-[#fbfcfe] px-4 py-2 text-[12px] font-semibold text-slate-600 shadow-[0_4px_12px_rgba(15,23,42,0.05)]">
+      Latest trend
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -99,88 +115,121 @@ export default function OverviewTab({ raw, t }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <Card title="Registration Status Breakdown" t={t}>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie data={statusData} cx="50%" cy="50%" innerRadius={56} outerRadius={90} paddingAngle={3} dataKey="value">
-                {statusData.map((e, i) => <Cell key={i} fill={e.color} />)}
-              </Pie>
-              <Tooltip contentStyle={tooltipStyle} />
-              <Legend iconType="circle" iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-            </PieChart>
-          </ResponsiveContainer>
-        </Card>
+        <DonutSummaryCard
+          title="Registration Status Breakdown"
+          subtitle="Current verification mix across all submitted resident records."
+          rightLabel="Distribution"
+          centerLabel="Records"
+          data={statusData}
+          t={t}
+        />
 
-        <Card title="Daily Registration Trend" t={t}>
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={trendData} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-              <XAxis dataKey="date" tick={axisTick} />
-              <YAxis tick={axisTick} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Line
+        <ChartCard
+          title="Registration Growth"
+          subtitle="Resident registration movement across the latest reporting window."
+          rightContent={rangeChip}
+          t={t}
+        >
+          <ResponsiveContainer width="100%" height={310}>
+            <AreaChart data={trendData} margin={{ top: 8, right: 10, bottom: 0, left: 0 }}>
+              <defs>
+                <linearGradient id="overviewHeroFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={trendAccent} stopOpacity={0.22} />
+                  <stop offset="68%" stopColor={trendAccent} stopOpacity={0.08} />
+                  <stop offset="100%" stopColor={trendAccent} stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} strokeDasharray="2 10" stroke={gridStroke} />
+              <XAxis
+                dataKey="displayDate"
+                tick={axisTick}
+                axisLine={false}
+                tickLine={false}
+                tickMargin={12}
+                minTickGap={18}
+              />
+              <YAxis
+                tick={{ ...axisTick, fill: '#6b7280' }}
+                axisLine={false}
+                tickLine={false}
+                tickMargin={10}
+                width={56}
+                tickFormatter={(value) => compactFormatter.format(value)}
+              />
+              <Tooltip
+                cursor={{ stroke: trendAccent, strokeOpacity: 0.25, strokeWidth: 2 }}
+                content={(
+                  <AnalyticsTooltip
+                    labelFormatter={(label, payload) => payload?.[0]?.payload?.displayDate || label}
+                    valueFormatter={(value) => Number(value).toLocaleString()}
+                  />
+                )}
+                wrapperStyle={{ outline: 'none' }}
+              />
+              <Area
                 type="monotone"
                 dataKey="count"
                 name="Registrations"
-                stroke={COLORS.primary}
-                strokeWidth={2.8}
-                dot={{ r: 3, fill: COLORS.primary }}
+                stroke={trendAccent}
+                fill="url(#overviewHeroFill)"
+                strokeWidth={2}
+                dot={false}
+                activeDot={{
+                  r: 8,
+                  strokeWidth: 2,
+                  stroke: trendAccent,
+                  fill: '#f8fffd',
+                }}
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
-        </Card>
+        </ChartCard>
 
-        <Card title="Gender Distribution" t={t}>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={genderData}
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              >
-                {genderData.map((e, i) => <Cell key={i} fill={e.color} />)}
-              </Pie>
-              <Tooltip contentStyle={tooltipStyle} />
-            </PieChart>
-          </ResponsiveContainer>
-        </Card>
+        <DonutSummaryCard
+          title="Gender Distribution"
+          subtitle="Resident population split by recorded gender."
+          rightLabel="Distribution"
+          centerLabel="Residents"
+          data={genderData}
+          t={t}
+        />
 
-        <Card title="Residency Type" t={t}>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart margin={{ top: 8, right: 28, left: 28, bottom: 8 }}>
-              <Pie
-                data={residencyData}
-                cx="50%"
-                cy="56%"
-                outerRadius={72}
-                dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              >
-                {residencyData.map((e, i) => <Cell key={i} fill={e.color} />)}
-              </Pie>
-              <Tooltip contentStyle={tooltipStyle} />
-            </PieChart>
-          </ResponsiveContainer>
-        </Card>
+        <DonutSummaryCard
+          title="Residency Type"
+          subtitle="Old and new resident counts based on registry residency tags."
+          rightLabel="Distribution"
+          centerLabel="Residents"
+          data={residencyData}
+          t={t}
+        />
       </div>
 
       {hm.length > 0 && (
-        <Card title="Residents per Purok - Quick View" t={t}>
-          <ResponsiveContainer width="100%" height={220}>
+        <ChartCard
+          title="Residents per Purok - Quick View"
+          subtitle="Fast comparison of total residents, verified records, and senior counts by purok."
+          rightLabel="Snapshot"
+          t={t}
+        >
+          <ResponsiveContainer width="100%" height={240}>
             <BarChart data={hm} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-              <XAxis dataKey="purok" tick={axisTick} />
-              <YAxis tick={axisTick} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="total" name="Total" fill={COLORS.primary} radius={[8, 8, 0, 0]} />
-              <Bar dataKey="verified" name="Verified" fill={COLORS.success} radius={[8, 8, 0, 0]} />
-              <Bar dataKey="seniors" name="Seniors" fill={COLORS.danger} radius={[8, 8, 0, 0]} />
+              <CartesianGrid vertical={false} strokeDasharray="2 10" stroke={gridStroke} />
+              <XAxis dataKey="purok" tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <YAxis tick={axisTick} axisLine={false} tickLine={false} tickMargin={10} />
+              <Tooltip
+                content={(
+                  <AnalyticsTooltip
+                    valueFormatter={(value, name) => `${Number(value).toLocaleString()} ${name === 'Seniors' ? 'seniors' : 'residents'}`}
+                  />
+                )}
+                wrapperStyle={{ outline: 'none' }}
+              />
+              <Bar dataKey="total" name="Total" fill={COLORS.primary} radius={barRadius} />
+              <Bar dataKey="verified" name="Verified" fill={REGISTRY_STATUS_COLORS.verified.solid} radius={barRadius} />
+              <Bar dataKey="seniors" name="Seniors" fill={COLORS.danger} radius={barRadius} />
             </BarChart>
           </ResponsiveContainer>
-        </Card>
+        </ChartCard>
       )}
     </div>
   );

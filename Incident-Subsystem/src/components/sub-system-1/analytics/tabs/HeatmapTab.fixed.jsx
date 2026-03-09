@@ -59,27 +59,7 @@ function getMetricFriendlyLabel(metricLabel) {
   return labelMap[metricLabel] ?? metricLabel.toLowerCase();
 }
 
-function buildPurokInsight({ metric, metricLabel, purok, metricValue, verificationRate, sharePct, rank }) {
-  const priorityText = rank === 1 ? 'Highest priority area for this metric.' : rank <= 3 ? 'High-priority area.' : 'Standard monitoring area.';
-  const metricGuides = {
-    verified: 'Sustain validation operations and replicate effective verification practices.',
-    total: 'Allocate baseline manpower, forms, and logistics proportional to population load.',
-    seniors: 'Coordinate senior-focused support (health checks, medicine assistance, pensions).',
-    pwd: 'Prioritize accessibility support and disability-responsive household services.',
-    unregistered: 'Run targeted house-to-house registration and document completion follow-up.',
-    minors: 'Coordinate youth and child-protection interventions with schools and guardians.',
-    voters: 'Plan voter-information campaigns and civic participation activities.',
-  };
-
-  return {
-    title: `${purok}: ${metricLabel} insight`,
-    priorityText,
-    recommendation: metricGuides[metric] ?? 'Use this metric to prioritize local assistance planning.',
-    summary: `${metricValue} (${sharePct}% of barangay ${metricLabel.toLowerCase()}) with ${verificationRate}% verification rate.`,
-  };
-}
-
-function HeatmapMap({ purokData, metric, t, onAreaClick }) {
+function HeatmapMap({ purokData, metric, metricMeta, t }) {
   const mapRef = useRef(null);
   const leafletRef = useRef(null);
   const layersRef = useRef([]);
@@ -91,6 +71,7 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
     const y = point[0];
     const x = point[1];
     let inside = false;
+
     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
       const yi = polygon[i][0];
       const xi = polygon[i][1];
@@ -98,8 +79,10 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
       const xj = polygon[j][1];
       const intersect = ((yi > y) !== (yj > y))
         && (x < ((xj - xi) * (y - yi)) / ((yj - yi) || 1e-12) + xi);
+
       if (intersect) inside = !inside;
     }
+
     return inside;
   };
 
@@ -109,11 +92,17 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
       ? normalized.split('').map((char) => `${char}${char}`).join('')
       : normalized;
     const int = parseInt(full, 16);
-    return { r: (int >> 16) & 255, g: (int >> 8) & 255, b: int & 255 };
+
+    return {
+      r: (int >> 16) & 255,
+      g: (int >> 8) & 255,
+      b: int & 255,
+    };
   };
 
   useEffect(() => {
     if (!mapRef.current || leafletRef.current || typeof window === 'undefined') return;
+
     const L = window.L;
     if (!L) return;
 
@@ -145,39 +134,10 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
       .bindPopup('<b>Barangay Gulod Hall</b><br/>Novaliches, Quezon City');
 
     leafletRef.current = map;
+
     return () => {
       map.remove();
       leafletRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (typeof document === 'undefined') return undefined;
-
-    const styleId = 'heatmap-map-stack-order';
-    if (document.getElementById(styleId)) return undefined;
-
-    const style = document.createElement('style');
-    style.id = styleId;
-    style.textContent = `
-      .heatmap-map-shell,
-      .heatmap-map-shell .leaflet-container,
-      .heatmap-map-shell .leaflet-pane,
-      .heatmap-map-shell .leaflet-top,
-      .heatmap-map-shell .leaflet-bottom,
-      .heatmap-map-shell .leaflet-control {
-        z-index: 0 !important;
-      }
-
-      .heatmap-map-shell .leaflet-tooltip-pane,
-      .heatmap-map-shell .leaflet-marker-pane {
-        z-index: 1 !important;
-      }
-    `;
-    document.head.appendChild(style);
-
-    return () => {
-      style.remove();
     };
   }, []);
 
@@ -186,20 +146,20 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
 
     const L = window.L;
     if (!L || !leafletRef.current) return undefined;
-    const map = leafletRef.current;
 
+    const map = leafletRef.current;
     layersRef.current.forEach((layer) => map.removeLayer(layer));
     layersRef.current = [];
 
     const orderedPuroks = Object.keys(PUROK_CENTERS);
     const baseRgb = hexToRgb(metricStyle.accent);
-    const valueByPurok = purokData.reduce((acc, p) => {
-      acc[p.purok] = Number(p[metric] ?? 0);
+    const valueByPurok = purokData.reduce((acc, purok) => {
+      acc[purok.purok] = Number(purok[metric] ?? 0);
       return acc;
     }, {});
 
-    const lats = BARANGAY_BOUNDARY.map((pt) => pt[0]);
-    const lngs = BARANGAY_BOUNDARY.map((pt) => pt[1]);
+    const lats = BARANGAY_BOUNDARY.map((point) => point[0]);
+    const lngs = BARANGAY_BOUNDARY.map((point) => point[1]);
     const minLat = Math.min(...lats);
     const maxLat = Math.max(...lats);
     const minLng = Math.min(...lngs);
@@ -224,20 +184,24 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
         const y = row * step;
         const lat = maxLat - (y / (height - 1)) * (maxLat - minLat);
         const lng = minLng + (x / (width - 1)) * (maxLng - minLng);
+
         if (!isPointInPolygon([lat, lng], BARANGAY_BOUNDARY)) continue;
 
         let nearestIdx = -1;
         let minDist = Infinity;
+
         orderedPuroks.forEach((name, idx) => {
-          const c = PUROK_CENTERS[name].center;
-          const dLat = lat - c[0];
-          const dLng = lng - c[1];
+          const center = PUROK_CENTERS[name].center;
+          const dLat = lat - center[0];
+          const dLng = lng - center[1];
           const dist = dLat * dLat + dLng * dLng;
+
           if (dist < minDist) {
             minDist = dist;
             nearestIdx = idx;
           }
         });
+
         assignments[row][col] = nearestIdx;
 
         const nearestPurok = orderedPuroks[nearestIdx];
@@ -246,6 +210,7 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
         const r = Math.round(start.r + (baseRgb.r - start.r) * ratio);
         const g = Math.round(start.g + (baseRgb.g - start.g) * ratio);
         const b = Math.round(start.b + (baseRgb.b - start.b) * ratio);
+
         ctx.fillStyle = `rgba(${r},${g},${b},0.9)`;
         ctx.fillRect(x, y, step, step);
       }
@@ -256,6 +221,7 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
       for (let col = 0; col < cols; col++) {
         const current = assignments[row][col];
         if (current < 0) continue;
+
         const right = col + 1 < cols ? assignments[row][col + 1] : current;
         const down = row + 1 < rows ? assignments[row + 1][col] : current;
         const x = col * step;
@@ -274,56 +240,96 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
     overlay.addTo(map);
     layersRef.current.push(overlay);
 
-    purokData.forEach((p) => {
-      const meta = PUROK_CENTERS[p.purok];
+    purokData.forEach((purok) => {
+      const meta = PUROK_CENTERS[purok.purok];
       if (!meta) return;
 
-      const val = Number(p[metric] ?? 0);
+      const val = Number(purok[metric] ?? 0);
+      const fill = getHeatColor(val, maxVal, 0.72, metricStyle.accent);
+      const radius = 100 + (val / maxVal) * 160;
+      const rate = calcVerifRate(purok);
       const labelColor = metricStyle.accent;
-      const offset = LABEL_OFFSETS[p.purok] ?? [0, 0];
+      const offset = LABEL_OFFSETS[purok.purok] ?? [0, 0];
       const labelPosition = [meta.center[0] + offset[0], meta.center[1] + offset[1]];
+      const rateColor = rate >= 80 ? '#059669' : rate >= 50 ? '#d97706' : '#dc2626';
+      const popupValueColors = {
+        total: '#334155',
+        verified: '#059669',
+        pending: '#d97706',
+        rejected: '#dc2626',
+        unregistered: '#dc2626',
+        seniors: '#ea580c',
+        pwd: '#7c3aed',
+        minors: '#0891b2',
+        voters: '#0f766e',
+      };
+
+      const popup = `
+        <div style="font-family:Segoe UI,Arial,sans-serif;min-width:188px;color:#0f172a;padding:2px 0">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding-bottom:8px;border-bottom:1px solid #e2e8f0">
+            <div style="font-size:14px;line-height:1.1;font-weight:900;color:#0f172a">${purok.purok}</div>
+            <div style="padding:3px 6px;border-radius:999px;background:${metricStyle.soft};border:1px solid ${metricStyle.border};font-size:8px;font-weight:800;color:${metricStyle.text}">
+              ${metricMeta.label}: ${val}
+            </div>
+          </div>
+
+          <div style="margin-top:9px;display:grid;grid-template-columns:1fr auto;gap:5px 9px;font-size:10px;line-height:1.28;border-radius:11px;border:1px solid #eef2f7;background:#fbfcfe;padding:8px 9px">
+            <div style="color:${popupValueColors.total}">Total residents</div><div style="font-weight:800;color:${popupValueColors.total}">${Number(purok.total ?? 0).toLocaleString()}</div>
+            <div style="color:${popupValueColors.verified}">Verified</div><div style="font-weight:800;color:${popupValueColors.verified}">${Number(purok.verified ?? 0).toLocaleString()}</div>
+            <div style="color:${popupValueColors.pending}">Pending</div><div style="font-weight:800;color:${popupValueColors.pending}">${Number(purok.pending ?? 0).toLocaleString()}</div>
+            <div style="color:${popupValueColors.rejected}">Rejected</div><div style="font-weight:800;color:${popupValueColors.rejected}">${Number(purok.rejected ?? 0).toLocaleString()}</div>
+            <div style="color:${popupValueColors.unregistered}">Unregistered</div><div style="font-weight:800;color:${popupValueColors.unregistered}">${Number(purok.unregistered ?? 0).toLocaleString()}</div>
+            <div style="color:${popupValueColors.seniors}">Senior citizens</div><div style="font-weight:800;color:${popupValueColors.seniors}">${Number(purok.seniors ?? 0).toLocaleString()}</div>
+            <div style="color:${popupValueColors.pwd}">PWD</div><div style="font-weight:800;color:${popupValueColors.pwd}">${Number(purok.pwd ?? 0).toLocaleString()}</div>
+            <div style="color:${popupValueColors.minors}">Minors</div><div style="font-weight:800;color:${popupValueColors.minors}">${Number(purok.minors ?? 0).toLocaleString()}</div>
+            <div style="color:${popupValueColors.voters}">Voters</div><div style="font-weight:800;color:${popupValueColors.voters}">${Number(purok.voters ?? 0).toLocaleString()}</div>
+          </div>
+
+          <div style="margin-top:9px;border-radius:11px;border:1px solid #e7ecf3;background:#f8fafc;padding:8px 9px;text-align:center">
+            <div style="font-size:8px;font-weight:900;letter-spacing:0.16em;text-transform:uppercase;color:#94a3b8">Verification rate</div>
+            <div style="margin-top:3px;font-size:18px;line-height:1;font-weight:900;color:${rateColor}">${rate}%</div>
+            <div style="margin-top:3px;font-size:8px;color:#64748b">Submitted records only</div>
+          </div>
+        </div>
+      `;
+
+      const circle = L.circle(meta.center, {
+        radius,
+        color: metricStyle.accent,
+        weight: 1.5,
+        fillColor: fill,
+        fillOpacity: 0.72,
+      }).bindPopup(popup);
+
+      circle.on('mouseover', function handleMouseOver() {
+        this.setStyle({ weight: 3, fillOpacity: 0.9 });
+      });
+
+      circle.on('mouseout', function handleMouseOut() {
+        this.setStyle({ weight: 1.5, fillOpacity: 0.72 });
+      });
+
+      circle.addTo(map);
+      layersRef.current.push(circle);
 
       const labelIcon = L.divIcon({
-        html: `<div style="background:rgba(255,255,255,0.9);color:#0f172a;border-radius:16px;padding:3px 9px;font-size:12px;font-weight:800;white-space:nowrap;border:1px solid rgba(148,163,184,.7);box-shadow:0 2px 5px rgba(0,0,0,.2)">${p.purok} - <span style="color:${labelColor};font-weight:900">${val}</span></div>`,
+        html: `<div style="background:rgba(255,255,255,0.9);color:#0f172a;border-radius:16px;padding:3px 9px;font-size:12px;font-weight:800;white-space:nowrap;border:1px solid rgba(148,163,184,.7);box-shadow:0 2px 5px rgba(0,0,0,.2)">${purok.purok} - <span style="color:${labelColor};font-weight:900">${val}</span></div>`,
         className: '',
         iconAnchor: [45, 12],
       });
+
       const label = L.marker(labelPosition, { icon: labelIcon, interactive: false });
       label.addTo(map);
       layersRef.current.push(label);
     });
 
-    const handleMapClick = (e) => {
-      const lat = e.latlng.lat;
-      const lng = e.latlng.lng;
-      if (!isPointInPolygon([lat, lng], BARANGAY_BOUNDARY)) return;
-
-      let nearestPurok = null;
-      let minDist = Infinity;
-      Object.entries(PUROK_CENTERS).forEach(([name, meta]) => {
-        const dLat = lat - meta.center[0];
-        const dLng = lng - meta.center[1];
-        const dist = dLat * dLat + dLng * dLng;
-        if (dist < minDist) {
-          minDist = dist;
-          nearestPurok = name;
-        }
-      });
-
-      const selected = purokData.find((p) => p.purok === nearestPurok);
-      if (selected && onAreaClick) onAreaClick(selected);
-    };
-
-    map.on('click', handleMapClick);
-    return () => {
-      map.off('click', handleMapClick);
-    };
-  }, [metric, purokData, maxVal, metricStyle, onAreaClick]);
+    return undefined;
+  }, [metric, metricMeta.label, purokData, maxVal, metricStyle]);
 
   return (
     <div
       ref={mapRef}
-      className={`heatmap-map-shell relative z-0 w-full overflow-hidden rounded-[26px] border shadow-[0_18px_36px_rgba(15,23,42,0.08)] ${t ? t.cardBorder : 'border-gray-200'}`}
+      className={`relative z-0 w-full overflow-hidden rounded-[26px] border shadow-[0_18px_36px_rgba(15,23,42,0.08)] ${t ? t.cardBorder : 'border-gray-200'}`}
       style={{ height: 420 }}
     />
   );
@@ -394,7 +400,6 @@ export default function HeatmapTab({ raw, t }) {
   const [metric, setMetric] = useState('verified');
   const [view, setView] = useState('map');
   const [leafletReady, setLeafletReady] = useState(typeof window !== 'undefined' && !!window.L);
-  const [selectedPurok, setSelectedPurok] = useState(null);
 
   const currentMetricStyle = HEATMAP_METRIC_COLORS[metric] ?? HEATMAP_METRIC_COLORS.total;
   const selectedMetric = MAP_METRICS.find((item) => item.key === metric) ?? MAP_METRICS[0];
@@ -420,27 +425,6 @@ export default function HeatmapTab({ raw, t }) {
   }, [view]);
 
   if (!purokData.length) return <EmptyState message="No purok data available." />;
-
-  const maxVal = Math.max(...purokData.map((p) => Number(p[metric] ?? 0)), 1);
-  const metricTotal = purokData.reduce((sum, p) => sum + Number(p[metric] ?? 0), 0);
-  const sortedByMetric = [...purokData].sort((a, b) => Number(b[metric] ?? 0) - Number(a[metric] ?? 0));
-
-  const selectedMetricValue = Number(selectedPurok?.[metric] ?? 0);
-  const selectedSharePct = metricTotal > 0 ? Math.round((selectedMetricValue / metricTotal) * 100) : 0;
-  const selectedRank = selectedPurok
-    ? (sortedByMetric.findIndex((p) => p.purok === selectedPurok.purok) + 1 || sortedByMetric.length)
-    : null;
-  const selectedInsight = selectedPurok
-    ? buildPurokInsight({
-      metric,
-      metricLabel: selectedMetric.label,
-      purok: selectedPurok.purok,
-      metricValue: selectedMetricValue,
-      verificationRate: calcVerifRate(selectedPurok),
-      sharePct: selectedSharePct,
-      rank: selectedRank,
-    })
-    : null;
 
   return (
     <div className="space-y-5">
@@ -508,7 +492,7 @@ export default function HeatmapTab({ raw, t }) {
                 {MAP_METRICS.map((item) => {
                   const metricStyle = HEATMAP_METRIC_COLORS[item.key] ?? HEATMAP_METRIC_COLORS.total;
                   const isActive = metric === item.key;
-                  const metricTotalValue = purokData.reduce((sum, purok) => sum + Number(purok[item.key] ?? 0), 0);
+                  const metricTotal = purokData.reduce((sum, purok) => sum + Number(purok[item.key] ?? 0), 0);
 
                   return (
                     <button
@@ -538,7 +522,7 @@ export default function HeatmapTab({ raw, t }) {
                         </div>
 
                         <div className="shrink-0 text-right">
-                          <div className="text-[12px] font-semibold">{metricTotalValue.toLocaleString()}</div>
+                          <div className="text-[12px] font-semibold">{metricTotal.toLocaleString()}</div>
                         </div>
                       </div>
                     </button>
@@ -550,56 +534,7 @@ export default function HeatmapTab({ raw, t }) {
 
           {view === 'map' ? (
             leafletReady ? (
-              <div className="relative isolate z-0">
-                <HeatmapMap purokData={purokData} metric={metric} t={t} onAreaClick={setSelectedPurok} />
-
-                {selectedPurok ? (
-                  <div className="pointer-events-none absolute inset-x-0 top-4 z-10 flex justify-center px-3">
-                    <div className={`pointer-events-auto w-full max-w-[244px] rounded-[24px] border shadow-[0_18px_36px_rgba(15,23,42,0.14)] ${t ? `${t.cardBg} ${t.cardBorder}` : 'bg-white border-gray-200'}`}>
-                      <div className={`px-4 py-3 border-b ${t ? t.cardBorder : 'border-gray-200'} flex items-center justify-between`}>
-                        <div>
-                          <h3 className={`text-[13px] font-bold ${t ? t.cardText : 'text-gray-800'}`}>{selectedPurok.purok}</h3>
-                        </div>
-                        <button
-                          className={`text-[12px] font-semibold ${t ? t.subtleText : 'text-gray-500'}`}
-                          onClick={() => setSelectedPurok(null)}
-                        >
-                          Close
-                        </button>
-                      </div>
-
-                      <div className="p-3 space-y-2">
-                        <div className="grid grid-cols-2 gap-2 text-[11px]">
-                          <div className={`${t ? t.inlineBg : 'bg-gray-50'} rounded-lg p-3 text-center`}>
-                            <p className={`text-[9px] uppercase ${t ? t.subtleText : 'text-gray-500'}`}>Selected Metric</p>
-                            <p className="mt-1 font-bold" style={{ color: currentMetricStyle.text }}>
-                              {selectedMetric.label}: {Number(selectedPurok[metric] ?? 0)}
-                            </p>
-                          </div>
-                          <div className={`${t ? t.inlineBg : 'bg-gray-50'} rounded-lg p-3 text-center`}>
-                            <p className={`text-[9px] uppercase ${t ? t.subtleText : 'text-gray-500'}`}>Verification Rate</p>
-                            <p className={`mt-1 font-bold ${t ? t.cardText : 'text-gray-800'}`}>{calcVerifRate(selectedPurok)}%</p>
-                          </div>
-                        </div>
-
-                        {selectedInsight ? (
-                          <div className={`${t ? t.inlineBg : 'bg-gray-50'} rounded-lg border ${t ? t.cardBorder : 'border-gray-200'} p-3 text-center`}>
-                            <p className={`text-[9px] uppercase font-bold mb-1 ${t ? t.subtleText : 'text-gray-500'}`}>Decision Guide</p>
-                            <p className={`text-[12px] font-bold ${t ? t.cardText : 'text-gray-800'}`}>{selectedInsight.title}</p>
-                            <p className={`text-[11px] mt-1 ${t ? t.subtleText : 'text-gray-600'}`}>{selectedInsight.summary}</p>
-                            <p className={`text-[11px] mt-2 ${t ? t.cardText : 'text-gray-700'}`}>
-                              <span className="font-bold">Priority:</span> {selectedInsight.priorityText}
-                            </p>
-                            <p className={`text-[11px] mt-1 ${t ? t.cardText : 'text-gray-700'}`}>
-                              <span className="font-bold">Recommended action:</span> {selectedInsight.recommendation}
-                            </p>
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+              <HeatmapMap purokData={purokData} metric={metric} metricMeta={selectedMetric} t={t} />
             ) : (
               <div className="flex h-64 items-center justify-center gap-3 text-gray-400">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
@@ -646,7 +581,6 @@ export default function HeatmapTab({ raw, t }) {
           ) : null}
         </ChartCard>
       </div>
-
     </div>
   );
 }

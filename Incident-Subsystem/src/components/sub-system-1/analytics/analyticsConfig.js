@@ -130,6 +130,29 @@ export const HEATMAP_METRIC_COLORS = {
 };
 
 // ─── MAP ─────────────────────────────────────────────────────
+export const REGISTRY_STATUS_COLORS = {
+  verified: {
+    solid: COLORS.success,
+    start: '#6ee7b7',
+    end: COLORS.success,
+  },
+  pending: {
+    solid: COLORS.accent,
+    start: '#fde68a',
+    end: COLORS.accent,
+  },
+  rejected: {
+    solid: COLORS.danger,
+    start: '#fda4af',
+    end: COLORS.danger,
+  },
+  unregistered: {
+    solid: COLORS.gray,
+    start: '#e2e8f0',
+    end: COLORS.gray,
+  },
+};
+
 export const BARANGAY_CENTER = [14.71275, 121.03859];
 
 export const BARANGAY_BOUNDARY = [
