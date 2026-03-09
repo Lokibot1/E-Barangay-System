@@ -404,6 +404,8 @@ const Step4Upload = ({
   const [privacyAgreed,    setPrivacyAgreed]    = useState(false);
   const [termsModalOpen,   setTermsModalOpen]   = useState(false);
   const [termsAgreed,      setTermsAgreed]      = useState(false);
+  const galleryInputRefs = useRef({});
+  const cameraInputRefs = useRef({});
 
   const labelClass = `text-[11px] font-black uppercase tracking-widest ${isDarkMode ? "text-slate-400" : "text-slate-500"}`;
 
@@ -414,6 +416,14 @@ const Step4Upload = ({
   const isContactValid = contactStr.length === 11 && contactStr.startsWith("09");
 
   const isReady = hasFront && hasBack && isContactValid && privacyAgreed && termsAgreed && !loading;
+  const openPicker = (fieldName, source) => {
+    const targetInput =
+      source === "camera" ? cameraInputRefs.current[fieldName] : galleryInputRefs.current[fieldName];
+    if (targetInput) {
+      targetInput.value = "";
+      targetInput.click();
+    }
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -452,9 +462,9 @@ const Step4Upload = ({
 
             return (
               <div key={fieldName} className="group relative">
-                <label className={`
+                <div className={`
                   relative h-40 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center
-                  overflow-hidden transition-all duration-300 cursor-pointer
+                  overflow-hidden transition-all duration-300
                   ${!hasImage
                     ? "border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 hover:border-emerald-500"
                     : "border-emerald-500 bg-emerald-50/10 dark:bg-emerald-500/5"}
@@ -462,14 +472,25 @@ const Step4Upload = ({
                   {previews[side] ? (
                     <>
                       <img src={previews[side]} className="w-full h-full object-cover" alt={`${side} view`} />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
-                        <span className="text-white text-[10px] font-black uppercase tracking-widest bg-emerald-600 px-3 py-2 rounded-xl shadow-lg">
-                          Change Photo
-                        </span>
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 px-3">
+                        <button
+                          type="button"
+                          onClick={() => openPicker(fieldName, "upload")}
+                          className="w-full max-w-[150px] text-white text-[10px] font-black uppercase tracking-widest bg-emerald-600 px-3 py-2 rounded-xl shadow-lg hover:bg-emerald-700"
+                        >
+                          Upload Photo
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openPicker(fieldName, "camera")}
+                          className="w-full max-w-[150px] text-white text-[10px] font-black uppercase tracking-widest bg-slate-700 px-3 py-2 rounded-xl shadow-lg hover:bg-slate-800"
+                        >
+                          Use Camera
+                        </button>
                       </div>
                     </>
                   ) : (
-                    <div className="text-center space-y-2">
+                    <div className="text-center space-y-2 px-3">
                       <div className="w-12 h-12 bg-white dark:bg-slate-800 shadow-sm rounded-2xl flex items-center justify-center mx-auto transition-transform group-hover:scale-110">
                         <ImageIcon size={20} className={isDarkMode ? "text-emerald-500" : "text-emerald-600"} />
                       </div>
@@ -479,17 +500,42 @@ const Step4Upload = ({
                         </p>
                         <p className="text-[9px] text-slate-400 italic mt-0.5 font-bold">Max 5MB • JPG/PNG</p>
                       </div>
+                      <div className="flex items-center justify-center gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => openPicker(fieldName, "upload")}
+                          className="text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700"
+                        >
+                          Upload Photo
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openPicker(fieldName, "camera")}
+                          className="text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-xl bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                        >
+                          Use Camera
+                        </button>
+                      </div>
                     </div>
                   )}
                   <input
                     type="file"
                     name={fieldName}
-                    id={fieldName}
                     accept="image/jpeg,image/png,image/jpg"
                     onChange={(e) => handleFile(e, side)}
-                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                    ref={(el) => { galleryInputRefs.current[fieldName] = el; }}
+                    className="hidden"
                   />
-                </label>
+                  <input
+                    type="file"
+                    name={fieldName}
+                    accept="image/jpeg,image/png,image/jpg"
+                    capture="environment"
+                    onChange={(e) => handleFile(e, side)}
+                    ref={(el) => { cameraInputRefs.current[fieldName] = el; }}
+                    className="hidden"
+                  />
+                </div>
               </div>
             );
           })}
