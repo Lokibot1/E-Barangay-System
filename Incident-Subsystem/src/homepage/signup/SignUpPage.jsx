@@ -1,12 +1,23 @@
 /**
  * SignupPage.jsx
- * Standalone registration page for the public.
- * FIXED: Integrated Debug Autofill listener & Success Modal safety.
+ *
+ * CHANGES:
+ * 1. Draft persistence via localStorage
+ *    - Key: "signup_draft"
+ *    - Saved on every formData change (debounced 400 ms)
+ *    - Excluded from save: idFront, idBack (File objects can't be serialized)
+ *    - Restored on mount — shows a "Resume draft" toast-style notice
+ *    - Cleared automatically on successful registration (authSuccess)
+ * 2. "Clear draft" button shown in the notice banner so users can start fresh
+ * 3. All existing logic (autofill listener, address search props, etc.) preserved
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
-import { Sun, Moon, CheckCircle2, Download, ArrowLeft, Info } from "lucide-react";
+import {
+  Sun, Moon, CheckCircle2, Download, ArrowLeft, Info,
+  RotateCcw, Trash2,
+} from "lucide-react";
 
 import SignupForm from "./SignUpForm";
 import { useAuthLogic } from "../hooks/useAuthLogic";
@@ -16,9 +27,14 @@ import { handleDownloadSlip } from "../../utils/sub-system-1/documentGenerator";
 import bsbPic from "../../assets/images/bgygulod.png";
 import bgyLogo from "../../assets/images/bgylogo.png";
 
+const DRAFT_KEY     = "signup_draft";
+// Fields that cannot be serialised to localStorage (File objects)
+const NON_SERIALISABLE = ["idFront", "idBack"];
+
 const SignupPage = () => {
-  const navigate = useNavigate();
+  const navigate    = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [draftBanner, setDraftBanner] = useState(false); // show resume-draft notice
 
   const {
     formData,
@@ -27,47 +43,114 @@ const SignupPage = () => {
     submitAuth,
     loading,
     authSuccess,
+    setAuthSuccess,
     purokList,
     allStreets,
     addressExists,
+    householdHeadData,
+    addressSearch,
+    setAddressSearch,
+    addressSuggestions,
+    isSearchingAddress,
+    selectAddress,
   } = useAuthLogic(navigate);
 
-  // ── AUTOFILL LISTENER ───────────────────────────────────────────────────
+  // ── DRAFT: restore on mount ──────────────────────────────────────────────
   useEffect(() => {
-  
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      // Only restore if there is at least one meaningful field filled
+      const hasMeaningful = saved.firstName || saved.lastName || saved.email || saved.contact;
+      if (!hasMeaningful) return;
+      setFormData((prev) => ({ ...prev, ...saved }));
+      setDraftBanner(true);
+    } catch {
+      // Corrupt data — ignore
+      localStorage.removeItem(DRAFT_KEY);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── DRAFT: save on change (debounced) ────────────────────────────────────
+  const saveTimer = useRef(null);
+  useEffect(() => {
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      try {
+        const toSave = Object.fromEntries(
+          Object.entries(formData).filter(([k]) => !NON_SERIALISABLE.includes(k))
+        );
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(toSave));
+      } catch { /* quota exceeded — silently skip */ }
+    }, 400);
+    return () => clearTimeout(saveTimer.current);
+  }, [formData]);
+
+  // ── DRAFT: clear on successful registration ───────────────────────────────
+  useEffect(() => {
+    if (authSuccess) {
+      localStorage.removeItem(DRAFT_KEY);
+      setDraftBanner(false);
+    }
+  }, [authSuccess]);
+
+  const clearDraft = useCallback(() => {
+    localStorage.removeItem(DRAFT_KEY);
+    setDraftBanner(false);
+    // Reset only text fields, keep default values from useAuthLogic initial state
+    setFormData((prev) => ({
+      ...prev,
+      firstName: "", middleName: "", lastName: "", suffix: "",
+      birthdate: "", age: "", gender: "", sector: "",
+      householdPosition: "", maritalStatus: "", nationality: "Filipino",
+      residencyStatus: "", residencyStartDate: "",
+      isVoter: false, birthRegistration: "Registered",
+      purok: "", street: "", houseNumber: "",
+      contact: "", email: "",
+      employmentStatus: "N/A", occupation: "",
+      incomeSource: "N/A", monthlyIncome: "0",
+      educationalStatus: "N/A", schoolType: "N/A",
+      schoolLevel: "N/A", highestGrade: "N/A",
+      idFront: null, idBack: null, idType: "Barangay ID",
+      username: "", password: "",
+      tenureStatus: "Owned", wallMaterial: "Concrete",
+      roofMaterial: "G.I. Sheet", waterSource: "Maynilad",
+      isIndigent: 0,
+    }));
+  }, [setFormData]);
+
+  // ── AUTOFILL LISTENER (existing) ─────────────────────────────────────────
+  useEffect(() => {
     const register = () => {
-      window.dispatchEvent(new CustomEvent('REGISTER_SETTER', { detail: setFormData }));
+      window.dispatchEvent(new CustomEvent("REGISTER_SETTER", { detail: setFormData }));
     };
-
     register();
-
-
-    window.addEventListener('REQUEST_SETTER_REFRESH', register);
-    
+    window.addEventListener("REQUEST_SETTER_REFRESH", register);
     return () => {
-      window.removeEventListener('REQUEST_SETTER_REFRESH', register);
-      window.dispatchEvent(new CustomEvent('REGISTER_SETTER', { detail: null }));
+      window.removeEventListener("REQUEST_SETTER_REFRESH", register);
+      window.dispatchEvent(new CustomEvent("REGISTER_SETTER", { detail: null }));
     };
   }, [setFormData]);
 
-  // Guard: If already logged in, redirect away from signup
+  // Guard: already logged in
   if (isAuthenticated()) {
     return <Navigate to={isAdmin() ? "/admin" : "/dashboard"} replace />;
   }
 
-  const mutedClass = isDarkMode ? "text-slate-400" : "text-slate-500";
+  const mutedClass      = isDarkMode ? "text-slate-400" : "text-slate-500";
   const strongMutedClass = isDarkMode ? "text-slate-300" : "text-slate-700";
-  const panelClass = isDarkMode
+  const panelClass      = isDarkMode
     ? "bg-slate-900/95 border-white/10 text-white"
     : "bg-white border-black/10 text-slate-900";
-  const sideClass = isDarkMode
+  const sideClass       = isDarkMode
     ? "bg-slate-950/40 border-white/10"
     : "bg-slate-100/95 border-black/10";
 
   return (
     <div className={`min-h-screen w-screen relative overflow-x-hidden ${isDarkMode ? "bg-slate-950" : "bg-slate-100"}`}>
-      
-      {/* Background Layer */}
+
+      {/* Background */}
       <div className="fixed inset-0 z-0">
         <img src={bsbPic} alt="Barangay Hall"
           className={`w-full h-full object-cover ${isDarkMode ? "opacity-20 grayscale" : "opacity-[0.38]"}`} />
@@ -78,7 +161,7 @@ const SignupPage = () => {
         }`} />
       </div>
 
-      {/* SUCCESS MODAL */}
+      {/* ── SUCCESS MODAL ──────────────────────────────────────────────────── */}
       {authSuccess && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
           <div className={`w-full max-w-md p-5 sm:p-8 rounded-[24px] sm:rounded-[36px] border shadow-2xl ${panelClass}`}>
@@ -91,7 +174,6 @@ const SignupPage = () => {
             <p className={`text-[11px] font-bold uppercase tracking-wider text-center mb-6 font-kumbh ${mutedClass}`}>
               {authSuccess.msg || "Please save your tracking number below."}
             </p>
-            
             <div className={`rounded-3xl p-6 mb-6 border-2 border-dashed ${
               isDarkMode ? "bg-slate-950/70 border-emerald-500/40" : "bg-slate-50 border-emerald-500/40"
             }`}>
@@ -102,10 +184,9 @@ const SignupPage = () => {
                 {authSuccess.code || authSuccess.cardText || "N/A"}
               </p>
             </div>
-
             <div className="space-y-3">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => {
                   const fullName = [formData.firstName, formData.middleName, formData.lastName, formData.suffix]
                     .filter(Boolean).join(" ").toUpperCase();
@@ -115,12 +196,12 @@ const SignupPage = () => {
                     status: "Pending Verification",
                     submittedDate: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
                   });
-                }} 
+                }}
                 className="w-full py-4 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl font-black uppercase text-[11px] tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 font-kumbh"
               >
                 <Download size={16} /> Download Slip
               </button>
-              <button 
+              <button
                 onClick={() => navigate("/login")}
                 className={`w-full py-2 font-black uppercase text-[10px] tracking-widest transition-colors font-kumbh ${mutedClass} hover:text-emerald-500`}
               >
@@ -131,7 +212,7 @@ const SignupPage = () => {
         </div>
       )}
 
-      {/* Top Header Actions */}
+      {/* ── TOP BAR ────────────────────────────────────────────────────────── */}
       <main className="relative z-20 pt-3 sm:pt-6 pb-3 sm:pb-6 px-3 sm:px-6">
         <div className="w-full flex items-center justify-between mb-4">
           <button onClick={() => navigate("/")}
@@ -152,7 +233,7 @@ const SignupPage = () => {
           <div className={`rounded-[28px] sm:rounded-[40px] border shadow-2xl overflow-y-auto lg:overflow-hidden backdrop-blur-2xl max-h-[calc(100dvh-6.5rem)] sm:max-h-[calc(100dvh-8rem)] lg:h-[calc(100dvh-8rem)] custom-scrollbar ${panelClass}`}>
             <div className="grid lg:grid-cols-[360px_1fr] lg:h-full">
 
-              {/* Sidebar Info */}
+              {/* ── SIDEBAR ────────────────────────────────────────────────── */}
               <aside className={`p-5 sm:p-8 lg:p-10 border-b lg:border-b-0 lg:border-r flex flex-col items-center text-center ${sideClass}`}>
                 <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.28em] mb-8 font-kumbh ${
                   isDarkMode ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-100 text-emerald-700"
@@ -167,6 +248,35 @@ const SignupPage = () => {
                     Barangay<br />Gulod
                   </h2>
                 </div>
+
+                {/* ── DRAFT BANNER ─────────────────────────────────────────── */}
+                {draftBanner && (
+                  <div className={`w-full mt-4 rounded-2xl border p-4 text-left animate-in fade-in slide-in-from-bottom-2 duration-300 ${
+                    isDarkMode
+                      ? "bg-amber-900/20 border-amber-700/40 text-amber-300"
+                      : "bg-amber-50 border-amber-200 text-amber-800"
+                  }`}>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <RotateCcw size={12} className="shrink-0" />
+                      <p className="text-[10px] font-black uppercase tracking-widest">Draft Restored</p>
+                    </div>
+                    <p className="text-[10px] font-bold leading-relaxed mb-3 opacity-80">
+                      Your previous form progress has been loaded. You can continue where you left off.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={clearDraft}
+                      className={`inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border transition-colors ${
+                        isDarkMode
+                          ? "border-amber-700/50 hover:bg-amber-900/40 text-amber-400"
+                          : "border-amber-300 hover:bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      <Trash2 size={10} /> Start fresh
+                    </button>
+                  </div>
+                )}
+
                 <div className={`mt-auto pt-6 text-[11px] font-black uppercase tracking-[0.2em] font-kumbh ${mutedClass}`}>
                   <p className="mb-2">Member already?</p>
                   <button onClick={() => navigate("/login")} className="text-emerald-600 hover:underline font-black uppercase">
@@ -175,13 +285,13 @@ const SignupPage = () => {
                 </div>
               </aside>
 
-              {/* Form Section */}
+              {/* ── FORM SECTION ─────────────────────────────────────────────── */}
               <section className="p-5 sm:p-8 lg:p-10 lg:min-h-0 flex flex-col">
                 <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tighter leading-none mb-4 font-spartan">Register</h1>
                 <p className={`text-sm mb-5 font-kumbh ${strongMutedClass}`}>
                   Please provide valid information to ensure a smooth verification process.
                 </p>
-                
+
                 <div className={`rounded-[30px] border p-4 sm:p-6 lg:p-8 flex-1 overflow-y-auto custom-scrollbar ${
                   isDarkMode ? "bg-slate-950/40 border-white/10" : "bg-white/90 border-black/10"
                 }`}>
@@ -189,12 +299,18 @@ const SignupPage = () => {
                     formData={formData}
                     handleChange={handleChange}
                     isDarkMode={isDarkMode}
-                    handleSubmit={submitAuth} 
+                    handleSubmit={submitAuth}
                     loading={loading}
                     purokList={purokList}
                     allStreets={allStreets}
                     addressExists={addressExists}
-                    isStaffMode={false} 
+                    householdHeadData={householdHeadData}
+                    isStaffMode={false}
+                    addressSearch={addressSearch}
+                    setAddressSearch={setAddressSearch}
+                    addressSuggestions={addressSuggestions}
+                    isSearchingAddress={isSearchingAddress}
+                    selectAddress={selectAddress}
                   />
                 </div>
               </section>
@@ -230,15 +346,14 @@ const SignupPage = () => {
           border-color: #059669;
           box-shadow: 0 0 0 4px rgba(5,150,105,0.12);
         }
-        select.full-input-sm {
-          cursor: pointer;
-        }
-        input[type="date"].full-input-sm {
-          padding-right: 0.85rem;
-        }
+        select.full-input-sm { cursor: pointer; }
+        input[type="date"].full-input-sm { padding-right: 0.85rem; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slide-in-from-bottom-2 { from { transform: translateY(8px); } to { transform: translateY(0); } }
+        .animate-in { animation: fade-in 0.3s ease, slide-in-from-bottom-2 0.3s ease; }
       ` }} />
     </div>
   );

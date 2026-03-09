@@ -1,14 +1,26 @@
 /**
  * LoginForm.jsx
- * Email + password fields for the login view.
- * Props are managed externally by LoginPage.jsx (email, password, onChange, errors).
+ *
+ * CHANGES:
+ * 1. input type="text" for username/email (case-sensitive, no browser email normalization)
+ * 2. Caps Lock detection on the password field via onKeyUp + onMouseDown
+ *    — shows a warning badge when CapsLock is active
+ * 3. Label updated to "Username or Email"
  */
 
 import React, { useState } from "react";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, User, Lock, AlertTriangle } from "lucide-react";
 
 const LoginForm = ({ email, password, onChange, errors = {}, isDarkMode }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [capsLockOn,   setCapsLockOn]   = useState(false);
+
+  // Detect CapsLock state from any key event on the password field
+  const handlePasswordKeyEvent = (e) => {
+    if (e.getModifierState) {
+      setCapsLockOn(e.getModifierState("CapsLock"));
+    }
+  };
 
   const inputClass = `
     w-full pl-11 pr-4 py-3.5 rounded-2xl border-2 text-sm font-bold outline-none
@@ -25,25 +37,25 @@ const LoginForm = ({ email, password, onChange, errors = {}, isDarkMode }) => {
 
   return (
     <div className="space-y-5">
-      {/* Email */}
+
+      {/* ── Username or Email ─────────────────────────────────────────── */}
       <div className="space-y-2">
-        <label
-          className={`text-[10px] font-black uppercase tracking-widest ${
-            isDarkMode ? "text-slate-400" : "text-slate-500"
-          }`}
-        >
-          Email
+        <label className={`text-[10px] font-black uppercase tracking-widest ${
+          isDarkMode ? "text-slate-400" : "text-slate-500"
+        }`}>
+          Username or Email
         </label>
         <div className="relative">
-          <Mail size={16} className={iconClass} />
+          <User size={16} className={iconClass} />
+          {/* type="text" — preserves exact casing; no email-format enforcement */}
           <input
-            type="email"
+            type="text"
             name="email"
             value={email}
             onChange={onChange}
             required
-            autoComplete="email"
-            placeholder="you@example.com"
+            autoComplete="username"
+            placeholder="Username or email address"
             className={inputClass}
           />
         </div>
@@ -52,13 +64,11 @@ const LoginForm = ({ email, password, onChange, errors = {}, isDarkMode }) => {
         )}
       </div>
 
-      {/* Password */}
+      {/* ── Password ──────────────────────────────────────────────────── */}
       <div className="space-y-2">
-        <label
-          className={`text-[10px] font-black uppercase tracking-widest ${
-            isDarkMode ? "text-slate-400" : "text-slate-500"
-          }`}
-        >
+        <label className={`text-[10px] font-black uppercase tracking-widest ${
+          isDarkMode ? "text-slate-400" : "text-slate-500"
+        }`}>
           Password
         </label>
         <div className="relative">
@@ -71,6 +81,8 @@ const LoginForm = ({ email, password, onChange, errors = {}, isDarkMode }) => {
             required
             autoComplete="current-password"
             placeholder="Enter your password"
+            onKeyUp={handlePasswordKeyEvent}
+            onMouseDown={handlePasswordKeyEvent}
             className={`${inputClass} pr-12`}
           />
           <button
@@ -86,10 +98,24 @@ const LoginForm = ({ email, password, onChange, errors = {}, isDarkMode }) => {
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
+
+        {/* Caps Lock warning */}
+        {capsLockOn && (
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border ${
+            isDarkMode
+              ? "bg-amber-900/30 border-amber-700/50 text-amber-400"
+              : "bg-amber-50 border-amber-200 text-amber-700"
+          }`}>
+            <AlertTriangle size={12} className="shrink-0" />
+            Caps Lock is ON — password is case-sensitive
+          </div>
+        )}
+
         {errors.password && (
           <p className="text-xs text-red-500 font-bold">{errors.password}</p>
         )}
       </div>
+
     </div>
   );
 };

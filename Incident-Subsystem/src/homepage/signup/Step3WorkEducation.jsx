@@ -1,13 +1,10 @@
 /**
  * Step3WorkEducation.jsx
  *
- * FIXED: Added indigency toggle — visible only when:
- *   - isStaffMode === true
- *   - isHead === true (householdPosition is Head or Head of Family)
- *
- * The toggle is rendered at the bottom of the step, above the Next button.
- * isIndigent / setIsIndigent are lifted to SignupForm so the value
- * persists across step navigation and is available at submit time.
+ * FIXED: 
+ * - Added indigency toggle (staff mode + head only)
+ * - Converted Highest Grade level to a dropdown with "N/A" as default
+ * - Fixed styling to match other inputs
  */
 
 import React from 'react';
@@ -32,6 +29,19 @@ const SCHOOL_TYPES  = ['Public', 'Private', 'N/A'];
 const SCHOOL_LEVELS = [
   'Pre-School', 'Elementary', 'Junior High School',
   'Senior High School', 'College', 'Vocational', 'Masteral', 'N/A',
+];
+
+const HIGHEST_GRADE_OPTIONS = [
+  'N/A',
+  'No Formal Education',
+  'Elementary Undergraduate',
+  'Elementary Graduate',
+  'High School Undergraduate',
+  'High School Graduate',
+  'College Undergraduate',
+  'College Graduate',
+  'Vocational Graduate',
+  'Post Graduate'
 ];
 
 const Step3WorkEducation = ({
@@ -185,14 +195,17 @@ const Step3WorkEducation = ({
           </div>
 
           <div>
-            <label className={labelClass}>Highest Grade / Year Completed</label>
-            <input
-              name="highestGrade"
-              value={formData.highestGrade || ''}
-              onChange={handleChange}
-              placeholder="e.g. Grade 10, 2nd Year College"
-              className={inputClass}
-            />
+            <label className={labelClass}>Highest Grade Level</label>
+            <select 
+              name="highestGrade" 
+              value={formData.highestGrade || "N/A"} 
+              onChange={handleChange} 
+              className={selectClass}
+            >
+              {HIGHEST_GRADE_OPTIONS.map((grade) => (
+                <option key={grade} value={grade}>{grade}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>

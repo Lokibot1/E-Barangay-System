@@ -1,21 +1,59 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { API_BASE_URL } from '../../config/api';
+import { CalendarDays, Phone } from 'lucide-react';
+
+/**
+ * Step1PersonalInfo
+ *
+ * CHANGES vs previous version:
+ * 1. Birthdate min capped at 150 years ago — prevents absurd dates like 1800.
+ * 2. Birthdate guide text: "Format: MM/DD/YYYY" with note that future dates
+ *    are blocked and age will be auto-calculated.
+ * 3. Future birthdate guard: if user somehow bypasses the `max` attr (manual
+ *    keyboard entry), isValid becomes false and a clear error is shown.
+ * 4. Residency start date notes moved to Step2 (unchanged here).
+ * 5. All original logic preserved exactly.
+ */
 
 const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
-  // 1. STATES
-  const [emailError, setEmailError]       = useState("");
+  // ── STATES ────────────────────────────────────────────────────────────────
+  const [emailError,      setEmailError]      = useState("");
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
-  const [showGmailChip, setShowGmailChip] = useState(false);
+  const [showGmailChip,   setShowGmailChip]   = useState(false);
   const emailRef = useRef(null);
 
-  // 2. CONSTANTS
-  const today = new Date().toISOString().split("T")[0];
-  const labelClass = `text-[10px] font-black uppercase tracking-wider ${
-    isDarkMode ? 'text-gray-400' : 'text-gray-500'
-  }`;
+  // ── DATE BOUNDS ───────────────────────────────────────────────────────────
+  const today        = new Date();
+  const todayStr     = today.toISOString().split("T")[0];
+
+  // Oldest allowed birthdate — 150 years ago from today
+  const minBirthdate = new Date(
+    today.getFullYear() - 150,
+    today.getMonth(),
+    today.getDate()
+  ).toISOString().split("T")[0];
+
+  // ── BIRTHDATE VALIDATION ──────────────────────────────────────────────────
+  const birthdateState = useMemo(() => {
+    if (!formData.birthdate) return 'empty';
+    const bd = new Date(formData.birthdate);
+    if (isNaN(bd.getTime()))         return 'invalid';
+    if (bd > today)                  return 'future';
+    if (formData.birthdate < minBirthdate) return 'too_old';
+    return 'valid';
+  }, [formData.birthdate, todayStr, minBirthdate]);
+
+  const birthdateError = {
+    future:  'Birthdate cannot be a future date.',
+    too_old: 'Birthdate cannot be more than 150 years ago.',
+    invalid: 'Please enter a valid date.',
+  }[birthdateState];
+
+  // ── CONSTANTS ─────────────────────────────────────────────────────────────
+  const labelClass   = `text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`;
   const requiredStar = <span className="text-rose-500 ml-0.5" aria-hidden="true">*</span>;
 
-  // 3. CONTACT LOGIC — unchanged from original
+  // ── CONTACT LOGIC — unchanged ─────────────────────────────────────────────
   const contactStr     = formData.contact ? String(formData.contact).replace(/\D/g, "") : "";
   const isContactValid = contactStr.length === 11 && contactStr.startsWith("09");
 
@@ -31,38 +69,31 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
     }
   };
 
-  // 4. @gmail.com CHIP LOGIC
-  // Show the chip when:
-  //   - user has typed something without an @ yet, OR
-  //   - user has typed @ but hasn't finished a valid address
-  // Hide it once the email is fully valid (has @ and a proper domain)
+  // ── @gmail.com CHIP LOGIC — unchanged ─────────────────────────────────────
   useEffect(() => {
     const raw = formData.email?.trim() || "";
     if (!raw) { setShowGmailChip(false); return; }
-
     const isComplete = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(raw);
     setShowGmailChip(!isComplete);
   }, [formData.email]);
 
   const applyGmail = () => {
-    const raw     = formData.email?.trim() || "";
-    const atIdx   = raw.indexOf('@');
-    const local   = atIdx !== -1 ? raw.slice(0, atIdx) : raw;
+    const raw      = formData.email?.trim() || "";
+    const atIdx    = raw.indexOf('@');
+    const local    = atIdx !== -1 ? raw.slice(0, atIdx) : raw;
     const newEmail = `${local}@gmail.com`;
     handleChange({ target: { name: "email", value: newEmail } });
     setShowGmailChip(false);
     emailRef.current?.focus();
   };
 
-  // 5. EMAIL CHECKER LOGIC (Debounced API Call) — unchanged from original
+  // ── EMAIL CHECKER — unchanged ─────────────────────────────────────────────
   useEffect(() => {
     const emailValue = formData.email?.trim().toLowerCase();
-
     if (!emailValue || !emailValue.endsWith('@gmail.com')) {
       setEmailError("");
       return;
     }
-
     const timer = setTimeout(async () => {
       setIsCheckingEmail(true);
       try {
@@ -78,25 +109,24 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
         setIsCheckingEmail(false);
       }
     }, 600);
-
     return () => clearTimeout(timer);
   }, [formData.email]);
 
-  // 6. VALIDATION LOGIC — unchanged from original, same required fields
+  // ── VALIDATION — birthdate state added to the gate ────────────────────────
   const { isEmailValid, isValid, missingFields } = useMemo(() => {
     const emailValue        = formData.email?.trim().toLowerCase() || "";
     const emailPatternValid = !emailValue || emailValue.endsWith('@gmail.com');
     const isEmailAvailable  = emailError === "";
 
     const checks = {
-      "First Name":          !!formData.firstName?.trim(),
-      "Last Name":           !!formData.lastName?.trim(),
-      "Birthdate":           !!formData.birthdate,
-      "Gender":              !!formData.gender,
-      "Sector":              !!formData.sector,
-      "Birth Registration":  !!formData.birthRegistration,
+      "First Name":            !!formData.firstName?.trim(),
+      "Last Name":             !!formData.lastName?.trim(),
+      "Birthdate":             birthdateState === 'valid',
+      "Gender":                !!formData.gender,
+      "Sector":                !!formData.sector,
+      "Birth Registration":    !!formData.birthRegistration,
       "Age (check birthdate)": formData.age !== "" && !isNaN(formData.age),
-      "Contact Number":      isContactValid,
+      "Contact Number":        isContactValid,
     };
 
     const missing = Object.entries(checks)
@@ -110,11 +140,11 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
       isValid:       allRequiredOk && emailPatternValid && isEmailAvailable && !isCheckingEmail,
       missingFields: missing,
     };
-  }, [formData, isContactValid, emailError, isCheckingEmail]);
+  }, [formData, isContactValid, emailError, isCheckingEmail, birthdateState]);
 
-  // Reason string shown below the disabled button
   const disabledReason = useMemo(() => {
-    if (isCheckingEmail)               return "Checking email availability...";
+    if (isCheckingEmail)                        return "Checking email availability...";
+    if (birthdateError && formData.birthdate)   return `Birthdate: ${birthdateError}`;
     if (!isEmailValid && formData.email?.trim())
       return emailError
         ? `Email: ${emailError}`
@@ -122,12 +152,13 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
     if (missingFields.length > 0)
       return `Missing: ${missingFields.join(', ')}`;
     return null;
-  }, [isCheckingEmail, isEmailValid, formData.email, emailError, missingFields]);
+  }, [isCheckingEmail, isEmailValid, formData.email, emailError, missingFields, birthdateError, formData.birthdate]);
 
+  // ── RENDER ────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-right-3 duration-300">
 
-      {/* Name Section */}
+      {/* ── Name ─────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         <div className="col-span-1 space-y-1">
           <label className={labelClass}>First Name{requiredStar}</label>
@@ -155,7 +186,7 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
         </div>
       </div>
 
-      {/* Email & Contact Section */}
+      {/* ── Email & Contact ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
         {/* EMAIL */}
@@ -164,7 +195,6 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
             <label className={labelClass}>Email Address</label>
             <span className="text-[9px] font-bold text-gray-400 italic">Optional (Gmail only)</span>
           </div>
-
           <div className="relative">
             <input
               ref={emailRef}
@@ -186,7 +216,6 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
             )}
           </div>
 
-          {/* @gmail.com suggestion chip — appears while email is incomplete */}
           {showGmailChip && (
             <button
               type="button"
@@ -198,7 +227,6 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
               }`}
             >
               <span className="text-[11px]">✉</span>
-              {/* Show what the completed email would look like */}
               {(() => {
                 const raw   = formData.email?.trim() || "";
                 const atIdx = raw.indexOf('@');
@@ -215,7 +243,7 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
           )}
         </div>
 
-        {/* CONTACT — unchanged from original */}
+        {/* CONTACT */}
         <div className="space-y-1">
           <div className="flex justify-between items-center">
             <label className={labelClass}>Contact Number{requiredStar}</label>
@@ -234,15 +262,49 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
               formData.contact && !isContactValid ? 'border-rose-500 focus:ring-rose-500' : ''
             }`}
           />
+          <div className="flex items-center gap-1.5 mt-1">
+            <Phone size={10} className={isDarkMode ? 'text-slate-500' : 'text-slate-400'} />
+            <p className={`text-[9px] font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+              Must start with <strong>09</strong> — PH mobile format, 11 digits total.
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Birth & Age Section — unchanged */}
+      {/* ── Birthdate & Age ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="sm:col-span-2 space-y-1">
           <label className={labelClass}>Birthdate{requiredStar}</label>
-          <input type="date" name="birthdate" value={formData.birthdate || ""} onChange={handleChange}
-            max={today} className="full-input-sm" />
+          <input
+            type="date"
+            name="birthdate"
+            value={formData.birthdate || ""}
+            onChange={handleChange}
+            min={minBirthdate}
+            max={todayStr}
+            className={`full-input-sm ${
+              birthdateError ? 'border-rose-500 ring-2 ring-rose-500/20' : ''
+            }`}
+          />
+          {/* Guide row */}
+          <div className="flex items-start gap-1.5 mt-1">
+            <CalendarDays size={10} className={`shrink-0 mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
+            <p className={`text-[9px] font-bold leading-relaxed ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+              Format: <strong>MM/DD/YYYY</strong> — use the calendar picker or type directly.
+              Future dates and dates beyond 150 years ago are not allowed.
+              Age will be calculated automatically.
+            </p>
+          </div>
+          {/* Inline error if birthdate is invalid */}
+          {birthdateError && (
+            <div className={`flex items-center gap-1.5 mt-1 px-3 py-2 rounded-xl border text-[9px] font-bold ${
+              isDarkMode
+                ? 'bg-rose-900/20 border-rose-800 text-rose-400'
+                : 'bg-rose-50 border-rose-200 text-rose-600'
+            }`}>
+              <span>⚠</span> {birthdateError}
+            </div>
+          )}
         </div>
         <div className="space-y-1">
           <label className={labelClass}>Age</label>
@@ -254,10 +316,13 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
               formData.age === 'Invalid' ? 'text-rose-500' : 'text-emerald-600'
             }`}
           />
+          <p className={`text-[9px] font-bold mt-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+            Auto-calculated
+          </p>
         </div>
       </div>
 
-      {/* Identity & Status — unchanged */}
+      {/* ── Identity & Status — unchanged ────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={labelClass}>Gender{requiredStar}</label>
@@ -316,7 +381,7 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
         </select>
       </div>
 
-      {/* Voter Consent Box — unchanged */}
+      {/* ── Voter Consent — unchanged ─────────────────────────────────────── */}
       <div className={`flex items-center gap-3 p-4 rounded-2xl border transition-colors ${
         isDarkMode ? "bg-slate-800/40 border-slate-700" : "bg-slate-50 border-slate-200"
       }`}>
@@ -333,7 +398,7 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
         </label>
       </div>
 
-      {/* Primary Action */}
+      {/* ── Primary Action ────────────────────────────────────────────────── */}
       <div className="space-y-2">
         <button
           type="button"
@@ -346,7 +411,6 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
           {isCheckingEmail ? 'Checking Email...' : 'Continue to Address'}
         </button>
 
-        {/* Reason why the button is disabled — only shows when user has started filling */}
         {!isValid && disabledReason && (formData.firstName || formData.contact || formData.email) && (
           <p className={`text-[9px] font-bold text-center uppercase tracking-wider ${
             isDarkMode ? 'text-slate-500' : 'text-slate-400'

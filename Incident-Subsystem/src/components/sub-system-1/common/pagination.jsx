@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 const normalizeTheme = (theme) => (theme === 'modern' ? 'blue' : theme || 'blue');
 
@@ -56,7 +56,7 @@ const Pagination = ({
   const startIdx = (currentPage - 1) * itemsPerPage + 1;
   const endIdx = Math.min(currentPage * itemsPerPage, totalItems);
 
-  const maxVisiblePages = 5; 
+  const maxVisiblePages = 5;
   let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
   let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
@@ -75,6 +75,9 @@ const Pagination = ({
   const subtleText = t?.subtleText ?? 'text-gray-500';
   const cardText = t?.cardText ?? 'text-slate-800';
 
+  // Helper for consistent button styling
+  const navBtnClass = `h-8 w-8 flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed ${subtleText}`;
+
   return (
     <div
       className={`flex flex-col gap-3 ${cardBg} px-3 py-3 sm:px-4 sm:py-4 transition-colors duration-300`}
@@ -88,52 +91,70 @@ const Pagination = ({
           className={`flex items-center rounded-lg border overflow-hidden ${cardBg} ${cardBorder} shadow-sm`}
           style={{ backgroundColor: palette.shell, borderColor: palette.border }}
         >
+          {/* FIRST PAGE */}
+          <button
+            disabled={currentPage === 1}
+            onClick={() => onPageChange(1)}
+            className={navBtnClass}
+            style={{ borderRight: `1px solid ${palette.border}` }}
+            title="First Page"
+          >
+            <ChevronsLeft size={16} />
+          </button>
+
+          {/* PREVIOUS PAGE */}
           <button
             disabled={currentPage === 1}
             onClick={() => onPageChange(currentPage - 1)}
-            className={`h-8 w-8 flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed ${subtleText}`}
+            className={navBtnClass}
             style={{ borderRight: `1px solid ${palette.border}` }}
             title="Previous"
           >
             <ChevronLeft size={16} />
           </button>
 
-        {/* NUMBERED PAGES */}
-        <div className="flex items-center">
-          {visiblePages.map((page) => (
-            <button
-              key={page}
-              onClick={() => onPageChange(page)}
-              className={`h-8 min-w-8 px-2.5 text-sm font-kumbh transition-all ${
-                currentPage === page ? 'font-semibold text-white' : `${cardText}`
-              }`}
-              style={{
-                backgroundColor: currentPage === page ? palette.accent : 'transparent',
-                color: currentPage === page ? '#ffffff' : undefined,
-                borderRight:
-                  page !== visiblePages[visiblePages.length - 1]
-                    ? `1px solid ${palette.border}`
-                    : 'none',
-              }}
-            >
-              {page}
-            </button>
-          ))}
-        </div>
+          {/* NUMBERED PAGES */}
+          <div className="flex items-center">
+            {visiblePages.map((page) => (
+              <button
+                key={page}
+                onClick={() => onPageChange(page)}
+                className={`h-8 min-w-8 px-2.5 text-sm font-kumbh transition-all ${
+                  currentPage === page ? 'font-semibold text-white' : `${cardText}`
+                }`}
+                style={{
+                  backgroundColor: currentPage === page ? palette.accent : 'transparent',
+                  color: currentPage === page ? '#ffffff' : undefined,
+                  borderRight: `1px solid ${palette.border}`,
+                }}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
 
-        {/* NEXT PAGE BUTTON */}
-        <button
-          disabled={currentPage === totalPages}
-          onClick={() => onPageChange(currentPage + 1)}
-          className={`h-8 w-8 flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed ${subtleText}`}
-          style={{ borderLeft: `1px solid ${palette.border}` }}
-          title="Next"
-        >
-          <ChevronRight size={16} />
-        </button>
+          {/* NEXT PAGE */}
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => onPageChange(currentPage + 1)}
+            className={navBtnClass}
+            style={{ borderRight: `1px solid ${palette.border}` }}
+            title="Next"
+          >
+            <ChevronRight size={16} />
+          </button>
+
+          {/* LAST PAGE */}
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => onPageChange(totalPages)}
+            className={navBtnClass}
+            title="Last Page"
+          >
+            <ChevronsRight size={16} />
+          </button>
         </div>
       </div>
-
     </div>
   );
 };
