@@ -189,7 +189,7 @@ const DocumentsInquiryPage = () => {
           </div>
           <input
             type="text"
-            placeholder="Search by name, document, or ref #"
+            placeholder="Search by Name, Ref #"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="px-3 py-2 border rounded-lg w-full sm:w-64 focus:outline-none focus:ring focus:ring-blue-300"
