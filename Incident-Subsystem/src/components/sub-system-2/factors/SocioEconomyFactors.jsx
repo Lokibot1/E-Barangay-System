@@ -35,7 +35,7 @@ const SocioEconomyFactors = ({ t, isDark, currentTheme = "modern" }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       
-    <ChartCard title="Age / Gender Distribution" subtitle="Population split by cohort" rightLabel="Cohorts" t={t} currentTheme={currentTheme}>
+    {/* <ChartCard title="Age / Gender Distribution" subtitle="Population split by cohort" rightLabel="Cohorts" t={t} currentTheme={currentTheme}>
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={ageGenderDistribution}>
           <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#334155" : "#E5E7EB"} />
@@ -47,7 +47,7 @@ const SocioEconomyFactors = ({ t, isDark, currentTheme = "modern" }) => {
           <Bar dataKey="female" stackId="a" fill={GENDER_COLORS.female} radius={[8, 8, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
-    </ChartCard>
+    </ChartCard> */}
 
     <ChartCard title="Purpose of Requests" subtitle="Service intent breakdown" rightLabel="Distribution" t={t} currentTheme={currentTheme}>
       <ResponsiveContainer width="100%" height={250}>
