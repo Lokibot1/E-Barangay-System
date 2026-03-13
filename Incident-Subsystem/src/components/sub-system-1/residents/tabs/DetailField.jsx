@@ -1,11 +1,11 @@
 import React from 'react';
 
 const inputAccentMap = {
-    modern: { border: 'focus:border-blue-500', ring: 'focus:ring-blue-500/10', icon: 'group-hover:text-blue-500' },
-    blue: { border: 'focus:border-blue-500', ring: 'focus:ring-blue-500/10', icon: 'group-hover:text-blue-500' },
+    modern: { border: 'focus:border-blue-500',   ring: 'focus:ring-blue-500/10',   icon: 'group-hover:text-blue-500'   },
+    blue:   { border: 'focus:border-blue-500',   ring: 'focus:ring-blue-500/10',   icon: 'group-hover:text-blue-500'   },
     purple: { border: 'focus:border-purple-500', ring: 'focus:ring-purple-500/10', icon: 'group-hover:text-purple-500' },
-    green: { border: 'focus:border-green-500', ring: 'focus:ring-green-500/10', icon: 'group-hover:text-green-500' },
-    dark: { border: 'focus:border-slate-500', ring: 'focus:ring-slate-500/10', icon: 'group-hover:text-slate-300' },
+    green:  { border: 'focus:border-green-500',  ring: 'focus:ring-green-500/10',  icon: 'group-hover:text-green-500'  },
+    dark:   { border: 'focus:border-slate-500',  ring: 'focus:ring-slate-500/10',  icon: 'group-hover:text-slate-300'  },
 };
 
 const DetailField = ({
@@ -14,45 +14,53 @@ const DetailField = ({
     val,
     isEdit,
     onChange,
-    type = "text",
-    options = [],
+    type      = 'text',
+    options   = [],
     max,
-    className = "",
+    className = '',
     error,
     placeholder,
     t,
-    currentTheme = 'modern'
+    currentTheme = 'modern',
 }) => {
     const accent = inputAccentMap[currentTheme] || inputAccentMap.modern;
-    
+
+    // ── Display value (view mode) ─────────────────────────────────────────────
     const getDisplayLabel = () => {
         if (val === undefined || val === null || val === '') return '---';
+
         if (name === 'is_voter') {
             return (val == 1 || val === 'Yes' || val === true) ? 'Yes' : 'No';
         }
+
         if (typeof val === 'object' && !Array.isArray(val)) {
-            return val.name || val.label || val.number || val.text || "Data Error";
+            return val.name || val.label || val.number || val.text || 'Data Error';
         }
+
         if (options && options.length > 0) {
-            const found = options.find(o => {
-                const optId = o?.id !== undefined ? String(o.id) : (o?.value !== undefined ? String(o.value) : String(o));
-                return optId === String(val);
+            const strVal = String(val);
+            const found  = options.find(o => {
+                const oVal =
+                    o?.id    != null ? String(o.id)    :
+                    o?.value != null ? String(o.value) :
+                    String(o);
+                return oVal === strVal;
             });
             if (found) {
-                if (typeof found === 'object') {
-                    return found.name || found.label || found.number || String(val);
-                }
-                return String(found);
+                return typeof found === 'object'
+                    ? (found.name || found.label || found.number || strVal)
+                    : String(found);
             }
         }
+
         return String(val);
     };
 
     const inputBaseClass = `
-        w-full 
+        w-full
         ${t?.inputBg || 'bg-white dark:bg-slate-900'}
         border rounded-xl px-4 py-2.5
-        text-sm font-semibold 
+        text-sm font-semibold
         ${t?.inputText || 'text-slate-700 dark:text-slate-200'}
         outline-none transition-all shadow-sm
         ${error
@@ -60,6 +68,11 @@ const DetailField = ({
             : `${t?.inputBorder || 'border-slate-300 dark:border-slate-700'} ${accent.border} focus:ring-2 ${accent.ring}`
         }
     `;
+
+    // ── Select value: MUST be a string so React matches <option value="3"> ───
+    // React controlled-select matching is strict equality. If val is 3 (number)
+    // and option value is "3" (string) they will NOT match → shows "Select...".
+    const selectControlledValue = val != null ? String(val) : '';
 
     return (
         <div className={`flex flex-col gap-1.5 ${className}`}>
@@ -76,20 +89,23 @@ const DetailField = ({
 
             {isEdit ? (
                 <div className="relative">
-                    {type === "select" ? (
+                    {type === 'select' ? (
                         <div className="relative group">
                             <select
                                 name={name}
-                                value={val && typeof val === 'object' ? (val.id || '') : (val || '')}
+                                value={selectControlledValue}
                                 onChange={onChange}
                                 className={`${inputBaseClass} appearance-none cursor-pointer pr-10`}
                             >
                                 <option value="">Select...</option>
                                 {(options || []).map((opt, i) => {
-                                    const optId = opt?.id !== undefined ? opt.id : (opt?.value !== undefined ? opt.value : opt);
+                                    // Both key and value MUST be strings
+                                    const optVal = opt?.id    != null ? String(opt.id)    :
+                                                   opt?.value != null ? String(opt.value) :
+                                                   String(opt);
                                     const optLabel = opt?.name || opt?.label || opt?.number || opt;
                                     return (
-                                        <option key={optId || i} value={optId}>
+                                        <option key={optVal || i} value={optVal}>
                                             {optLabel}
                                         </option>
                                     );
@@ -106,7 +122,7 @@ const DetailField = ({
                             type={type}
                             name={name}
                             placeholder={placeholder}
-                            value={val || ''}
+                            value={val != null ? val : ''}
                             onChange={onChange}
                             max={max}
                             className={inputBaseClass}

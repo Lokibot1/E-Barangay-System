@@ -109,7 +109,7 @@ const VerificationSuccessModal = ({
             <ShieldCheck className="text-white" size={20} />
           </div>
           <h2 className={`text-sm font-black uppercase tracking-widest ${t?.cardText} ${accentTextClass}`}>
-            Enrollment Successful
+            Registration Successful
           </h2>
         </div>
       }

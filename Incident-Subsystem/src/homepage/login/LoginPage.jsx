@@ -239,7 +239,7 @@ const LoginPage = () => {
                       type="text" 
                       value={trackingNum} 
                       onChange={(e) => handleTrackSearch(e.target.value)}
-                      placeholder="BGN-XXXX"
+                      placeholder="BGNXXXXX"
                       className={`w-full pl-10 pr-4 py-2.5 rounded-2xl border text-[11px] font-black uppercase tracking-widest outline-none transition-colors bg-transparent font-kumbh ${
                         isDarkMode ? "border-slate-300/30 text-white" : `border-slate-300 ${t.cardText}`
                       }`} 

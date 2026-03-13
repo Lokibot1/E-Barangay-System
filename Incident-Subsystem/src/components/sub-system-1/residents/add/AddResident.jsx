@@ -116,7 +116,7 @@ const AddResident = () => {
           </button>
           <div>
             <h1 className={`text-2xl font-bold font-spartan ${t.cardText} uppercase tracking-tight`}>
-              Resident Enrollment
+              Resident Registration
             </h1>
             <p className={`text-[10px] ${t.subtleText} uppercase tracking-[0.2em] font-bold mt-1`}>
               System Administrator Module

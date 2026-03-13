@@ -252,7 +252,7 @@ const SignupForm = ({
 
             <div className="mb-8">
               <h3 className="text-3xl font-black uppercase tracking-tight">
-                {isStaffMode ? 'Finalize Enrollment' : 'Review Details'}
+                {isStaffMode ? 'Finalize Registration' : 'Review Details'}
               </h3>
               <p className="text-sm opacity-60 mt-1">
                 Pakisuri ang lahat ng impormasyon bago i-save sa system.
