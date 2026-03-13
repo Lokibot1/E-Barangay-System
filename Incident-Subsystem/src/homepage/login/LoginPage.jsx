@@ -15,6 +15,7 @@ import {
 import themeTokens from "../../Themetokens";
 import ForgotPasswordModal from "../../components/shared/ForgotPasswordModal";
 import Toast from "../../components/shared/modals/Toast";
+import { useBranding } from "../../context/BrandingContext";
 
 import LoginForm from "./LogInForm";
 import { useAuthLogic } from "../hooks/useAuthLogic";
@@ -44,6 +45,8 @@ const LoginPage = () => {
   const [loginLoading, setLoginLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const { logoDataUrl } = useBranding();
+  const logoSrc = logoDataUrl || bgyLogo;
 
   const addToast = (toast) => setToasts((prev) => [...prev, { ...toast, id: Date.now() }]);
   const removeToast = (id) => setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -102,27 +105,27 @@ const LoginPage = () => {
   };
 
   const SidebarBrand = () => (
-    <div className="mb-5 flex flex-col items-center text-center">
-      <div className={`mb-3 w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 shadow-sm ${
+    <div className="mt-4 mb-5 flex flex-col items-center text-center">
+      <div className={`mb-3 w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-4 shadow-sm ${
         isDarkMode ? "border-white/20 bg-white/95" : "border-slate-200 bg-white"
       }`}>
-        <img src={bgyLogo} alt="Logo" className="w-full h-full object-cover rounded-full" />
+        <img src={logoSrc} alt="Logo" className="w-full h-full object-cover rounded-full" />
       </div>
-      <h2 className={`text-3xl sm:text-4xl font-black uppercase leading-[0.95] tracking-tight font-spartan ${t.primaryText}`}>
-        Barangay<br />Gulod<br />Novaliches
+      <h2 className={`text-2xl sm:text-3xl font-black uppercase leading-[0.95] tracking-tight font-spartan text-center ${t.primaryText}`}>
+        Barangay Gulod<br />Novaliches
       </h2>
-      <div className={`mt-2.5 w-12 h-1 rounded-full bg-gradient-to-r ${t.primaryGrad}`} />
-      <p className={`mt-3 text-[10px] sm:text-[11px] font-black leading-relaxed font-kumbh uppercase ${mutedClass}`}>
+      <div className={`mt-2 w-10 h-1 rounded-full bg-gradient-to-r mx-auto ${t.primaryGrad}`} />
+      <p className={`mt-4 text-[9px] sm:text-[10px] font-black leading-relaxed font-kumbh uppercase text-center ${mutedClass}`}>
         OFFICE HOURS: 7:00 AM - 5:00 PM MONDAY - FRIDAY
       </p>
     </div>
   );
 
   const DistrictBadge = () => (
-    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.28em] mb-6 font-kumbh ${
+    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.24em] mb-5 font-kumbh self-start ${
       isDarkMode ? "bg-emerald-900/30 text-emerald-400" : `${t.primaryLight} ${t.primaryText}`
     }`}>
-      <Info size={12} /> District 5, Quezon City
+      <Info size={10} /> District 5, Quezon City
     </div>
   );
 
@@ -227,17 +230,17 @@ const LoginPage = () => {
                 <div className={`rounded-[28px] p-5 border mt-6 lg:mt-auto ${
                   isDarkMode ? "bg-slate-950/70 border-white/10" : `${t.cardBg} border-slate-200`
                 }`}>
-                  <label className={`text-[10px] font-black uppercase tracking-[0.25em] mb-3 block font-kumbh ${mutedClass}`}>
+                  <label className={`text-[9px] font-black uppercase tracking-[0.22em] mb-2 block font-kumbh ${mutedClass}`}>
                     Track Application
                   </label>
                   <div className="relative">
-                    <Search size={14} className={`absolute left-4 top-1/2 -translate-y-1/2 ${mutedClass}`} />
+                    <Search size={12} className={`absolute left-4 top-1/2 -translate-y-1/2 ${mutedClass}`} />
                     <input 
                       type="text" 
                       value={trackingNum} 
                       onChange={(e) => handleTrackSearch(e.target.value)}
                       placeholder="BGN-XXXX"
-                      className={`w-full pl-11 pr-4 py-3 rounded-2xl border-2 text-xs font-black uppercase tracking-widest outline-none transition-colors bg-transparent font-kumbh ${
+                      className={`w-full pl-10 pr-4 py-2.5 rounded-2xl border text-[11px] font-black uppercase tracking-widest outline-none transition-colors bg-transparent font-kumbh ${
                         isDarkMode ? "border-slate-300/30 text-white" : `border-slate-300 ${t.cardText}`
                       }`} 
                     />
@@ -264,9 +267,9 @@ const LoginPage = () => {
 
               {/* Main Login Form Section */}
               <section className="p-5 sm:p-8 lg:p-8">
-                <div className="max-w-xl mx-auto lg:mx-0">
-                  <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tighter leading-none mb-3 font-spartan">Sign In</h1>
-                  <p className={`text-sm leading-relaxed mb-6 font-kumbh ${strongMutedClass}`}>
+                <div className="max-w-xl mx-auto lg:mx-0 text-left">
+                  <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tighter leading-none mb-1 font-spartan">Sign In</h1>
+                  <p className={`text-xs sm:text-sm leading-relaxed mb-3 font-kumbh ${strongMutedClass}`}>
                     Use your registered email and password to access your account.
                   </p>
 
@@ -277,42 +280,44 @@ const LoginPage = () => {
                     </div>
                   )}
 
-                  <form onSubmit={handleLoginSubmit} className="space-y-5">
-                    <LoginForm
-                      email={email}
-                      password={password}
-                      onChange={(e) => {
-                        if (e.target.name === "email") setEmail(e.target.value);
-                        if (e.target.name === "password") setPassword(e.target.value);
-                      }}
-                      errors={errors}
-                      isDarkMode={isDarkMode}
-                    />
+                  <div className="mt-8">
+                    <form onSubmit={handleLoginSubmit} className="space-y-5">
+                      <LoginForm
+                        email={email}
+                        password={password}
+                        onChange={(e) => {
+                          if (e.target.name === "email") setEmail(e.target.value);
+                          if (e.target.name === "password") setPassword(e.target.value);
+                        }}
+                        errors={errors}
+                        isDarkMode={isDarkMode}
+                      />
 
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                      <label className={`inline-flex items-center gap-2 text-xs font-bold font-kumbh ${strongMutedClass}`}>
-                        <input type="checkbox" className="w-4 h-4" style={{ accentColor: primaryCss }} />
-                        Remember me
-                      </label>
-                      <button type="button" onClick={() => setShowForgotModal(true)}
-                        className={`text-xs font-black uppercase tracking-wide font-kumbh ${t.primaryText}`}>
-                        Forgot password?
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <label className={`inline-flex items-center gap-2 text-sm font-semibold font-kumbh ${strongMutedClass}`}>
+                          <input type="checkbox" className="w-4 h-4" style={{ accentColor: primaryCss }} />
+                          Remember me
+                        </label>
+                        <button type="button" onClick={() => setShowForgotModal(true)}
+                          className={`text-sm font-semibold font-kumbh ${t.primaryText}`}>
+                          Forgot password?
+                        </button>
+                      </div>
+
+                      <button type="submit" disabled={loginLoading}
+                        className={`w-full sm:w-auto sm:min-w-[280px] py-4 px-8 bg-gradient-to-r ${t.primaryGrad} text-white rounded-[24px] font-bold text-sm tracking-normal shadow-2xl disabled:opacity-30 transition-all active:scale-95 flex items-center justify-center gap-2 mx-auto !mt-10 font-kumbh`}>
+                        {loginLoading ? <Loader2 className="animate-spin" size={20} /> : "Login"}
+                      </button>
+                    </form>
+
+                    <div className={`mt-8 text-sm font-semibold tracking-normal flex flex-wrap items-center justify-center gap-2 font-kumbh ${mutedClass}`}>
+                      <span>No account yet?</span>
+                      <button type="button"
+                        onClick={() => navigate("/signup")}
+                        className={`${t.primaryText} transition-colors font-semibold hover:underline`}>
+                        Register here!
                       </button>
                     </div>
-
-                    <button type="submit" disabled={loginLoading}
-                      className={`w-full sm:w-auto sm:min-w-[280px] py-4 px-8 bg-gradient-to-r ${t.primaryGrad} text-white rounded-[24px] font-black text-sm uppercase tracking-widest shadow-2xl disabled:opacity-30 transition-all active:scale-95 flex items-center justify-center gap-2 mx-auto !mt-10 font-kumbh`}>
-                      {loginLoading ? <Loader2 className="animate-spin" size={20} /> : "Login Portal"}
-                    </button>
-                  </form>
-
-                  <div className={`mt-8 text-[11px] font-black uppercase tracking-[0.2em] flex flex-wrap items-center justify-center gap-2 font-kumbh ${mutedClass}`}>
-                    <span>No account yet?</span>
-                    <button type="button"
-                      onClick={() => navigate("/signup")}
-                      className={`${t.primaryText} transition-colors font-black uppercase tracking-[0.05em] hover:underline`}>
-                      Register here!
-                    </button>
                   </div>
                 </div>
               </section>

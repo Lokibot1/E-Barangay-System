@@ -23,8 +23,8 @@ const LoginForm = ({ email, password, onChange, errors = {}, isDarkMode }) => {
   };
 
   const inputClass = `
-    w-full pl-11 pr-4 py-3.5 rounded-2xl border-2 text-sm font-bold outline-none
-    transition-colors bg-transparent
+    w-full pl-11 pr-4 py-3.5 rounded-2xl border text-sm font-normal outline-none
+    transition-colors bg-transparent placeholder:font-normal
     ${isDarkMode
       ? "border-slate-600 text-white placeholder:text-slate-500 focus:border-emerald-500"
       : "border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500"
@@ -36,14 +36,16 @@ const LoginForm = ({ email, password, onChange, errors = {}, isDarkMode }) => {
   }`;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 text-left">
 
       {/* ── Username or Email ─────────────────────────────────────────── */}
       <div className="space-y-2">
-        <label className={`text-[10px] font-black uppercase tracking-widest ${
+        <label className={`text-sm font-semibold tracking-normal ${
           isDarkMode ? "text-slate-400" : "text-slate-500"
         }`}>
-          Username or Email
+          <span>Username or Email</span>
+          <span className="text-red-500 ml-1" aria-hidden="true">*</span>
+          <span className="sr-only">required</span>
         </label>
         <div className="relative">
           <User size={16} className={iconClass} />
@@ -66,10 +68,12 @@ const LoginForm = ({ email, password, onChange, errors = {}, isDarkMode }) => {
 
       {/* ── Password ──────────────────────────────────────────────────── */}
       <div className="space-y-2">
-        <label className={`text-[10px] font-black uppercase tracking-widest ${
+        <label className={`text-sm font-semibold tracking-normal ${
           isDarkMode ? "text-slate-400" : "text-slate-500"
         }`}>
-          Password
+          <span>Password</span>
+          <span className="text-red-500 ml-1" aria-hidden="true">*</span>
+          <span className="sr-only">required</span>
         </label>
         <div className="relative">
           <Lock size={16} className={iconClass} />
@@ -85,18 +89,20 @@ const LoginForm = ({ email, password, onChange, errors = {}, isDarkMode }) => {
             onMouseDown={handlePasswordKeyEvent}
             className={`${inputClass} pr-12`}
           />
-          <button
-            type="button"
-            onClick={() => setShowPassword((p) => !p)}
-            className={`absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors ${
-              isDarkMode
-                ? "text-slate-400 hover:text-slate-200"
-                : "text-slate-400 hover:text-slate-700"
-            }`}
-            aria-label={showPassword ? "Hide password" : "Show password"}
-          >
-            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
+          {password?.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowPassword((p) => !p)}
+              className={`absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors ${
+                isDarkMode
+                  ? "text-slate-400 hover:text-slate-200"
+                  : "text-slate-400 hover:text-slate-700"
+              }`}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
+            </button>
+          )}
         </div>
 
         {/* Caps Lock warning */}

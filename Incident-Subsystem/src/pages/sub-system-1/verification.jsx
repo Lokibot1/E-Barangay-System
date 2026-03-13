@@ -18,6 +18,7 @@ import ConfirmActionModal from '../../components/sub-system-1/verification/modal
 import VerificationTabs from '../../components/sub-system-1/verification/VerificationTabs';
 import ImageZoomOverlay from '../../components/sub-system-1/common/ImageZoomOverlay';
 import MinimizedSuccessCard from '../../components/sub-system-1/verification/MinimizedSuccessCard';
+import ScreenLoader from '../../components/shared/ScreenLoader';
 
 const Verification = () => {
   const [currentTheme, setCurrentTheme] = useState(
@@ -46,6 +47,7 @@ const Verification = () => {
   const [accountDetails, setAccountDetails] = useState(null);
   const [isMinimized,    setIsMinimized]    = useState(false);
   const [pendingAction,  setPendingAction]  = useState(null);
+  const [isActionSubmitting, setIsActionSubmitting] = useState(false);
 
   useEffect(() => { window.scrollTo(0, 0); }, [view]);
 
@@ -67,6 +69,7 @@ const Verification = () => {
   ];
 
   const handleAction = (id, status, isIndigent = 0, additionalData = {}) => {
+    if (isActionSubmitting) return;
     const actionText =
       status === 'Rejected'         ? 'REJECT'        :
       status === 'For Verification' ? 'SET FOR VISIT' : 'APPROVE';
@@ -74,26 +77,33 @@ const Verification = () => {
   };
 
   const confirmPendingAction = async () => {
-    if (!pendingAction) return;
+    if (!pendingAction || isActionSubmitting) return;
     const { id, status, isIndigent, additionalData } = pendingAction;
-    setPendingAction(null);
+    setIsActionSubmitting(true);
+    try {
+      const result = await updateStatus(id, status, isIndigent, additionalData);
 
-    const result = await updateStatus(id, status, isIndigent, additionalData);
-
-    if (result.success) {
-      if (status === 'Verified' || status === 'Approved') {
-        playFeedback('success');
-        setAccountDetails({ name: selectedRes?.name, ...result.residentData });
-        setShowSuccess(true);
-        setIsMinimized(false);
+      if (result.success) {
+        setPendingAction(null);
+        if (status === 'Verified' || status === 'Approved') {
+          playFeedback('success');
+          setAccountDetails({ name: selectedRes?.name, ...result.residentData });
+          setShowSuccess(true);
+          setIsMinimized(false);
+        } else {
+          setView('list');
+          setSelectedRes(null);
+          setActiveTab(status);
+        }
       } else {
-        setView('list');
-        setSelectedRes(null);
-        setActiveTab(status);
+        playFeedback('error');
+        alert(`Error: ${result.message}`);
       }
-    } else {
+    } catch (error) {
       playFeedback('error');
-      alert(`Error: ${result.message}`);
+      alert(`Error: ${error?.message || 'Failed to update status.'}`);
+    } finally {
+      setIsActionSubmitting(false);
     }
   };
 
@@ -115,6 +125,12 @@ const Verification = () => {
 
   return (
     <div className={`font-sans min-h-screen py-4 pb-24 px-3 sm:px-4 lg:px-5 relative ${t.pageBg}`}>
+      <ScreenLoader
+        show={isActionSubmitting}
+        title="Processing Request"
+        description="Updating the verification status. Please wait."
+        zIndexClass="z-[10020]"
+      />
 
       <ImageZoomOverlay
         isOpen={!!zoomedImg}
@@ -134,8 +150,11 @@ const Verification = () => {
 
       <ConfirmActionModal
         pendingAction={pendingAction}
-        onClose={() => setPendingAction(null)}
+        onClose={() => {
+          if (!isActionSubmitting) setPendingAction(null);
+        }}
         onConfirm={confirmPendingAction}
+        isSubmitting={isActionSubmitting}
         t={t}
       />
 
@@ -221,6 +240,7 @@ const Verification = () => {
             }
             onReject={() => handleAction(selectedRes.id, 'Rejected')}
             onZoom={setZoomedImg}
+            isActionSubmitting={isActionSubmitting}
             t={t}
             currentTheme={currentTheme}
           />

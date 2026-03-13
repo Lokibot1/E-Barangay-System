@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { isAdmin } from "../../homepage/services/loginService";
 import { useLanguage } from "../../context/LanguageContext";
+import { useBranding } from "../../context/BrandingContext";
 import themeTokens from "../../Themetokens";
 import logo from "../../assets/images/logo.jpg";
 import {
@@ -206,6 +207,8 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
   const t = themeTokens[currentTheme] || themeTokens.modern || themeTokens.blue;
   const isDark = currentTheme === "dark";
   const { tr } = useLanguage();
+  const { logoDataUrl } = useBranding();
+  const logoSrc = logoDataUrl || logo;
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -502,7 +505,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
               {/* Logo mark */}
               <button className="w-8 h-8 rounded-full shadow-sm flex-shrink-0 overflow-hidden">
                 <img
-                  src={logo}
+                  src={logoSrc}
                   alt="Barangay Gulod Logo"
                   className="w-full h-full object-cover"
                 />

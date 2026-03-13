@@ -20,6 +20,7 @@ import Step1PersonalInfo from './Step1PersonalInfo';
 import Step2Address from './Step2Address';
 import Step3WorkEducation from './Step3WorkEducation';
 import Step4Upload from './Step4Upload';
+import ScreenLoader from '../../components/shared/ScreenLoader';
 
 const SignupForm = ({
   formData,
@@ -175,6 +176,13 @@ const SignupForm = ({
 
   return (
     <div className={compactMode ? "space-y-4" : "space-y-6"}>
+      <ScreenLoader
+        show={loading}
+        title={isStaffMode ? "Saving Resident" : "Submitting Registration"}
+        description={isStaffMode
+          ? "Creating the resident profile. Please wait."
+          : "Sending your registration details. Please wait."}
+      />
 
       {/* Step indicator */}
       <div className={`flex items-center justify-between px-2 max-w-xl mx-auto ${compactMode ? "mb-5" : "mb-8"}`}>

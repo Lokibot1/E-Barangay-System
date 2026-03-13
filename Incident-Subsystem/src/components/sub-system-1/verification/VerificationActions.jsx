@@ -1,7 +1,14 @@
 import React from 'react';
 import Button from '../common/Button';
 
-const VerificationActions = ({ onApprove, onReject, onVisitBgy, currentStatus, t }) => {
+const VerificationActions = ({
+  onApprove,
+  onReject,
+  onVisitBgy,
+  currentStatus,
+  isActionSubmitting = false,
+  t,
+}) => {
   const status = currentStatus?.toLowerCase() || '';
   
   const isVerified = status === 'verified';
@@ -19,7 +26,7 @@ const VerificationActions = ({ onApprove, onReject, onVisitBgy, currentStatus, t
           variant="secondary"
           onClick={onVisitBgy}
     
-          disabled={isForVerification || isVerified}
+          disabled={isForVerification || isVerified || isActionSubmitting}
           t={t}
         />
       ) : (
@@ -31,7 +38,7 @@ const VerificationActions = ({ onApprove, onReject, onVisitBgy, currentStatus, t
         label={isRejected ? "Rejected" : "Reject"}
         variant="outline"
         onClick={onReject}
-        disabled={isVerified || isRejected}
+        disabled={isVerified || isRejected || isActionSubmitting}
         t={t}
       />
 
@@ -40,7 +47,7 @@ const VerificationActions = ({ onApprove, onReject, onVisitBgy, currentStatus, t
         label={isVerified ? "Verified" : "Approve"}
         variant="primary"
         onClick={onApprove}
-        disabled={isVerified}
+        disabled={isVerified || isActionSubmitting}
         t={t}
       />
       

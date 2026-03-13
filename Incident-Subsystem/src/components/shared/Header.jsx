@@ -6,8 +6,10 @@ import { logout, getUser, isAdmin } from "../../homepage/services/loginService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useRealTime } from "../../context/RealTimeContext";
 import { useUserRealTime } from "../../context/UserRealTimeContext";
+import { useBranding } from "../../context/BrandingContext";
 import themeTokens from "../../Themetokens";
 import logo from "../../assets/images/logo.jpg";
+import { getResidentProfilePhoto, syncResidentProfilePhoto } from "../../utils/profilePhoto";
 
 // ── Notification sound using Web Audio API (no mp3 file needed) ─────────
 const playNotificationSound = () => {
@@ -207,6 +209,23 @@ const getRelativeTime = (date) => {
   return `${Math.floor(diff / 86400)} days ago`;
 };
 
+const BellOutlineIcon = ({ className = "", strokeWidth = 2 }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={strokeWidth}
+      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+    />
+  </svg>
+);
+
 // ── Memoized notification list item ─────────────────────────────────────
 const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppointment, onViewRegistration, onCloseMenu }) => {
   const statusColor = notification.read ? "bg-gray-400" : "bg-amber-500";
@@ -330,7 +349,7 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
       : notification.type;
 
   const actionLabel = isRegistration
-    ? "Open pending list"
+    ? "View"
     : isAppointment
       ? "Open details"
       : null;
@@ -369,33 +388,17 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={`inline-flex items-center rounded-full px-2 py-1 text-[10px] font-bold font-kumbh uppercase tracking-wide ${
-              isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-600"
-            }`}>
-              {sourceLabel}
-            </span>
-            <span className={`inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold font-kumbh ${
-              unread
-                ? isDark
-                  ? "border border-violet-400/30 bg-violet-500/20 text-violet-200"
-                  : "border border-violet-200 bg-violet-100 text-violet-700"
-                : isDark
-                  ? "border border-slate-600 bg-slate-700 text-slate-300"
-                  : "border border-slate-200 bg-slate-100 text-slate-500"
-            }`}>
-              {unread ? "Unread" : "Read"}
-            </span>
-            {isStatusChange && (
+          {isStatusChange && (
+            <div className="flex items-center gap-2 flex-wrap">
               <span className={`rounded-full px-2 py-1 text-[10px] font-medium font-kumbh ${
                 isDark ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-600"
               }`}>
                 {capitalize(notification.oldStatus)} {"->"} {capitalize(notification.newStatus)}
               </span>
-            )}
-          </div>
+            </div>
+          )}
 
-          <p className={`mt-2.5 text-[13px] font-semibold leading-4.5 font-kumbh ${
+          <p className={`${isStatusChange ? "mt-2.5" : ""} text-[13px] font-semibold leading-4.5 font-kumbh ${
             isDark ? "text-slate-100" : "text-slate-900"
           }`}>
             {displayType}
@@ -415,8 +418,10 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
             </p>
 
             {actionLabel && (
-              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[9px] font-semibold font-kumbh ${
-                isDark ? "bg-slate-700 text-violet-200" : "bg-violet-50 text-violet-700"
+              <span className={`inline-flex items-center rounded-lg border px-3 py-1.5 text-[9px] font-semibold font-kumbh shadow-sm transition-colors ${
+                isDark
+                  ? "border-violet-400/30 bg-violet-500/20 text-violet-200"
+                  : "border-violet-200 bg-violet-100 text-violet-700"
               }`}>
                 {actionLabel}
               </span>
@@ -443,6 +448,8 @@ const Header = ({ currentTheme, onThemeChange }) => {
   const location = useLocation();
   const { language, setLanguage, tr } = useLanguage();
   const isSubSystem2Route = location.pathname.startsWith("/sub-system-2") || location.pathname.startsWith("/incident-complaint");
+  const { logoDataUrl } = useBranding();
+  const logoSrc = logoDataUrl || logo;
 
   // Real-time notifications — merge admin and user contexts
   const adminRT = useRealTime();
@@ -460,6 +467,29 @@ const Header = ({ currentTheme, onThemeChange }) => {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+  const [residentPhoto, setResidentPhoto] = useState(() =>
+    isAdminUser ? "" : getResidentProfilePhoto(user),
+  );
+
+  useEffect(() => {
+    if (isAdminUser) return;
+    setResidentPhoto(getResidentProfilePhoto(user));
+    syncResidentProfilePhoto(user)
+      .then((remote) => {
+        if (remote) setResidentPhoto(remote);
+      })
+      .catch(() => {});
+  }, [isAdminUser, user]);
+
+  useEffect(() => {
+    const handler = () => {
+      if (!isAdminUser) {
+        setResidentPhoto(getResidentProfilePhoto(user));
+      }
+    };
+    window.addEventListener("residentPhotoUpdated", handler);
+    return () => window.removeEventListener("residentPhotoUpdated", handler);
+  }, [isAdminUser, user]);
 
   const t = themeTokens[currentTheme];
   const isDark = currentTheme === "dark";
@@ -604,9 +634,9 @@ const Header = ({ currentTheme, onThemeChange }) => {
             {/* Logo */}
             <div className="flex items-center space-x-2 sm:space-x-3">
               <img
-                src={logo}
+                src={logoSrc}
                 alt="Barangay Gulod Logo"
-                className={`w-9 h-9 sm:w-11 sm:h-11 ${isAdminUser ? "rounded-xl" : "rounded-full"} shadow-lg object-cover`}
+                className="w-9 h-9 sm:w-11 sm:h-11 rounded-full shadow-lg object-cover"
               />
               <div className="hidden sm:block text-left">
                 <h1
@@ -633,19 +663,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                   className={`p-2 sm:p-2.5 ${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} ${isAdminUser ? `rounded-xl border ${t.cardBorder}` : "rounded-full"} transition-all relative`}
                   title="Notifications"
                 >
-                  <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                    />
-                  </svg>
+                  <BellOutlineIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                   {unreadCount > 0 && (
                     <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-red-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
                       {unreadCount > 99 ? "99+" : unreadCount}
@@ -690,19 +708,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                         <div
                           className={`rounded-2xl border p-8 text-center ${t.subtleText} ${isDark ? "border-slate-700 bg-slate-800/60" : "border-slate-200 bg-white"}`}
                         >
-                          <svg
-                            className="w-12 h-12 mx-auto mb-3 opacity-30"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={1.5}
-                              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                            />
-                          </svg>
+                          <BellOutlineIcon className="w-12 h-12 mx-auto mb-3 opacity-30" strokeWidth={1.5} />
                           <p className="text-sm font-kumbh font-semibold">
                             No history yet
                           </p>
@@ -725,7 +731,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                               : "bg-violet-50 text-violet-700 hover:bg-violet-100"
                           }`}
                         >
-                          Mark All as Read
+                          Mark all as read
                         </button>
                         <button
                           onClick={handleClearHistory}
@@ -735,7 +741,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                               : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800"
                           }`}
                         >
-                          Clear
+                          Clear all
                         </button>
                       </div>
                     )}
@@ -905,7 +911,15 @@ const Header = ({ currentTheme, onThemeChange }) => {
                   <div
                     className={`w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br ${t.primaryGrad} rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm`}
                   >
-                    {userInitials}
+                    {residentPhoto ? (
+                      <img
+                        src={residentPhoto}
+                        alt="Resident profile"
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    ) : (
+                      userInitials
+                    )}
                   </div>
                   <svg
                     className={`w-3 h-3 sm:w-4 sm:h-4 ${t.subtleText} hidden sm:block`}
@@ -933,7 +947,15 @@ const Header = ({ currentTheme, onThemeChange }) => {
                         <div
                           className={`w-10 h-10 bg-gradient-to-br ${t.primaryGrad} rounded-[16px] flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-lg`}
                         >
-                          {userInitials}
+                          {residentPhoto ? (
+                            <img
+                              src={residentPhoto}
+                              alt="Resident profile"
+                              className="h-full w-full rounded-[16px] object-cover"
+                            />
+                          ) : (
+                            userInitials
+                          )}
                         </div>
                         <div className="flex-1 min-w-0 text-left">
                           <p

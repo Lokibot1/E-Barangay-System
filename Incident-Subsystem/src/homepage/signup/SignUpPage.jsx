@@ -23,6 +23,7 @@ import SignupForm from "./SignUpForm";
 import { useAuthLogic } from "../hooks/useAuthLogic";
 import { isAuthenticated, isAdmin } from "../services/loginService";
 import { handleDownloadSlip } from "../../utils/sub-system-1/documentGenerator";
+import { useBranding } from "../../context/BrandingContext";
 
 import bsbPic from "../../assets/images/bgygulod.png";
 import bgyLogo from "../../assets/images/bgylogo.png";
@@ -35,6 +36,8 @@ const SignupPage = () => {
   const navigate    = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [draftBanner, setDraftBanner] = useState(false); // show resume-draft notice
+  const { logoDataUrl } = useBranding();
+  const logoSrc = logoDataUrl || bgyLogo;
 
   const {
     formData,
@@ -242,7 +245,7 @@ const SignupPage = () => {
                 </div>
                 <div className="mb-5 flex flex-col items-center text-center">
                   <div className={`mb-3 w-20 h-20 rounded-full overflow-hidden border-4 ${isDarkMode ? "border-white/20" : "border-slate-200"}`}>
-                    <img src={bgyLogo} alt="Logo" className="w-full h-full object-cover" />
+                    <img src={logoSrc} alt="Logo" className="w-full h-full object-cover" />
                   </div>
                   <h2 className="text-3xl font-black uppercase leading-[0.95] tracking-tight text-emerald-600 font-spartan">
                     Barangay<br />Gulod
