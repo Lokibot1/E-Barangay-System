@@ -18,6 +18,7 @@ import { login, saveAuth, isAuthenticated, isAdmin } from "../../homepage/servic
 import { useAuthLogic } from "../../homepage/auth/hooks/useAuthLogic";
 import SignupForm from "../../homepage/auth/signup/SignUpForm";
 import { handleDownloadSlip } from "../../utils/sub-system-1/documentGenerator";
+import { useBranding } from "../../context/BrandingContext";
 import bsbPic from "../../assets/images/bgygulod.png";
 import bgyLogo from "../../assets/images/bgylogo.png";
 
@@ -49,6 +50,8 @@ const LoginPage = () => {
   const [loginLoading, setLoginLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const { logoDataUrl } = useBranding();
+  const logoSrc = logoDataUrl || bgyLogo;
 
   const addToast = (toast) =>
     setToasts((prev) => [...prev, { ...toast, id: Date.now() }]);
@@ -305,7 +308,7 @@ const LoginPage = () => {
                       }`}
                     >
                       <img
-                        src={bgyLogo}
+                        src={logoSrc}
                         alt="Barangay Gulod Logo"
                         className="w-full h-full object-cover rounded-full"
                       />
@@ -511,7 +514,7 @@ const LoginPage = () => {
                         disabled={loginLoading}
                         className={`w-full sm:w-auto sm:min-w-[280px] py-4 px-8 bg-gradient-to-r ${t.primaryGrad} text-white rounded-[24px] font-black text-sm uppercase tracking-widest shadow-2xl disabled:opacity-30 transition-all active:scale-95 flex items-center justify-center gap-2 mx-auto !mt-10 font-kumbh`}
                       >
-                        {loginLoading ? <Loader2 className="animate-spin" size={20} /> : "Login Portal"}
+                        {loginLoading ? <Loader2 className="animate-spin" size={20} /> : "Login"}
                       </button>
                     </form>
 
@@ -562,7 +565,7 @@ const LoginPage = () => {
                       }`}
                     >
                       <img
-                        src={bgyLogo}
+                        src={logoSrc}
                         alt="Barangay Gulod Logo"
                         className="w-full h-full object-cover rounded-full"
                       />

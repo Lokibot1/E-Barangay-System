@@ -164,7 +164,7 @@ const ChangePasswordModal = ({ isOpen, onClose, currentTheme, onToast, onLogout 
             <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-600"}`}>
               <KeyRound className="h-4 w-4" />
             </div>
-            <div>
+            <div className="text-left">
               <h2 className={`text-[15px] font-bold font-spartan leading-tight ${isDark ? "text-slate-100" : t.cardText}`}>
                 Change Password
               </h2>

@@ -18,12 +18,12 @@ const InputField = ({
   return (
     <div className="form-group">
       <label
-        className={`block text-sm font-semibold ${t.labelText} mb-2 font-kumbh`}
+        className={`block text-sm font-semibold ${t.labelText} mb-4 font-kumbh`}
       >
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
-      <div className="relative">
+      <div className="relative mt-2">
         {icon && (
           <div className={`absolute left-3 top-1/2 -translate-y-1/2 ${t.subtleText} pointer-events-none`}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

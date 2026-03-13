@@ -16,6 +16,7 @@ import { LanguageProvider } from "./context/LanguageContext";
 import { RealTimeProvider } from "./context/RealTimeContext";
 import { UserRealTimeProvider } from "./context/UserRealTimeContext";
 import { UserProvider } from "./context/UserContext";
+import { BrandingProvider } from "./context/BrandingContext";
 import Layout from "./components/shared/Layout";
 
 // ── Route guards ─────────────────────────────────────────────────────────────
@@ -131,10 +132,11 @@ function App() {
   return (
     <LanguageProvider>
       <UserProvider>
-        <Router>
-          <ScrollToTop />
-          <div className="App">
-            <Routes>
+        <BrandingProvider>
+          <Router>
+            <ScrollToTop />
+            <div className="App">
+              <Routes>
 
               {/* ── PUBLIC ROUTES ───────────────────────────────────── */}
               <Route path="/login" element={<LoginPage />} />
@@ -212,12 +214,13 @@ function App() {
 
               <Route path="*" element={<Navigate to="/login" replace />} />
 
-            </Routes>
-            
-            <DebugAutofillGate setFormData={activeSetFormData} />
-            
-          </div>
-        </Router>
+              </Routes>
+              
+              <DebugAutofillGate setFormData={activeSetFormData} />
+              
+            </div>
+          </Router>
+        </BrandingProvider>
       </UserProvider>
     </LanguageProvider>
   );

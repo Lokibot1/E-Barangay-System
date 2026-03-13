@@ -1,7 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 
-const ConfirmActionModal = ({ pendingAction, onClose, onConfirm, t }) => {
+const ConfirmActionModal = ({ pendingAction, onClose, onConfirm, isSubmitting = false, t }) => {
   if (!pendingAction) return null;
 
   const getActionConfig = (status) => {
@@ -21,7 +21,7 @@ const ConfirmActionModal = ({ pendingAction, onClose, onConfirm, t }) => {
       <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-bold dark:text-white uppercase tracking-tight">Confirm Action</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} disabled={isSubmitting} className="text-slate-400 hover:text-slate-600 disabled:opacity-50">
             <X size={20}/>
           </button>
         </div>
@@ -30,12 +30,17 @@ const ConfirmActionModal = ({ pendingAction, onClose, onConfirm, t }) => {
             Are you sure you want to <strong>{pendingAction.actionText}</strong> this submission?
           </p>
           <div className="flex justify-end gap-2">
-            <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+            <button
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="px-4 py-2 rounded-lg text-sm font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-50"
+            >
               Cancel
             </button>
             <button
               onClick={onConfirm}
-              className={`px-4 py-2 rounded-lg text-sm font-bold text-white ${config.buttonClass}`}
+              disabled={isSubmitting}
+              className={`px-4 py-2 rounded-lg text-sm font-bold text-white disabled:opacity-60 disabled:cursor-not-allowed ${config.buttonClass}`}
             >
               {config.buttonText}
             </button>

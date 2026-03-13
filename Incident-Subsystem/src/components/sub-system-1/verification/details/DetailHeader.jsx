@@ -2,10 +2,19 @@ import React from 'react';
 import { ChevronLeft } from 'lucide-react';
 import VerificationActions from '../VerificationActions';
 
-const DetailHeader = ({ data, setView, onApprove, onReject, onVisitBgy, t }) => (
+const DetailHeader = ({
+  data,
+  setView,
+  onApprove,
+  onReject,
+  onVisitBgy,
+  isActionSubmitting,
+  t,
+}) => (
   <>
     <button
       onClick={() => setView('list')}
+      disabled={isActionSubmitting}
       className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-emerald-600 flex items-center gap-2 transition-colors"
     >
       <ChevronLeft size={18} /> Back to Queue
@@ -27,6 +36,7 @@ const DetailHeader = ({ data, setView, onApprove, onReject, onVisitBgy, t }) => 
         onApprove={onApprove}
         onReject={onReject}
         currentStatus={data?.status}
+        isActionSubmitting={isActionSubmitting}
         t={t}
       />
     </div>
