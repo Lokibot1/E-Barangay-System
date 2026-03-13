@@ -2,33 +2,37 @@ import api from "./Api";
 
 export const householdService = {
   getAll: async () => {
-    try {
+    const res = await api.get("/households");
+    return res.data;
+  },
 
-      const res = await api.get("/households"); 
-      return res.data;
-    } catch (error) {
-      console.error("Fetch Error:", error);
-      throw error;
-    }
+  getArchived: async () => {
+    const res = await api.get("/households/archived");
+    return res.data;
+  },
+
+  getAllLogs: async () => {
+    const res = await api.get("/households/logs");
+    return res.data;
+  },
+
+  getHistory: async (db_id) => {
+    const res = await api.get(`/households/${db_id}/history`);
+    return res.data;
   },
 
   update: async (db_id, payload) => {
-    try {
-      const res = await api.put(`/households/${db_id}`, payload);
-      return res.data;
-    } catch (error) {
-      console.error("Update Error:", error.response?.data || error.message);
-      throw error;
-    }
+    const res = await api.put(`/households/${db_id}`, payload);
+    return res.data;
   },
 
-  delete: async (db_id) => {
-    try {
-      await api.delete(`/households/${db_id}`);
-      return true;
-    } catch (error) {
-      console.error("Delete Error:", error);
-      return false;
-    }
+  deactivate: async (db_id) => {
+    const res = await api.delete(`/households/${db_id}/deactivate`);
+    return res.data;
+  },
+
+  restore: async (db_id) => {
+    const res = await api.post(`/households/${db_id}/restore`);
+    return res.data;
   },
 };

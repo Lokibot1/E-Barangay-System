@@ -1,15 +1,15 @@
 import React from 'react';
 import HouseholdRow from './householdrow';
 
-const HouseholdTable = ({ households, onView, onEdit, t, currentTheme = 'modern' }) => {
+const HouseholdTable = ({ households, onView, onEdit, onDeactivate, t, currentTheme = 'modern' }) => {
   const isDark = currentTheme === 'dark';
 
   const headers = [
-    "Household head and ID", 
-    "Location", 
-    "Classification", 
-    "Members", 
-    "Action" 
+    'Household head and ID',
+    'Location',
+    'Classification',
+    'Members',
+    'Action',
   ];
 
   return (
@@ -28,11 +28,12 @@ const HouseholdTable = ({ households, onView, onEdit, t, currentTheme = 'modern'
             {headers.map((header) => {
               const lower = header.toLowerCase();
               const isCentered = lower === 'members' || lower === 'action';
-
               return (
                 <th
                   key={header}
-                  className={`border-b px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.22em] ${isCentered ? 'text-center' : 'text-left'} ${t.subtleText} ${t.cardBorder} font-kumbh`}
+                  className={`border-b px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.22em] ${
+                    isCentered ? 'text-center' : 'text-left'
+                  } ${t.subtleText} ${t.cardBorder} font-kumbh`}
                 >
                   {header}
                 </th>
@@ -49,6 +50,7 @@ const HouseholdTable = ({ households, onView, onEdit, t, currentTheme = 'modern'
                 item={h}
                 onView={onView}
                 onEdit={onEdit}
+                onDeactivate={onDeactivate}
                 t={t}
                 currentTheme={currentTheme}
               />

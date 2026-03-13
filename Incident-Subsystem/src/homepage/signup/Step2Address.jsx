@@ -205,7 +205,7 @@ const Step2Address = ({
                     No. {addr.house_number} — {addr.street_name}
                   </p>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">
-                    Purok {addr.purok_name}
+                     {addr.purok_name}
                   </p>
                 </div>
               </button>
