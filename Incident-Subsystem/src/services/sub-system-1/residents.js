@@ -281,5 +281,31 @@ export const residentService = {
             };
         }
     },
+
+    getMyProfile: async () => {
+        const res = await api.get('/my/profile');
+        return res.data;
+    },
+
+    updateMyProfile: async (payload) => {
+        try {
+            const normalized = { ...(payload || {}) };
+            const contactValue =
+                payload?.contact_number ?? payload?.contactNumber ?? payload?.contact;
+            if (contactValue !== undefined) {
+                normalized.contact_number = contactValue;
+            }
+            delete normalized.contactNumber;
+            delete normalized.contact;
+
+            const res = await api.put('/my/profile', normalized);
+            return res.data;
+        } catch (err) {
+            return {
+                success: false,
+                error: err.response?.data?.error || err.message,
+            };
+        }
+    },
 };
 

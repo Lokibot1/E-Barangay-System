@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 import themeTokens from "../../Themetokens";
 import { authService } from "../../homepage/services/authService";
-import { getUser, isAdmin, logout } from "../../homepage/services/loginService";
+import { getUser, logout } from "../../homepage/services/loginService";
+import { residentService } from "../../services/sub-system-1/residents";
 import { getInitials } from "../../utils/avatar";
 import {
   getResidentProfilePhoto,
@@ -245,6 +246,101 @@ const normalizeRoleLabel = (role, adminAccount) => {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
+const applyProfileValue = (target, key, value) => {
+  if (value === undefined || value === null || value === "") return;
+  target[key] = value;
+};
+
+const mergeProfilePayload = (payload, fallback = {}) => {
+  if (!payload) return { ...fallback };
+
+  const resident = payload.resident || payload.data?.resident || {};
+  const account = payload.account || payload.data?.account || {};
+  const merged = { ...fallback, ...resident, ...account };
+
+  applyProfileValue(
+    merged,
+    "contact_number",
+    resident.contact_number ?? resident.contactNumber ?? resident.contact,
+  );
+  applyProfileValue(
+    merged,
+    "contact",
+    resident.contact_number ?? resident.contactNumber ?? resident.contact,
+  );
+  applyProfileValue(merged, "email", resident.email ?? account.email);
+  applyProfileValue(merged, "status", account.status_label ?? resident.status);
+  applyProfileValue(merged, "status_label", account.status_label);
+  applyProfileValue(merged, "role", account.role);
+  applyProfileValue(merged, "username", account.username);
+  applyProfileValue(merged, "resident_id", resident.id ?? account.resident_id);
+  applyProfileValue(merged, "account_id", account.id);
+
+  applyProfileValue(
+    merged,
+    "nationality",
+    resident.nationality_name ?? resident.nationalityName ?? resident.nationality,
+  );
+  applyProfileValue(
+    merged,
+    "marital_status",
+    resident.marital_status_name ?? resident.maritalStatusName ?? resident.marital_status,
+  );
+  applyProfileValue(
+    merged,
+    "sector_name",
+    resident.sector_name ?? resident.sectorName ?? resident.sector_name,
+  );
+  applyProfileValue(
+    merged,
+    "sector",
+    resident.sector_name ?? resident.sectorName ?? resident.sector,
+  );
+
+  applyProfileValue(merged, "house_number", resident.house_number ?? resident.houseNumber);
+  applyProfileValue(merged, "purok_name", resident.purok_name ?? resident.purok);
+  applyProfileValue(merged, "street_name", resident.street_name ?? resident.street);
+  applyProfileValue(merged, "full_address", resident.full_address ?? resident.fullAddress);
+
+  if (resident.is_voter !== undefined && resident.is_voter !== null) {
+    merged.is_voter = resident.is_voter;
+  } else if (resident.isVoter !== undefined && resident.isVoter !== null) {
+    merged.is_voter = resident.isVoter;
+  }
+
+  applyProfileValue(
+    merged,
+    "birth_registration",
+    resident.birth_registration ?? resident.birthRegistration,
+  );
+  applyProfileValue(
+    merged,
+    "residency_status",
+    resident.residency_status ?? resident.residencyType,
+  );
+  applyProfileValue(
+    merged,
+    "residency_start_date",
+    resident.residency_start_date ?? resident.residencyStartDate,
+  );
+  applyProfileValue(
+    merged,
+    "household_position",
+    resident.household_position ?? resident.householdPosition,
+  );
+
+  applyProfileValue(
+    merged,
+    "registered_at",
+    account.member_since ?? resident.member_since,
+  );
+  if (!merged.created_at && (account.member_since || resident.member_since)) {
+    merged.created_at = account.member_since || resident.member_since;
+  }
+
+  return merged;
+};
+
 const ProfileField = ({
   label,
   value,
@@ -351,6 +447,14 @@ export default function ProfilePage() {
   const [toasts, setToasts] = useState([]);
   const [view, setView] = useState("profile");
   const [logsEverOpened, setLogsEverOpened] = useState(false);
+  const [user, setUser] = useState(() => getUser() || {});
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [contactDraft, setContactDraft] = useState("");
+  const [emailDraft, setEmailDraft] = useState("");
+  const [contactSaving, setContactSaving] = useState(false);
+  const [contactError, setContactError] = useState("");
   const menuRef = useRef(null);
   const photoInputRef = useRef(null);
   const navigate = useNavigate();
@@ -406,10 +510,60 @@ export default function ProfilePage() {
 
   const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
-  const user = useMemo(() => getUser() || {}, []);
-  const adminAccount = isAdmin();
+  const adminAccount = user?.role === "admin";
   const isResident = !adminAccount;
-  const parsedName = useMemo(() => splitNameParts(user.name), [user.name]);
+  const parsedName = useMemo(() => splitNameParts(user?.name), [user?.name]);
+
+  useEffect(() => {
+    if (!isResident) return undefined;
+
+    let isMounted = true;
+    const loadProfile = async () => {
+      setProfileLoading(true);
+      setProfileError("");
+      try {
+        const payload = await residentService.getMyProfile();
+        if (!isMounted) return;
+
+        if (payload?.success === false) {
+          throw new Error(payload.error || payload.message || "Unable to load profile.");
+        }
+
+        setUser((prev) => {
+          const merged = mergeProfilePayload(payload, prev);
+          localStorage.setItem("authUser", JSON.stringify(merged));
+          return merged;
+        });
+      } catch (error) {
+        if (!isMounted) return;
+        setProfileError(error?.message || "Unable to load profile.");
+      } finally {
+        if (!isMounted) return;
+        setProfileLoading(false);
+      }
+    };
+
+    loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isResident]);
+
+  useEffect(() => {
+    setContactDraft(user?.contact_number || user?.contact || "");
+    setEmailDraft(user?.email || "");
+  }, [user?.contact_number, user?.contact, user?.email]);
+
+  useEffect(() => {
+    if (!profileError) return;
+    addToast({
+      type: "error",
+      title: "Unable to load profile",
+      message: profileError,
+      duration: 3000,
+    });
+  }, [profileError]);
 
   const userName = buildFullName(user);
   const userEmail = formatText(user.email, "No email on file");
@@ -417,8 +571,9 @@ export default function ProfilePage() {
     user.contact_number || user.contact || user.phone || user.mobile,
   );
   const roleLabel = normalizeRoleLabel(user.role, adminAccount);
-  const accountStatus = user.status
-    ? normalizeRoleLabel(user.status, false)
+  const statusValue = user.status_label || user.status;
+  const accountStatus = statusValue
+    ? normalizeRoleLabel(statusValue, false)
     : adminAccount
     ? "Active Staff Account"
     : "Active User Account";
@@ -426,6 +581,7 @@ export default function ProfilePage() {
   const accountId = formatText(
     user.staff_id ||
       user.employee_id ||
+      user.account_id ||
       user.barangay_id ||
       user.id,
   );
@@ -566,6 +722,72 @@ export default function ProfilePage() {
       setPhotoSaving(false);
     }
   };
+
+  const openContactModal = () => {
+    setContactModalOpen(true);
+    setContactError("");
+  };
+
+  const closeContactModal = () => {
+    if (contactSaving) return;
+    setContactModalOpen(false);
+    setContactError("");
+  };
+
+  const handleContactSave = async () => {
+    if (contactSaving) return;
+
+    const trimmedContact = contactDraft.trim();
+    const trimmedEmail = emailDraft.trim();
+    const payload = {};
+
+    if (trimmedContact) payload.contactNumber = trimmedContact;
+    if (trimmedEmail) payload.email = trimmedEmail;
+
+    if (!payload.contactNumber && !payload.email) {
+      setContactError("Please enter a contact number or email.");
+      return;
+    }
+
+    setContactSaving(true);
+    setContactError("");
+
+    try {
+      const response = await residentService.updateMyProfile(payload);
+      if (response?.success === false) {
+        throw new Error(response.error || response.message || "Unable to update profile.");
+      }
+
+      let nextPayload = response;
+      try {
+        const refreshed = await residentService.getMyProfile();
+        if (refreshed && refreshed.success !== false) {
+          nextPayload = refreshed;
+        }
+      } catch {
+        // Keep optimistic response if refresh fails.
+      }
+
+      setUser((prev) => {
+        const merged = mergeProfilePayload(nextPayload, prev);
+        localStorage.setItem("authUser", JSON.stringify(merged));
+        return merged;
+      });
+
+      addToast({
+        type: "success",
+        title: "Profile updated",
+        message: "Your contact details were saved.",
+        duration: 2500,
+      });
+      setContactModalOpen(false);
+    } catch (error) {
+      setContactError(error?.message || "Unable to update profile.");
+    } finally {
+      setContactSaving(false);
+    }
+  };
+
   const goToBranding = () => {
     navigate(adminAccount ? "/admin/settings?tab=branding" : "/settings?tab=branding");
   };
@@ -573,7 +795,7 @@ export default function ProfilePage() {
     ? "Admin Operations Workspace"
     : "Resident Services Workspace";
   const memberSince = formatDisplayDate(
-    user.created_at || user.registered_at || user.updated_at,
+    user.created_at || user.registered_at || user.member_since || user.updated_at,
   );
   const firstName = formatText(user.first_name || user.firstName || parsedName.firstName);
   const middleName = formatText(
@@ -584,13 +806,22 @@ export default function ProfilePage() {
   const gender = formatText(user.gender || user.sex);
   const birthDate = formatDisplayDate(user.birthdate || user.date_of_birth);
   const age = formatText(user.age || calculateAge(user.birthdate || user.date_of_birth));
-  const nationality = formatText(user.nationality, "Filipino");
+  const nationality = formatText(
+    user.nationality ||
+      user.nationality_name ||
+      user.nationalityName,
+    "Filipino",
+  );
   const civilStatus = normalizeMappedValue(
-    user.marital_status || user.maritalStatus || user.marital_status_id,
+    user.marital_status ||
+      user.maritalStatus ||
+      user.marital_status_name ||
+      user.maritalStatusName ||
+      user.marital_status_id,
     MARITAL_STATUS_LABELS,
   );
   const sector = normalizeMappedValue(
-    user.sector_name || user.sector || user.sector_id,
+    user.sector_name || user.sectorName || user.sector || user.sector_id,
     SECTOR_LABELS,
   );
   const birthRegistration = formatText(
@@ -843,6 +1074,128 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+      {contactModalOpen && (
+        <div className="fixed inset-0 z-[97] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+          <div
+            className={`w-full max-w-md rounded-[24px] border shadow-2xl ${
+              isDark
+                ? "bg-slate-900 border-slate-700 text-slate-100"
+                : `bg-white border-slate-200 ${t.cardText}`
+            }`}
+          >
+            <div
+              className={`flex items-center justify-between border-b px-5 py-4 ${
+                isDark ? "border-slate-700" : "border-slate-100"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={`flex h-8 w-8 items-center justify-center rounded-xl ${
+                    isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  <UserRound className="h-4 w-4" />
+                </div>
+                <div className="text-left">
+                  <h2
+                    className={`text-[15px] font-bold font-spartan leading-tight ${
+                      isDark ? "text-slate-100" : t.cardText
+                    }`}
+                  >
+                    Update Contact Info
+                  </h2>
+                  <p className={`text-[11px] font-kumbh ${isDark ? "text-slate-400" : t.subtleText}`}>
+                    Edit your contact number and email address.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={closeContactModal}
+                disabled={contactSaving}
+                className={`rounded-lg p-1.5 transition-colors ${
+                  isDark
+                    ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                    : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                }`}
+              >
+                <span className="sr-only">Close</span>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4 px-5 py-5">
+              <div className="space-y-2 text-left">
+                <label className={`text-[11px] font-semibold font-kumbh ${t.subtleText}`}>
+                  Contact Number
+                </label>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="09XXXXXXXXX"
+                  value={contactDraft}
+                  onChange={(e) => setContactDraft(e.target.value)}
+                  disabled={contactSaving}
+                  className={`w-full rounded-xl border px-3 py-2 text-[13px] font-kumbh outline-none transition ${
+                    isDark
+                      ? "border-slate-700 bg-slate-900/60 text-slate-100 focus:border-emerald-400/60"
+                      : "border-slate-200 bg-white text-slate-700 focus:border-emerald-400"
+                  }`}
+                />
+              </div>
+
+              <div className="space-y-2 text-left">
+                <label className={`text-[11px] font-semibold font-kumbh ${t.subtleText}`}>
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  placeholder="you@email.com"
+                  value={emailDraft}
+                  onChange={(e) => setEmailDraft(e.target.value)}
+                  disabled={contactSaving}
+                  className={`w-full rounded-xl border px-3 py-2 text-[13px] font-kumbh outline-none transition ${
+                    isDark
+                      ? "border-slate-700 bg-slate-900/60 text-slate-100 focus:border-emerald-400/60"
+                      : "border-slate-200 bg-white text-slate-700 focus:border-emerald-400"
+                  }`}
+                />
+              </div>
+
+              {contactError && (
+                <p className="text-left text-[12px] font-kumbh text-rose-600">
+                  {contactError}
+                </p>
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={closeContactModal}
+                  disabled={contactSaving}
+                  className={`rounded-full border px-4 py-2 text-[12px] font-semibold font-kumbh transition ${
+                    isDark
+                      ? "border-slate-700 text-slate-200 hover:bg-slate-800"
+                      : "border-slate-200 text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleContactSave}
+                  disabled={contactSaving}
+                  className={`rounded-full px-4 py-2 text-[12px] font-semibold font-kumbh text-white transition ${
+                    contactSaving ? "bg-slate-400 cursor-not-allowed" : t.primarySolid
+                  }`}
+                >
+                  {contactSaving ? "Saving..." : "Save"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="mx-auto max-w-7xl space-y-4">
         <div className="space-y-4 text-left">
           <div>
@@ -932,6 +1285,16 @@ export default function ProfilePage() {
               <p className={`mt-0.5 break-words text-left text-[12px] font-medium font-kumbh ${t.subtleText}`}>
                 {headerIdentity}
               </p>
+              {profileLoading && (
+                <p className={`mt-1 text-left text-[11px] font-kumbh ${t.subtleText}`}>
+                  Refreshing profile details...
+                </p>
+              )}
+              {profileError && !profileLoading && (
+                <p className="mt-1 text-left text-[11px] font-kumbh text-rose-500">
+                  {profileError}
+                </p>
+              )}
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <div
                   className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold font-kumbh ${
@@ -990,6 +1353,23 @@ export default function ProfilePage() {
                     <KeyRound className="h-4 w-4 shrink-0" />
                     Change Password
                   </button>
+
+                  {isResident && (
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false);
+                        openContactModal();
+                      }}
+                      className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[13px] font-semibold font-kumbh transition ${
+                        isDark
+                          ? "text-slate-200 hover:bg-slate-800"
+                          : "text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      <UserRound className="h-4 w-4 shrink-0" />
+                      Edit Contact Info
+                    </button>
+                  )}
 
                   {adminAccount && (
                     <button

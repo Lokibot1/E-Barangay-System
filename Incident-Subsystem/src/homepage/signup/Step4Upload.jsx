@@ -391,7 +391,14 @@ const TermsAndConditionModal = ({ isOpen, onClose, onAgree, alreadyAgreed, isDar
 };
 
 // ── Step4Upload ───────────────────────────────────────────────────────────────
-const CameraCaptureModal = ({ isOpen, onClose, onCapture, side, isDarkMode }) => {
+const CameraCaptureModal = ({
+  isOpen,
+  onClose,
+  onCapture,
+  side,
+  isDarkMode,
+  onFallbackCapture,
+}) => {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const [cameraError, setCameraError] = useState("");
@@ -419,6 +426,16 @@ const CameraCaptureModal = ({ isOpen, onClose, onCapture, side, isDarkMode }) =>
     let cancelled = false;
 
     const startCamera = async () => {
+      const isSecure =
+        typeof window !== "undefined" &&
+        (window.isSecureContext ||
+          ["localhost", "127.0.0.1"].includes(window.location?.hostname));
+
+      if (!isSecure) {
+        setCameraError("Camera access requires HTTPS or localhost.");
+        return;
+      }
+
       if (!navigator.mediaDevices?.getUserMedia) {
         setCameraError("This device or browser does not support camera access.");
         return;
@@ -585,6 +602,15 @@ const CameraCaptureModal = ({ isOpen, onClose, onCapture, side, isDarkMode }) =>
                     <p className="text-xs text-slate-300">
                       If camera access is unavailable here, use `UPLOAD PHOTO` as fallback.
                     </p>
+                    {onFallbackCapture && (
+                      <button
+                        type="button"
+                        onClick={onFallbackCapture}
+                        className="mt-1 rounded-xl bg-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/20"
+                      >
+                        Use Native Camera
+                      </button>
+                    )}
                   </>
                 )}
               </div>
@@ -655,18 +681,44 @@ const Step4Upload = ({
   const isContactValid = contactStr.length === 11 && contactStr.startsWith("09");
 
   const isReady = hasFront && hasBack && isContactValid && privacyAgreed && termsAgreed && !loading;
+  const canUseLiveCamera = () => {
+    if (typeof window === "undefined") return false;
+    const isSecure =
+      window.isSecureContext ||
+      ["localhost", "127.0.0.1"].includes(window.location?.hostname);
+    return isSecure && !!navigator.mediaDevices?.getUserMedia;
+  };
+
+  const openNativeCamera = (fieldName) => {
+    const targetInput = galleryInputRefs.current[fieldName];
+    if (targetInput) {
+      targetInput.value = "";
+      targetInput.setAttribute("capture", "environment");
+      targetInput.click();
+    }
+  };
+
+  const openUploadPicker = (fieldName) => {
+    const targetInput = galleryInputRefs.current[fieldName];
+    if (targetInput) {
+      targetInput.value = "";
+      targetInput.removeAttribute("capture");
+      targetInput.click();
+    }
+  };
+
   const openPicker = (fieldName, source) => {
     if (source === "camera") {
+      if (!canUseLiveCamera()) {
+        openNativeCamera(fieldName);
+        return;
+      }
       const side = fieldName === "idFront" ? "front" : "back";
       setCameraTarget({ fieldName, side });
       return;
     }
 
-    const targetInput = galleryInputRefs.current[fieldName];
-    if (targetInput) {
-      targetInput.value = "";
-      targetInput.click();
-    }
+    openUploadPicker(fieldName);
   };
 
   return (
@@ -695,6 +747,12 @@ const Step4Upload = ({
         onCapture={(file) => {
           if (!cameraTarget) return;
           handleCapturedFile(file, cameraTarget.side);
+        }}
+        onFallbackCapture={() => {
+          if (!cameraTarget) return;
+          const fieldName = cameraTarget.fieldName;
+          setCameraTarget(null);
+          openNativeCamera(fieldName);
         }}
         side={cameraTarget?.side || "front"}
         isDarkMode={isDarkMode}
