@@ -139,6 +139,7 @@ function App() {
               <Routes>
 
               {/* ── PUBLIC ROUTES ───────────────────────────────────── */}
+              <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -153,7 +154,6 @@ function App() {
                     </UserRealTimeProvider>
                   }
                 >
-                  <Route path="/" element={<HomePage />} />
                   <Route path="/sub-system-2" element={<SubSystem2MainPage />} />
                   <Route path="/sub-system-2/req-bid" element={<Req_BIDPage />} />
                   <Route path="/sub-system-2/req-coi" element={<Req_COIPage />} />
@@ -212,7 +212,7 @@ function App() {
                 </Route>
               </Route>
 
-              <Route path="*" element={<Navigate to="/login" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
 
               </Routes>
               
