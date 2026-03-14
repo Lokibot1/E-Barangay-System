@@ -554,8 +554,8 @@ export default function HeatmapTab({ raw, t }) {
                 <HeatmapMap purokData={purokData} metric={metric} t={t} onAreaClick={setSelectedPurok} />
 
                 {selectedPurok ? (
-                  <div className="pointer-events-none absolute inset-x-0 top-4 z-10 flex justify-center px-3">
-                    <div className={`pointer-events-auto w-full max-w-[244px] rounded-[24px] border shadow-[0_18px_36px_rgba(15,23,42,0.14)] ${t ? `${t.cardBg} ${t.cardBorder}` : 'bg-white border-gray-200'}`}>
+                  <div className="pointer-events-none absolute right-4 top-4 z-10 w-[240px] max-w-[75%] sm:w-[260px]">
+                    <div className={`pointer-events-auto max-h-[340px] overflow-y-auto rounded-[22px] border shadow-[0_18px_36px_rgba(15,23,42,0.14)] backdrop-blur-sm ${t ? `${t.cardBg} ${t.cardBorder}` : 'bg-white border-gray-200'} bg-white/90`}>
                       <div className={`px-4 py-3 border-b ${t ? t.cardBorder : 'border-gray-200'} flex items-center justify-between`}>
                         <div>
                           <h3 className={`text-[13px] font-bold ${t ? t.cardText : 'text-gray-800'}`}>{selectedPurok.purok}</h3>

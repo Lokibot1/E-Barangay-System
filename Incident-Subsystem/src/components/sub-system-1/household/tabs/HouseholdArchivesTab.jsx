@@ -121,9 +121,10 @@ const ArchiveRow = ({ item, onRestore, t, currentTheme }) => {
         <button
           onClick={() => onRestore(item)}
           title="Restore household"
-          className="inline-flex items-center gap-2 rounded-[18px] border border-emerald-300 px-4 py-3 text-emerald-600 text-xs font-semibold font-kumbh transition-all shadow-sm hover:bg-emerald-600 hover:text-white hover:border-emerald-600 active:scale-90"
+          className="group inline-flex items-center gap-2 rounded-[18px] border border-emerald-300 px-4 py-3 text-emerald-600 text-xs font-semibold font-kumbh transition-all shadow-sm hover:bg-emerald-600 hover:border-emerald-600 active:scale-90"
         >
-          <RotateCcw size={14} /> Restore
+          <RotateCcw size={14} />
+          <span className="group-hover:!text-white">Restore</span>
         </button>
       </td>
     </tr>
