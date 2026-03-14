@@ -50,6 +50,7 @@ export const useAuthLogic = (navigate) => {
     username: "", password: "",
     tenureStatus: "Owned", wallMaterial: "Concrete",
     roofMaterial: "G.I. Sheet", waterSource: "Maynilad",
+    numberOfFamilies: 1,
     isIndigent: 0,
   });
 

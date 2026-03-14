@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Search, X, ChevronDown, ChevronUp, Loader2, ScrollText,
-  Pencil, Trash2, RotateCcw, Landmark, Home, FileText, Layers, User,
+  Pencil, Trash2, RotateCcw, Landmark, Home, FileText, Layers, User, UsersRound
 } from 'lucide-react';
 import { householdService } from '../../../../services/sub-system-1/household';
 
@@ -38,6 +38,7 @@ const FIELD_META = {
   'Wall Material': { Icon: Layers,   color: 'text-slate-500' },
   'Roof Material': { Icon: Layers,   color: 'text-slate-500' },
   'Indigent':      { Icon: User,     color: 'text-rose-500'  },
+  'No of Families':{ Icon: UsersRound, color: 'text-emerald-500' },
 };
 
 const DEFAULT_META = { Icon: Pencil, color: 'text-slate-500' };

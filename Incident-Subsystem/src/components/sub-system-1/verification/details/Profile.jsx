@@ -38,6 +38,7 @@
         <InfoField label="Street" val={details?.street} />
         <InfoField label="Purok" val={details?.purok} />
         <InfoField label="Position in Family" val={details?.householdPosition} />
+        <InfoField label="Number of Families in Household" val={details?.numberOfFamilies} />
         
         {/* Dynamic Household Status Row */}
         <div className="mt-2 p-3 bg-slate-800/40 rounded-xl border border-slate-800">

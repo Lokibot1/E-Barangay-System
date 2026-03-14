@@ -53,14 +53,24 @@ const VerificationDetailView = (props) => {
   }, [data, isHead, isNewHousehold, existingIndigentStatus]);
 
   // ── Merge registration_payload into details ─────────────────────────────────
-  const combinedDetails = useMemo(() => ({
+  const combinedDetails = useMemo(() => {
+  // Kunin natin yung payload
+  const payload = data?.registration_payload || {};
+  
+  return {
     ...data?.details,
-    tenureStatus: data?.registration_payload?.tenure_status || data?.details?.tenureStatus,
-    wallMaterial: data?.registration_payload?.wall_material || data?.details?.wallMaterial,
-    roofMaterial: data?.registration_payload?.roof_material || data?.details?.roofMaterial,
-    waterSource:  data?.registration_payload?.water_source  || data?.details?.waterSource,
-  }), [data]);
+    tenureStatus: payload.tenure_status || data?.details?.tenureStatus,
+    wallMaterial: payload.wall_material || data?.details?.wallMaterial,
+    roofMaterial: payload.roof_material || data?.details?.roofMaterial,
+    waterSource:  payload.water_source  || data?.details?.waterSource,
 
+    numberOfFamilies: 
+      payload.num_families_reported || 
+      payload.number_of_families || 
+      data?.details?.numberOfFamilies || 
+      1, // Fallback kung wala talaga
+  };
+}, [data]);
   // ── Approve — pass indigency + housing survey data upstream ─────────────────
   const handleApproveClick = () => {
     if (onApprove) {
@@ -69,6 +79,7 @@ const VerificationDetailView = (props) => {
         wallMaterial: combinedDetails.wallMaterial,
         roofMaterial: combinedDetails.roofMaterial,
         waterSource:  combinedDetails.waterSource,
+        numberOfFamilies: combinedDetails.numberOfFamilies,
       });
     }
   };

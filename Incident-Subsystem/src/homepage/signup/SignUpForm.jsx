@@ -152,6 +152,7 @@ const SignupForm = ({
         { label:'Housing Status', value: val(formData.tenureStatus) },
         { label:'Wall Material',  value: val(formData.wallMaterial) },
         { label:'Roof Material',  value: val(formData.roofMaterial) },
+        { label: 'No. of Families', value: formData.numberOfFamilies || '1' },
       ] : []),
     ]},
     { title:'Education', rows:[
