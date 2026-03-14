@@ -13,13 +13,15 @@ const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => localStorage.getItem("sidebarCollapsed") === "true",
   );
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem("appTheme") || "modern",
   );
   const location = useLocation();
 
-  // Scroll to main content section on route change
+  // Close mobile sidebar and scroll to top on route change
   useEffect(() => {
+    setMobileSidebarOpen(false);
     const timer = setTimeout(() => {
       const el = document.getElementById("main-content");
       if (el) {
@@ -61,10 +63,17 @@ const Layout = () => {
         currentTheme={currentTheme}
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed((prev) => !prev)}
+        mobileOpen={mobileSidebarOpen}
+        onMobileToggle={(val) => setMobileSidebarOpen(typeof val === "boolean" ? val : (prev) => !prev)}
       />
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden transition-all duration-300 ease-in-out">
         <DateTimeBar currentTheme={currentTheme} />
-        <Header currentTheme={currentTheme} onThemeChange={handleThemeChange} />
+        <Header
+          currentTheme={currentTheme}
+          onThemeChange={handleThemeChange}
+          onMobileSidebarToggle={() => setMobileSidebarOpen((prev) => !prev)}
+          mobileSidebarOpen={mobileSidebarOpen}
+        />
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>

@@ -11,6 +11,7 @@ const TabsComponent = ({ activeTab, onTabChange, currentTheme }) => {
     {
       key: "complaints",
       label: "Submitted Complaints",
+      shortLabel: "Complaints",
       icon: (
         <svg
           className="w-4 h-4"
@@ -30,6 +31,7 @@ const TabsComponent = ({ activeTab, onTabChange, currentTheme }) => {
     {
       key: "incidents",
       label: "Submitted Incidents",
+      shortLabel: "Incidents",
       icon: (
         <svg
           className="w-4 h-4"
@@ -49,6 +51,7 @@ const TabsComponent = ({ activeTab, onTabChange, currentTheme }) => {
     {
       key: "appointments",
       label: "My Appointments",
+      shortLabel: "Appointments",
       icon: (
         <svg
           className="w-4 h-4"
@@ -84,10 +87,10 @@ const TabsComponent = ({ activeTab, onTabChange, currentTheme }) => {
   }, [activeTab]);
 
   return (
-    <div className="mb-6 sm:mb-8">
+    <div className="mb-6 sm:mb-8 overflow-x-auto">
       <div
         ref={containerRef}
-        className={`relative inline-flex ${t.cardBg} rounded-lg p-1 shadow-md border ${t.cardBorder}`}
+        className={`relative inline-flex min-w-full sm:min-w-0 ${t.cardBg} rounded-lg p-1 shadow-md border ${t.cardBorder}`}
       >
         {/* Sliding background */}
         <div
@@ -102,14 +105,15 @@ const TabsComponent = ({ activeTab, onTabChange, currentTheme }) => {
           <button
             key={tab.key}
             onClick={() => onTabChange(tab.key)}
-            className={`relative z-10 flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-md font-semibold text-sm transition-colors duration-300 font-kumbh whitespace-nowrap ${
+            className={`relative z-10 flex items-center justify-center gap-1.5 sm:gap-2 flex-1 sm:flex-none px-3 sm:px-5 py-2 sm:py-2.5 rounded-md font-semibold text-xs sm:text-sm transition-colors duration-300 font-kumbh whitespace-nowrap ${
               activeTab === tab.key
                 ? "text-white"
                 : `${t.subtleText} ${isDark ? "hover:text-slate-300" : "hover:text-slate-700"}`
             }`}
           >
             {tab.icon}
-            <span>{tab.label}</span>
+            <span className="hidden sm:inline">{tab.label}</span>
+            <span className="sm:hidden">{tab.shortLabel}</span>
           </button>
         ))}
       </div>

@@ -441,7 +441,7 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
   );
 });
 
-const Header = ({ currentTheme, onThemeChange }) => {
+const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSidebarOpen }) => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -641,6 +641,24 @@ const Header = ({ currentTheme, onThemeChange }) => {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center space-x-2 sm:space-x-3">
+              {/* Mobile sidebar burger */}
+              {onMobileSidebarToggle && (
+                <button
+                  onClick={onMobileSidebarToggle}
+                  className={`md:hidden flex-shrink-0 p-2 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.subtleText} hover:opacity-80 transition-all shadow-sm`}
+                  aria-label="Toggle menu"
+                >
+                  {mobileSidebarOpen ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  )}
+                </button>
+              )}
               <img
                 src={logoSrc}
                 alt="Barangay Gulod Logo"

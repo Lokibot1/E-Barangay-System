@@ -299,42 +299,37 @@ const ReportDetailModal = ({ isOpen, onClose, report, currentTheme }) => {
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
         <div className="absolute inset-0" onClick={onClose} />
 
-        <div className={`relative ${t.modalBg} rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-scaleIn`}>
+        <div className={`relative ${t.modalBg} rounded-2xl shadow-2xl w-full max-w-xl max-h-[94vh] flex flex-col animate-scaleIn`}>
           {/* Header */}
-          <div className={`sticky top-0 bg-gradient-to-r ${t.modalHeaderGrad} px-6 py-5 flex items-center justify-between border-b ${t.modalHeaderBorderBottom} rounded-t-2xl z-10`}>
-            <div className="flex items-center gap-3">
-              <div className={`${config.badge} text-white p-2 rounded-lg`}>
+          <div className={`flex-shrink-0 bg-gradient-to-r ${t.modalHeaderGrad} px-4 py-3 flex items-center justify-between border-b ${t.modalHeaderBorderBottom} rounded-t-2xl`}>
+            <div className="flex items-center gap-2">
+              <div className={`${config.badge} text-white p-1.5 rounded-lg [&_svg]:w-4 [&_svg]:h-4`}>
                 {config.icon}
               </div>
-              <div>
-                <h2 className={`text-2xl font-bold ${t.modalTitle} font-spartan`}>
-                  Report Details
-                </h2>
-              </div>
+              <h2 className={`text-base font-bold ${t.modalTitle} font-spartan`}>Report Details</h2>
             </div>
             <button
               onClick={onClose}
-              className={`p-2 ${t.modalCloseBtnColor} ${t.modalCloseBtnHover} ${t.modalCloseBtnHoverBg} rounded-lg transition-all`}
+              className={`p-1.5 ${t.modalCloseBtnColor} ${t.modalCloseBtnHover} ${t.modalCloseBtnHoverBg} rounded-lg transition-all`}
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
-          {/* Content */}
-          <div className="p-6 space-y-6">
-            {/* Status Badge */}
+          {/* Scrollable body */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+
+            {/* Status + date */}
             <div className="flex items-center justify-between">
-              <span className={`${config.badge} text-white px-4 py-2 rounded-full font-semibold font-kumbh capitalize`}>
+              <span className={`${config.badge} text-white px-2.5 py-0.5 rounded-full text-xs font-semibold font-kumbh capitalize`}>
                 {report.status}
               </span>
-              <span className={`text-sm ${t.subtleText} font-kumbh`}>
-                {report.date}
-              </span>
+              <span className={`text-xs ${t.subtleText} font-kumbh`}>{report.date}</span>
             </div>
 
-            {/* Evidence — image or video */}
+            {/* Evidence */}
             {isVideoUrl(report.image) ? (
               <div
                 className="relative w-full rounded-xl overflow-hidden bg-gray-900 flex items-center justify-center cursor-pointer group"
@@ -342,78 +337,70 @@ const ReportDetailModal = ({ isOpen, onClose, report, currentTheme }) => {
               >
                 <video
                   src={report.image}
-                  className="w-full max-h-80 object-cover opacity-60"
+                  className="w-full max-h-52 object-cover opacity-60"
                   muted
                   preload="metadata"
                   onLoadedMetadata={(e) => { e.currentTarget.currentTime = 0.1; }}
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="bg-black/50 rounded-full p-4 group-hover:bg-black/70 transition-colors">
-                    <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-black/50 rounded-full p-3 group-hover:bg-black/70 transition-colors">
+                    <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M8 5v14l11-7z" />
                     </svg>
                   </div>
                 </div>
-                <span className="absolute bottom-3 left-3 bg-black/60 text-white text-xs font-bold px-2 py-1 rounded font-kumbh uppercase tracking-wide">
+                <span className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded font-kumbh uppercase tracking-wide">
                   VIDEO — Click to play
                 </span>
               </div>
             ) : (
               <div
-                className="rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center cursor-zoom-in"
+                className={`rounded-xl overflow-hidden ${isDark ? "bg-slate-700" : "bg-slate-100"} flex items-center justify-center cursor-zoom-in`}
                 onClick={openMediaViewer}
               >
                 <img
                   src={report.image || defaultImage}
                   alt={report.title}
-                  className="w-full max-h-80 object-contain hover:opacity-90 transition-opacity"
+                  className="w-full max-h-52 object-contain hover:opacity-90 transition-opacity"
                 />
               </div>
             )}
 
             {/* Title & Category */}
             <div>
-              <h3 className={`text-3xl font-bold ${t.cardText} mb-2 font-spartan`}>
-                {report.title}
-              </h3>
-              <p className={`text-lg ${t.subtleText} font-kumbh`}>
-                {report.category}
-              </p>
+              <h3 className={`text-lg font-bold ${t.cardText} font-spartan leading-tight`}>{report.title}</h3>
+              <p className={`text-xs ${t.subtleText} font-kumbh mt-0.5`}>{report.category}</p>
             </div>
 
-            {/* Info Grid */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className={`${isDark ? "bg-slate-700/50" : "bg-slate-50"} rounded-lg p-4`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <svg className={`w-5 h-5 ${t.primaryText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {/* Info row */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className={`${isDark ? "bg-slate-700/50" : "bg-slate-50"} rounded-lg p-2.5`}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <svg className={`w-3.5 h-3.5 ${t.primaryText} flex-shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  <span className={`text-sm font-semibold ${t.subtleText} font-kumbh`}>Location</span>
+                  <span className={`text-[10px] font-semibold ${t.subtleText} font-kumbh uppercase tracking-wide`}>Location</span>
                 </div>
-                <p className={`${t.cardText} font-kumbh`}>{report.location}</p>
+                <p className={`text-xs ${t.cardText} font-kumbh`}>{report.location}</p>
               </div>
-
-              <div className={`${isDark ? "bg-slate-700/50" : "bg-slate-50"} rounded-lg p-4`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <svg className={`w-5 h-5 ${t.primaryText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className={`${isDark ? "bg-slate-700/50" : "bg-slate-50"} rounded-lg p-2.5`}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <svg className={`w-3.5 h-3.5 ${t.primaryText} flex-shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <span className={`text-sm font-semibold ${t.subtleText} font-kumbh`}>Date Submitted</span>
+                  <span className={`text-[10px] font-semibold ${t.subtleText} font-kumbh uppercase tracking-wide`}>Submitted</span>
                 </div>
-                <p className={`${t.cardText} font-kumbh`}>{report.date}</p>
+                <p className={`text-xs ${t.cardText} font-kumbh`}>{report.date}</p>
               </div>
             </div>
 
             {/* Description */}
             <div>
-              <h4 className={`text-lg font-bold ${t.cardText} mb-3 font-spartan`}>
-                Description
-              </h4>
-              <p className={`${t.subtleText} leading-relaxed font-kumbh`}>
-                {report.description}
-              </p>
+              <p className={`text-xs font-bold ${t.subtleText} font-kumbh uppercase tracking-wide mb-1`}>Description</p>
+              <p className={`text-sm ${t.cardText} leading-relaxed font-kumbh`}>{report.description}</p>
             </div>
+
           </div>
         </div>
 
