@@ -39,6 +39,7 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const bodyRef = useRef(null);
   const [incidentTypeOptions, setIncidentTypeOptions] = useState([]);
   const [typesLoading, setTypesLoading] = useState(false);
   const [customFieldDefs, setCustomFieldDefs] = useState([]);
@@ -203,9 +204,11 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     const stepErrors = validate(currentStep);
     if (Object.keys(stepErrors).length > 0) {
       setErrors(stepErrors);
+      bodyRef.current?.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     setErrors({});
+    bodyRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     if (currentStep < totalSteps) setCurrentStep(currentStep + 1);
   };
 
@@ -219,6 +222,7 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     const stepErrors = validate(currentStep);
     if (Object.keys(stepErrors).length > 0) {
       setErrors(stepErrors);
+      bodyRef.current?.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -340,7 +344,7 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
           </div>
 
           {/* Body */}
-          <div className="relative flex-1 overflow-y-auto">
+          <div ref={bodyRef} className="relative flex-1 overflow-y-auto">
             {/* Draft restore prompt */}
             {showDraftPrompt && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm">

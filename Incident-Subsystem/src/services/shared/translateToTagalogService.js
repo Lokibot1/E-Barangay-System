@@ -241,7 +241,9 @@ const translations = {
       severityRequired: "Please select a severity level.",
       descriptionRequired: "A detailed description is required.",
       complainantRequired: "Complainant name is required.",
+      contactRequired: "Complainant contact number is required.",
       respondentRequired: "Respondent name is required.",
+      coordinatesRequired: "Please pin the location on the map.",
     },
 
     // ── Incident Form ───────────────────────────────────────────────────────
@@ -557,7 +559,9 @@ const translations = {
       severityRequired: "Mangyaring pumili ng antas ng kalubhaan.",
       descriptionRequired: "Kinakailangan ang detalyadong paglalarawan.",
       complainantRequired: "Kinakailangan ang pangalan ng nagreklamo.",
+      contactRequired: "Kinakailangan ang contact number ng nagreklamo.",
       respondentRequired: "Kinakailangan ang pangalan ng respondent.",
+      coordinatesRequired: "Mangyaring i-pin ang lokasyon sa mapa.",
     },
 
     incidentForm: {

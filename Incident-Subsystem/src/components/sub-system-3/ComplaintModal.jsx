@@ -58,6 +58,7 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
   const [showDraftPrompt, setShowDraftPrompt] = useState(false);
   const pendingDraftRef = useRef(null);
   const submittedRef = useRef(false);
+  const bodyRef = useRef(null);
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -190,6 +191,8 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
         if (!formData.complaintTime.trim())
           errs.complaintTime = cm.timeRequired;
         if (!formData.location.trim()) errs.location = cm.locationRequired;
+        if (!formData.latitude || !formData.longitude)
+          errs.latitude = cm.coordinatesRequired;
         break;
       case 2:
         if (!formData.complaintType)
@@ -202,6 +205,8 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
       case 3:
         if (!formData.complainantName.trim())
           errs.complainantName = cm.complainantRequired;
+        if (!formData.complainantContact?.trim())
+          errs.complainantContact = cm.contactRequired;
         if (!formData.respondentName.trim())
           errs.respondentName = cm.respondentRequired;
         break;
@@ -216,9 +221,11 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
     const stepErrors = validate(currentStep);
     if (Object.keys(stepErrors).length > 0) {
       setErrors(stepErrors);
+      bodyRef.current?.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     setErrors({});
+    bodyRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     if (currentStep < totalSteps) setCurrentStep(currentStep + 1);
   };
 
@@ -229,6 +236,12 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
 
   // ─── Submit ─────────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
+    const stepErrors = validate(currentStep);
+    if (Object.keys(stepErrors).length > 0) {
+      setErrors(stepErrors);
+      bodyRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     setIsSubmitting(true);
     try {
       await fileComplaint(formData);
@@ -350,7 +363,7 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
           </div>
 
           {/* Body */}
-          <div className="relative flex-1 overflow-y-auto">
+          <div ref={bodyRef} className="relative flex-1 overflow-y-auto">
             {/* Draft restore prompt */}
             {showDraftPrompt && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm">
