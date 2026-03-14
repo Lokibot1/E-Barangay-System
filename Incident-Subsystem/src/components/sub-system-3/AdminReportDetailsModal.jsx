@@ -271,6 +271,7 @@ const AdminReportDetailsModal = ({
   onStatusUpdate,
 }) => {
   const [modalTab, setModalTab] = useState("details");
+  const [slideDir, setSlideDir] = useState("right");
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showDispatch, setShowDispatch] = useState(false);
   const [officials, setOfficials] = useState(["", "", ""]);
@@ -513,7 +514,6 @@ const AdminReportDetailsModal = ({
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4"
           onClick={() => setMediaViewerOpen(false)}
         >
-          {/* Close button */}
           <button
             className="absolute top-4 right-4 z-10 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-colors"
             onClick={() => setMediaViewerOpen(false)}
@@ -523,20 +523,12 @@ const AdminReportDetailsModal = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-
-          <div
-            className="relative w-full max-w-3xl"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="relative w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
             {mediaViewerType === "video" ? (
               <VideoPlayer url={mediaViewerUrl} />
             ) : (
               <div className="flex items-center justify-center">
-                <img
-                  src={mediaViewerUrl}
-                  alt="Evidence full view"
-                  className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
-                />
+                <img src={mediaViewerUrl} alt="Evidence full view" className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl" />
               </div>
             )}
           </div>
@@ -548,476 +540,167 @@ const AdminReportDetailsModal = ({
         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       >
-      <div
-        className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal Header */}
-        <div className="bg-gray-800 dark:bg-gray-950 text-white px-5 py-3 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className="text-white/80 hover:text-white transition-colors"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-                />
+        <div
+          className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* ── Header ── */}
+          <div className="bg-gray-100 dark:bg-gray-950 border-b border-gray-200 dark:border-gray-700 px-5 py-3 flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5 flex-shrink-0 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {reportType === "complaints" ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                )}
+              </svg>
+              <h2 className="text-sm font-bold font-spartan tracking-wide text-gray-900 dark:text-white">
+                {reportType === "complaints" ? "COMPLAINT" : "INCIDENT"} ID #{incident.id}
+              </h2>
+            </div>
+            <button onClick={onClose} className="text-gray-500 dark:text-white/80 hover:text-gray-900 dark:hover:text-white transition-colors">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <h2 className="text-sm font-bold font-spartan tracking-wide">
-              {reportType === "complaints" ? "COMPLAINT" : "INCIDENT"} ID #{" "}
-              {incident.id}
-            </h2>
           </div>
-          <button onClick={onClose} className="text-white/80 hover:text-white">
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
 
-        {/* Scrollable Body */}
-        <div className="flex-1 overflow-y-auto">
-          {/* Photo / Video Section */}
-          {incident.photos && incident.photos.length > 0 ? (
-            <div className="relative bg-gray-900">
-              {isVideoUrl(incident.photos[photoIndex]) ? (
-                /* Video thumbnail with play overlay */
-                <div
-                  className="relative w-full h-56 bg-gray-900 flex items-center justify-center cursor-pointer group"
-                  onClick={() => openMediaViewer(incident.photos[photoIndex])}
-                >
-                  <video
-                    src={incident.photos[photoIndex]}
-                    className="w-full h-56 object-cover opacity-60"
-                    muted
-                    preload="metadata"
-                    onLoadedMetadata={(e) => { e.currentTarget.currentTime = 0.1; }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="bg-black/50 rounded-full p-4 group-hover:bg-black/70 transition-colors">
-                      <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
+          {/* ── Two-column body ── */}
+          <div className="flex-1 grid grid-cols-[320px_1fr] min-h-0 divide-x divide-gray-200 dark:divide-gray-700">
+
+            {/* ── LEFT: Media + Incident Info ── */}
+            <div className="overflow-y-auto">
+              {/* Photo / Video */}
+              {incident.photos && incident.photos.length > 0 ? (
+                <div className="relative bg-gray-900">
+                  {isVideoUrl(incident.photos[photoIndex]) ? (
+                    <div
+                      className="relative w-full h-48 bg-gray-900 flex items-center justify-center cursor-pointer group"
+                      onClick={() => openMediaViewer(incident.photos[photoIndex])}
+                    >
+                      <video
+                        src={incident.photos[photoIndex]}
+                        className="w-full h-48 object-cover opacity-60"
+                        muted preload="metadata"
+                        onLoadedMetadata={(e) => { e.currentTarget.currentTime = 0.1; }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-black/50 rounded-full p-3 group-hover:bg-black/70 transition-colors">
+                          <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                        </div>
+                      </div>
+                      <span className="absolute bottom-2 left-2 bg-black/60 text-white text-xs font-bold px-2 py-1 rounded font-kumbh uppercase tracking-wide">
+                        VIDEO — Click to play
+                      </span>
                     </div>
-                  </div>
-                  <span className="absolute bottom-3 left-3 bg-black/60 text-white text-xs font-bold px-2 py-1 rounded font-kumbh uppercase tracking-wide">
-                    VIDEO — Click to play
-                  </span>
-                </div>
-              ) : (
-                /* Clickable image */
-                <img
-                  src={incident.photos[photoIndex]}
-                  alt={`Evidence ${photoIndex + 1}`}
-                  className="w-full h-56 object-cover cursor-zoom-in hover:opacity-90 transition-opacity"
-                  onClick={() => openMediaViewer(incident.photos[photoIndex])}
-                />
-              )}
-              {/* View Edit History badge */}
-              <button className="absolute top-3 right-3 bg-gray-800/80 text-white text-xs font-bold px-3 py-1.5 rounded font-kumbh uppercase hover:bg-gray-800 transition-colors">
-                View Edit History
-              </button>
-              {/* Photo navigation */}
-              {incident.photos.length > 1 && (
-                <>
-                  <button
-                    onClick={() =>
-                      setPhotoIndex((prev) =>
-                        prev > 0 ? prev - 1 : incident.photos.length - 1,
-                      )
-                    }
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/70"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 19l-7-7 7-7"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() =>
-                      setPhotoIndex((prev) =>
-                        prev < incident.photos.length - 1 ? prev + 1 : 0,
-                      )
-                    }
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/70"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </button>
-                  {/* Dots indicator */}
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                    {incident.photos.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setPhotoIndex(i)}
-                        className={`w-2 h-2 rounded-full transition-colors ${
-                          i === photoIndex ? "bg-white" : "bg-white/50"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="bg-gray-100 dark:bg-gray-800 h-40 flex items-center justify-center">
-              <div className="text-center text-gray-400 dark:text-gray-500">
-                <svg
-                  className="w-10 h-10 mx-auto mb-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                <p className="text-xs font-kumbh">No photos attached</p>
-              </div>
-            </div>
-          )}
-
-          {/* Type + Status Badge */}
-          <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-            <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 font-spartan uppercase">
-              {incident.type}
-            </h3>
-            <span
-              className="px-3 py-1 rounded-full text-xs font-bold text-white font-kumbh uppercase"
-              style={{ backgroundColor: statusCfg?.color }}
-            >
-              {statusCfg?.label}
-            </span>
-          </div>
-
-          {/* Last Updated */}
-          <div className="px-5 pb-3 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 font-kumbh">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <span>
-              LAST UPDATED:{" "}
-              {new Date(incident.lastUpdated).toLocaleDateString("en-US", {
-                month: "2-digit",
-                day: "2-digit",
-                year: "numeric",
-              })}{" "}
-              {new Date(incident.lastUpdated).toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-              })}
-            </span>
-          </div>
-
-          {/* Details / Updates Tabs */}
-          <div className="px-5 flex gap-2 mb-4">
-            <button
-              onClick={() => {
-                setModalTab("details");
-                setShowDispatch(false);
-                setShowNotes(false);
-                setShowUpdate(false);
-              }}
-              className={`px-5 py-2 rounded-lg text-xs font-bold font-kumbh uppercase transition-all duration-200 ${
-                modalTab === "details" &&
-                !showDispatch &&
-                !showNotes &&
-                !showUpdate
-                  ? "bg-gray-700 dark:bg-gray-600 text-white"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-              }`}
-            >
-              Details
-            </button>
-            <button
-              onClick={() => {
-                setModalTab("updates");
-                setShowDispatch(false);
-                setShowNotes(false);
-                setShowUpdate(false);
-              }}
-              className={`px-5 py-2 rounded-lg text-xs font-bold font-kumbh uppercase transition-all duration-200 ${
-                modalTab === "updates" &&
-                !showDispatch &&
-                !showNotes &&
-                !showUpdate
-                  ? "bg-gray-700 dark:bg-gray-600 text-white"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-              }`}
-            >
-              Updates
-            </button>
-          </div>
-
-          {/* Tab / Dispatch / Notes / Update Content */}
-          <div className="transition-all duration-300 ease-in-out">
-            {showUpdate ? (
-              /* ── Add Update Form ── */
-              <div className="px-5 pb-5 animate-fadeIn">
-                <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 font-kumbh uppercase text-center mb-3">
-                  Add Update
-                </h3>
-                <hr className="border-gray-300 dark:border-gray-700 mb-4" />
-                <textarea
-                  value={updateText}
-                  onChange={(e) => setUpdateText(e.target.value)}
-                  placeholder="Enter update details here ..."
-                  rows={6}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-kumbh text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200"
-                />
-                <input
-                  ref={updateAttachmentRef}
-                  type="file"
-                  accept="image/*,.pdf"
-                  className="hidden"
-                  onChange={(e) => setUpdateAttachment(e.target.files?.[0] || null)}
-                />
-                <button
-                  type="button"
-                  onClick={() => updateAttachmentRef.current?.click()}
-                  className="w-full mt-3 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                  </svg>
-                  {updateAttachment ? updateAttachment.name : "+ Add Attachment"}
-                </button>
-                {updateAttachment && (
-                  <button
-                    type="button"
-                    onClick={() => { setUpdateAttachment(null); if (updateAttachmentRef.current) updateAttachmentRef.current.value = ""; }}
-                    className="w-full mt-1.5 text-xs text-red-500 dark:text-red-400 font-kumbh hover:underline"
-                  >
-                    Remove attachment
-                  </button>
-                )}
-                <button
-                  onClick={handleSaveUpdate}
-                  disabled={isUpdating}
-                  className="w-full mt-3 py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
-                >
-                  {isUpdating ? "Saving..." : "Save Update"}
-                </button>
-              </div>
-            ) : showNotes ? (
-              /* ── Add Notes Form ── */
-              <div className="px-5 pb-5 animate-fadeIn">
-                <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 font-kumbh uppercase text-center mb-3">
-                  Add Notes
-                </h3>
-                <hr className="border-gray-300 dark:border-gray-700 mb-4" />
-                <textarea
-                  value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
-                  placeholder="Enter your notes here ..."
-                  rows={6}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-kumbh text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200"
-                />
-                <div className="flex gap-3 mt-3">
-                  <button
-                    onClick={() => {
-                      setShowNotes(false);
-                      setNoteText("");
-                    }}
-                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh uppercase hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveNotes}
-                    disabled={isUpdating}
-                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh uppercase hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
-                  >
-                    {isUpdating ? "Saving..." : "Save"}
-                  </button>
-                </div>
-              </div>
-            ) : showDispatch ? (
-              /* ── Dispatch Team Form ── */
-              <div className="px-5 pb-5 animate-fadeIn">
-                <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 font-kumbh uppercase text-center mb-3">
-                  Dispatch Team
-                </h3>
-                <hr className="border-gray-300 dark:border-gray-700 mb-4" />
-                <div className="space-y-3">
-                  {officials.map((official, idx) => (
-                    <input
-                      key={idx}
-                      type="text"
-                      value={official}
-                      onChange={(e) => {
-                        const updated = [...officials];
-                        updated[idx] = e.target.value;
-                        setOfficials(updated);
-                      }}
-                      placeholder="+ Add Official"
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-kumbh text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all duration-200"
+                  ) : (
+                    <img
+                      src={incident.photos[photoIndex]}
+                      alt={`Evidence ${photoIndex + 1}`}
+                      className="w-full h-48 object-cover cursor-zoom-in hover:opacity-90 transition-opacity"
+                      onClick={() => openMediaViewer(incident.photos[photoIndex])}
                     />
-                  ))}
-                </div>
-                <div className="flex gap-3 mt-4">
-                  <button
-                    onClick={() => {
-                      setShowDispatch(false);
-                      if (!dispatchedTeam) setOfficials(["", "", ""]);
-                      else setOfficials([...dispatchedTeam.officials]);
-                    }}
-                    className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh uppercase hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200"
-                  >
-                    Cancel
+                  )}
+                  <button className="absolute top-2 right-2 bg-gray-800/80 text-white text-xs font-bold px-2.5 py-1 rounded font-kumbh uppercase hover:bg-gray-800 transition-colors">
+                    View Edit History
                   </button>
-                  <button
-                    onClick={handleSaveDispatch}
-                    disabled={isUpdating}
-                    className="flex-1 py-2.5 rounded-lg bg-amber-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-amber-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
-                  >
-                    {isUpdating ? "Saving..." : "Save Dispatch"}
-                  </button>
-                </div>
-              </div>
-            ) : modalTab === "details" ? (
-              /* ── Details Tab ── */
-              <div className="px-5 pb-5 space-y-4 animate-fadeIn">
-                {/* Address */}
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <svg
-                      className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                    <p className="text-xs text-gray-700 dark:text-gray-300 font-kumbh uppercase leading-relaxed">
-                      {incident.address}
-                    </p>
-                  </div>
-                  {incident.plusCode && (
-                    <div className="flex items-start gap-2">
-                      <svg
-                        className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                  {incident.photos.length > 1 && (
+                    <>
+                      <button
+                        onClick={() => setPhotoIndex((p) => p > 0 ? p - 1 : incident.photos.length - 1)}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/70"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                        />
-                      </svg>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 font-kumbh uppercase">
-                        {incident.plusCode}
-                      </p>
-                    </div>
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                      </button>
+                      <button
+                        onClick={() => setPhotoIndex((p) => p < incident.photos.length - 1 ? p + 1 : 0)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/70"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                      </button>
+                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                        {incident.photos.map((_, i) => (
+                          <button key={i} onClick={() => setPhotoIndex(i)} className={`w-1.5 h-1.5 rounded-full transition-colors ${i === photoIndex ? "bg-white" : "bg-white/50"}`} />
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
+              ) : (
+                <div className="bg-gray-100 dark:bg-gray-800 h-36 flex items-center justify-center">
+                  <div className="text-center text-gray-400 dark:text-gray-500">
+                    <svg className="w-8 h-8 mx-auto mb-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p className="text-xs font-kumbh">No photos attached</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Type + Status */}
+              <div className="px-4 pt-3 pb-1.5 flex items-center justify-between">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 font-spartan uppercase">
+                  {incident.type}
+                </h3>
+                <span
+                  className="px-2.5 py-0.5 rounded-full text-xs font-bold text-white font-kumbh uppercase"
+                  style={{ backgroundColor: statusCfg?.color }}
+                >
+                  {statusCfg?.label}
+                </span>
+              </div>
+
+              {/* Last Updated */}
+              <div className="px-4 pb-3 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 font-kumbh">
+                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>
+                  {new Date(incident.lastUpdated).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })}{" "}
+                  {new Date(incident.lastUpdated).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              </div>
+
+              <div className="px-4 pb-4 space-y-3 border-t border-gray-100 dark:border-gray-700 pt-3">
+                {/* Address */}
+                <div className="flex items-start gap-2">
+                  <svg className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <p className="text-xs text-gray-700 dark:text-gray-300 font-kumbh uppercase leading-relaxed">{incident.address}</p>
+                </div>
+                {incident.plusCode && (
+                  <div className="flex items-start gap-2">
+                    <svg className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    </svg>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-kumbh uppercase">{incident.plusCode}</p>
+                  </div>
+                )}
 
                 {/* Reported By */}
                 <div>
-                  <p className="text-xs font-bold text-gray-900 dark:text-gray-100 font-kumbh uppercase mb-1.5">
-                    {reportType === "complaints" ? "Complaint" : "Incident"}{" "}
-                    Reported By:
+                  <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 font-kumbh uppercase mb-1">
+                    {reportType === "complaints" ? "Complaint" : "Incident"} Reported By
                   </p>
-                  <div className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-gray-400 dark:text-gray-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
+                  <div className="flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    <p className="text-xs text-gray-700 dark:text-gray-300 font-kumbh">
-                      {incident.reportedBy}
-                    </p>
+                    <p className="text-xs text-gray-700 dark:text-gray-300 font-kumbh">{incident.reportedBy}</p>
                   </div>
                 </div>
 
                 {/* Description */}
                 <div>
-                  <p className="text-xs font-bold text-gray-900 dark:text-gray-100 font-kumbh uppercase mb-1.5">
-                    {reportType === "complaints" ? "Complaint" : "Incident"}{" "}
-                    Description:
+                  <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 font-kumbh uppercase mb-1">
+                    Description
                   </p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 font-kumbh leading-relaxed">
-                    {incident.description}
-                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 font-kumbh leading-relaxed">{incident.description}</p>
                 </div>
 
-                {/* Dispatched Team – shown after save */}
+                {/* Dispatched Team */}
                 {dispatchedTeam && (
                   <div
                     onClick={() => {
@@ -1026,345 +709,353 @@ const AdminReportDetailsModal = ({
                       setOfficials(padded);
                       setShowDispatch(true);
                       setShowNotes(false);
+                      setShowUpdate(false);
                     }}
-                    className="border-t border-gray-200 dark:border-gray-700 pt-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60 -mx-5 px-5 pb-1 transition-colors duration-200"
+                    className="border border-amber-200 dark:border-amber-800 rounded-lg p-3 cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-bold text-gray-900 dark:text-gray-100 font-kumbh uppercase">
-                        Dispatch Team
-                      </p>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 font-kumbh">
-                        {new Date(dispatchedTeam.timestamp).toLocaleDateString(
-                          "en-US",
-                          {
-                            month: "2-digit",
-                            day: "2-digit",
-                            year: "numeric",
-                          },
-                        )}{" "}
-                        {new Date(dispatchedTeam.timestamp).toLocaleTimeString(
-                          "en-US",
-                          {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit",
-                          },
-                        )}
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-[10px] font-bold text-amber-700 dark:text-amber-400 font-kumbh uppercase">Dispatch Team</p>
+                      <span className="text-[10px] text-gray-400 font-kumbh">
+                        {new Date(dispatchedTeam.timestamp).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })}
                       </span>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       {dispatchedTeam.officials.map((name, idx) => (
-                        <p
-                          key={idx}
-                          className="text-xs text-gray-700 dark:text-gray-300 font-kumbh uppercase"
-                        >
-                          {name}
-                        </p>
+                        <p key={idx} className="text-xs text-gray-700 dark:text-gray-300 font-kumbh uppercase">{name}</p>
                       ))}
                     </div>
                   </div>
                 )}
               </div>
-            ) : (
-              /* ── Updates Tab ── */
-              <div className="px-5 pb-5 animate-fadeIn">
+            </div>
 
-                {/* Appointment History — complaints only */}
-                {reportType === "complaints" && (
-                  <div className="mb-5">
-                    <p className="text-xs font-bold text-gray-900 dark:text-gray-100 font-kumbh uppercase mb-3">
-                      Appointment History
-                    </p>
-                    {loadingAppts ? (
-                      <div className="flex items-center gap-2 py-4 text-gray-400 dark:text-gray-500 text-xs font-kumbh">
-                        <svg className="w-4 h-4 animate-spin flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Loading appointments…
-                      </div>
-                    ) : complaintAppointments.length > 0 ? (
-                      <div className="space-y-2">
-                        {complaintAppointments.map((appt) => {
-                          const { date, time } = parseApptScheduledAt(appt.scheduled_at);
-                          return (
-                            <div
-                              key={appt.id}
-                              className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
-                            >
-                              <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                                  <span className="text-xs font-bold text-gray-800 dark:text-gray-100 font-kumbh truncate">
-                                    {appt.title || `Appointment #${appt.id}`}
-                                  </span>
-                                  <span className={`text-[10px] font-bold font-kumbh uppercase px-2 py-0.5 rounded-full ${apptStatusBadge(appt.status)}`}>
-                                    {(appt.status || "scheduled").replace(/-/g, " ")}
-                                  </span>
+            {/* ── RIGHT: Tabs + Content + Actions ── */}
+            <div className="flex flex-col min-h-0">
+              {/* Tabs */}
+              <div className="px-4 pt-3 pb-0 flex gap-2 flex-shrink-0 border-b border-gray-100 dark:border-gray-700">
+                <button
+                  onClick={() => {
+                    if (modalTab !== "details") setSlideDir("right");
+                    setModalTab("details");
+                    setShowDispatch(false); setShowNotes(false); setShowUpdate(false);
+                  }}
+                  className={`px-4 py-2 rounded-t-lg text-xs font-bold font-kumbh uppercase transition-all duration-200 ${
+                    modalTab === "details" && !showDispatch && !showNotes && !showUpdate
+                      ? "bg-gray-700 dark:bg-gray-600 text-white"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  }`}
+                >
+                  Details
+                </button>
+                <button
+                  onClick={() => {
+                    if (modalTab !== "updates") setSlideDir("left");
+                    setModalTab("updates");
+                    setShowDispatch(false); setShowNotes(false); setShowUpdate(false);
+                  }}
+                  className={`px-4 py-2 rounded-t-lg text-xs font-bold font-kumbh uppercase transition-all duration-200 ${
+                    modalTab === "updates" && !showDispatch && !showNotes && !showUpdate
+                      ? "bg-gray-700 dark:bg-gray-600 text-white"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  }`}
+                >
+                  Updates {localUpdates.length > 0 && <span className="ml-1 text-[10px] opacity-70">({localUpdates.length})</span>}
+                </button>
+              </div>
+
+              {/* Scrollable tab / form content */}
+              <div
+                key={showDispatch ? "dispatch" : showNotes ? "notes" : showUpdate ? "update" : modalTab}
+                className="flex-1 overflow-y-auto"
+                style={{
+                  animation: `${slideDir === "left" ? "modalSlideInFromRight" : "modalSlideInFromLeft"} 0.25s ease-out`,
+                }}
+              >
+                {showUpdate ? (
+                  /* ── Add Update Form ── */
+                  <div className="p-4 animate-fadeIn">
+                    <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 font-kumbh uppercase text-center mb-3">Add Update</h3>
+                    <hr className="border-gray-300 dark:border-gray-700 mb-4" />
+                    <textarea
+                      value={updateText}
+                      onChange={(e) => setUpdateText(e.target.value)}
+                      placeholder="Enter update details here ..."
+                      rows={5}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-kumbh text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200"
+                    />
+                    <input ref={updateAttachmentRef} type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => setUpdateAttachment(e.target.files?.[0] || null)} />
+                    <button
+                      type="button"
+                      onClick={() => updateAttachmentRef.current?.click()}
+                      className="w-full mt-3 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                      </svg>
+                      {updateAttachment ? updateAttachment.name : "+ Add Attachment"}
+                    </button>
+                    {updateAttachment && (
+                      <button type="button" onClick={() => { setUpdateAttachment(null); if (updateAttachmentRef.current) updateAttachmentRef.current.value = ""; }} className="w-full mt-1.5 text-xs text-red-500 dark:text-red-400 font-kumbh hover:underline">
+                        Remove attachment
+                      </button>
+                    )}
+                    <button onClick={handleSaveUpdate} disabled={isUpdating} className="w-full mt-3 py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait">
+                      {isUpdating ? "Saving..." : "Save Update"}
+                    </button>
+                  </div>
+                ) : showNotes ? (
+                  /* ── Add Notes Form ── */
+                  <div className="p-4 animate-fadeIn">
+                    <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 font-kumbh uppercase text-center mb-3">Add Notes</h3>
+                    <hr className="border-gray-300 dark:border-gray-700 mb-4" />
+                    <textarea
+                      value={noteText}
+                      onChange={(e) => setNoteText(e.target.value)}
+                      placeholder="Enter your notes here ..."
+                      rows={5}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-kumbh text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200"
+                    />
+                    <div className="flex gap-3 mt-3">
+                      <button onClick={() => { setShowNotes(false); setNoteText(""); }} className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh uppercase hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200">Cancel</button>
+                      <button onClick={handleSaveNotes} disabled={isUpdating} className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh uppercase hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait">
+                        {isUpdating ? "Saving..." : "Save"}
+                      </button>
+                    </div>
+                  </div>
+                ) : showDispatch ? (
+                  /* ── Dispatch Team Form ── */
+                  <div className="p-4 animate-fadeIn">
+                    <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 font-kumbh uppercase text-center mb-3">Dispatch Team</h3>
+                    <hr className="border-gray-300 dark:border-gray-700 mb-4" />
+                    <div className="space-y-3">
+                      {officials.map((official, idx) => (
+                        <input
+                          key={idx}
+                          type="text"
+                          value={official}
+                          onChange={(e) => { const u = [...officials]; u[idx] = e.target.value; setOfficials(u); }}
+                          placeholder="+ Add Official"
+                          className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-kumbh text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all duration-200"
+                        />
+                      ))}
+                    </div>
+                    <div className="flex gap-3 mt-4">
+                      <button onClick={() => { setShowDispatch(false); if (!dispatchedTeam) setOfficials(["", "", ""]); else setOfficials([...dispatchedTeam.officials]); }} className="flex-1 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh uppercase hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200">Cancel</button>
+                      <button onClick={handleSaveDispatch} disabled={isUpdating} className="flex-1 py-2.5 rounded-lg bg-amber-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-amber-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-wait">
+                        {isUpdating ? "Saving..." : "Save Dispatch"}
+                      </button>
+                    </div>
+                  </div>
+                ) : modalTab === "details" ? (
+                  /* ── Details Tab: Appointment History (complaints) ── */
+                  <div className="p-4 animate-fadeIn">
+                    {reportType === "complaints" ? (
+                      <>
+                        <p className="text-xs font-bold text-gray-900 dark:text-gray-100 font-kumbh uppercase mb-3">Appointment History</p>
+                        {loadingAppts ? (
+                          <div className="flex items-center gap-2 py-4 text-gray-400 dark:text-gray-500 text-xs font-kumbh">
+                            <svg className="w-4 h-4 animate-spin flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Loading appointments…
+                          </div>
+                        ) : complaintAppointments.length > 0 ? (
+                          <div className="space-y-2">
+                            {complaintAppointments.map((appt) => {
+                              const { date, time } = parseApptScheduledAt(appt.scheduled_at);
+                              return (
+                                <div key={appt.id} className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                                  <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                                      <span className="text-xs font-bold text-gray-800 dark:text-gray-100 font-kumbh truncate">{appt.title || `Appointment #${appt.id}`}</span>
+                                      <span className={`text-[10px] font-bold font-kumbh uppercase px-2 py-0.5 rounded-full ${apptStatusBadge(appt.status)}`}>{(appt.status || "scheduled").replace(/-/g, " ")}</span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-kumbh">{fmtApptDate(date)} · {fmtApptTime(time)}</p>
+                                    {appt.description && <p className="text-xs text-gray-500 dark:text-gray-400 font-kumbh mt-0.5 leading-relaxed">{appt.description}</p>}
+                                  </div>
+                                  <span className="text-[10px] text-gray-400 dark:text-gray-500 font-kumbh whitespace-nowrap flex-shrink-0">#{appt.id}</span>
                                 </div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 font-kumbh">
-                                  {fmtApptDate(date)} · {fmtApptTime(time)}
-                                </p>
-                                {appt.description && (
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 font-kumbh mt-0.5 leading-relaxed">
-                                    {appt.description}
-                                  </p>
-                                )}
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-400 dark:text-gray-500 font-kumbh py-2">No appointments scheduled for this complaint.</p>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500">
+                        <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <p className="text-xs font-kumbh">No additional details</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* ── Updates Tab ── */
+                  <div className="p-4 animate-fadeIn">
+                    {loadingUpdates ? (
+                      <div className="text-center py-8 text-gray-400 dark:text-gray-500">
+                        <svg className="w-6 h-6 mx-auto mb-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <p className="text-xs font-kumbh">Loading updates...</p>
+                      </div>
+                    ) : localUpdates.length > 0 ? (
+                      <div className="space-y-0 divide-y divide-gray-200 dark:divide-gray-700">
+                        {localUpdates.map((update, idx) => {
+                          const dt = new Date(update.timestamp);
+                          const dateStr = dt.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
+                          const timeStr = dt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+                          const dayStr = dt.toLocaleDateString("en-US", { weekday: "long" }).toUpperCase();
+                          return (
+                            <div key={idx} className="py-3">
+                              <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 font-kumbh">
+                                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                  <span className="uppercase">{dateStr} {timeStr} {dayStr}</span>
+                                </div>
+                                {{
+                                  note:       <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">NOTE</span>,
+                                  status:     <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">STATUS</span>,
+                                  dispatch:   <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">DISPATCH</span>,
+                                  attachment: <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">FILE</span>,
+                                  created:    <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400">CREATED</span>,
+                                  update:     <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400">UPDATE</span>,
+                                }[update.type]}
                               </div>
-                              <span className="text-[10px] text-gray-400 dark:text-gray-500 font-kumbh whitespace-nowrap flex-shrink-0">
-                                #{appt.id}
-                              </span>
+                              <p className="text-xs text-gray-700 dark:text-gray-300 font-kumbh uppercase leading-relaxed">{update.text}</p>
+                              {update.author && (
+                                <div className="flex items-center gap-1.5 mt-1.5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-gray-700 dark:bg-gray-400 flex-shrink-0" />
+                                  <p className="text-xs text-gray-600 dark:text-gray-400 font-kumbh uppercase">{update.author}</p>
+                                </div>
+                              )}
+                              {update.attachment && (() => {
+                                const url = update.attachment;
+                                const ext = url.split("?")[0].split(".").pop().toLowerCase();
+                                return ext === "pdf" ? (
+                                  <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 mt-1.5 text-xs text-red-600 dark:text-red-400 font-kumbh hover:underline">
+                                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                    View PDF
+                                  </a>
+                                ) : (
+                                  <button type="button" onClick={() => openMediaViewer(url)} className="inline-flex items-center gap-1.5 mt-1.5 text-xs text-blue-600 dark:text-blue-400 font-kumbh hover:underline">
+                                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                    {isVideoUrl(url) ? "View Video" : "View Image"}
+                                  </button>
+                                );
+                              })()}
                             </div>
                           );
                         })}
                       </div>
                     ) : (
-                      <p className="text-xs text-gray-400 dark:text-gray-500 font-kumbh py-2">
-                        No appointments scheduled for this complaint.
-                      </p>
+                      <div className="text-center py-10 text-gray-400 dark:text-gray-500">
+                        <svg className="w-10 h-10 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-xs font-kumbh">No updates yet</p>
+                      </div>
                     )}
-                    <hr className="mt-4 border-gray-200 dark:border-gray-700" />
                   </div>
                 )}
+              </div>
 
-                {loadingUpdates ? (
-                  <div className="text-center py-8 text-gray-400 dark:text-gray-500">
-                    <svg
-                      className="w-6 h-6 mx-auto mb-2 animate-spin"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+              {/* ── Sticky Action Footer (right column) ── */}
+              <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 px-4 py-3 space-y-2 bg-gray-50 dark:bg-gray-800">
+                {!showNotes && (
+                  <button
+                    onClick={() => { setShowNotes(true); setShowDispatch(false); setShowUpdate(false); }}
+                    disabled={isUpdating}
+                    className="w-full py-2 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-xs font-semibold text-gray-500 dark:text-gray-400 font-kumbh hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
+                  >
+                    + Add Notes
+                  </button>
+                )}
+
+                {isDispatched ? (
+                  <>
+                    <button
+                      onClick={() => { setShowUpdate(true); setShowNotes(false); setShowDispatch(false); setUpdateAttachment(null); }}
+                      disabled={isUpdating || isTerminal}
+                      className="w-full py-2 rounded-lg bg-blue-600 text-white text-xs font-bold font-kumbh uppercase hover:bg-blue-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                    <p className="text-xs font-kumbh">Loading updates...</p>
-                  </div>
-                ) : localUpdates.length > 0 ? (
-                  <div className="space-y-0 divide-y divide-gray-200 dark:divide-gray-700">
-                    {localUpdates.map((update, idx) => {
-                      const dt = new Date(update.timestamp);
-                      const dateStr = dt.toLocaleDateString("en-US", {
-                        month: "2-digit",
-                        day: "2-digit",
-                        year: "numeric",
-                      });
-                      const timeStr = dt.toLocaleTimeString("en-US", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                      });
-                      const dayStr = dt
-                        .toLocaleDateString("en-US", {
-                          weekday: "long",
-                        })
-                        .toUpperCase();
-
-                      return (
-                        <div key={idx} className="py-3">
-                          {/* Date row */}
-                          <div className="flex items-center justify-between mb-1.5">
-                            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 font-kumbh">
-                              <svg
-                                className="w-4 h-4 flex-shrink-0"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                />
-                              </svg>
-                              <span className="uppercase">
-                                {dateStr} &nbsp; {timeStr} &nbsp; {dayStr}
-                              </span>
-                            </div>
-                            {{
-                              note:       <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">NOTE</span>,
-                              status:     <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">STATUS CHANGE</span>,
-                              dispatch:   <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">DISPATCH</span>,
-                              attachment: <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">ATTACHMENT</span>,
-                              created:    <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400">CREATED</span>,
-                              update:     <span className="text-xs font-bold font-kumbh uppercase px-2 py-0.5 rounded bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400">UPDATE</span>,
-                            }[update.type]}
-                          </div>
-                          {/* Description */}
-                          <p className="text-xs text-gray-700 dark:text-gray-300 font-kumbh uppercase leading-relaxed">
-                            {update.text}
-                          </p>
-                          {/* Author */}
-                          {update.author && (
-                            <div className="flex items-center gap-1.5 mt-2">
-                              <span className="w-1.5 h-1.5 rounded-full bg-gray-700 dark:bg-gray-400 flex-shrink-0" />
-                              <p className="text-xs text-gray-600 dark:text-gray-400 font-kumbh uppercase">
-                                {update.author}
-                              </p>
-                            </div>
-                          )}
-                          {/* Attachment */}
-                          {update.attachment && (() => {
-                            const url = update.attachment;
-                            const ext = url.split("?")[0].split(".").pop().toLowerCase();
-                            const isPdf = ext === "pdf";
-                            return isPdf ? (
-                              <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 mt-2 text-xs text-red-600 dark:text-red-400 font-kumbh hover:underline"
-                              >
-                                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                </svg>
-                                View PDF
-                              </a>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => openMediaViewer(url)}
-                                className="inline-flex items-center gap-1.5 mt-2 text-xs text-blue-600 dark:text-blue-400 font-kumbh hover:underline"
-                              >
-                                {isVideoUrl(url) ? (
-                                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
-                                ) : (
-                                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                  </svg>
-                                )}
-                                {isVideoUrl(url) ? "View Video" : "View Image"}
-                              </button>
-                            );
-                          })()}
-                        </div>
-                      );
-                    })}
-                  </div>
+                      + Add Update
+                    </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => handleStatusChange("in-progress")}
+                        disabled={isUpdating || currentStatus === "in-progress" || isTerminal}
+                        className="py-2 rounded-lg bg-amber-500 text-white text-xs font-bold font-kumbh uppercase hover:bg-amber-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isUpdating ? "Updating..." : "In-Progress"}
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange("resolved")}
+                        disabled={isUpdating || currentStatus === "resolved"}
+                        className="py-2 rounded-lg bg-green-600 text-white text-xs font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isUpdating ? "Updating..." : "Resolved"}
+                      </button>
+                    </div>
+                  </>
                 ) : (
-                  <div className="text-center py-8 text-gray-400 dark:text-gray-500">
-                    <svg
-                      className="w-10 h-10 mx-auto mb-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <p className="text-xs font-kumbh">No updates yet</p>
-                  </div>
+                  <>
+                    {!showDispatch && (
+                      <button
+                        onClick={() => { setShowDispatch(true); setShowNotes(false); setShowUpdate(false); }}
+                        disabled={isUpdating || isTerminal}
+                        className="w-full py-2 rounded-lg bg-amber-500 text-white text-xs font-bold font-kumbh uppercase hover:bg-amber-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Dispatch Team
+                      </button>
+                    )}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => handleStatusChange("rejected")}
+                        disabled={isUpdating || isTerminal}
+                        className="py-2 rounded-lg bg-red-500 text-white text-xs font-bold font-kumbh uppercase hover:bg-red-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isUpdating ? "Updating..." : "Mark Invalid"}
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange("resolved")}
+                        disabled={isUpdating || isTerminal}
+                        className="py-2 rounded-lg bg-green-600 text-white text-xs font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isUpdating ? "Updating..." : "Resolved"}
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
-            )}
+            </div>
+            {/* end right column */}
+
           </div>
-        </div>
+          {/* end two-column body */}
 
-        {/* Modal Footer / Actions */}
-        <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 px-5 py-4 space-y-3 bg-gray-50 dark:bg-gray-800">
-          {/* Add Notes – hidden when notes form is open */}
-          {!showNotes && (
-            <button
-              onClick={() => {
-                setShowNotes(true);
-                setShowDispatch(false);
-                setShowUpdate(false);
-              }}
-              disabled={isUpdating}
-              className="w-full py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-500 dark:text-gray-400 font-kumbh hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
-            >
-              + Add Notes
-            </button>
-          )}
-
-          {isDispatched ? (
-            <>
-              {/* + Add Update */}
-              <button
-                onClick={() => {
-                  setShowUpdate(true);
-                  setShowNotes(false);
-                  setShowDispatch(false);
-                  setUpdateAttachment(null);
-                }}
-                disabled={isUpdating || isTerminal}
-                className="w-full py-2.5 rounded-lg bg-blue-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-blue-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                + Add Update
-              </button>
-
-              {/* Bottom row – post-dispatch */}
-              <button
-                onClick={() => handleStatusChange("in-progress")}
-                disabled={isUpdating || currentStatus === "in-progress" || isTerminal}
-                className="w-full py-2.5 rounded-lg bg-amber-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-amber-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isUpdating ? "Updating..." : "Mark as In-Progress"}
-              </button>
-              <button
-                onClick={() => handleStatusChange("resolved")}
-                disabled={isUpdating || currentStatus === "resolved"}
-                className="w-full py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isUpdating ? "Updating..." : "Mark as Resolved"}
-              </button>
-            </>
-          ) : (
-            <>
-              {/* Dispatch Team – hidden when dispatch form is open */}
-              {!showDispatch && (
-                <button
-                  onClick={() => {
-                    setShowDispatch(true);
-                    setShowNotes(false);
-                    setShowUpdate(false);
-                  }}
-                  disabled={isUpdating || isTerminal}
-                  className="w-full py-2.5 rounded-lg bg-amber-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-amber-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Dispatch Team
-                </button>
-              )}
-
-              {/* Bottom row – pre-dispatch */}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => handleStatusChange("rejected")}
-                  disabled={isUpdating || isTerminal}
-                  className="flex-1 py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold font-kumbh uppercase hover:bg-red-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isUpdating ? "Updating..." : "Mark as Invalid"}
-                </button>
-                <button
-                  onClick={() => handleStatusChange("resolved")}
-                  disabled={isUpdating || isTerminal}
-                  className="flex-1 py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold font-kumbh uppercase hover:bg-green-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isUpdating ? "Updating..." : "Mark as Resolved"}
-                </button>
-              </div>
-            </>
-          )}
         </div>
       </div>
-    </div>
+
+      <style>{`
+        @keyframes modalSlideInFromRight {
+          from { opacity: 0; transform: translateX(30px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes modalSlideInFromLeft {
+          from { opacity: 0; transform: translateX(-30px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+      `}</style>
     </>
   );
 };
