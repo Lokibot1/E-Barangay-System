@@ -30,7 +30,7 @@ const getStatusStyle = (newStatus) => {
   if (s === "resolved" || s === "completed" || s === "closed") {
     return { border: "border-l-green-500", bg: "bg-green-100", bgDark: "bg-green-900/60", text: "text-green-600", textDark: "text-green-400" };
   }
-  if (s === "in_progress" || s === "in progress" || s === "ongoing") {
+  if (s === "in_progress" || s === "in progress" || s === "ongoing" || s === "in-progress" || s === "dispatched" || s === "on-site") {
     return { border: "border-l-blue-500", bg: "bg-blue-100", bgDark: "bg-blue-900/60", text: "text-blue-600", textDark: "text-blue-400" };
   }
   if (s === "rejected" || s === "dismissed" || s === "denied") {
