@@ -232,18 +232,26 @@ const TimeSlotPicker = ({ date, value, onChange, availability = {}, isDark, t })
     );
   }
 
+  const todayStr = new Date().toISOString().split("T")[0];
+  const isToday = date === todayStr;
+  const nowMinutes = isToday
+    ? new Date().getHours() * 60 + new Date().getMinutes()
+    : -1;
+
   return (
     <div className="grid grid-cols-5 gap-1.5">
       {slots.map((slot) => {
         const selected = value === slot.value;
-        const taken = !slot.available;
+        const [slotH, slotM] = slot.value.split(":").map(Number);
+        const isPastTime = isToday && slotH * 60 + slotM <= nowMinutes;
+        const taken = !slot.available || isPastTime;
         return (
           <button
             key={slot.value}
             type="button"
             disabled={taken}
             onClick={() => !taken && onChange(slot.value)}
-            title={taken ? "Slot already taken" : slot.label}
+            title={isPastTime ? "Time has passed" : taken ? "Slot already taken" : slot.label}
             className={`py-1.5 rounded-lg text-[11px] font-kumbh font-semibold text-center transition-all ${
               taken
                 ? `cursor-not-allowed line-through ${isDark ? "bg-slate-700 text-slate-600" : "bg-gray-100 text-gray-400"}`
@@ -274,6 +282,8 @@ const WeekdayPicker = ({ value, onChange, isDark, t, availability = {} }) => {
 
   const year = viewMonth.getFullYear();
   const month = viewMonth.getMonth();
+  const todayNow = new Date();
+  const isCurrentMonth = year === todayNow.getFullYear() && month === todayNow.getMonth();
 
   const MONTH_NAMES = [
     "January",
@@ -306,8 +316,9 @@ const WeekdayPicker = ({ value, onChange, isDark, t, availability = {} }) => {
       <div className="flex items-center justify-between mb-2">
         <button
           type="button"
-          onClick={() => setViewMonth(new Date(year, month - 1, 1))}
-          className={`p-1 rounded-lg transition-colors ${isDark ? "hover:bg-slate-700 text-slate-300" : "hover:bg-gray-100 text-gray-600"}`}
+          disabled={isCurrentMonth}
+          onClick={() => !isCurrentMonth && setViewMonth(new Date(year, month - 1, 1))}
+          className={`p-1 rounded-lg transition-colors ${isCurrentMonth ? "opacity-30 cursor-not-allowed" : isDark ? "hover:bg-slate-700 text-slate-300" : "hover:bg-gray-100 text-gray-600"}`}
         >
           <svg
             className="w-4 h-4"
