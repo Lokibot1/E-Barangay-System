@@ -15,6 +15,7 @@ const EditHouseholdModal = ({ isOpen, onClose, data, onUpdate, t }) => {
     is_indigent: 0,
     wall_material: '',
     roof_material: '',
+    num_families_reported: 1,
   });
 
   const [references, setReferences] = useState({ 
@@ -46,7 +47,6 @@ const EditHouseholdModal = ({ isOpen, onClose, data, onUpdate, t }) => {
   useEffect(() => {
     if (data) {
       setFormData({
-        // Sa PHP mo: 'db_id' => $hh->id, 'id' => $hh->household_id
         db_id: data.db_id,       
         household_id: data.id, 
         head_resident_id: data.head_resident_id || '',
@@ -57,6 +57,7 @@ const EditHouseholdModal = ({ isOpen, onClose, data, onUpdate, t }) => {
         is_indigent: data.is_indigent ? 1 : 0,
         wall_material: data.wall_material || '',
         roof_material: data.roof_material || '',
+        num_families_reported: data.num_families_reported || 1,
       });
       setIsAddressTaken(false);
     }
@@ -203,7 +204,16 @@ const EditHouseholdModal = ({ isOpen, onClose, data, onUpdate, t }) => {
             </select>
           </div>
         </div>
-
+<div>
+  <label className={labelClass}>Number of Families</label>
+  <input 
+    type="number"
+    min="1"
+    className={inputClass} 
+    value={formData.num_families_reported} 
+    onChange={(e) => setFormData({...formData, num_families_reported: e.target.value})} 
+  />
+</div>
         <div className="flex justify-end gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
           <button type="button" onClick={onClose} className={`text-[11px] font-black uppercase tracking-widest ${t.subtleText} px-4 hover:opacity-70`}>
             Discard

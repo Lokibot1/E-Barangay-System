@@ -7,13 +7,14 @@ const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 export const getRandomTestData = () => {
   const randomNum = Math.floor(Math.random() * 9000) + 1000;
+  const randomText = Math.random().toString(36).substring(2, 7);
   const randomPhone = "09" + Math.floor(100000000 + Math.random() * 900000000).toString();
 
-  const firstNames = ["Juan", "Maria", "Pedro", "Elena", "Ricardo", "Liza", "Antonio", "Sonia"];
-  const lastNames = ["Dela Cruz", "Santos", "Reyes", "Bautista", "Garcia", "Mendoza", "Pascual"];
-  const middleNames = ["Protacio", "Silang", "Luna", "Mabini", "Aquino"];
+  const firstNames = ["Juan", "Maria", "Pedro", "Elena", "Ricardo", "Liza", "Antonio", "Sonia", "Carlos", "Ana"];
+  const lastNames = ["Dela Cruz", "Santos", "Reyes", "Bautista", "Garcia", "Mendoza", "Pascual", "Lopez", "Torres", "Rivera"];
+  const middleNames = ["Protacio", "Silang", "Luna", "Mabini", "Aquino", "Dela Cruz", "Santos", "Reyes", "Bautista", "Garcia"];
   
-  const occupations = ["Web Developer", "Teacher", "Nurse", "Sales Agent", "Driver", "Engineer", "Accountant"];
+  const occupations = ["Web Developer", "Teacher", "Nurse", "Sales Agent", "Driver", "Engineer", "Accountant", "Farmer", "Fisherman", "Vendor"];
   
   const educStats = ['Currently Studying', 'Graduated', 'Not Studying', 'N/A'];
   const schoolLevels = ['Pre-School', 'Elementary', 'Junior High School', 'Senior High School', 'College', 'Vocational', 'Masteral', 'N/A'];
@@ -34,7 +35,7 @@ export const getRandomTestData = () => {
     birthRegistration: "Registered",
     gender: Math.random() > 0.5 ? "Male" : "Female",
     contact: randomPhone,
-    email: `testuser${randomNum}@gmail.com`,
+    email: `${randomText}${randomNum}@gmail.com`,
     
     purok: "1", 
     street: "1", 
@@ -61,6 +62,7 @@ export const getRandomTestData = () => {
     wallMaterial: pickRandom(walls),
     roofMaterial: pickRandom(roofs),
     waterSource: pickRandom(water),
+    
 
     isStaffMode: true 
   };

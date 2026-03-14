@@ -3,6 +3,7 @@
  * FIXED: Shows specific reason why Next is disabled (same pattern as Step1).
  * FIXED: Guide text for Head/non-Head household position.
  * FIXED: Residency date 6-month rule validation with error messages.
+ * ADDED: numberOfFamilies field — required for Head of Family, default 1.
  * All original logic preserved.
  */
 
@@ -15,6 +16,7 @@ import {
   X,
   AlertCircle,
   Info,
+  Users,
 } from "lucide-react";
 
 const Step2Address = ({
@@ -57,6 +59,17 @@ const Step2Address = ({
     }
   }, [addressExists, formData.householdPosition]);
 
+  // Default numberOfFamilies to "1" when Head is selected and field is empty
+  useEffect(() => {
+    if (
+      formData.householdPosition === "Head" &&
+      !addressExists &&
+      !formData.numberOfFamilies
+    ) {
+      handleChange({ target: { name: "numberOfFamilies", value: "1" } });
+    }
+  }, [formData.householdPosition, addressExists, formData.numberOfFamilies]);
+
   const filteredStreets = (streets || []).filter((s) => {
     if (!s || !s.purok_id) return false;
     return s.purok_id.toString() === formData.purok?.toString();
@@ -87,6 +100,13 @@ const Step2Address = ({
     mismatch_new: 'For "New Resident", date must be within the last 6 months.',
     mismatch_old: 'For "Old Resident", date must be more than 6 months ago.',
   };
+
+  // ── NUMBER OF FAMILIES VALIDATION ─────────────────────────────────────
+  const numberOfFamiliesValue = parseInt(formData.numberOfFamilies, 10);
+  const isNumberOfFamiliesValid =
+    formData.householdPosition !== "Head" ||
+    addressExists ||
+    (!isNaN(numberOfFamiliesValue) && numberOfFamiliesValue >= 1);
 
   // ── KEYBOARD NAVIGATION ────────────────────────────────────────────────
   const handleKeyDown = (e) => {
@@ -128,7 +148,10 @@ const Step2Address = ({
   const isHeadSurveyComplete =
     formData.householdPosition !== "Head" ||
     addressExists ||
-    (formData.tenureStatus && formData.wallMaterial && formData.roofMaterial);
+    (formData.tenureStatus &&
+      formData.wallMaterial &&
+      formData.roofMaterial &&
+      isNumberOfFamiliesValid);
 
   const isStep2Valid =
     isAddressComplete &&
@@ -157,10 +180,11 @@ const Step2Address = ({
       if (!formData.tenureStatus) missing.push("Housing Status");
       if (!formData.wallMaterial) missing.push("Wall Material");
       if (!formData.roofMaterial) missing.push("Roof Material");
+      if (!isNumberOfFamiliesValid) missing.push("No. of Families");
       return `Missing: ${missing.join(", ")}`;
     }
     return null;
-  }, [formData, isAddressComplete, dateState, isHeadSurveyComplete]);
+  }, [formData, isAddressComplete, dateState, isHeadSurveyComplete, isNumberOfFamiliesValid]);
 
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-right-3 duration-300">
@@ -366,6 +390,7 @@ const Step2Address = ({
               New Household — Housing Survey
             </p>
           </div>
+
           <div className="space-y-1">
             <label className={labelClass}>Housing Status{requiredStar}</label>
             <select
@@ -380,6 +405,7 @@ const Step2Address = ({
               <option value="Sharer">Sharer</option>
             </select>
           </div>
+
           <div className="space-y-1">
             <label className={labelClass}>Wall Material{requiredStar}</label>
             <select
@@ -395,21 +421,55 @@ const Step2Address = ({
               <option value="Makeshift">Makeshift</option>
             </select>
           </div>
-          <div className="space-y-1 sm:col-span-2">
-            <label className={labelClass}>Roof Material{requiredStar}</label>
-            <select
-              name="roofMaterial"
-              value={formData.roofMaterial || ""}
-              onChange={handleChange}
-              className="full-input-sm"
-            >
-              <option value="">Select Material</option>
-              <option value="G.I. Sheet">G.I. Sheet</option>
-              <option value="Concrete Slab">Concrete Slab</option>
-              <option value="Tile">Tile</option>
-              <option value="Makeshift">Makeshift</option>
-            </select>
-          </div>
+
+        {/* Row 2: Roof and No. of Families */}
+
+<div className="space-y-1 flex flex-col justify-end">
+  <label className={labelClass}>Roof Material{requiredStar}</label>
+  <select
+    name="roofMaterial"
+    value={formData.roofMaterial || ""}
+    onChange={handleChange}
+    className="full-input-sm"
+  >
+    <option value="">Select Material</option>
+    <option value="G.I. Sheet">G.I. Sheet</option>
+    <option value="Concrete Slab">Concrete Slab</option>
+    <option value="Tile">Tile</option>
+    <option value="Makeshift">Makeshift</option>
+  </select>
+
+  <div className="h-4 invisible"></div>
+</div>
+
+<div className="space-y-1 flex flex-col items-center justify-end text-center">
+  {/* Label - Centered */}
+  <label className={`${labelClass} mb-0`}>
+    No. of Families Reported{requiredStar}
+  </label>
+  
+ <input
+  type="number"
+  name="numberOfFamilies"
+ 
+  value={formData.numberOfFamilies || "1"} 
+  min={1}
+  onChange={handleChange} 
+  className={`full-input-sm text-center ${
+    !isNumberOfFamiliesValid ? "border-rose-500 ring-2 ring-rose-500/20" : ""
+  }`}
+  placeholder="1"
+/>
+
+  {/* Multiple Badge - Underneath */}
+  <div className="h-4 flex items-center justify-center">
+    {parseInt(formData.numberOfFamilies) > 1 && (
+      <span className="text-[8px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full font-black animate-in fade-in slide-in-from-top-1 duration-200 uppercase tracking-tighter">
+        Multiple Families
+      </span>
+    )}
+  </div>
+</div>
         </div>
       )}
 

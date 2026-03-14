@@ -1,4 +1,4 @@
-import api from "./Api"; // Siguraduhin na tama ang path papunta sa Api.js mo
+import api from "./Api"; 
 
 /**
  * Service to handle all analytics-related API calls.
