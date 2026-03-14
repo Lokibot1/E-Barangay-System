@@ -672,7 +672,7 @@ const Step4Upload = ({
   const galleryInputRefs = useRef({});
   const [cameraTarget, setCameraTarget] = useState(null);
 
-  const labelClass = `text-[11px] font-black uppercase tracking-widest ${isDarkMode ? "text-slate-400" : "text-slate-500"}`;
+  const labelClass = `text-[11px] font-black uppercase tracking-widest font-kumbh ${isDarkMode ? "text-slate-400" : "text-slate-500"}`;
 
   const hasFront = !!previews?.front;
   const hasBack  = !!previews?.back;

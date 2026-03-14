@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, useLocation } from "react-router-dom";
 import {
   Sun, Moon, Loader2, CheckCircle2, Download,
   ArrowLeft, Search, Info,
@@ -34,8 +34,11 @@ const THEME_PRIMARY_CSS = {
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from; // 'signup' when coming from signup page
   const [currentTheme] = useState(() => localStorage.getItem("appTheme") || "blue");
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [slidingOut, setSlidingOut] = useState(false);
 
   // -- Login-specific state --
   const [email, setEmail] = useState("");
@@ -103,6 +106,11 @@ const LoginPage = () => {
     } finally {
       setLoginLoading(false);
     }
+  };
+
+  const goToSignup = () => {
+    setSlidingOut(true);
+    setTimeout(() => navigate("/signup", { state: { from: "login" } }), 280);
   };
 
   const SidebarBrand = () => (
@@ -224,7 +232,7 @@ const LoginPage = () => {
             <div className="grid lg:grid-cols-[360px_1fr]">
               
               {/* Sidebar: Branding & Tracking */}
-              <aside className={`p-5 sm:p-8 lg:p-8 border-b lg:border-b-0 lg:border-r flex flex-col ${sideClass}`}>
+              <aside className={`p-5 sm:p-8 lg:p-8 border-b lg:border-b-0 lg:border-r flex flex-col ${sideClass} ${slidingOut ? "auth-side-exit" : from === "signup" ? "auth-side-enter" : "auth-fade-in"}`}>
                 <DistrictBadge />
                 <SidebarBrand />
 
@@ -267,7 +275,7 @@ const LoginPage = () => {
               </aside>
 
               {/* Main Login Form Section */}
-              <section className="p-5 sm:p-8 lg:p-8">
+              <section className={`p-5 sm:p-8 lg:p-8 ${slidingOut ? "auth-section-exit" : from === "signup" ? "auth-section-enter" : "auth-fade-in"}`}>
                 <div className="max-w-xl mx-auto lg:mx-0 text-left">
                   <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tighter leading-none mb-1 font-spartan">Sign In</h1>
                   <p className={`text-xs sm:text-sm leading-relaxed mb-3 font-kumbh ${strongMutedClass}`}>
@@ -314,7 +322,7 @@ const LoginPage = () => {
                     <div className={`mt-8 text-sm font-semibold tracking-normal flex flex-wrap items-center justify-center gap-2 font-kumbh ${mutedClass}`}>
                       <span>No account yet?</span>
                       <button type="button"
-                        onClick={() => navigate("/signup")}
+                        onClick={goToSignup}
                         className={`${t.primaryText} transition-colors font-semibold hover:underline`}>
                         Register here!
                       </button>
@@ -329,6 +337,16 @@ const LoginPage = () => {
       </main>
 
       <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes authSideEnterLogin { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes authSideExitLogin { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-60px); } }
+        @keyframes authSectionEnterLogin { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes authSectionExitLogin { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
+        @keyframes authFadeInLogin { from { opacity: 0; } to { opacity: 1; } }
+        .auth-side-enter { animation: authSideEnterLogin 0.35s cubic-bezier(0.4,0,0.2,1) both; }
+        .auth-side-exit { animation: authSideExitLogin 0.28s cubic-bezier(0.4,0,0.2,1) both; }
+        .auth-section-enter { animation: authSectionEnterLogin 0.35s cubic-bezier(0.4,0,0.2,1) both; }
+        .auth-section-exit { animation: authSectionExitLogin 0.28s cubic-bezier(0.4,0,0.2,1) both; }
+        .auth-fade-in { animation: authFadeInLogin 0.3s ease both; }
         .custom-scrollbar { scrollbar-width: thin; scrollbar-color: ${primaryCss} rgba(148,163,184,0.22); }
         .custom-scrollbar::-webkit-scrollbar { width: 10px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(148,163,184,0.22); border-radius: 999px; }

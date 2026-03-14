@@ -23,7 +23,7 @@ const LoginForm = ({ email, password, onChange, errors = {}, isDarkMode }) => {
   };
 
   const inputClass = `
-    w-full pl-11 pr-4 py-3.5 rounded-2xl border text-sm font-normal outline-none
+    w-full pl-11 pr-4 py-3.5 rounded-2xl border text-sm font-normal outline-none font-kumbh
     transition-colors bg-transparent placeholder:font-normal
     ${isDarkMode
       ? "border-slate-600 text-white placeholder:text-slate-500 focus:border-emerald-500"
@@ -40,7 +40,7 @@ const LoginForm = ({ email, password, onChange, errors = {}, isDarkMode }) => {
 
       {/* ── Username or Email ─────────────────────────────────────────── */}
       <div className="space-y-2">
-        <label className={`text-sm font-semibold tracking-normal ${
+        <label className={`text-sm font-semibold tracking-normal font-kumbh ${
           isDarkMode ? "text-slate-400" : "text-slate-500"
         }`}>
           <span>Username or Email</span>
@@ -68,7 +68,7 @@ const LoginForm = ({ email, password, onChange, errors = {}, isDarkMode }) => {
 
       {/* ── Password ──────────────────────────────────────────────────── */}
       <div className="space-y-2">
-        <label className={`text-sm font-semibold tracking-normal ${
+        <label className={`text-sm font-semibold tracking-normal font-kumbh ${
           isDarkMode ? "text-slate-400" : "text-slate-500"
         }`}>
           <span>Password</span>
