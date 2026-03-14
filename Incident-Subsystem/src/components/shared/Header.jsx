@@ -247,7 +247,11 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
     ? "Appointment Scheduled"
     : notification.type === "registration_pending"
       ? "New Resident Registration"
-    : notification.type;
+      : notification.type === "incident_status_updated"
+        ? "Incident Status Updated"
+        : notification.type === "complaint_status_updated"
+          ? "Complaint Status Updated"
+          : notification.type;
 
   const capitalize = (str) =>
     str ? str.replace(/\b\w/g, (c) => c.toUpperCase()) : str;
@@ -346,7 +350,11 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
     ? "Appointment Scheduled"
     : notification.type === "registration_pending"
       ? "New Resident Registration"
-      : notification.type;
+      : notification.type === "incident_status_updated"
+        ? "Incident Status Updated"
+        : notification.type === "complaint_status_updated"
+          ? "Complaint Status Updated"
+          : notification.type;
 
   const actionLabel = isRegistration
     ? "View"

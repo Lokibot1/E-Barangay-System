@@ -8,7 +8,7 @@ import React, {
   useRef,
 } from "react";
 import useUserRealTimeEvents from "../hooks/shared/useUserRealTimeEvents";
-import { fetchNotifications } from "../services/sub-system-3/notificationService";
+import { fetchNotifications, markNotificationsRead } from "../services/sub-system-3/notificationService";
 
 const UserRealTimeContext = createContext(null);
 
@@ -56,6 +56,27 @@ const mapUserBackendNotification = (n) => {
       data: n.data,
     };
   }
+
+  if (n.type === "incident_status_updated" || n.type === "complaint_status_updated") {
+    const src = n.type === "complaint_status_updated" ? "complaint" : "incident";
+    const oldStatus = n.data?.old_status || "";
+    const newStatus = n.data?.new_status || "";
+    return {
+      id: `api-${n.id}`,
+      backendId: n.id,
+      source: src,
+      type: n.type,
+      description: oldStatus && newStatus
+        ? `Your ${src} report status changed from ${capitalize(oldStatus)} to ${capitalize(newStatus)}`
+        : (n.message || "Your report status has been updated."),
+      oldStatus,
+      newStatus,
+      timestamp: n.created_at,
+      read: n.is_read,
+      data: n.data,
+    };
+  }
+
   return {
     id: `api-${n.id}`,
     backendId: n.id,
@@ -114,8 +135,13 @@ export const UserRealTimeProvider = ({ children }) => {
 
       const backendItems = response.data.map(mapUserBackendNotification);
 
-      // Replace cache with backend data — keeps it in sync (handles DB clears, etc.)
-      setNotifications(backendItems);
+      // Merge: backend notifications are synced by their api-* id, but locally-detected
+      // notifications (poll-detected status changes without a backendId) are preserved.
+      setNotifications((prev) => {
+        const backendIds = new Set(backendItems.map((n) => n.id));
+        const localOnly = prev.filter((n) => !n.backendId && !backendIds.has(n.id));
+        return [...backendItems, ...localOnly];
+      });
 
       // Show toasts for unread notifications that weren't cached locally at mount
       if (initialNotifIdsRef.current) {
@@ -191,12 +217,17 @@ export const UserRealTimeProvider = ({ children }) => {
   );
 
   const markAsRead = useCallback((notificationId) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
-    );
+    setNotifications((prev) => {
+      const notification = prev.find((n) => n.id === notificationId);
+      if (notification?.backendId && !notification.read) {
+        markNotificationsRead({ ids: [notification.backendId], read: true });
+      }
+      return prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n));
+    });
   }, []);
 
   const markAllAsRead = useCallback(() => {
+    markNotificationsRead({ markAll: true, read: true });
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   }, []);
 

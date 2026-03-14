@@ -48,7 +48,7 @@ export const markNotificationsRead = async ({ ids, markAll = false, read = true 
 
   try {
     const res = await fetch(`${API_BASE}/notifications`, {
-      method: "PUT",
+      method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/json",
