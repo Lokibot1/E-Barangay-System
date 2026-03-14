@@ -15,7 +15,13 @@ const getLoggedInName = () => {
   const user = getUser();
   if (!user) return "";
   const parts = [user.first_name, user.middle_name, user.last_name].filter(Boolean);
-  return parts.join(" ");
+  return parts.length > 0 ? parts.join(" ") : (user.name || "");
+};
+
+const getLoggedInContact = () => {
+  const user = getUser();
+  if (!user) return "";
+  return user.contact_number || user.contact || user.phone || user.mobile || "";
 };
 
 const defaultComplaintForm = () => ({
@@ -28,7 +34,7 @@ const defaultComplaintForm = () => ({
   severity: "",
   description: "",
   complainantName: getLoggedInName(),
-  complainantContact: "",
+  complainantContact: getLoggedInContact(),
   respondentName: "",
   respondentAddress: "",
   witnesses: [""],
@@ -80,8 +86,13 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
   useEffect(() => {
     if (isOpen) {
       const name = getLoggedInName();
-      if (name) {
-        setFormData((prev) => ({ ...prev, complainantName: name }));
+      const contact = getLoggedInContact();
+      if (name || contact) {
+        setFormData((prev) => ({
+          ...prev,
+          ...(name ? { complainantName: name } : {}),
+          ...(contact ? { complainantContact: contact } : {}),
+        }));
       }
 
       // Check for saved draft
