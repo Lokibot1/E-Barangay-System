@@ -251,10 +251,10 @@ const SignupForm = ({
           }`}>
 
             <div className="mb-8">
-              <h3 className="text-3xl font-black uppercase tracking-tight">
+              <h3 className="text-3xl font-black uppercase tracking-tight font-spartan">
                 {isStaffMode ? 'Finalize Registration' : 'Review Details'}
               </h3>
-              <p className="text-sm opacity-60 mt-1">
+              <p className="text-sm opacity-60 mt-1 font-kumbh">
                 Pakisuri ang lahat ng impormasyon bago i-save sa system.
               </p>
             </div>
@@ -262,7 +262,7 @@ const SignupForm = ({
             <div className="space-y-8 text-left">
               {reviewSections.map((section) => (
                 <div key={section.title}>
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500 mb-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500 mb-4 font-kumbh">
                     {section.title}
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -270,8 +270,8 @@ const SignupForm = ({
                       <div key={row.label} className={`p-4 rounded-2xl border ${
                         isDarkMode ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-black/5'
                       }`}>
-                        <p className="text-[9px] font-black uppercase opacity-40 mb-1">{row.label}</p>
-                        <p className="text-xs font-bold break-words">{row.value}</p>
+                        <p className="text-[9px] font-black uppercase opacity-40 mb-1 font-kumbh">{row.label}</p>
+                        <p className="text-xs font-bold break-words font-kumbh">{row.value}</p>
                       </div>
                     ))}
                   </div>
@@ -280,7 +280,7 @@ const SignupForm = ({
 
               {!isStaffMode && (previews.front || previews.back) && (
                 <div>
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500 mb-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500 mb-4 font-kumbh">
                     Identification Documents
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
@@ -300,14 +300,14 @@ const SignupForm = ({
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
               <button
                 onClick={() => { setIsReviewOpen(false); if (!isStaffMode) setStep(4); }}
-                className="flex-1 py-4 rounded-2xl font-black text-xs uppercase tracking-widest bg-slate-100 dark:bg-slate-800 transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
+                className="flex-1 py-4 rounded-2xl font-black text-xs uppercase tracking-widest font-kumbh bg-slate-100 dark:bg-slate-800 transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
               >
                 Go Back
               </button>
               <button
                 onClick={handleConfirmSubmit}
                 disabled={loading}
-                className={`flex-[2] py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-white transition-colors ${
+                className={`flex-[2] py-4 rounded-2xl font-black text-xs uppercase tracking-widest font-kumbh text-white transition-colors ${
                   loading ? 'bg-slate-400' : 'bg-emerald-600 hover:bg-emerald-700'
                 }`}
               >

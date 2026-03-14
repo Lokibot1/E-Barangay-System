@@ -57,10 +57,10 @@ const Step3WorkEducation = ({
   setIsIndigent = () => {},
 }) => {
 
-  const labelClass = `block text-[10px] font-black uppercase tracking-[0.22em] mb-1.5 ${
+  const labelClass = `block text-[10px] font-black uppercase tracking-[0.22em] mb-1.5 font-kumbh ${
     isDarkMode ? 'text-slate-400' : 'text-slate-500'
   }`;
-  const inputClass = `w-full px-4 py-3 rounded-2xl border text-sm font-medium transition-all outline-none focus:ring-2 focus:ring-emerald-500/40 ${
+  const inputClass = `w-full px-4 py-3 rounded-2xl border text-sm font-medium font-kumbh transition-all outline-none focus:ring-2 focus:ring-emerald-500/40 ${
     isDarkMode
       ? 'bg-slate-800 border-white/10 text-white placeholder-slate-500'
       : 'bg-white border-black/10 text-slate-900 placeholder-slate-400'
@@ -77,7 +77,7 @@ const Step3WorkEducation = ({
 
       {/* ── Employment ─────────────────────────────────────────────────────── */}
       <div>
-        <h3 className={`text-xs font-black uppercase tracking-[0.3em] mb-4 ${
+        <h3 className={`text-xs font-black uppercase tracking-[0.3em] mb-4 font-kumbh ${
           isDarkMode ? 'text-slate-400' : 'text-slate-500'
         }`}>
           Employment
@@ -143,7 +143,7 @@ const Step3WorkEducation = ({
 
       {/* ── Education ──────────────────────────────────────────────────────── */}
       <div>
-        <h3 className={`text-xs font-black uppercase tracking-[0.3em] mb-4 ${
+        <h3 className={`text-xs font-black uppercase tracking-[0.3em] mb-4 font-kumbh ${
           isDarkMode ? 'text-slate-400' : 'text-slate-500'
         }`}>
           Education
