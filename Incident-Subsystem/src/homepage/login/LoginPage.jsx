@@ -65,15 +65,16 @@ const LoginPage = () => {
     return <Navigate to={isAdmin() ? "/admin" : "/sub-system-2"} replace />;
   }
 
-  const t = themeTokens[currentTheme];
-  const primaryCss = THEME_PRIMARY_CSS[currentTheme] || THEME_PRIMARY_CSS.blue;
+  const lightTheme = currentTheme === "dark" ? "modern" : currentTheme;
+  const t = isDarkMode ? themeTokens.dark : (themeTokens[lightTheme] || themeTokens.modern);
+  const primaryCss = isDarkMode ? "#475569" : (THEME_PRIMARY_CSS[lightTheme] || THEME_PRIMARY_CSS.blue);
   const panelClass = isDarkMode
-    ? "bg-slate-900/95 border-white/10 text-white"
+    ? `${t.cardBg} border-white/10 ${t.cardText}`
     : `${t.cardBg} border-slate-200 ${t.cardText}`;
   const sideClass = isDarkMode
-    ? "bg-slate-950/40 border-white/10"
+    ? `${t.inlineBg} border-white/10`
     : "bg-slate-100/95 border-slate-200";
-  const mutedClass = isDarkMode ? "text-slate-400" : t.subtleText;
+  const mutedClass = t.subtleText;
   const strongMutedClass = isDarkMode ? "text-slate-300" : "text-slate-700";
 
   const validate = () => {
@@ -130,7 +131,7 @@ const LoginPage = () => {
   );
 
   return (
-    <div className={`min-h-screen w-screen relative overflow-x-hidden ${isDarkMode ? "bg-slate-950" : t.pageBg}`}>
+    <div className={`min-h-screen w-screen relative overflow-x-hidden ${t.pageBg}`}>
       <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
 
       <ForgotPasswordModal
@@ -148,7 +149,7 @@ const LoginPage = () => {
           className={`w-full h-full object-cover ${isDarkMode ? "opacity-20 grayscale" : "opacity-[0.38]"}`} />
         <div className={`absolute inset-0 ${
           isDarkMode
-            ? "bg-gradient-to-b from-slate-950/95 via-slate-950/85 to-slate-950/95"
+            ? "bg-gradient-to-b from-slate-900/80 via-slate-800/70 to-slate-900/80"
             : "bg-gradient-to-b from-white/60 via-white/38 to-white/65"
         }`} />
       </div>
