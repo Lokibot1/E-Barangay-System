@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useLanguage } from "../../context/LanguageContext";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
 import ComplaintModal from "../../components/sub-system-3/ComplaintModal";
 import themeTokens from "../../Themetokens";
@@ -60,6 +61,7 @@ const FileComplaintPage = () => {
     };
   }, []);
 
+  const { tr } = useLanguage();
   const t = themeTokens[currentTheme];
 
   const openModal = () => setIsModalOpen(true);
@@ -73,7 +75,7 @@ const FileComplaintPage = () => {
           <h1
             className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${t.cardText} mb-2 sm:mb-3 font-spartan uppercase tracking-tight`}
           >
-            INCIDENT & COMPLAINT MANAGEMENT
+            {tr.incidentMap?.title || 'INCIDENT & COMPLAINT MANAGEMENT'}
           </h1>
         </div>
 
@@ -111,7 +113,7 @@ const FileComplaintPage = () => {
                 <h2
                   className={`text-2xl sm:text-3xl font-bold ${t.cardText} mb-2 font-spartan`}
                 >
-                  FILING A COMPLAINT
+                  {tr.fileComplaintPage.title}
                 </h2>
                 <div className="w-20 h-1 bg-amber-500 rounded-full"></div>
               </div>
@@ -133,16 +135,12 @@ const FileComplaintPage = () => {
                   <h3
                     className={`text-lg font-bold ${t.cardText} mb-3 font-spartan text-amber-500`}
                   >
-                    WHAT HAPPENS WHEN YOU FILE A COMPLAINT?
+                    {tr.fileComplaintPage.whatHappens}
                   </h3>
                   <p
                     className={`text-sm ${t.subtleText} font-kumbh leading-relaxed`}
-                  >
-                    Filing a formal complaint (<strong>Blotter</strong>)
-                    initiates a community-based dispute resolution process. Its
-                    primary goal is Amicable Settlement—helping both parties
-                    reach a fair agreement without going to court.
-                  </p>
+                    dangerouslySetInnerHTML={{ __html: tr.fileComplaintPage.whatHappensDesc }}
+                  />
                 </div>
               </div>
             </div>
@@ -169,7 +167,7 @@ const FileComplaintPage = () => {
               <h3
                 className={`text-xl sm:text-2xl font-bold ${t.cardText} font-spartan`}
               >
-                HOW THE PROCESS WORKS?
+                {tr.fileComplaintPage.howProcessWorks}
               </h3>
             </div>
 
@@ -186,12 +184,10 @@ const FileComplaintPage = () => {
                     <h4
                       className={`text-lg font-bold ${t.cardText} mb-2 font-spartan`}
                     >
-                      DOCUMENTATION
+                      {tr.fileComplaintPage.step1Title}
                     </h4>
                     <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                      Your narration will be recorded in the official Barangay
-                      Blotter. This serves as a permanent administrative record
-                      of the incident.
+                      {tr.fileComplaintPage.step1Desc}
                     </p>
                   </div>
                 </div>
@@ -210,12 +206,10 @@ const FileComplaintPage = () => {
                     <h4
                       className={`text-lg font-bold ${t.cardText} mb-2 font-spartan`}
                     >
-                      THE SUMMONS
+                      {tr.fileComplaintPage.step2Title}
                     </h4>
                     <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                      Within the next few days, the Barangay will issue a Notice
-                      to Appear (Summons) to the person you are complaining
-                      against (the Respondent).
+                      {tr.fileComplaintPage.step2Desc}
                     </p>
                   </div>
                 </div>
@@ -234,12 +228,10 @@ const FileComplaintPage = () => {
                     <h4
                       className={`text-lg font-bold ${t.cardText} mb-2 font-spartan`}
                     >
-                      MEDIATION
+                      {tr.fileComplaintPage.step3Title}
                     </h4>
                     <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                      You and the Respondent will be invited to a face-to-face
-                      meeting moderated by the Barangay Captain or a member of
-                      the Lupon Tagapamayapa.
+                      {tr.fileComplaintPage.step3Desc}
                     </p>
                   </div>
                 </div>
@@ -258,18 +250,15 @@ const FileComplaintPage = () => {
                     <h4
                       className={`text-lg font-bold ${t.cardText} mb-2 font-spartan`}
                     >
-                      RESOLUTION / AGREEMENT
+                      {tr.fileComplaintPage.step4Title}
                     </h4>
                     <p className={`text-sm ${t.subtleText} font-kumbh mb-2`}>
-                      If you settle, a written agreement is signed. This has the
-                      force and effect of a court judgment.
+                      {tr.fileComplaintPage.step4Desc}
                     </p>
-                    <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                      <strong>No Agreement:</strong> If no settlement is
-                      reached, the Barangay will issue a Certificate to File
-                      Action (CFA). You need this document if you decide to
-                      escalate the case to a higher court or the police.
-                    </p>
+                    <p
+                      className={`text-sm ${t.subtleText} font-kumbh`}
+                      dangerouslySetInnerHTML={{ __html: tr.fileComplaintPage.step4NoAgreement }}
+                    />
                   </div>
                 </div>
               </div>
@@ -297,7 +286,7 @@ const FileComplaintPage = () => {
               <h3
                 className={`text-xl sm:text-2xl font-bold ${t.cardText} font-spartan`}
               >
-                WHAT TO PREPARE?
+                {tr.fileComplaintPage.whatToPrepare}
               </h3>
             </div>
 
@@ -308,10 +297,10 @@ const FileComplaintPage = () => {
                 <h4
                   className={`text-lg font-bold ${t.cardText} mb-3 font-spartan`}
                 >
-                  FACTS
+                  {tr.fileComplaintPage.facts}
                 </h4>
                 <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                  Clear details of the date, time, and location of the incident.
+                  {tr.fileComplaintPage.factsDesc}
                 </p>
               </div>
 
@@ -322,10 +311,10 @@ const FileComplaintPage = () => {
                 <h4
                   className={`text-lg font-bold ${t.cardText} mb-3 font-spartan`}
                 >
-                  NAMES
+                  {tr.fileComplaintPage.names}
                 </h4>
                 <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                  Full names and addresses of the parties involved (if known).
+                  {tr.fileComplaintPage.namesDesc}
                 </p>
               </div>
 
@@ -336,11 +325,10 @@ const FileComplaintPage = () => {
                 <h4
                   className={`text-lg font-bold ${t.cardText} mb-3 font-spartan`}
                 >
-                  EVIDENCE
+                  {tr.fileComplaintPage.evidence}
                 </h4>
                 <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                  Photos, videos, screenshots, or names of witnesses that can
-                  support your statement.
+                  {tr.fileComplaintPage.evidenceDesc}
                 </p>
               </div>
             </div>
@@ -365,14 +353,14 @@ const FileComplaintPage = () => {
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              FILE A COMPLAINT
+              {tr.fileComplaintPage.ctaButton}
             </button>
           </div>
 
           {/* Bottom Bar */}
           <div className={`pt-6 mt-8 border-t ${t.dividerBorder} text-center`}>
             <p className={`text-sm ${t.subtleText} font-kumbh`}>
-              © {new Date().getFullYear()} Barangay Incident & Complaint Management System. All rights reserved.
+              © {new Date().getFullYear()} {tr.fileComplaintPage.footer}
             </p>
           </div>
         </div>

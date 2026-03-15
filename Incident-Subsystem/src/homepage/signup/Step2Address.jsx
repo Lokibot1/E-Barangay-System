@@ -552,7 +552,7 @@ const Step2Address = ({
           <button
             type="button"
             onClick={() => setStep(1)}
-            className="flex-1 py-4 rounded-2xl font-black text-xs uppercase tracking-widest border transition-all dark:bg-slate-900 dark:border-white/10 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="flex-1 py-4 rounded-2xl font-black text-xs uppercase tracking-widest font-kumbh border transition-all dark:bg-slate-900 dark:border-white/10 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             Back
           </button>
@@ -560,7 +560,7 @@ const Step2Address = ({
             type="button"
             disabled={!isStep2Valid}
             onClick={() => setStep(3)}
-            className="sm:flex-[2] py-4 bg-emerald-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest disabled:opacity-30 transition-all hover:bg-emerald-800 shadow-lg shadow-emerald-900/20"
+            className="sm:flex-[2] py-4 bg-emerald-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest font-kumbh disabled:opacity-30 transition-all hover:bg-emerald-800 shadow-lg shadow-emerald-900/20"
           >
             Next Step
           </button>
@@ -573,7 +573,7 @@ const Step2Address = ({
             formData.houseNumber ||
             formData.residencyStatus) && (
             <p
-              className={`text-[9px] font-bold text-center uppercase tracking-wider ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}
+              className={`text-[9px] font-bold text-center uppercase tracking-wider font-kumbh ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}
             >
               ⚠ {disabledReason}
             </p>

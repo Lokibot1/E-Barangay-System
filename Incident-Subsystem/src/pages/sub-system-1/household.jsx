@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { Printer, Archive, LayoutList, ScrollText } from 'lucide-react';
 
 import HouseholdStats from '../../components/sub-system-1/household/HouseholdStats';
@@ -32,6 +33,7 @@ const tabAccentMap = {
 };
 
 const Households = () => {
+  const { tr } = useLanguage();
   const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem('appTheme') || 'modern');
   useEffect(() => {
     const handler = (e) => setCurrentTheme(e.detail);
@@ -143,7 +145,9 @@ const Households = () => {
     return (
       <div className={`font-sans min-h-screen py-4 pb-24 px-3 sm:px-4 lg:px-5 relative ${t.pageBg}`}>
         <div className="mx-auto flex h-64 w-full max-w-[1600px] items-center justify-center">
-          <div className={`animate-pulse font-semibold font-kumbh ${t.subtleText}`}>Syncing Registry...</div>
+          <div className={`animate-pulse font-semibold font-kumbh ${t.subtleText}`}>
+            {tr?.sub1?.loading || 'Syncing Registry...'}
+          </div>
         </div>
       </div>
     );
@@ -157,10 +161,10 @@ const Households = () => {
           <section className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl space-y-2 text-left">
               <h1 className={`text-[2.25rem] sm:text-[2.1rem] font-bold tracking-tight ${t.cardText} font-spartan`}>
-                Household Registry
+                {tr?.sub1?.households || 'Household Registry'}
               </h1>
               <p className={`max-w-2xl text-[13px] leading-6 ${t.subtleText} font-kumbh`}>
-                Family units, housing status, and archival history in one organized workspace.
+                {tr?.sub1?.householdsDesc || 'Family units, housing status, and archival history in one organized workspace.'}
               </p>
             </div>
             {activeTab === 'registry' && (
@@ -170,7 +174,7 @@ const Households = () => {
                   disabled={filteredHouseholds.length === 0}
                   className={`inline-flex items-center gap-2 rounded-[20px] px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 ${t.primarySolid} ${t.primaryHover}`}
                 >
-                  <Printer size={16} /> Print Masterlist
+                  <Printer size={16} /> {tr?.sub1?.export || 'Print Masterlist'}
                 </button>
               </div>
             )}

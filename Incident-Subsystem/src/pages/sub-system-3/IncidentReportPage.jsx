@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useLanguage } from "../../context/LanguageContext";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
 import TwoStepIncidentReportModal from "../../components/sub-system-3/TwoStepIncidentReportModal";
 import themeTokens from "../../Themetokens";
@@ -60,6 +61,7 @@ const IncidentReportPage = () => {
     };
   }, []);
 
+  const { tr } = useLanguage();
   const t = themeTokens[currentTheme];
 
   const openModal = () => setIsModalOpen(true);
@@ -73,7 +75,7 @@ const IncidentReportPage = () => {
           <h1
             className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${t.cardText} mb-2 sm:mb-3 font-spartan uppercase tracking-tight`}
           >
-            INCIDENT & COMPLAINT MANAGEMENT
+            {tr.incidentMap?.title || 'INCIDENT & COMPLAINT MANAGEMENT'}
           </h1>
         </div>
 
@@ -113,7 +115,7 @@ const IncidentReportPage = () => {
                 <h2
                   className={`text-2xl sm:text-3xl font-bold ${t.cardText} mb-2 font-spartan`}
                 >
-                  REPORT A COMMUNITY INCIDENT
+                  {tr.incidentReportPage.title}
                 </h2>
                 <div className="w-20 h-1 bg-blue-600 rounded-full"></div>
               </div>
@@ -135,15 +137,12 @@ const IncidentReportPage = () => {
                   <h3
                     className={`text-lg font-bold ${t.cardText} mb-3 font-spartan text-blue-600`}
                   >
-                    HELP US MAINTAIN ORDER AND SAFETY IN OUR STREETS.
+                    {tr.incidentReportPage.heroTitle}
                   </h3>
                   <p
                     className={`text-sm ${t.subtleText} font-kumbh leading-relaxed`}
                   >
-                    Use this platform to alert the Barangay about non-emergency
-                    incidents occurring in public spaces. Your report allows our
-                    response teams (Tanods and BDRRM) to address community
-                    concerns quickly.
+                    {tr.incidentReportPage.heroDesc}
                   </p>
                 </div>
               </div>
@@ -171,7 +170,7 @@ const IncidentReportPage = () => {
               <h3
                 className={`text-xl sm:text-2xl font-bold ${t.cardText} font-spartan`}
               >
-                WHAT TO REPORT?
+                {tr.incidentReportPage.whatToReport}
               </h3>
             </div>
 
@@ -200,11 +199,10 @@ const IncidentReportPage = () => {
                     <h4
                       className={`text-lg font-bold ${t.cardText} mb-2 font-spartan`}
                     >
-                      PUBLIC SAFETY & TRAFFIC
+                      {tr.incidentReportPage.publicSafety}
                     </h4>
                     <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                      Illegal parking, street obstructions, or abandoned
-                      vehicles.
+                      {tr.incidentReportPage.publicSafetyDesc}
                     </p>
                   </div>
                 </div>
@@ -235,11 +233,10 @@ const IncidentReportPage = () => {
                     <h4
                       className={`text-lg font-bold ${t.cardText} mb-2 font-spartan`}
                     >
-                      PUBLIC NUISANCE
+                      {tr.incidentReportPage.publicNuisance}
                     </h4>
                     <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                      Excessive noise, stray/aggressive animals, or broken
-                      public facilities.
+                      {tr.incidentReportPage.publicNuisanceDesc}
                     </p>
                   </div>
                 </div>
@@ -270,11 +267,10 @@ const IncidentReportPage = () => {
                     <h4
                       className={`text-lg font-bold ${t.cardText} mb-2 font-spartan`}
                     >
-                      ENVIRONMENTAL HAZARDS
+                      {tr.incidentReportPage.environmental}
                     </h4>
                     <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                      Sudden flooding, illegal dumping of waste, or clogged
-                      sewers.
+                      {tr.incidentReportPage.environmentalDesc}
                     </p>
                   </div>
                 </div>
@@ -305,10 +301,10 @@ const IncidentReportPage = () => {
                     <h4
                       className={`text-lg font-bold ${t.cardText} mb-2 font-spartan`}
                     >
-                      HEALTH HAZARDS
+                      {tr.incidentReportPage.health}
                     </h4>
                     <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                      Standing water (dengue risk) or unsanitary public areas.
+                      {tr.incidentReportPage.healthDesc}
                     </p>
                   </div>
                 </div>
@@ -337,7 +333,7 @@ const IncidentReportPage = () => {
               <h3
                 className={`text-xl sm:text-2xl font-bold ${t.cardText} font-spartan`}
               >
-                HOW TO FILE?
+                {tr.incidentReportPage.howToFile}
               </h3>
             </div>
 
@@ -371,11 +367,10 @@ const IncidentReportPage = () => {
                     <h4
                       className={`text-lg font-bold ${t.cardText} mb-2 font-spartan`}
                     >
-                      PIN THE LOCATION
+                      {tr.incidentReportPage.pinLocation}
                     </h4>
                     <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                      Use the map to mark the exact spot where the incident is
-                      happening.
+                      {tr.incidentReportPage.pinLocationDesc}
                     </p>
                   </div>
                 </div>
@@ -405,11 +400,10 @@ const IncidentReportPage = () => {
                     <h4
                       className={`text-lg font-bold ${t.cardText} mb-2 font-spartan`}
                     >
-                      PROVIDE A BRIEF DESCRIPTION
+                      {tr.incidentReportPage.provideDesc}
                     </h4>
                     <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                      Tell us what is happening and how long it has been
-                      occurring.
+                      {tr.incidentReportPage.provideDescDesc}
                     </p>
                   </div>
                 </div>
@@ -439,11 +433,10 @@ const IncidentReportPage = () => {
                     <h4
                       className={`text-lg font-bold ${t.cardText} mb-2 font-spartan`}
                     >
-                      ATTACH PROOF
+                      {tr.incidentReportPage.attachProof}
                     </h4>
                     <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                      A clear photo of the violation (like a vehicle's license
-                      plate or the flooded street) is essential for validation.
+                      {tr.incidentReportPage.attachProofDesc}
                     </p>
                   </div>
                 </div>
@@ -470,15 +463,14 @@ const IncidentReportPage = () => {
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
-              REPORT AN INCIDENT
+              {tr.incidentReportPage.ctaButton}
             </button>
           </div>
 
           {/* Bottom Bar */}
           <div className={`pt-6 mt-8 border-t ${t.dividerBorder} text-center`}>
             <p className={`text-sm ${t.subtleText} font-kumbh`}>
-              © {new Date().getFullYear()} Barangay Incident & Complaint
-              Management System. All rights reserved.
+              © {new Date().getFullYear()} {tr.incidentReportPage.footer}
             </p>
           </div>
         </div>

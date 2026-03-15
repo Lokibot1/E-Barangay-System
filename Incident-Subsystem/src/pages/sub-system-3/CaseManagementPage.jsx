@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useLanguage } from "../../context/LanguageContext";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
 import TabsComponent from "../../components/sub-system-3/TabsComponent";
 import ReportCard from "../../components/sub-system-3/ReportCard";
@@ -35,6 +36,7 @@ const apptStatusCfg = {
 };
 
 const CaseManagementPage = () => {
+  const { tr } = useLanguage();
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("complaints");
@@ -312,7 +314,7 @@ const CaseManagementPage = () => {
           <h1
             className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${t.cardText} mb-2 sm:mb-3 font-spartan uppercase tracking-tight`}
           >
-            CASE TRACKER
+            {tr.caseManagement.title}
           </h1>
         </div>
 
@@ -361,10 +363,10 @@ const CaseManagementPage = () => {
                   {/* Header */}
                   <div className="mb-6 sm:mb-8">
                     <h2 className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan mb-1`}>
-                      My Appointments
+                      {tr.adminAppointments.title}
                     </h2>
                     <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh`}>
-                      Barangay hearing appointments scheduled for your complaints
+                      {tr.caseManagement.appointmentsSubtitle}
                     </p>
                   </div>
 
@@ -383,10 +385,10 @@ const CaseManagementPage = () => {
                       </div>
                       <div className="flex-1 text-left">
                         <span className={`text-sm font-bold font-spartan ${t.cardText}`}>
-                          Appointment List
+                          {tr.caseManagement.appointmentList}
                         </span>
                         <span className={`ml-2 text-[11px] font-kumbh ${t.subtleText}`}>
-                          {visibleAppts.length} {apptFilter === "all" ? "total" : apptFilter.replace(/_/g, " ")}
+                          {visibleAppts.length} {apptFilter === "all" ? tr.caseManagement.total : apptFilter.replace(/_/g, " ")}
                         </span>
                       </div>
                       <svg
@@ -447,13 +449,13 @@ const CaseManagementPage = () => {
                           }`}>
                             <div className="flex-shrink-0 w-12" />
                             <div className="flex-1 min-w-0">
-                              <span className={`text-[10px] font-bold uppercase tracking-widest font-kumbh ${t.subtleText}`}>Appointment</span>
+                              <span className={`text-[10px] font-bold uppercase tracking-widest font-kumbh ${t.subtleText}`}>{tr.caseManagement.appointment}</span>
                             </div>
                             <div className="flex-shrink-0 w-16 text-center hidden sm:block">
-                              <span className={`text-[10px] font-bold uppercase tracking-widest font-kumbh ${t.subtleText}`}>Time</span>
+                              <span className={`text-[10px] font-bold uppercase tracking-widest font-kumbh ${t.subtleText}`}>{tr.caseManagement.time}</span>
                             </div>
                             <div className="flex-shrink-0 w-24 text-right">
-                              <span className={`text-[10px] font-bold uppercase tracking-widest font-kumbh ${t.subtleText}`}>Status</span>
+                              <span className={`text-[10px] font-bold uppercase tracking-widest font-kumbh ${t.subtleText}`}>{tr.caseManagement.status}</span>
                             </div>
                           </div>
 
@@ -461,17 +463,17 @@ const CaseManagementPage = () => {
                           {loading ? (
                             <div className="py-10 text-center">
                               <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-3" />
-                              <p className={`text-sm ${t.subtleText} font-kumbh`}>Loading appointments…</p>
+                              <p className={`text-sm ${t.subtleText} font-kumbh`}>{tr.caseManagement.loading}</p>
                             </div>
                           ) : visibleAppts.length === 0 ? (
                             <div className="py-10 text-center">
                               <svg className={`w-12 h-12 ${t.subtleText} mx-auto mb-3`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z" />
                               </svg>
-                              <p className={`text-sm font-semibold ${t.cardText} font-spartan mb-1`}>No appointments found</p>
+                              <p className={`text-sm font-semibold ${t.cardText} font-spartan mb-1`}>{tr.caseManagement.noAppointmentsFound}</p>
                               <p className={`text-xs ${t.subtleText} font-kumbh`}>
                                 {apptFilter === "all"
-                                  ? "You have no barangay appointments yet."
+                                  ? tr.caseManagement.noAppointmentsYet
                                   : `No ${apptFilter.replace(/_/g, " ")} appointments.`}
                               </p>
                             </div>
@@ -561,19 +563,19 @@ const CaseManagementPage = () => {
                                             </svg>
                                           </div>
                                           <div>
-                                            <p className={`text-[10px] font-bold uppercase tracking-wide font-kumbh ${isDark ? "text-green-400" : "text-green-600"}`}>Where to Go</p>
-                                            <p className={`text-sm font-bold font-spartan ${t.cardText}`}>Gulod Barangay Hall</p>
+                                            <p className={`text-[10px] font-bold uppercase tracking-wide font-kumbh ${isDark ? "text-green-400" : "text-green-600"}`}>{tr.caseManagement.whereToGo}</p>
+                                            <p className={`text-sm font-bold font-spartan ${t.cardText}`}>{tr.caseManagement.gulodBarangayHall}</p>
                                           </div>
                                         </div>
 
                                         {/* Detail rows */}
                                         <div className={`rounded-xl border ${t.cardBorder} divide-y ${isDark ? "divide-slate-700" : "divide-gray-100"} overflow-hidden`}>
                                           {[
-                                            { label: "Complaint Type",     value: appt.complaint_type || "—" },
-                                            { label: "Respondent",         value: appt.respondent_name || "—" },
-                                            { label: "Respondent Address", value: appt.respondent_address || "—" },
-                                            { label: "Appointment ID",     value: `#${appt.id}` },
-                                            { label: "Complaint ID",       value: `#${appt.complaint_id || "—"}` },
+                                            { label: tr.caseManagement.complaintType,     value: appt.complaint_type || "—" },
+                                            { label: tr.caseManagement.respondent,         value: appt.respondent_name || "—" },
+                                            { label: tr.caseManagement.respondentAddress, value: appt.respondent_address || "—" },
+                                            { label: tr.caseManagement.appointmentId,     value: `#${appt.id}` },
+                                            { label: tr.caseManagement.complaintId,       value: `#${appt.complaint_id || "—"}` },
                                           ].map(({ label, value }) => (
                                             <div key={label} className={`flex items-start px-4 py-2.5 ${isDark ? "bg-slate-800" : "bg-white"}`}>
                                               <span className={`text-xs font-semibold w-36 flex-shrink-0 font-kumbh ${t.subtleText} pt-0.5`}>{label}</span>
@@ -582,7 +584,7 @@ const CaseManagementPage = () => {
                                           ))}
                                           {appt.description && (
                                             <div className={`px-4 py-2.5 ${isDark ? "bg-slate-800" : "bg-white"}`}>
-                                              <span className={`text-xs font-semibold font-kumbh ${t.subtleText} block mb-1`}>Notes</span>
+                                              <span className={`text-xs font-semibold font-kumbh ${t.subtleText} block mb-1`}>{tr.caseManagement.notes}</span>
                                               <span className={`text-xs font-kumbh ${t.cardText} leading-relaxed`}>{appt.description}</span>
                                             </div>
                                           )}
@@ -603,7 +605,7 @@ const CaseManagementPage = () => {
                               {/* End-of-list note */}
                               {!hasMore && visibleAppts.length > 0 && (
                                 <p className={`text-center text-[11px] font-kumbh ${t.subtleText} py-3`}>
-                                  All {visibleAppts.length} appointment{visibleAppts.length !== 1 ? "s" : ""} shown
+                                  {tr.caseManagement.allShown.replace("{n}", visibleAppts.length)}
                                 </p>
                               )}
                             </div>
@@ -622,7 +624,7 @@ const CaseManagementPage = () => {
               <div className="mb-6 sm:mb-8">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}>
-                    {activeTab === "complaints" ? "Complaint Tracker" : "Incident Tracker"}
+                    {activeTab === "complaints" ? tr.caseManagement.myComplaints : tr.caseManagement.myIncidents}
                   </h2>
                   <button
                     onClick={() => setShowMap(!showMap)}
@@ -633,22 +635,22 @@ const CaseManagementPage = () => {
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                         </svg>
-                        <span className="hidden sm:inline">Grid View</span>
+                        <span className="hidden sm:inline">{tr.caseManagement.gridView}</span>
                       </>
                     ) : (
                       <>
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                         </svg>
-                        <span className="hidden sm:inline">Map View</span>
+                        <span className="hidden sm:inline">{tr.caseManagement.mapView}</span>
                       </>
                     )}
                   </button>
                 </div>
                 <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh text-left`}>
                   {activeTab === "complaints"
-                    ? "View and track your submitted complaints"
-                    : "View and track your submitted incident reports"}
+                    ? tr.caseManagement.myComplaints
+                    : tr.caseManagement.myIncidents}
                 </p>
               </div>
 
@@ -657,7 +659,7 @@ const CaseManagementPage = () => {
                 <div className={`sr-elem ${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}>On-Going</p>
+                      <p className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}>{tr.caseManagement.onGoing}</p>
                       <p className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}>{statusCounts.ongoing}</p>
                     </div>
                     <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -671,7 +673,7 @@ const CaseManagementPage = () => {
                 <div className={`sr-elem ${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`} style={{ transitionDelay: "0.1s" }}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}>Resolved</p>
+                      <p className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}>{tr.caseManagement.resolved}</p>
                       <p className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}>{statusCounts.resolved}</p>
                     </div>
                     <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -685,7 +687,7 @@ const CaseManagementPage = () => {
                 <div className={`sr-elem ${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all sm:col-span-2 lg:col-span-1`} style={{ transitionDelay: "0.2s" }}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}>Rejected</p>
+                      <p className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}>{tr.caseManagement.rejected}</p>
                       <p className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}>{statusCounts.rejected}</p>
                     </div>
                     <div className="w-12 h-12 sm:w-14 sm:h-14 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -732,7 +734,7 @@ const CaseManagementPage = () => {
               {loading ? (
                 <div className={`${t.cardBg} rounded-xl p-8 sm:p-12 text-center border ${t.cardBorder}`}>
                   <div className="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-                  <p className={`text-sm ${t.subtleText} font-kumbh`}>Loading {activeTab}...</p>
+                  <p className={`text-sm ${t.subtleText} font-kumbh`}>{tr.caseManagement.loading}</p>
                 </div>
               ) : showMap ? (
                 <div className="mb-6">
@@ -756,10 +758,10 @@ const CaseManagementPage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                   </svg>
                   <h3 className={`text-lg sm:text-xl font-bold ${t.cardText} mb-2 font-spartan`}>
-                    No {activeFilter} {activeTab === "complaints" ? "complaints" : "incidents"}
+                    {activeTab === "complaints" ? tr.caseManagement.noComplaints : tr.caseManagement.noIncidents}
                   </h3>
                   <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh`}>
-                    There are no {activeTab === "complaints" ? "complaints" : "incidents"} with this status at the moment.
+                    {activeTab === "complaints" ? tr.caseManagement.noComplaints : tr.caseManagement.noIncidents}
                   </p>
                 </div>
               )}
@@ -769,8 +771,7 @@ const CaseManagementPage = () => {
           {/* Bottom Bar */}
           <div className={`pt-6 mt-8 border-t ${t.dividerBorder} text-center`}>
             <p className={`text-sm ${t.subtleText} font-kumbh`}>
-              © {new Date().getFullYear()} Barangay Incident & Complaint
-              Management System. All rights reserved.
+              © {new Date().getFullYear()} {tr.caseManagement.footer}
             </p>
           </div>
         </div>

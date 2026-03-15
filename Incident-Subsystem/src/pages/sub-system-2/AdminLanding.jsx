@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useLanguage } from "../../context/LanguageContext";
 import themeTokens from "../../Themetokens";
 import { getUser } from "../../homepage/services/loginService";
 import sanBartolomeImg from "../../assets/css/images/SanBartolome.jpg";
@@ -18,6 +19,7 @@ const AdminLanding = () => {
     return () => window.removeEventListener("themeChange", handleThemeChange);
   }, []);
 
+  const { tr } = useLanguage();
   const t = themeTokens[currentTheme];
   const isDark = currentTheme === "dark";
   const user = getUser();
@@ -34,12 +36,12 @@ const AdminLanding = () => {
         <img src={sanBartolomeImg} alt="Barangay Gulod" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 flex flex-col justify-center h-full px-6 sm:px-10 lg:px-16 max-w-7xl mx-auto w-full">
-          <p className="text-white/90 text-lg font-semibold font-kumbh mb-2">Hi, {firstName}!</p>
+          <p className="text-white/90 text-lg font-semibold font-kumbh mb-2">{tr.adminLanding?.welcomeBack || 'Hi,'} {firstName}!</p>
           <h1 className="text-white text-3xl sm:text-4xl lg:text-5xl font-bold font-spartan leading-tight text-left">
-            Document Services Analytics
+            {tr.sub2Admin?.title || 'Document Services Analytics'}
           </h1>
           <p className="text-white/85 text-base sm:text-lg font-kumbh mt-3 text-left max-w-3xl">
-            Volumes, operations, socio-economy, and transaction insights for BID, COR, and COI requests.
+            {tr.sub2Admin?.desc || 'Volumes, operations, socio-economy, and transaction insights for BID, COR, and COI requests.'}
           </p>
         </div>
       </div>
@@ -48,32 +50,32 @@ const AdminLanding = () => {
         <div className="max-w-7xl mx-auto w-full space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className={`${t.cardBg} border ${t.cardBorder} rounded-xl p-4`}>
-              <p className={`text-xs uppercase font-kumbh ${t.subtleText}`}>BID/COR/COI Reports</p>
+              <p className={`text-xs uppercase font-kumbh ${t.subtleText}`}>{tr.sub2Admin?.bidCorCoiReports || 'BID/COR/COI Reports'}</p>
               <p className={`text-3xl font-spartan font-bold ${t.cardText} mt-1`}>{totalTransactions}</p>
             </div>
             <div className={`${t.cardBg} border ${t.cardBorder} rounded-xl p-4`}>
-              <p className={`text-xs uppercase font-kumbh ${t.subtleText}`}>Queue Processing Avg</p>
+              <p className={`text-xs uppercase font-kumbh ${t.subtleText}`}>{tr.sub2Admin?.queueAvg || 'Queue Processing Avg'}</p>
               <p className={`text-3xl font-spartan font-bold ${t.cardText} mt-1`}>15 min</p>
             </div>
             <div className={`${t.cardBg} border ${t.cardBorder} rounded-xl p-4`}>
-              <p className={`text-xs uppercase font-kumbh ${t.subtleText}`}>Backlog Rate</p>
+              <p className={`text-xs uppercase font-kumbh ${t.subtleText}`}>{tr.sub2Admin?.backlogRate || 'Backlog Rate'}</p>
               <p className={`text-3xl font-spartan font-bold ${t.cardText} mt-1`}>8.5%</p>
             </div>
           </div>
 
-          <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>Volumes</h2>
+          <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>{tr.sub2Admin?.volumes || 'Volumes'}</h2>
           <VolumesFactors t={t} isDark={isDark} currentTheme={currentTheme} />
 
-          <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>Operations</h2>
+          <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>{tr.sub2Admin?.operations || 'Operations'}</h2>
           <OperationsFactors t={t} isDark={isDark} currentTheme={currentTheme} />
 
-          <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>Socio-Economy</h2>
+          <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>{tr.sub2Admin?.socioEconomy || 'Socio-Economy'}</h2>
           <SocioEconomyFactors t={t} isDark={isDark} currentTheme={currentTheme} />
 
-          <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>Reports</h2>
+          <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>{tr.sub2Admin?.reports || 'Reports'}</h2>
           <ReportsSection />
 
-          <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>Transactions</h2>
+          <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>{tr.sub2Admin?.transactions || 'Transactions'}</h2>
           <AccountsSection />
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useLanguage } from "../../context/LanguageContext";
 import {
   MapContainer,
   TileLayer,
@@ -325,6 +326,7 @@ const BARANGAY_BOUNDARY = [
 ];
 
 const IncidentMapPage = () => {
+  const { tr } = useLanguage();
   const [currentTheme, setCurrentTheme] = useState(() => {
     return localStorage.getItem("appTheme") || "modern";
   });
@@ -442,7 +444,7 @@ const IncidentMapPage = () => {
           <h1
             className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${t.cardText} mb-2 sm:mb-3 font-spartan uppercase tracking-tight`}
           >
-            INCIDENT & COMPLAINT MANAGEMENT
+            {tr.incidentMap.title}
           </h1>
         </div>
 
@@ -479,7 +481,7 @@ const IncidentMapPage = () => {
                 <h2
                   className={`text-2xl sm:text-3xl font-bold ${t.cardText} mb-2 font-spartan`}
                 >
-                  INCIDENT MAPPING
+                  {tr.incidentMap.incidentMapping}
                 </h2>
                 <div className="w-20 h-1 bg-green-600 rounded-full"></div>
               </div>
@@ -772,17 +774,12 @@ const IncidentMapPage = () => {
                   <h3
                     className={`text-lg font-bold ${t.cardText} mb-3 font-spartan text-green-600`}
                   >
-                    EXPLORE THE LIVE INCIDENT MAP
+                    {tr.incidentMap.exploreTitle}
                   </h3>
                   <p
                     className={`text-sm ${t.subtleText} font-kumbh leading-relaxed`}
                   >
-                    See all the incidents and complaints you have filed, plotted
-                    directly on the Barangay Gulod map. Each pin reflects the
-                    current status of your report — <span className="font-semibold text-red-500">red</span> for newly
-                    submitted, <span className="font-semibold text-orange-400">orange</span> for in-progress, and{" "}
-                    <span className="font-semibold text-emerald-500">green</span> for resolved. Click any pin to
-                    view the report title, description, and date filed.
+                    {tr.incidentMap.exploreDesc}
                   </p>
                 </div>
               </div>
@@ -810,7 +807,7 @@ const IncidentMapPage = () => {
               <h3
                 className={`text-xl sm:text-2xl font-bold ${t.cardText} font-spartan`}
               >
-                MAP LEGEND
+                {tr.incidentMap.legend}
               </h3>
             </div>
 
@@ -826,12 +823,12 @@ const IncidentMapPage = () => {
                     <h4
                       className={`text-sm font-bold ${t.cardText} font-spartan mb-1`}
                     >
-                      NEW/ACTIVE
+                      {tr.incidentMap.legendNewActive}
                     </h4>
                     <p
                       className={`text-xs ${t.subtleText} font-kumbh leading-relaxed`}
                     >
-                      Issue recently reported and awaiting dispatch.
+                      {tr.incidentMap.legendNewActiveDesc}
                     </p>
                   </div>
                 </div>
@@ -843,12 +840,12 @@ const IncidentMapPage = () => {
                     <h4
                       className={`text-sm font-bold ${t.cardText} font-spartan mb-1`}
                     >
-                      IN-PROGRESS
+                      {tr.incidentMap.legendInProgress}
                     </h4>
                     <p
                       className={`text-xs ${t.subtleText} font-kumbh leading-relaxed`}
                     >
-                      Barangay officials or maintenance teams are on-site.
+                      {tr.incidentMap.legendInProgressDesc}
                     </p>
                   </div>
                 </div>
@@ -860,13 +857,12 @@ const IncidentMapPage = () => {
                     <h4
                       className={`text-sm font-bold ${t.cardText} font-spartan mb-1`}
                     >
-                      RESOLVED
+                      {tr.incidentMap.legendResolved}
                     </h4>
                     <p
                       className={`text-xs ${t.subtleText} font-kumbh leading-relaxed`}
                     >
-                      Issue has been cleared or fixed (displayed for the last 24
-                      hours).
+                      {tr.incidentMap.legendResolvedDesc}
                     </p>
                   </div>
                 </div>
@@ -884,7 +880,7 @@ const IncidentMapPage = () => {
                 {loading && (
                   <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/70 backdrop-blur-sm">
                     <div className="animate-spin w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full mb-3" />
-                    <p className="text-sm font-kumbh text-slate-600">Loading your reports…</p>
+                    <p className="text-sm font-kumbh text-slate-600">{tr.incidentMap.loading}</p>
                   </div>
                 )}
 
@@ -1014,7 +1010,7 @@ const IncidentMapPage = () => {
               {/* No location data notice */}
               {!loading && markers.length === 0 && (
                 <p className="text-center text-sm font-kumbh text-slate-500 mt-3">
-                  None of your submitted reports include location data, so no pins are shown.
+                  {tr.incidentMap.noLocationData}
                 </p>
               )}
             </div>
@@ -1023,7 +1019,7 @@ const IncidentMapPage = () => {
           {/* Bottom Bar */}
           <div className={`pt-6 mt-8 border-t ${t.dividerBorder} text-center`}>
             <p className={`text-sm ${t.subtleText} font-kumbh`}>
-              © {new Date().getFullYear()} Barangay Incident & Complaint Management System. All rights reserved.
+              © {new Date().getFullYear()} {tr.incidentMap.footer}
             </p>
           </div>
         </div>
