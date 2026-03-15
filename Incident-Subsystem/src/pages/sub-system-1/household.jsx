@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { Printer, Archive, LayoutList, ScrollText } from 'lucide-react';
 
 import HouseholdStats from '../../components/sub-system-1/household/HouseholdStats';
@@ -32,7 +33,8 @@ const tabAccentMap = {
 };
 
 const Households = () => {
-  const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem('appTheme') || 'modern');
+  const { tr } = useLanguage();
+  const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem('appTheme') || 'blue');
   useEffect(() => {
     const handler = (e) => setCurrentTheme(e.detail);
     window.addEventListener('themeChange', handler);
@@ -141,10 +143,8 @@ const Households = () => {
 
   if (loading)
     return (
-      <div className={`font-sans min-h-screen py-4 pb-24 px-3 sm:px-4 lg:px-5 relative ${t.pageBg}`}>
-        <div className="mx-auto flex h-64 w-full max-w-[1600px] items-center justify-center">
-          <div className={`animate-pulse font-semibold font-kumbh ${t.subtleText}`}>Syncing Registry...</div>
-        </div>
+      <div className={`p-6 sm:p-8 ${t.subtleText} font-kumbh flex justify-center items-center h-64`}>
+        <div className="animate-pulse font-black tracking-widest uppercase">{tr.sub1.loading}</div>
       </div>
     );
 
@@ -153,28 +153,26 @@ const Households = () => {
       <div className="mx-auto w-full max-w-[1600px]">
         <div className="animate-in fade-in duration-500 space-y-6 pt-4 sm:pt-5">
 
-          {/* Page header */}
-          <section className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-            <div className="max-w-3xl space-y-2 text-left">
-              <h1 className={`text-[2.25rem] sm:text-[2.1rem] font-bold tracking-tight ${t.cardText} font-spartan`}>
-                Household Registry
-              </h1>
-              <p className={`max-w-2xl text-[13px] leading-6 ${t.subtleText} font-kumbh`}>
-                Family units, housing status, and archival history in one organized workspace.
-              </p>
-            </div>
-            {activeTab === 'registry' && (
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  onClick={handlePrint}
-                  disabled={filteredHouseholds.length === 0}
-                  className={`inline-flex items-center gap-2 rounded-[20px] px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 ${t.primarySolid} ${t.primaryHover}`}
-                >
-                  <Printer size={16} /> Print Masterlist
-                </button>
-              </div>
-            )}
-          </section>
+      {/* Page header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className={`text-2xl font-spartan font-bold ${t.cardText} uppercase tracking-tight`}>
+            {tr.sub1.households}
+          </h1>
+          <p className={`text-xs font-kumbh ${t.subtleText} uppercase tracking-widest mt-1`}>
+            {tr.sub1.householdsDesc}
+          </p>
+        </div>
+        {activeTab === 'registry' && (
+          <button
+            onClick={handlePrint}
+            disabled={filteredHouseholds.length === 0}
+            className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase hover:opacity-90 shadow-lg transition-all active:scale-95 disabled:opacity-50"
+          >
+            <Printer size={16} /> {tr.sub1.export}
+          </button>
+        )}
+      </div>
 
       {/* Stats — registry tab only */}
       {activeTab === 'registry' && (
@@ -184,24 +182,27 @@ const Households = () => {
           {/* Main card */}
           <div className={`${t.cardBg} border ${t.cardBorder} overflow-hidden rounded-[30px] shadow-[0_18px_45px_rgba(15,23,42,0.08)] flex flex-col`}>
 
-            {/* Tab bar */}
-            <div className={`flex border-b ${t.cardBorder} ${isDark ? 'bg-slate-900/60' : 'bg-slate-50/80'} px-6`}>
-              {TABS.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setActiveTab(id)}
-                  className={`flex items-center gap-2 px-6 py-4 text-[11px] font-bold uppercase tracking-widest transition-all relative ${
-                    activeTab === id ? accent.text : accent.inactive
-                  }`}
-                >
-                  <Icon size={14} /> {label}
-                  {activeTab === id && (
-                    <div className={`absolute bottom-0 left-0 w-full h-0.5 ${accent.bar}`} />
-                  )}
-                </button>
-              ))}
-            </div>
+        {/* Tab bar */}
+        <div className={`flex items-center gap-1 px-5 pt-4 sm:px-6 border-b ${t.cardBorder} ${isDark ? 'bg-slate-950/40' : 'bg-slate-50/60'}`}>
+          <button
+            onClick={() => setActiveTab('registry')}
+            className={`${tabBase} ${activeTab === 'registry' ? tabActiveStyle.registry : tabInactive}`}
+          >
+            <LayoutList size={14} /> {tr.sub1.registry || 'Registry'}
+          </button>
+          <button
+            onClick={() => setActiveTab('archives')}
+            className={`${tabBase} ${activeTab === 'archives' ? tabActiveStyle.archives : tabInactive}`}
+          >
+            <Archive size={14} /> {tr.sub1.archived}
+          </button>
+          <button
+            onClick={() => setActiveTab('logs')}
+            className={`${tabBase} ${activeTab === 'logs' ? tabActiveStyle.logs : tabInactive}`}
+          >
+            <ScrollText size={14} /> {tr.sub1.logs || 'Logs'}
+          </button>
+        </div>
 
         {/* Registry tab */}
         {activeTab === 'registry' && (

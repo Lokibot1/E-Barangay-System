@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { Search, FileText, UserCheck, ArrowRight, Printer } from 'lucide-react';
 import { useResidents } from '../../hooks/sub-system-1/useResidents';
 import { usePrinter } from '../../hooks/sub-system-1/usePrinter';
 import themeTokens from '../../Themetokens';
 
 const Certificates = () => {
+  const { tr } = useLanguage();
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem('appTheme') || 'modern'
   );
@@ -48,10 +50,10 @@ const Certificates = () => {
       {/* Page Header */}
       <div>
         <h1 className={`text-2xl font-spartan font-bold ${t.cardText} uppercase tracking-tight`}>
-          Document Issuance
+          {tr.sub1.certificates}
         </h1>
         <p className={`text-xs font-kumbh ${t.subtleText} uppercase tracking-widest mt-1`}>
-          Generate official barangay certifications
+          {tr.sub1.certificatesDesc}
         </p>
       </div>
 
@@ -136,7 +138,7 @@ const Certificates = () => {
                   onClick={handlePrintCert}
                   className={`inline-flex items-center gap-2 bg-gradient-to-r ${t.primaryGrad} text-white px-8 py-3 rounded-xl font-kumbh font-bold text-xs uppercase tracking-widest shadow-md active:scale-95 transition-all`}
                 >
-                  <Printer size={16} /> Generate & Print
+                  <Printer size={16} /> {tr.sub1.issueCertificate}
                 </button>
               </div>
             ) : (

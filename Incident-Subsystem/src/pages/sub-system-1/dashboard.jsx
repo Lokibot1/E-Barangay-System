@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { TABS } from '../../components/sub-system-1/analytics/analyticsConfig';
 import OverviewTab from '../../components/sub-system-1/analytics/tabs/OverviewTab';
 import HeatmapTab from '../../components/sub-system-1/analytics/tabs/HeatmapTab';
@@ -35,6 +36,7 @@ function renderTab(id, data, t) {
 }
 
 export default function Dashboard() {
+  const { tr } = useLanguage();
   const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem('appTheme') || 'modern');
 
   useEffect(() => {
@@ -79,7 +81,7 @@ export default function Dashboard() {
           <div>
             <h1 className={`text-base sm:text-lg font-spartan font-bold ${t.cardText} flex items-center gap-2`}>
               {tabMeta?.icon && <tabMeta.icon size={18} strokeWidth={2.4} />}
-              Analytics - {tabMeta?.label}
+              {tr.sub1.dashboard} - {tabMeta?.label}
             </h1>
             <p className={`text-xs font-kumbh ${t.subtleText}`}>
               {lastUpdated
@@ -92,7 +94,7 @@ export default function Dashboard() {
             disabled={loading}
             className="text-xs font-kumbh font-normal bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-xl hover:opacity-90 disabled:opacity-50 transition-all"
           >
-            {loading ? 'Loading...' : 'Refresh'}
+            {loading ? tr.sub1.loading : tr.sub1.refresh || 'Refresh'}
           </button>
         </div>
 
@@ -127,14 +129,14 @@ export default function Dashboard() {
               className={`w-12 h-12 border-4 ${t.primaryText} border-t-transparent rounded-full animate-spin`}
               style={{ borderColor: isDark ? '#64748b' : '#2563eb', borderTopColor: 'transparent' }}
             />
-            <p className={`${t.subtleText} font-kumbh text-sm font-medium`}>Loading analytics data...</p>
+            <p className={`${t.subtleText} font-kumbh text-sm font-medium`}>{tr.sub1.loading}</p>
           </div>
         )}
 
         {!loading && error && (
           <div className={`${t.cardBg} border ${t.cardBorder} rounded-xl p-6 text-center shadow-sm`}>
             <div className="text-3xl mb-2">!</div>
-            <h3 className={`font-spartan font-bold ${t.cardText} text-lg mb-1`}>Cannot load data</h3>
+            <h3 className={`font-spartan font-bold ${t.cardText} text-lg mb-1`}>{tr.common.error}</h3>
             <p className={`${t.subtleText} font-kumbh text-sm mb-4`}>{error}</p>
             <p className={`text-xs ${t.subtleText} font-kumbh ${t.inlineBg} rounded p-3 mb-4 text-left font-mono`}>
               Endpoint: GET {API_BASE}/analytics/all
@@ -143,7 +145,7 @@ export default function Dashboard() {
               onClick={fetchData}
               className="bg-red-600 text-white font-kumbh font-normal px-4 py-2 rounded-lg text-sm hover:bg-red-700"
             >
-              Retry
+              {tr.common.tryAgain}
             </button>
           </div>
         )}

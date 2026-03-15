@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useLanguage } from "../../context/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import {
   ActivitySquare,
@@ -438,6 +439,7 @@ const ProfilePanel = ({
 );
 
 export default function ProfilePage() {
+  const { tr } = useLanguage();
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem("appTheme") || "modern",
   );
@@ -862,31 +864,31 @@ export default function ProfilePage() {
     userEmail !== "No email on file" ? userEmail : `${idLabel}: ${idValue}`;
 
   const personalFields = [
-    { label: "First Name", value: firstName },
-    { label: "Middle Name", value: middleName },
-    { label: "Last Name", value: lastName },
-    { label: "Suffix", value: suffix },
-    { label: "Contact Number", value: userPhone },
-    { label: "Email Address", value: userEmail },
-    { label: "Birthdate", value: birthDate },
-    { label: "Age", value: age },
-    { label: "Gender", value: gender },
-    { label: "Nationality", value: nationality },
-    { label: "Marital Status", value: civilStatus },
-    { label: "Sector", value: sector },
-    { label: "Birth Registration", value: birthRegistration },
-    { label: "Registered Voter", value: registeredVoter },
+    { label: tr.profilePage.firstName, value: firstName },
+    { label: tr.profilePage.middleName, value: middleName },
+    { label: tr.profilePage.lastName, value: lastName },
+    { label: tr.profilePage.suffix, value: suffix },
+    { label: tr.profilePage.contactNumberField, value: userPhone },
+    { label: tr.profilePage.emailField, value: userEmail },
+    { label: tr.profilePage.birthdate, value: birthDate },
+    { label: tr.profilePage.age, value: age },
+    { label: tr.profilePage.gender, value: gender },
+    { label: tr.profilePage.nationality, value: nationality },
+    { label: tr.profilePage.maritalStatus, value: civilStatus },
+    { label: tr.profilePage.sector, value: sector },
+    { label: tr.profilePage.birthRegistration, value: birthRegistration },
+    { label: tr.profilePage.registeredVoter, value: registeredVoter },
   ];
 
   const residencyFields = [
-    { label: "House No.", value: houseNumber },
-    { label: "Purok", value: purok },
-    { label: "Street", value: street },
-    { label: "Household Position", value: householdPosition },
-    { label: "Residency Type", value: residencyType },
-    { label: "Date Started", value: residencyStartDate },
+    { label: tr.profilePage.houseNo, value: houseNumber },
+    { label: tr.profilePage.purok, value: purok },
+    { label: tr.profilePage.street, value: street },
+    { label: tr.profilePage.householdPosition, value: householdPosition },
+    { label: tr.profilePage.residencyType, value: residencyType },
+    { label: tr.profilePage.dateStarted, value: residencyStartDate },
     {
-      label: "Full Registered Address",
+      label: tr.profilePage.fullAddress,
       value: registeredAddress,
       full: true,
     },
@@ -894,13 +896,13 @@ export default function ProfilePage() {
 
   const accountFields = [
     { label: idLabel, value: idValue },
-    { label: "Username", value: accountUsername },
-    { label: "Role", value: roleLabel },
-    { label: "Status", value: accountStatus },
-    { label: "Workspace", value: workspaceLabel },
-    { label: "Member Since", value: memberSince },
+    { label: tr.profilePage.username, value: accountUsername },
+    { label: tr.profilePage.role, value: roleLabel },
+    { label: tr.profilePage.status, value: accountStatus },
+    { label: tr.profilePage.workspace, value: workspaceLabel },
+    { label: tr.profilePage.memberSince, value: memberSince },
     {
-      label: "Account Protection",
+      label: tr.profilePage.accountProtection,
       value: protectionLabel,
       full: true,
     },
@@ -944,10 +946,10 @@ export default function ProfilePage() {
                       isDark ? "text-slate-100" : t.cardText
                     }`}
                   >
-                    Change Profile Photo
+                    {tr.profilePage.changeProfilePhoto}
                   </h2>
                   <p className={`text-[11px] font-kumbh ${isDark ? "text-slate-400" : t.subtleText}`}>
-                    Crop, zoom, and save your picture.
+                    {tr.profilePage.cropZoomDesc}
                   </p>
                 </div>
               </div>
@@ -994,7 +996,7 @@ export default function ProfilePage() {
                       : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                   } cursor-pointer`}
                 >
-                  Choose photo
+                  {tr.profilePage.choosePhoto}
                   <input
                     ref={photoInputRef}
                     type="file"
@@ -1005,13 +1007,13 @@ export default function ProfilePage() {
                   />
                 </label>
                 <p className={`text-[11px] font-kumbh ${isDark ? "text-slate-400" : t.subtleText}`}>
-                  PNG or JPG up to 2MB. Camera capture supported.
+                  {tr.profilePage.photoFormatDesc}
                 </p>
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-[11px] font-semibold font-kumbh">
-                  <span className={isDark ? "text-slate-300" : "text-slate-600"}>Zoom</span>
+                  <span className={isDark ? "text-slate-300" : "text-slate-600"}>{tr.profilePage.zoom}</span>
                   <span className={isDark ? "text-slate-400" : "text-slate-500"}>{photoScale.toFixed(2)}x</span>
                 </div>
                 <input
@@ -1043,7 +1045,7 @@ export default function ProfilePage() {
                       : "border-slate-200 text-slate-400 opacity-60 cursor-not-allowed"
                   }`}
                 >
-                  Remove photo
+                  {tr.profilePage.removePhoto}
                 </button>
                 <div className="flex items-center gap-2">
                   <button
@@ -1056,7 +1058,7 @@ export default function ProfilePage() {
                         : "border-slate-200 text-slate-700 hover:bg-slate-50"
                     }`}
                   >
-                    Cancel
+                    {tr.profilePage.cancel}
                   </button>
                   <button
                     type="button"
@@ -1066,7 +1068,7 @@ export default function ProfilePage() {
                       photoFile && !photoSaving ? t.primarySolid : "bg-slate-400 cursor-not-allowed"
                     }`}
                   >
-                    {photoSaving ? "Saving..." : "Save"}
+                    {photoSaving ? tr.profilePage.saving : tr.profilePage.save}
                   </button>
                 </div>
               </div>
@@ -1102,10 +1104,10 @@ export default function ProfilePage() {
                       isDark ? "text-slate-100" : t.cardText
                     }`}
                   >
-                    Update Contact Info
+                    {tr.profilePage.updateContactInfo}
                   </h2>
                   <p className={`text-[11px] font-kumbh ${isDark ? "text-slate-400" : t.subtleText}`}>
-                    Edit your contact number and email address.
+                    {tr.profilePage.editContactDesc}
                   </p>
                 </div>
               </div>
@@ -1127,7 +1129,7 @@ export default function ProfilePage() {
             <div className="space-y-4 px-5 py-5">
               <div className="space-y-2 text-left">
                 <label className={`text-[11px] font-semibold font-kumbh ${t.subtleText}`}>
-                  Contact Number
+                  {tr.profilePage.contactNumber}
                 </label>
                 <input
                   type="tel"
@@ -1146,7 +1148,7 @@ export default function ProfilePage() {
 
               <div className="space-y-2 text-left">
                 <label className={`text-[11px] font-semibold font-kumbh ${t.subtleText}`}>
-                  Email Address
+                  {tr.profilePage.emailAddress}
                 </label>
                 <input
                   type="email"
@@ -1179,7 +1181,7 @@ export default function ProfilePage() {
                       : "border-slate-200 text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  Cancel
+                  {tr.profilePage.cancel}
                 </button>
                 <button
                   type="button"
@@ -1189,7 +1191,7 @@ export default function ProfilePage() {
                     contactSaving ? "bg-slate-400 cursor-not-allowed" : t.primarySolid
                   }`}
                 >
-                  {contactSaving ? "Saving..." : "Save"}
+                  {contactSaving ? tr.profilePage.saving : tr.profilePage.save}
                 </button>
               </div>
             </div>
@@ -1200,10 +1202,10 @@ export default function ProfilePage() {
         <div className="space-y-4 text-left">
           <div>
             <h1 className={`text-lg font-bold font-spartan ${t.cardText}`}>
-              Profile
+              {tr.profilePage.profile}
             </h1>
             <p className={`text-xs font-kumbh ${t.subtleText}`}>
-              Review your account information and security details.
+              {tr.profilePage.reviewDesc}
             </p>
           </div>
           <div className={`flex items-center gap-5 border-b ${t.cardBorder} pt-3`}>
@@ -1212,7 +1214,7 @@ export default function ProfilePage() {
               className={`relative pb-2 text-[13px] font-semibold font-kumbh transition inline-flex items-center gap-2 ${t.primaryText}`}
             >
               <UserRound size={14} />
-              View Profile
+              {tr.profilePage.viewProfile}
               <span className={`absolute left-0 right-0 -bottom-px h-0.5 ${t.primarySolid}`} />
             </button>
             {adminAccount && (
@@ -1222,7 +1224,7 @@ export default function ProfilePage() {
                 className={`relative pb-2 text-[13px] font-semibold font-kumbh transition inline-flex items-center gap-2 ${t.subtleText} hover:opacity-80`}
               >
                 <Image size={14} />
-                Barangay Logo
+                {tr.profilePage.barangayLogo}
               </button>
             )}
           </div>
@@ -1287,7 +1289,7 @@ export default function ProfilePage() {
               </p>
               {profileLoading && (
                 <p className={`mt-1 text-left text-[11px] font-kumbh ${t.subtleText}`}>
-                  Refreshing profile details...
+                  {tr.profilePage.refreshingProfile}
                 </p>
               )}
               {profileError && !profileLoading && (
@@ -1351,7 +1353,7 @@ export default function ProfilePage() {
                     }`}
                   >
                     <KeyRound className="h-4 w-4 shrink-0" />
-                    Change Password
+                    {tr.profilePage.changePassword}
                   </button>
 
                   {isResident && (
@@ -1367,7 +1369,7 @@ export default function ProfilePage() {
                       }`}
                     >
                       <UserRound className="h-4 w-4 shrink-0" />
-                      Edit Contact Info
+                      {tr.profilePage.editContactInfoBtn}
                     </button>
                   )}
 
@@ -1385,7 +1387,7 @@ export default function ProfilePage() {
                       }`}
                     >
                       <ActivitySquare className="h-4 w-4 shrink-0" />
-                      View Activity Logs
+                      {tr.profilePage.viewActivityLogs}
                     </button>
                   )}
                 </div>
@@ -1408,8 +1410,8 @@ export default function ProfilePage() {
               <div className="grid gap-4 xl:grid-cols-2 items-start">
                 <div className="xl:col-span-2">
                   <ProfilePanel
-                    title="Personal information"
-                    subtitle="Identity and contact details based on the user registration record."
+                    title={tr.profilePage.personalInfoPanel}
+                    subtitle={tr.profilePage.personalInfoSubtitle}
                     icon={UserRound}
                     fields={personalFields}
                     gridClassName="grid-cols-2 sm:grid-cols-3"
@@ -1420,8 +1422,8 @@ export default function ProfilePage() {
                 </div>
 
                 <ProfilePanel
-                  title="Residency information"
-                  subtitle="Registered household and barangay address."
+                  title={tr.profilePage.residencyInfoPanel}
+                  subtitle={tr.profilePage.residencyInfoSubtitle}
                   icon={MapPinned}
                   fields={residencyFields}
                   gridClassName="grid-cols-2"
@@ -1431,8 +1433,8 @@ export default function ProfilePage() {
                 />
 
                 <ProfilePanel
-                  title="Account information"
-                  subtitle="System access, role, and login details."
+                  title={tr.profilePage.accountInfoPanel}
+                  subtitle={tr.profilePage.accountInfoSubtitle}
                   icon={ShieldCheck}
                   fields={accountFields}
                   gridClassName="grid-cols-2"
