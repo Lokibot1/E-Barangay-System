@@ -49,6 +49,7 @@ import AdminLanding from "./pages/sub-system-3/admin/AdminLanding";
 import AdminIncidentReports from "./pages/sub-system-3/admin/AdminIncidentReports";
 import AdminAppointments from "./pages/sub-system-3/admin/AdminAppointments";
 import ResetPasswordPage from "./pages/sub-system-3/ResetPasswordPage";
+import CreateAccounts from "./pages/sub-system-3/admin/CreateAccounts";
 
 // ── Sub-System 1 (RS) pages ──────────────────────────────────────────────────
 import Dashboard from "./pages/sub-system-1/dashboard";
@@ -209,6 +210,7 @@ function App() {
                   <Route path="/admin/settings" element={<Settings />} />
                   <Route path="/admin/profile" element={<ProfilePage />} />
                   <Route path="/admin/support" element={<Support />} />
+                  <Route path="/admin/accounts" element={<CreateAccounts />} />
                 </Route>
               </Route>
 

@@ -1,30 +1,50 @@
+/**
+ * Table.jsx
+ * ADDED: loading prop — renders TableSkeleton inside tbody when true.
+ * All original logic preserved.
+ */
+
 import React from 'react';
+import SkeletonLoader from '../common/SkeletonLoader';
 
 const tableHeaderBgMap = {
   modern: 'bg-blue-600',
-  blue: 'bg-blue-600',
+  blue:   'bg-blue-600',
   purple: 'bg-purple-600',
-  green: 'bg-green-600',
-  dark: 'bg-slate-700',
+  green:  'bg-green-600',
+  dark:   'bg-slate-700',
 };
 
 const tableHeaderBorderMap = {
   modern: 'border-blue-700',
-  blue: 'border-blue-700',
+  blue:   'border-blue-700',
   purple: 'border-purple-700',
-  green: 'border-green-700',
-  dark: 'border-slate-600',
+  green:  'border-green-700',
+  dark:   'border-slate-600',
 };
 
-const Table = ({ title, headers, children, t, currentTheme, columnPadMap = {}, columnWidths = [] }) => {
+const Table = ({
+  title,
+  headers,
+  children,
+  loading = false,
+  skeletonRows = 5,
+  t,
+  currentTheme,
+  columnPadMap = {},
+  columnWidths = [],
+}) => {
   const resolvedTheme =
-    currentTheme || (typeof window !== 'undefined' ? localStorage.getItem('appTheme') || 'modern' : 'modern');
-  const cardBg = t?.cardBg ?? 'bg-white';
-  const cardBorder = t?.cardBorder ?? 'border-gray-200';
-  const cardText = t?.cardText ?? 'text-gray-900';
-  const subtleText = t?.subtleText ?? 'text-gray-400';
-  const columnCount = headers.length;
-  const tableHeaderBg = tableHeaderBgMap[resolvedTheme] || tableHeaderBgMap.modern;
+    currentTheme ||
+    (typeof window !== 'undefined' ? localStorage.getItem('appTheme') || 'modern' : 'modern');
+
+  const cardBg          = t?.cardBg      ?? 'bg-white';
+  const cardBorder      = t?.cardBorder  ?? 'border-gray-200';
+  const cardText        = t?.cardText    ?? 'text-gray-900';
+  const subtleText      = t?.subtleText  ?? 'text-gray-400';
+  const isDark          = resolvedTheme === 'dark';
+  const columnCount     = headers.length;
+  const tableHeaderBg   = tableHeaderBgMap[resolvedTheme]     || tableHeaderBgMap.modern;
   const tableHeaderBorder = tableHeaderBorderMap[resolvedTheme] || tableHeaderBorderMap.modern;
   const tableHeaderText = resolvedTheme === 'dark' ? 'text-slate-100' : 'text-white';
 
@@ -38,11 +58,11 @@ const Table = ({ title, headers, children, t, currentTheme, columnPadMap = {}, c
         </div>
       )}
       <div className="overflow-x-auto">
-        <table className={`w-full border-collapse ${columnWidths.length ? 'table-fixed' : ''}`}> 
+        <table className={`w-full border-collapse ${columnWidths.length ? 'table-fixed' : ''}`}>
           {columnWidths.length > 0 && (
             <colgroup>
               {headers.map((_, idx) => (
-                <col key={idx} style={{ width: columnWidths[idx] || "auto" }} />
+                <col key={idx} style={{ width: columnWidths[idx] || 'auto' }} />
               ))}
             </colgroup>
           )}
@@ -61,9 +81,7 @@ const Table = ({ title, headers, children, t, currentTheme, columnPadMap = {}, c
                 return (
                   <th
                     key={index}
-                    className={`${colPadClass} py-5 ${isCentered ? 'text-center' : 'text-left'} 
-                    text-base font-semibold ${tableHeaderText}
-                    border-b-2 ${tableHeaderBorder} font-spartan whitespace-nowrap`}
+                    className={`${colPadClass} py-5 ${isCentered ? 'text-center' : 'text-left'} text-base font-semibold ${tableHeaderText} border-b-2 ${tableHeaderBorder} font-spartan whitespace-nowrap`}
                   >
                     {header}
                   </th>
@@ -71,9 +89,12 @@ const Table = ({ title, headers, children, t, currentTheme, columnPadMap = {}, c
               })}
             </tr>
           </thead>
+
           <tbody className={`divide-y ${cardBorder} ${cardBg} transition-all duration-300`}>
-           
-            {React.Children.count(children) === 0 ? (
+            {loading ? (
+              // ── Skeleton rows drop straight into tbody ──
+              <SkeletonLoader variant="table" rows={skeletonRows} cols={columnCount} isDark={isDark} />
+            ) : React.Children.count(children) === 0 ? (
               <tr>
                 <td colSpan={columnCount} className="px-6 py-20 text-center">
                   <div className="flex flex-col items-center justify-center space-y-2">

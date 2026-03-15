@@ -1,9 +1,17 @@
+/**
+ * PendingVerificationTable.jsx
+ * ADDED: loading prop — renders TableSkeleton inside tbody when true.
+ * All original logic preserved.
+ */
+
 import React from 'react';
 import VerificationRow from './VerificationRow';
+import SkeletonLoader from '../common/SkeletonLoader';
 
-const PendingVerificationTable = ({ data, onReview, t, currentTheme }) => {
+const PendingVerificationTable = ({ data, onReview, loading = false, t, currentTheme }) => {
   const isDark = currentTheme === 'dark';
   const headerLabels = ["Name", "Age", "Address", "Purok", "Submitted", "Status", "Action"];
+  const COLS = headerLabels.length;
 
   return (
     <div className="w-full overflow-x-auto">
@@ -13,11 +21,12 @@ const PendingVerificationTable = ({ data, onReview, t, currentTheme }) => {
             {headerLabels.map((header) => {
               const lower = header.toLowerCase();
               const isCentered = lower === 'age' || lower === 'action';
-
               return (
                 <th
                   key={header}
-                  className={`border-b px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.22em] ${isCentered ? 'text-center' : 'text-left'} ${t.subtleText} ${t.cardBorder} font-kumbh`}
+                  className={`border-b px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.22em] ${
+                    isCentered ? 'text-center' : 'text-left'
+                  } ${t.subtleText} ${t.cardBorder} font-kumbh`}
                 >
                   {header}
                 </th>
@@ -27,7 +36,10 @@ const PendingVerificationTable = ({ data, onReview, t, currentTheme }) => {
         </thead>
 
         <tbody className={t.cardBg}>
-          {data && data.length > 0 ? (
+          {loading ? (
+            // ── Skeleton rows drop straight into tbody ──
+            <SkeletonLoader variant="table" rows={6} cols={COLS} isDark={isDark} />
+          ) : data && data.length > 0 ? (
             data.map((res, index) => (
               <VerificationRow
                 key={res.id || index}
@@ -39,7 +51,7 @@ const PendingVerificationTable = ({ data, onReview, t, currentTheme }) => {
             ))
           ) : (
             <tr>
-              <td colSpan={7} className="px-6 py-28 text-center">
+              <td colSpan={COLS} className="px-6 py-28 text-center">
                 <div className="flex flex-col items-center justify-center space-y-3">
                   <span className={`text-2xl font-bold ${t.cardText} font-spartan`}>
                     No verification requests found
