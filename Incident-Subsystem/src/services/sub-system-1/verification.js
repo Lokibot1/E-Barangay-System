@@ -81,6 +81,17 @@ export const verificationService = {
             schoolType: res.education_data?.school_type || 'N/A',
             school_level: res.education_data?.school_level || 'N/A',
             highestGrade: res.education_data?.highest_grade_completed || 'N/A',
+            rejection_reason: res.rejection_reason, 
+            rejection_remarks: res.rejection_remarks,
+            visit_set_at: res.visit_set_at ? formatDate(res.visit_set_at) : 'N/A',
+            visit_set_by_name: res.visit_setter ? res.visit_setter.name : 'N/A',
+            visit_set_by_role: res.visit_setter ? res.visit_setter.role : 'Staff',
+            rejection_reason: res.rejection_reason || 'Incomplete documents.',
+            rejection_remarks: res.rejection_remarks || '', 
+            rejected_by_name: res.rejector ? res.rejector.name : 'N/A',
+            rejected_at: res.status === 'Rejected' ? formatDate(res.updated_at) : null,
+            rejected_by_role: res.rejector ? res.rejector.role : 'Staff',
+            updated_at: res.updated_at,
           },
         };
       });
@@ -98,7 +109,11 @@ export const verificationService = {
         wall_material: additionalData?.wallMaterial,
         roof_material: additionalData?.roofMaterial,
         water_source: additionalData?.waterSource,
-        tenure_status: additionalData?.tenureStatus
+        tenure_status: additionalData?.tenureStatus,
+        num_families_reported: additionalData?.numberOfFamilies,
+        rejection_reason: additionalData?.rejection_reason,
+        rejection_remarks: additionalData?.rejection_remarks,
+        visit_set_at: status === 'For Verification' ? new Date().toISOString() : null
       });
       return response.data;
     } catch (error) {

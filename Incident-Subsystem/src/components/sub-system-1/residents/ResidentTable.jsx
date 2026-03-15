@@ -1,26 +1,24 @@
+/**
+ * ResidentTable.jsx
+ * ADDED: loading prop — renders TableSkeleton inside tbody when true.
+ * All original logic preserved.
+ */
+
 import React, { useState } from 'react';
 import ResidentRow          from './ResidentRow';
 import ResidentDetailsModal from './ResidentDetailsModal';
 import { residentService }  from '../../../services/sub-system-1/residents';
+import SkeletonLoader from '../common/SkeletonLoader';
 
-/**
- * ResidentTable
- *
- * New prop: onHouseholdClick(householdId)
- *   – bubbled up from ResidentRow when the address / purok badge is clicked.
- *   – Residents.jsx receives it and opens HouseholdModal.
- */
-const ResidentTable = ({ residents, onUpdate, onDelete, onHouseholdClick, t, currentTheme = 'modern' }) => {
+const ResidentTable = ({ residents, loading = false, onUpdate, onDelete, onHouseholdClick, t, currentTheme = 'modern' }) => {
     const [isModalOpen,      setIsModalOpen]      = useState(false);
     const [selectedResident, setSelectedResident] = useState(null);
     const [modalMode,        setModalMode]        = useState('view');
 
     const isDark  = currentTheme === 'dark';
     const headers = ['Name', 'Age', 'Address', 'Purok', 'Sector', 'Actions'];
+    const COLS    = headers.length;
 
-    /**
-     * Fetch GET /residents/{id} first, then open the modal with complete data.
-     */
     const openModal = async (r, mode) => {
         setModalMode(mode);
         try {
@@ -39,6 +37,11 @@ const ResidentTable = ({ residents, onUpdate, onDelete, onHouseholdClick, t, cur
         if (window.confirm(`Are you sure you want to delete ${name}? This will also deactivate their account.`)) {
             try { await onDelete(id); } catch (err) { console.error('Delete failed:', err); }
         }
+    };
+
+    // Called from modal — confirm already done inside modal
+    const handleDeleteFromModal = async (id, name) => {
+        try { await onDelete(id); } catch (err) { console.error('Delete from modal failed:', err); }
     };
 
     const handleClose = () => {
@@ -82,7 +85,9 @@ const ResidentTable = ({ residents, onUpdate, onDelete, onHouseholdClick, t, cur
                         </tr>
                     </thead>
                     <tbody className={t.cardBg}>
-                        {residents?.length > 0 ? (
+                        {loading ? (
+                            <SkeletonLoader variant="table" rows={8} cols={COLS} isDark={isDark} />
+                        ) : residents?.length > 0 ? (
                             residents.map((r) => (
                                 <ResidentRow
                                     key={r.id}
@@ -97,7 +102,7 @@ const ResidentTable = ({ residents, onUpdate, onDelete, onHouseholdClick, t, cur
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={6} className="px-6 py-28 text-center">
+                                <td colSpan={COLS} className="px-6 py-28 text-center">
                                     <div className="flex flex-col items-center justify-center space-y-3">
                                         <span className={`text-2xl font-bold ${t.cardText} font-spartan`}>No resident records found</span>
                                         <p className={`max-w-md text-sm leading-7 ${t.subtleText} font-medium font-kumbh`}>Try adjusting the current filters or search input to surface the residents you need.</p>
@@ -118,6 +123,7 @@ const ResidentTable = ({ residents, onUpdate, onDelete, onHouseholdClick, t, cur
                     t={t}
                     currentTheme={currentTheme}
                     onSave={handleSave}
+                    onDelete={handleDeleteFromModal}
                 />
             )}
         </>

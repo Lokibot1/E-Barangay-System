@@ -1,5 +1,12 @@
+/**
+ * ResidentStats.jsx
+ * ADDED: loading prop — renders StatSkeleton when true.
+ * All original logic preserved.
+ */
+
 import React, { useMemo } from 'react';
 import { HeartPulse, ShieldCheck, UserCheck, Users } from 'lucide-react';
+import SkeletonLoader from '../common/SkeletonLoader';
 
 const toneMap = {
   blue: {
@@ -34,48 +41,52 @@ const toneMap = {
   },
 };
 
-const ResidentStats = ({ residents, t, currentTheme = 'modern' }) => {
+const ResidentStats = ({ residents, loading = false, t, currentTheme = 'modern' }) => {
+  const isDark = currentTheme === 'dark';
+
+  if (loading) {
+    return <SkeletonLoader variant="stat" count={4} isDark={isDark} />;
+  }
+
   const statsData = useMemo(() => {
     const residentList = residents || [];
-    
+
     const getSectorCount = (cat) => residentList.filter(r => {
       const s = (typeof r.sector === 'object' ? r.sector?.name : r.sector) || '';
       return s.toUpperCase() === cat.toUpperCase();
     }).length;
 
     return [
-      { 
-        title: 'Total Population', 
-        value: residentList.length, 
-        subtitle: 'Official Records', 
-        icon: Users, 
-        color: 'blue' 
+      {
+        title: 'Total Population',
+        value: residentList.length,
+        subtitle: 'Official Records',
+        icon: Users,
+        color: 'blue',
       },
-      { 
-        title: 'Voter Census', 
-        value: residentList.filter(r => r.is_voter == 1 || r.is_voter === 'Yes').length, 
-        subtitle: 'Qualified Voters', 
-        icon: UserCheck, 
-        color: 'emerald' 
+      {
+        title: 'Voter Census',
+        value: residentList.filter(r => r.is_voter == 1 || r.is_voter === 'Yes').length,
+        subtitle: 'Qualified Voters',
+        icon: UserCheck,
+        color: 'emerald',
       },
-      { 
-        title: 'Senior Citizens', 
-        value: getSectorCount('SENIOR CITIZEN'), 
-        subtitle: 'Aged 60 & Above', 
-        icon: ShieldCheck, 
-        color: 'amber' 
+      {
+        title: 'Senior Citizens',
+        value: getSectorCount('SENIOR CITIZEN'),
+        subtitle: 'Aged 60 & Above',
+        icon: ShieldCheck,
+        color: 'amber',
       },
-      { 
-        title: 'Priority Groups', 
-        value: getSectorCount('PWD') + getSectorCount('SOLO PARENT'), 
-        subtitle: 'PWD & Solo Parents', 
-        icon: HeartPulse, 
-        color: 'rose' 
+      {
+        title: 'Priority Groups',
+        value: getSectorCount('PWD') + getSectorCount('SOLO PARENT'),
+        subtitle: 'PWD & Solo Parents',
+        icon: HeartPulse,
+        color: 'rose',
       },
     ];
   }, [residents]);
-
-  const isDark = currentTheme === 'dark';
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -97,12 +108,10 @@ const ResidentStats = ({ residents, t, currentTheme = 'modern' }) => {
                   {stat.value.toLocaleString()}
                 </div>
               </div>
-
               <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[16px] ${tone.iconBg}`}>
                 <Icon className={tone.iconText} size={18} strokeWidth={2.1} />
               </div>
             </div>
-
             <div className={`mt-5 rounded-[18px] border px-4 py-3 ${tone.panelBg}`}>
               <p className={`text-[13px] font-medium ${isDark ? t.subtleText : tone.panelText} font-kumbh`}>
                 {stat.subtitle}

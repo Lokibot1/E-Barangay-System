@@ -1,10 +1,21 @@
+/**
+ * ResidentArchivesTab.jsx
+ * CHANGED: Replaced full-page `if (loading) return (...)` with skeleton rows
+ *   inside the table tbody — filters and header remain visible while loading.
+ * All original logic preserved.
+ */
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-    Search, X, RotateCcw, Loader2, ArchiveX, User,
+    Search, X, RotateCcw, ArchiveX, User,
 } from 'lucide-react';
-import { residentService } from '../../../../services/sub-system-1/residents';
-import ResidentArchiveModal from '../ResidentArchiveModal';
-import { PUROK_OPTIONS } from '../../../../constants/filter';
+import { residentService }   from '../../../../services/sub-system-1/residents';
+import ResidentArchiveModal  from '../ResidentArchiveModal';
+import SkeletonLoader from '../../common/SkeletonLoader';
+import { PUROK_OPTIONS }     from '../../../../constants/filter';
+
+const HEADERS = ['Resident & ID', 'Last Address', 'Archived On', 'Archived By', 'Action'];
+const COLS    = HEADERS.length;
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -18,7 +29,6 @@ const ResidentArchivesTab = ({ t, currentTheme = 'modern', onRestore }) => {
     const [selectedResident, setSelectedResident]  = useState(null);
     const [modalOpen,        setModalOpen]         = useState(false);
 
-    // ── Fetch ─────────────────────────────────────────────────────────────────
     const fetchArchived = useCallback(async () => {
         setLoading(true);
         try {
@@ -33,7 +43,6 @@ const ResidentArchivesTab = ({ t, currentTheme = 'modern', onRestore }) => {
 
     useEffect(() => { fetchArchived(); }, [fetchArchived]);
 
-    // ── Filtering ─────────────────────────────────────────────────────────────
     const filtered = useMemo(() => archived.filter((r) => {
         const q = searchTerm.toLowerCase();
         const matchSearch =
@@ -44,7 +53,6 @@ const ResidentArchivesTab = ({ t, currentTheme = 'modern', onRestore }) => {
         return matchSearch && matchPurok;
     }), [archived, searchTerm, purokFilter]);
 
-    // ── Restore ───────────────────────────────────────────────────────────────
     const handleRestore = async (id) => {
         const success = await onRestore(id);
         if (success) {
@@ -59,22 +67,11 @@ const ResidentArchivesTab = ({ t, currentTheme = 'modern', onRestore }) => {
         ...PUROK_OPTIONS,
     ];
 
-    const HEADERS = ['Resident & ID', 'Last Address', 'Archived On', 'Archived By', 'Action'];
-
-    // ── Loading ───────────────────────────────────────────────────────────────
-    if (loading) return (
-        <div className={`flex items-center justify-center py-28 ${t.subtleText} font-kumbh`}>
-            <Loader2 size={22} className="animate-spin mr-3" />
-            <span className="font-black tracking-widest uppercase text-sm">Loading Archives...</span>
-        </div>
-    );
-
     return (
         <>
             {/* ── Filters ── */}
             <div className={`border-b px-5 py-5 sm:px-6 ${t.cardBorder} ${isDark ? 'bg-slate-950/40' : 'bg-slate-50/80'}`}>
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-
                     <div className="relative w-full xl:max-w-xl">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
                         <input
@@ -90,7 +87,6 @@ const ResidentArchivesTab = ({ t, currentTheme = 'modern', onRestore }) => {
                             </button>
                         )}
                     </div>
-
                     <div className="w-full xl:w-auto">
                         <select
                             value={purokFilter}
@@ -110,7 +106,7 @@ const ResidentArchivesTab = ({ t, currentTheme = 'modern', onRestore }) => {
                 <div className="flex items-center gap-2.5">
                     <div className="h-2 w-2 rounded-full bg-rose-500" />
                     <span className={`text-sm font-semibold font-kumbh ${t.cardText}`}>
-                        {filtered.length} archived resident{filtered.length !== 1 ? 's' : ''}
+                        {loading ? '—' : `${filtered.length} archived resident${filtered.length !== 1 ? 's' : ''}`}
                     </span>
                 </div>
             </div>
@@ -138,7 +134,9 @@ const ResidentArchivesTab = ({ t, currentTheme = 'modern', onRestore }) => {
                         </tr>
                     </thead>
                     <tbody className={t.cardBg}>
-                        {filtered.length > 0 ? (
+                        {loading ? (
+                            <SkeletonLoader variant="table" rows={6} cols={COLS} isDark={isDark} />
+                        ) : filtered.length > 0 ? (
                             filtered.map((r) => (
                                 <ArchiveRow
                                     key={r.id}
@@ -150,7 +148,7 @@ const ResidentArchivesTab = ({ t, currentTheme = 'modern', onRestore }) => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={5} className="px-6 py-28 text-center">
+                                <td colSpan={COLS} className="px-6 py-28 text-center">
                                     <div className="flex flex-col items-center gap-3">
                                         <ArchiveX size={32} className="text-slate-300" />
                                         <span className={`text-2xl font-bold ${t.cardText} font-spartan`}>No archived residents</span>
@@ -165,7 +163,6 @@ const ResidentArchivesTab = ({ t, currentTheme = 'modern', onRestore }) => {
                 </table>
             </div>
 
-            {/* ── Restore modal ── */}
             <ResidentArchiveModal
                 isOpen={modalOpen}
                 onClose={() => setModalOpen(false)}
@@ -184,7 +181,6 @@ const ArchiveRow = ({ item, onView, t, isDark }) => {
     const divider = isDark ? 'border-slate-800/90' : 'border-slate-200';
     const cell    = `border-b ${divider} px-6 py-5 align-middle`;
 
-    // Prefer the resolved log timestamp; fall back to deleted_at
     const archivedAt = item.formatted_archived_at
         || (item.deleted_at
             ? new Date(item.deleted_at).toLocaleDateString('en-PH', {
@@ -199,63 +195,41 @@ const ArchiveRow = ({ item, onView, t, isDark }) => {
             onClick={onView}
             className={`cursor-pointer transition-colors duration-200 ${t.cardText} ${isDark ? 'hover:bg-slate-900/60' : 'hover:bg-slate-50/80'}`}
         >
-            {/* ── Name + Barangay ID ── */}
             <td className={`${cell} text-left`}>
                 <div className="flex items-center gap-3">
                     <div className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 ${isDark ? 'bg-slate-700' : 'bg-slate-100'}`}>
                         <User size={15} className={t.subtleText} />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[14px] font-semibold font-kumbh leading-tight truncate">
-                            {item.name || 'Unknown'}
-                        </p>
-                        <p className={`mt-0.5 text-[11px] font-mono ${t.subtleText}`}>
-                            {item.barangay_id || 'No ID'}
-                        </p>
+                        <p className="text-[14px] font-semibold font-kumbh leading-tight truncate">{item.name || 'Unknown'}</p>
+                        <p className={`mt-0.5 text-[11px] font-mono ${t.subtleText}`}>{item.barangay_id || 'No ID'}</p>
                     </div>
                 </div>
             </td>
-
-            {/* ── Address ── */}
             <td className={`${cell} text-left`}>
-                <p className={`text-sm font-normal font-kumbh ${t.subtleText} max-w-[240px] truncate`}>
-                    {item.full_address || 'No address'}
-                </p>
+                <p className={`text-sm font-normal font-kumbh ${t.subtleText} max-w-[240px] truncate`}>{item.full_address || 'No address'}</p>
                 {item.resolved_purok && (
                     <span className={`mt-1.5 inline-flex rounded-full px-3 py-1 text-xs font-semibold font-kumbh border ${
-                        isDark
-                            ? 'border-slate-600 bg-slate-700 text-slate-200'
-                            : 'border-blue-200 bg-blue-50 text-blue-700'
+                        isDark ? 'border-slate-600 bg-slate-700 text-slate-200' : 'border-blue-200 bg-blue-50 text-blue-700'
                     }`}>
                         {item.resolved_purok}
                     </span>
                 )}
             </td>
-
-            {/* ── Archived On ── */}
             <td className={`${cell} text-center`}>
-                <span className={`text-sm font-medium font-kumbh ${t.subtleText}`}>
-                    {archivedAt}
-                </span>
+                <span className={`text-sm font-medium font-kumbh ${t.subtleText}`}>{archivedAt}</span>
             </td>
-
-            {/* ── Archived By ── */}
             <td className={`${cell} text-center`}>
                 {archivedBy ? (
                     <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold font-kumbh border ${
-                        isDark
-                            ? 'border-rose-800/60 bg-rose-900/20 text-rose-300'
-                            : 'border-rose-200 bg-rose-50 text-rose-700'
+                        isDark ? 'border-rose-800/60 bg-rose-900/20 text-rose-300' : 'border-rose-200 bg-rose-50 text-rose-700'
                     }`}>
-                        <User size={10} />
-                        {archivedBy}
+                        <User size={10} /> {archivedBy}
                     </span>
                 ) : (
                     <span className={`text-sm font-medium font-kumbh ${t.subtleText}`}>—</span>
                 )}
             </td>
-
-            {/* ── Action ── */}
             <td className={`${cell} text-center`}>
                 <button
                     onClick={(e) => { e.stopPropagation(); onView(); }}

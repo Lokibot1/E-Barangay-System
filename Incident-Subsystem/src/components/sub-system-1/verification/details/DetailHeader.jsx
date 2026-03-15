@@ -6,7 +6,7 @@ const DetailHeader = ({
   data,
   setView,
   onApprove,
-  onReject,
+  onRejectClick, 
   onVisitBgy,
   isActionSubmitting,
   t,
@@ -34,7 +34,7 @@ const DetailHeader = ({
       <VerificationActions
         onVisitBgy={onVisitBgy}
         onApprove={onApprove}
-        onReject={onReject}
+        onReject={onRejectClick}
         currentStatus={data?.status}
         isActionSubmitting={isActionSubmitting}
         t={t}

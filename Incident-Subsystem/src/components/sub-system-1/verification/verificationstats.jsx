@@ -1,5 +1,12 @@
+/**
+ * VerificationStats.jsx
+ * ADDED: loading prop — renders StatSkeleton when true.
+ * All original logic preserved.
+ */
+
 import React, { useMemo } from 'react';
 import { CheckCircle2, Clock, MapPin, XCircle } from 'lucide-react';
+import SkeletonLoader from '../common/SkeletonLoader';
 
 const toneMap = {
   amber: {
@@ -34,53 +41,32 @@ const toneMap = {
   },
 };
 
-const VerificationStats = ({ submissions = [], t, currentTheme = 'modern' }) => {
+const VerificationStats = ({ submissions = [], loading = false, t, currentTheme = 'modern' }) => {
+  const isDark = currentTheme === 'dark';
+
+  // ── Show skeleton while loading ───────────────────────────────────────────
+  if (loading) {
+    return <SkeletonLoader variant="stat" count={4} isDark={isDark} />;
+  }
+
   const stats = useMemo(() => {
     const counts = { pending: 0, forVerification: 0, verified: 0, rejected: 0 };
-
     submissions.forEach(s => {
       const status = s.status?.toLowerCase();
-      if (status === 'pending') counts.pending++;
+      if (status === 'pending')           counts.pending++;
       else if (status === 'for verification') counts.forVerification++;
-      else if (status === 'verified') counts.verified++;
-      else if (status === 'rejected') counts.rejected++;
+      else if (status === 'verified')     counts.verified++;
+      else if (status === 'rejected')     counts.rejected++;
     });
-
     return counts;
   }, [submissions]);
 
   const statsConfig = [
-    {
-      title: 'Pending',
-      value: stats.pending,
-      subtitle: 'Awaiting Review',
-      icon: Clock,
-      color: 'amber'
-    },
-    {
-      title: 'For Verification',
-      value: stats.forVerification,
-      subtitle: 'On-site Check',
-      icon: MapPin,
-      color: 'blue'
-    },
-    {
-      title: 'Verified',
-      value: stats.verified,
-      subtitle: 'Approved Records',
-      icon: CheckCircle2,
-      color: 'green'
-    },
-    {
-      title: 'Rejected',
-      value: stats.rejected,
-      subtitle: 'Denied Submissions',
-      icon: XCircle,
-      color: 'red'
-    }
+    { title: 'Pending',          value: stats.pending,          subtitle: 'Awaiting Review',    icon: Clock,        color: 'amber' },
+    { title: 'For Verification', value: stats.forVerification,  subtitle: 'On-site Check',      icon: MapPin,       color: 'blue'  },
+    { title: 'Verified',         value: stats.verified,         subtitle: 'Approved Records',   icon: CheckCircle2, color: 'green' },
+    { title: 'Rejected',         value: stats.rejected,         subtitle: 'Denied Submissions', icon: XCircle,      color: 'red'   },
   ];
-
-  const isDark = currentTheme === 'dark';
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -103,7 +89,6 @@ const VerificationStats = ({ submissions = [], t, currentTheme = 'modern' }) => 
                   {stat.value.toLocaleString()}
                 </div>
               </div>
-
               <div
                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[16px] ${isVerifiedGreen ? '' : tone.iconBg}`}
                 style={isVerifiedGreen ? { backgroundColor: '#ecfdf5' } : undefined}
@@ -116,7 +101,6 @@ const VerificationStats = ({ submissions = [], t, currentTheme = 'modern' }) => 
                 />
               </div>
             </div>
-
             <div
               className={`mt-5 rounded-[18px] border px-4 py-3 ${isVerifiedGreen ? '' : tone.panelBg}`}
               style={isVerifiedGreen ? { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' } : undefined}

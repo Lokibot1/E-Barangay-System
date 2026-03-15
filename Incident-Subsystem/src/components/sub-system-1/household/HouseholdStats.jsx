@@ -1,5 +1,12 @@
+/**
+ * HouseholdStats.jsx
+ * ADDED: loading prop — renders StatSkeleton when true.
+ * All original logic preserved.
+ */
+
 import React from 'react';
 import { Home, Landmark, MapPin, Users } from 'lucide-react';
+import SkeletonLoader from '../common/SkeletonLoader';
 
 const toneMap = {
   blue: {
@@ -34,39 +41,19 @@ const toneMap = {
   },
 };
 
-const HouseholdStats = ({ stats, t, currentTheme = 'modern' }) => {
-  const cards = [
-    {
-      title: 'Total Households',
-      value: stats.total,
-      subtitle: 'Registered Family Units',
-      icon: Home,
-      color: 'blue'
-    },
-    {
-      title: 'Indigent Families',
-      value: stats.indigents,
-      subtitle: 'DSWD Priority List',
-      icon: Landmark,
-      color: 'amber'
-    },
-    {
-      title: 'Home Owners',
-      value: stats.owners,
-      subtitle: `${stats.ownerPercent}% of Total Units`,
-      icon: MapPin,
-      color: 'emerald'
-    },
-    {
-      title: 'Priority Heads',
-      value: stats.priority,
-      subtitle: 'Senior or PWD Headed',
-      icon: Users,
-      color: 'rose'
-    }
-  ];
-
+const HouseholdStats = ({ stats, loading = false, t, currentTheme = 'modern' }) => {
   const isDark = currentTheme === 'dark';
+
+  if (loading) {
+    return <SkeletonLoader variant="stat" count={4} isDark={isDark} />;
+  }
+
+  const cards = [
+    { title: 'Total Households', value: stats.total,        subtitle: 'Registered Family Units',     icon: Home,     color: 'blue'    },
+    { title: 'Indigent Families', value: stats.indigents,   subtitle: 'DSWD Priority List',          icon: Landmark, color: 'amber'   },
+    { title: 'Home Owners',       value: stats.owners,      subtitle: `${stats.ownerPercent}% of Total Units`, icon: MapPin, color: 'emerald' },
+    { title: 'Priority Heads',    value: stats.priority,    subtitle: 'Senior or PWD Headed',        icon: Users,    color: 'rose'    },
+  ];
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -88,12 +75,10 @@ const HouseholdStats = ({ stats, t, currentTheme = 'modern' }) => {
                   {card.value.toLocaleString()}
                 </div>
               </div>
-
               <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[16px] ${tone.iconBg}`}>
                 <Icon className={tone.iconText} size={18} strokeWidth={2.1} />
               </div>
             </div>
-
             <div className={`mt-5 rounded-[18px] border px-4 py-3 ${tone.panelBg}`}>
               <p className={`text-[13px] font-medium ${isDark ? t.subtleText : tone.panelText} font-kumbh`}>
                 {card.subtitle}
