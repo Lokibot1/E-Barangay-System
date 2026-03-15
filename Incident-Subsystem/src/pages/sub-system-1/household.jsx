@@ -53,7 +53,6 @@ const Households = () => {
 
   const t      = themeTokens[currentTheme];
   const isDark = currentTheme === 'dark';
-  const accent = tabAccentMap[currentTheme] || tabAccentMap.modern;
   const { households, loading, refresh } = useHouseholds();
   const { printTable } = usePrinter();
 
@@ -161,9 +160,7 @@ const Households = () => {
   };
 
   return (
-    <div className={`font-sans min-h-screen py-4 pb-24 px-3 sm:px-4 lg:px-5 relative ${t.pageBg}`}>
-      <div className="mx-auto w-full max-w-[1600px]">
-        <div className="animate-in fade-in duration-500 space-y-6 pt-4 sm:pt-5">
+    <div className="p-6 sm:p-8 space-y-6 pb-20">
 
       {/* ── Page header ── */}
       <div className="flex justify-between items-center">
@@ -300,8 +297,6 @@ const Households = () => {
           onClose={() => { setIsDeactivateModalOpen(false); setSelectedHousehold(null); }}
         />
       )}
-        </div>
-      </div>
     </div>
   );
 };
