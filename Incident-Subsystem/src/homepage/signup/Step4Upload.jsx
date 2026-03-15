@@ -25,10 +25,10 @@ import {
 // ── Policy Section sub-component ─────────────────────────────────────────────
 const PolicySection = ({ number, title, children, isDarkMode }) => (
   <div>
-    <p className={`text-[11px] font-black uppercase tracking-wider mb-1.5 ${isDarkMode ? "text-slate-200" : "text-slate-800"}`}>
+    <p className={`text-[11px] font-black uppercase tracking-wider mb-1.5 font-kumbh ${isDarkMode ? "text-slate-200" : "text-slate-800"}`}>
       <span className="text-emerald-500 mr-1">{number}.</span>{title}
     </p>
-    <p className={`text-[11px] leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+    <p className={`text-[11px] leading-relaxed font-kumbh ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
       {children}
     </p>
   </div>
@@ -106,10 +106,10 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAgree, alreadyAgreed, isDarkMod
             <ShieldCheck size={18} className="text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className={`text-xs font-black uppercase tracking-widest ${isDarkMode ? "text-slate-100" : "text-slate-800"}`}>
+            <p className={`text-xs font-black uppercase tracking-widest font-kumbh ${isDarkMode ? "text-slate-100" : "text-slate-800"}`}>
               Data Privacy &amp; Consent Agreement
             </p>
-            <p className={`text-[9px] font-bold mt-0.5 ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
+            <p className={`text-[9px] font-bold mt-0.5 font-kumbh ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
               R.A. 10173 — Data Privacy Act of 2012
             </p>
           </div>
@@ -136,7 +136,7 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAgree, alreadyAgreed, isDarkMod
             isDarkMode ? "bg-amber-900/20 border-b border-amber-800/30" : "bg-amber-50 border-b border-amber-100"
           }`}>
             <ChevronDown size={13} className="text-amber-500 animate-bounce" />
-            <p className="text-[9px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+            <p className="text-[9px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 font-kumbh">
               Please scroll to the bottom to read the full policy
             </p>
             <ChevronDown size={13} className="text-amber-500 animate-bounce" />
@@ -153,7 +153,7 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAgree, alreadyAgreed, isDarkMod
           style={{ scrollbarWidth: "thin" }}
         >
           {/* Intro */}
-          <p className={`text-[11px] leading-relaxed font-medium ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+          <p className={`text-[11px] leading-relaxed font-medium font-kumbh ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
             Before submitting your registration, please read the following Data Privacy Notice carefully.
             Barangay Gulod, Novaliches, Quezon City is committed to protecting your personal information
             in accordance with the <strong>Data Privacy Act of 2012 (R.A. 10173)</strong>.
@@ -228,7 +228,7 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAgree, alreadyAgreed, isDarkMod
             isDarkMode ? "text-slate-500 border-t border-slate-800" : "text-slate-400 border-t border-slate-100"
           }`}>
             <FileText size={10} />
-            <span className="text-[9px] font-bold uppercase tracking-wider">
+            <span className="text-[9px] font-bold uppercase tracking-wider font-kumbh">
               End of Data Privacy Notice — effective as of the date of your submission.
             </span>
           </div>
@@ -250,7 +250,7 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAgree, alreadyAgreed, isDarkMod
                 className="h-5 w-5 rounded border-2 border-slate-300 dark:border-slate-600 cursor-pointer accent-emerald-600 disabled:cursor-not-allowed"
               />
             </div>
-            <p className={`text-[11px] font-bold leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>
+            <p className={`text-[11px] font-bold leading-relaxed font-kumbh ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>
               I have read and understood the Data Privacy Notice. I freely and voluntarily give my
               consent to Barangay Gulod to collect, process, and store my personal information for
               the stated purposes in compliance with R.A. 10173.
@@ -261,7 +261,7 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAgree, alreadyAgreed, isDarkMod
           {!hasReachedEnd && (
             <div className="flex items-center gap-2">
               <Lock size={11} className="text-amber-500 flex-shrink-0" />
-              <p className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+              <p className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider font-kumbh">
                 Scroll to the bottom to unlock the consent checkbox
               </p>
             </div>
@@ -272,7 +272,7 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAgree, alreadyAgreed, isDarkMod
             type="button"
             disabled={!agreed}
             onClick={handleConfirm}
-            className={`w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
+            className={`w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest font-kumbh transition-all ${
               agreed
                 ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-900/20 active:scale-[0.98]"
                 : "bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed"
@@ -325,7 +325,7 @@ const TermsAndConditionModal = ({ isOpen, onClose, onAgree, alreadyAgreed, isDar
             <FileText size={18} className="text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className={`text-xs font-black uppercase tracking-widest ${isDarkMode ? "text-slate-100" : "text-slate-800"}`}>
+            <p className={`text-xs font-black uppercase tracking-widest font-kumbh ${isDarkMode ? "text-slate-100" : "text-slate-800"}`}>
               Terms and Condition
             </p>
           </div>
@@ -338,7 +338,7 @@ const TermsAndConditionModal = ({ isOpen, onClose, onAgree, alreadyAgreed, isDar
           </button>
         </div>
 
-        <div className={`px-6 py-5 space-y-4 text-[11px] leading-relaxed overflow-y-auto ${
+        <div className={`px-6 py-5 space-y-4 text-[11px] leading-relaxed overflow-y-auto font-kumbh ${
           isDarkMode ? "text-slate-300" : "text-slate-600"
         }`}>
           <p>
@@ -367,7 +367,7 @@ const TermsAndConditionModal = ({ isOpen, onClose, onAgree, alreadyAgreed, isDar
                 className="h-5 w-5 rounded border-2 border-slate-300 dark:border-slate-600 cursor-pointer accent-emerald-600"
               />
             </div>
-            <p className={`text-[11px] font-bold leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>
+            <p className={`text-[11px] font-bold leading-relaxed font-kumbh ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>
               I have read and understood the Terms and Condition.
             </p>
           </label>
@@ -375,7 +375,7 @@ const TermsAndConditionModal = ({ isOpen, onClose, onAgree, alreadyAgreed, isDar
             type="button"
             onClick={handleConfirm}
             disabled={!agreed}
-            className={`w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
+            className={`w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest font-kumbh transition-all ${
               agreed
                 ? "bg-emerald-600 hover:bg-emerald-700 text-white active:scale-[0.98]"
                 : "bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed"
@@ -556,10 +556,10 @@ const CameraCaptureModal = ({
               <Camera size={18} className="text-white" />
             </div>
             <div>
-              <p className={`text-xs font-black uppercase tracking-widest ${isDarkMode ? "text-slate-100" : "text-slate-800"}`}>
+              <p className={`text-xs font-black uppercase tracking-widest font-kumbh ${isDarkMode ? "text-slate-100" : "text-slate-800"}`}>
                 Use Camera
               </p>
-              <p className={`text-[10px] font-bold ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+              <p className={`text-[10px] font-bold font-kumbh ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                 Capture the {side} side of your ID
               </p>
             </div>
@@ -593,20 +593,20 @@ const CameraCaptureModal = ({
                 {isStarting && !cameraError && (
                   <>
                     <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
-                    <p className="text-sm font-bold text-white">Starting camera...</p>
+                    <p className="text-sm font-bold text-white font-kumbh">Starting camera...</p>
                   </>
                 )}
                 {cameraError && (
                   <>
-                    <p className="text-sm font-bold text-white">{cameraError}</p>
-                    <p className="text-xs text-slate-300">
+                    <p className="text-sm font-bold text-white font-kumbh">{cameraError}</p>
+                    <p className="text-xs text-slate-300 font-kumbh">
                       If camera access is unavailable here, use `UPLOAD PHOTO` as fallback.
                     </p>
                     {onFallbackCapture && (
                       <button
                         type="button"
                         onClick={onFallbackCapture}
-                        className="mt-1 rounded-xl bg-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/20"
+                        className="mt-1 rounded-xl bg-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/20 font-kumbh"
                       >
                         Use Native Camera
                       </button>
@@ -618,14 +618,14 @@ const CameraCaptureModal = ({
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <p className={`text-[11px] font-bold ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+            <p className={`text-[11px] font-bold font-kumbh ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
               Position the ID clearly inside the frame before taking the photo.
             </p>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={onClose}
-                className={`rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-wider ${
+                className={`rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-wider font-kumbh ${
                   isDarkMode
                     ? "bg-slate-800 text-slate-200 hover:bg-slate-700"
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -637,7 +637,7 @@ const CameraCaptureModal = ({
                 type="button"
                 onClick={handleTakePhoto}
                 disabled={isStarting || !!cameraError || isCapturing}
-                className={`rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-wider text-white ${
+                className={`rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-wider text-white font-kumbh ${
                   isStarting || cameraError || isCapturing
                     ? "cursor-not-allowed bg-emerald-400"
                     : "bg-emerald-600 hover:bg-emerald-700"
@@ -764,7 +764,7 @@ const Step4Upload = ({
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors ${
             hasFront && hasBack ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"
           }`}>
-            {hasFront && hasBack ? "✓ Requirements Met" : "Required: 2 Photos"}
+            <span className="font-kumbh">{hasFront && hasBack ? "✓ Requirements Met" : "Required: 2 Photos"}</span>
           </span>
         </header>
 
@@ -789,14 +789,14 @@ const Step4Upload = ({
                         <button
                           type="button"
                           onClick={() => openPicker(fieldName, "upload")}
-                          className="w-full max-w-[150px] text-white text-[10px] font-black uppercase tracking-widest bg-emerald-600 px-3 py-2 rounded-xl shadow-lg hover:bg-emerald-700"
+                          className="w-full max-w-[150px] text-white text-[10px] font-black uppercase tracking-widest font-kumbh bg-emerald-600 px-3 py-2 rounded-xl shadow-lg hover:bg-emerald-700"
                         >
                           Upload Photo
                         </button>
                         <button
                           type="button"
                           onClick={() => openPicker(fieldName, "camera")}
-                          className="w-full max-w-[150px] text-white text-[10px] font-black uppercase tracking-widest bg-slate-700 px-3 py-2 rounded-xl shadow-lg hover:bg-slate-800"
+                          className="w-full max-w-[150px] text-white text-[10px] font-black uppercase tracking-widest font-kumbh bg-slate-700 px-3 py-2 rounded-xl shadow-lg hover:bg-slate-800"
                         >
                           Use Camera
                         </button>
@@ -808,23 +808,23 @@ const Step4Upload = ({
                         <ImageIcon size={20} className={isDarkMode ? "text-emerald-500" : "text-emerald-600"} />
                       </div>
                       <div>
-                        <p className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">
+                        <p className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest font-kumbh">
                           Upload {side} ID
                         </p>
-                        <p className="text-[9px] text-slate-400 italic mt-0.5 font-bold">Max 5MB • JPG/PNG</p>
+                        <p className="text-[9px] text-slate-400 italic mt-0.5 font-bold font-kumbh">Max 5MB • JPG/PNG</p>
                       </div>
                       <div className="flex items-center justify-center gap-2 pt-1">
                         <button
                           type="button"
                           onClick={() => openPicker(fieldName, "upload")}
-                          className="text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700"
+                          className="text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-kumbh"
                         >
                           Upload Photo
                         </button>
                         <button
                           type="button"
                           onClick={() => openPicker(fieldName, "camera")}
-                          className="text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-xl bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                          className="text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-xl bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 font-kumbh"
                         >
                           Use Camera
                         </button>
@@ -863,14 +863,14 @@ const Step4Upload = ({
               <Lock size={18} className={isDarkMode ? "text-slate-400" : "text-slate-500"} />
             </div>
             <div className="text-left flex-1 min-w-0">
-              <p className={`text-xs font-black uppercase tracking-wide ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+              <p className={`text-xs font-black uppercase tracking-wide font-kumbh ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
                 Data Privacy &amp; Consent Agreement
               </p>
-              <p className={`text-[9px] font-bold mt-0.5 uppercase tracking-wider ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
+              <p className={`text-[9px] font-bold mt-0.5 uppercase tracking-wider font-kumbh ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
                 Required — Tap to read and accept before submitting
               </p>
             </div>
-            <div className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl flex-shrink-0 ${
+            <div className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl flex-shrink-0 font-kumbh ${
               isDarkMode ? "bg-emerald-900/40 text-emerald-400" : "bg-emerald-100 text-emerald-700"
             }`}>
               Open
@@ -887,17 +887,17 @@ const Step4Upload = ({
               <CheckCircle2 size={18} className="text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className={`text-xs font-black uppercase tracking-wide ${isDarkMode ? "text-emerald-300" : "text-emerald-700"}`}>
+              <p className={`text-xs font-black uppercase tracking-wide font-kumbh ${isDarkMode ? "text-emerald-300" : "text-emerald-700"}`}>
                 Privacy Policy Accepted
               </p>
-              <p className={`text-[9px] font-bold mt-0.5 ${isDarkMode ? "text-emerald-600" : "text-emerald-600"}`}>
+              <p className={`text-[9px] font-bold mt-0.5 font-kumbh ${isDarkMode ? "text-emerald-600" : "text-emerald-600"}`}>
                 R.A. 10173 — Data Privacy Act of 2012
               </p>
             </div>
             <button
               type="button"
               onClick={() => setPrivacyModalOpen(true)}
-              className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl flex-shrink-0 transition-colors ${
+              className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl flex-shrink-0 transition-colors font-kumbh ${
                 isDarkMode
                   ? "bg-slate-800 text-slate-400 hover:text-slate-200"
                   : "bg-white text-slate-500 hover:text-slate-700 border border-slate-200"
@@ -925,14 +925,14 @@ const Step4Upload = ({
               <FileText size={18} className={isDarkMode ? "text-slate-400" : "text-slate-500"} />
             </div>
             <div className="text-left flex-1 min-w-0">
-              <p className={`text-xs font-black uppercase tracking-wide ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+              <p className={`text-xs font-black uppercase tracking-wide font-kumbh ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
                 Terms and Condition
               </p>
-              <p className={`text-[9px] font-bold mt-0.5 uppercase tracking-wider ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
+              <p className={`text-[9px] font-bold mt-0.5 uppercase tracking-wider font-kumbh ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
                 Required - Tap to read before submitting
               </p>
             </div>
-            <div className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl flex-shrink-0 ${
+            <div className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl flex-shrink-0 font-kumbh ${
               isDarkMode ? "bg-emerald-900/40 text-emerald-400" : "bg-emerald-100 text-emerald-700"
             }`}>
               Open
@@ -948,17 +948,17 @@ const Step4Upload = ({
               <CheckCircle2 size={18} className="text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className={`text-xs font-black uppercase tracking-wide ${isDarkMode ? "text-emerald-300" : "text-emerald-700"}`}>
+              <p className={`text-xs font-black uppercase tracking-wide font-kumbh ${isDarkMode ? "text-emerald-300" : "text-emerald-700"}`}>
                 Terms and Condition Accepted
               </p>
-              <p className={`text-[9px] font-bold mt-0.5 ${isDarkMode ? "text-emerald-600" : "text-emerald-600"}`}>
+              <p className={`text-[9px] font-bold mt-0.5 font-kumbh ${isDarkMode ? "text-emerald-600" : "text-emerald-600"}`}>
                 You can review this anytime
               </p>
             </div>
             <button
               type="button"
               onClick={() => setTermsModalOpen(true)}
-              className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl flex-shrink-0 transition-colors ${
+              className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl flex-shrink-0 transition-colors font-kumbh ${
                 isDarkMode
                   ? "bg-slate-800 text-slate-400 hover:text-slate-200"
                   : "bg-white text-slate-500 hover:text-slate-700 border border-slate-200"
@@ -977,7 +977,7 @@ const Step4Upload = ({
           onClick={() => isReady && onReviewSubmit()}
           disabled={!isReady || loading}
           className={`
-            w-full py-5 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] transition-all duration-300
+            w-full py-5 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] font-kumbh transition-all duration-300
             shadow-2xl active:scale-[0.97]
             ${isReady
               ? "bg-emerald-700 text-white hover:bg-emerald-800 shadow-emerald-900/30"
@@ -1004,7 +1004,7 @@ const Step4Upload = ({
         <button
           type="button"
           onClick={() => setStep(3)}
-          className="w-full py-3 font-black text-[10px] uppercase tracking-widest text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+          className="w-full py-3 font-black text-[10px] uppercase tracking-widest font-kumbh text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
         >
           Go Back
         </button>
