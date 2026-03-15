@@ -213,7 +213,7 @@ const Step3WorkEducation = ({
       {/* ── Indigency Toggle — staff + Head only ───────────────────────────── */}
       {isStaffMode && isHead && (
         <div>
-          <h3 className={`text-xs font-black uppercase tracking-[0.3em] mb-4 ${
+          <h3 className={`text-xs font-black uppercase tracking-[0.3em] mb-4 font-kumbh ${
             isDarkMode ? 'text-slate-400' : 'text-slate-500'
           }`}>
             Household Classification
@@ -236,14 +236,14 @@ const Step3WorkEducation = ({
                 className={isIndigent ? 'text-amber-500' : isDarkMode ? 'text-slate-500' : 'text-slate-400'}
               />
               <div className="text-left">
-                <p className={`text-sm font-black uppercase tracking-wide ${
+                <p className={`text-sm font-black uppercase tracking-wide font-kumbh ${
                   isIndigent
                     ? 'text-amber-700 dark:text-amber-400'
                     : isDarkMode ? 'text-white' : 'text-slate-900'
                 }`}>
                   {isIndigent ? 'Marked as Indigent' : 'Non-Indigent Household'}
                 </p>
-                <p className={`text-[10px] font-medium mt-0.5 ${
+                <p className={`text-[10px] font-medium mt-0.5 font-kumbh ${
                   isDarkMode ? 'text-slate-400' : 'text-slate-500'
                 }`}>
                   {isIndigent
@@ -270,7 +270,7 @@ const Step3WorkEducation = ({
         <button
           type="button"
           onClick={() => setStep(2)}
-          className={`flex items-center gap-2 px-6 py-3 rounded-2xl border text-[11px] font-black uppercase tracking-widest transition-all ${
+          className={`flex items-center gap-2 px-6 py-3 rounded-2xl border text-[11px] font-black uppercase tracking-widest font-kumbh transition-all ${
             isDarkMode
               ? 'border-white/10 text-slate-300 hover:bg-white/5'
               : 'border-black/10 text-slate-600 hover:bg-black/5'
@@ -282,7 +282,7 @@ const Step3WorkEducation = ({
         <button
           type="button"
           onClick={handleNext}
-          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95"
+          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest font-kumbh transition-all active:scale-95"
         >
           {isStaffMode ? 'Review & Submit' : 'Next'} <ChevronRight size={14} />
         </button>

@@ -273,7 +273,7 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
             <button
               type="button"
               onClick={applyGmail}
-              className={`mt-1.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95 border ${
+              className={`mt-1.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider font-kumbh transition-all hover:scale-105 active:scale-95 border ${
                 isDarkMode
                   ? "bg-slate-800 border-slate-600 text-emerald-400 hover:bg-slate-700"
                   : "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
@@ -514,7 +514,7 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
           type="button"
           disabled={!isValid}
           onClick={() => setStep(2)}
-          className="w-full py-4 bg-emerald-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest
+          className="w-full py-4 bg-emerald-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest font-kumbh
                      disabled:opacity-20 disabled:cursor-not-allowed transition-all hover:bg-emerald-800
                      active:scale-[0.98] shadow-lg shadow-emerald-900/20"
         >
@@ -525,7 +525,7 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
           disabledReason &&
           (formData.firstName || formData.contact || formData.email) && (
             <p
-              className={`text-[9px] font-bold text-center uppercase tracking-wider ${
+              className={`text-[9px] font-bold text-center uppercase tracking-wider font-kumbh ${
                 isDarkMode ? "text-slate-500" : "text-slate-400"
               }`}
             >
