@@ -255,22 +255,47 @@ const LoginPage = () => {
                     />
                   </div>
                   {searchResult && (
-                    <div className={`mt-4 rounded-2xl p-4 border ${
-                      isDarkMode ? "bg-slate-900/80 border-white/10" : "bg-slate-50 border-slate-200"
-                    }`}>
-                      <div className="flex items-center justify-between mb-2 gap-2">
-                        <p className={`text-[10px] font-black uppercase tracking-widest font-kumbh ${mutedClass}`}>Status</p>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border font-kumbh ${
-                          searchResult.status === "Verified" ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                          : searchResult.status === "Rejected" ? "bg-rose-100 text-rose-700 border-rose-200"
-                          : "bg-amber-100 text-amber-700 border-amber-200"
-                        }`}>{searchResult.status}</span>
-                      </div>
-                      <p className={`text-sm font-black leading-tight mb-1 font-kumbh ${isDarkMode ? "text-slate-100" : "text-slate-800"}`}>
-                        {searchResult.message}
-                      </p>
-                    </div>
-                  )}
+  <div className={`mt-4 rounded-2xl p-4 border ${
+    isDarkMode ? "bg-slate-900/80 border-white/10" : "bg-slate-50 border-slate-200"
+  }`}>
+    <div className="flex items-center justify-between mb-2 gap-2">
+      <p className={`text-[10px] font-black uppercase tracking-widest font-kumbh ${mutedClass}`}>Status</p>
+      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border font-kumbh ${
+        searchResult.status === "Verified" ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+        : searchResult.status === "Rejected" ? "bg-rose-100 text-rose-700 border-rose-200"
+        : "bg-amber-100 text-amber-700 border-amber-200"
+      }`}>{searchResult.status}</span>
+    </div>
+
+    <p className={`text-sm font-black leading-tight mb-1 font-kumbh ${isDarkMode ? "text-slate-100" : "text-slate-800"}`}>
+      {searchResult.message}
+    </p>
+
+    {/* REJECTION DETAILS BOX */}
+    {searchResult.status === "Rejected" && (
+      <div className={`mt-3 p-3 rounded-xl border font-kumbh ${
+        isDarkMode ? "bg-rose-500/10 border-rose-500/20" : "bg-rose-50 border-rose-100"
+      }`}>
+        <p className="text-[10px] font-black text-rose-500 uppercase tracking-tight mb-1">
+          Reason for Rejection:
+        </p>
+        <p className={`text-xs font-bold leading-normal ${isDarkMode ? "text-rose-200" : "text-rose-800"}`}>
+          {searchResult.rejection_reason || "Incomplete documents/Invalid information."}
+        </p>
+
+        {/* REMARKS SECTION */}
+        {searchResult.rejection_remarks && (
+          <div className="mt-2 pt-2 border-t border-rose-500/10">
+            <p className="text-[9px] font-black text-rose-400 uppercase opacity-70">Staff Remarks:</p>
+            <p className={`text-[11px] italic font-medium ${isDarkMode ? "text-rose-300/80" : "text-rose-700"}`}>
+              "{searchResult.rejection_remarks}"
+            </p>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+)}
                 </div>
               </aside>
 

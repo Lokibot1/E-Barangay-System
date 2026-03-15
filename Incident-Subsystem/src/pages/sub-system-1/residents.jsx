@@ -1,7 +1,11 @@
 /**
  * Residents.jsx  —  Three-tab page: Registry | Archives | Logs
+ * CHANGED: Removed the full-page `if (loading) return (...)` fallback.
+ *   The page now renders immediately; ResidentStats and ResidentTable
+ *   each handle their own loading state via the skeleton loader.
+ *   Pagination is hidden while loading to avoid layout jumping.
+ * All original logic preserved.
  */
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { Printer as PrinterIcon, UserPlus, Users, Archive, ScrollText, Loader2, AlertCircle } from 'lucide-react';
@@ -25,9 +29,9 @@ import themeTokens           from '../../Themetokens';
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 const TABS = [
-    { id: 'registry', label: 'Registry',  icon: Users      },
-    { id: 'archives', label: 'Archives',  icon: Archive    },
-    { id: 'logs',     label: 'Logs', icon: ScrollText },
+    { id: 'registry', label: 'registry', icon: Users      },
+    { id: 'archives', label: 'archives', icon: Archive    },
+    { id: 'logs',     label: 'logs',     icon: ScrollText },
 ];
 
 const tabAccentMap = {
@@ -105,7 +109,6 @@ const Residents = () => {
     const closeHouseholdModal = () =>
         setHhModal({ open: false, data: null, loading: false, error: null });
 
-    // ── Household update handler (used by EditHouseholdModal) ─────────────────
     const handleHouseholdUpdate = async (db_id, updatedData) => {
         try {
             await householdService.update(db_id, updatedData);
@@ -141,13 +144,7 @@ const Residents = () => {
 
     useEffect(() => { setCurrentPage(1); }, [searchTerm, categoryFilter, purokFilter, residencyFilter]);
 
-    if (loading) return (
-        <div className={`font-sans min-h-screen py-4 pb-24 px-3 sm:px-4 lg:px-5 relative ${t.pageBg}`}>
-            <div className="mx-auto flex h-64 w-full max-w-[1600px] items-center justify-center">
-                <div className={`animate-pulse font-semibold font-kumbh ${t.subtleText}`}>Syncing records...</div>
-            </div>
-        </div>
-    );
+    // ── No more full-page loading bail-out — page renders immediately ─────────
 
     return (
         <div className={`font-sans min-h-screen py-4 pb-24 px-3 sm:px-4 lg:px-5 relative ${t.pageBg}`}>
@@ -197,9 +194,14 @@ const Residents = () => {
                         )}
                     </section>
 
-                    {/* ── Stats ── */}
+                    {/* ── Stats — skeleton shown while loading ── */}
                     {activeTab === 'registry' && (
-                        <ResidentStats residents={residents} t={t} currentTheme={currentTheme} />
+                        <ResidentStats
+                            residents={residents}
+                            loading={loading}
+                            t={t}
+                            currentTheme={currentTheme}
+                        />
                     )}
 
                     {/* ── Main card ── */}
@@ -216,7 +218,7 @@ const Residents = () => {
                                         activeTab === id ? accent.text : accent.inactive
                                     }`}
                                 >
-                                    <Icon size={14} /> {label}
+                                    <Icon size={14} /> {tr.sub1[label] || label}
                                     {activeTab === id && (
                                         <div className={`absolute bottom-0 left-0 w-full h-0.5 ${accent.bar}`} />
                                     )}
@@ -236,8 +238,10 @@ const Residents = () => {
                                     t={t} currentTheme={currentTheme}
                                 />
                                 <div className="overflow-x-auto">
+                                    {/* Table handles its own skeleton via loading prop */}
                                     <ResidentTable
                                         residents={currentItems}
+                                        loading={loading}
                                         onUpdate={handleUpdate}
                                         onDelete={handleDelete}
                                         onHouseholdClick={openHouseholdModal}
@@ -245,14 +249,17 @@ const Residents = () => {
                                         currentTheme={currentTheme}
                                     />
                                 </div>
-                                <Pagination
-                                    currentPage={currentPage}
-                                    totalPages={totalPages}
-                                    onPageChange={setCurrentPage}
-                                    totalItems={finalFiltered.length}
-                                    itemsPerPage={itemsPerPage}
-                                    t={t} currentTheme={currentTheme}
-                                />
+                                {/* Hide pagination while data is still loading */}
+                                {!loading && (
+                                    <Pagination
+                                        currentPage={currentPage}
+                                        totalPages={totalPages}
+                                        onPageChange={setCurrentPage}
+                                        totalItems={finalFiltered.length}
+                                        itemsPerPage={itemsPerPage}
+                                        t={t} currentTheme={currentTheme}
+                                    />
+                                )}
                             </>
                         )}
 
@@ -279,7 +286,7 @@ const Residents = () => {
                 </div>
             )}
 
-            {/* ── Loading overlay ── */}
+            {/* ── Loading overlay (household fetch) ── */}
             {hhModal.loading && (
                 <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/30 backdrop-blur-sm">
                     <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-xl ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
