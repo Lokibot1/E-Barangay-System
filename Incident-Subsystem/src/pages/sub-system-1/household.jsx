@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { Printer, Archive, LayoutList, ScrollText } from 'lucide-react';
 
 import HouseholdStats from '../../components/sub-system-1/household/HouseholdStats';
@@ -18,6 +19,7 @@ import { calculateHouseholdStats } from '../../utils/sub-system-1/householdUtils
 import themeTokens from '../../Themetokens';
 
 const Households = () => {
+  const { tr } = useLanguage();
   const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem('appTheme') || 'blue');
   useEffect(() => {
     const handler = (e) => setCurrentTheme(e.detail);
@@ -143,7 +145,7 @@ const Households = () => {
   if (loading)
     return (
       <div className={`p-6 sm:p-8 ${t.subtleText} font-kumbh flex justify-center items-center h-64`}>
-        <div className="animate-pulse font-black tracking-widest uppercase">Syncing Registry...</div>
+        <div className="animate-pulse font-black tracking-widest uppercase">{tr.sub1.loading}</div>
       </div>
     );
 
@@ -154,10 +156,10 @@ const Households = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className={`text-2xl font-spartan font-bold ${t.cardText} uppercase tracking-tight`}>
-            Household Registry
+            {tr.sub1.households}
           </h1>
           <p className={`text-xs font-kumbh ${t.subtleText} uppercase tracking-widest mt-1`}>
-            Family Units and Housing Status
+            {tr.sub1.householdsDesc}
           </p>
         </div>
         {activeTab === 'registry' && (
@@ -166,7 +168,7 @@ const Households = () => {
             disabled={filteredHouseholds.length === 0}
             className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase hover:opacity-90 shadow-lg transition-all active:scale-95 disabled:opacity-50"
           >
-            <Printer size={16} /> Print Masterlist
+            <Printer size={16} /> {tr.sub1.export}
           </button>
         )}
       </div>
@@ -185,19 +187,19 @@ const Households = () => {
             onClick={() => setActiveTab('registry')}
             className={`${tabBase} ${activeTab === 'registry' ? tabActiveStyle.registry : tabInactive}`}
           >
-            <LayoutList size={14} /> Registry
+            <LayoutList size={14} /> {tr.sub1.registry || 'Registry'}
           </button>
           <button
             onClick={() => setActiveTab('archives')}
             className={`${tabBase} ${activeTab === 'archives' ? tabActiveStyle.archives : tabInactive}`}
           >
-            <Archive size={14} /> Archives
+            <Archive size={14} /> {tr.sub1.archived}
           </button>
           <button
             onClick={() => setActiveTab('logs')}
             className={`${tabBase} ${activeTab === 'logs' ? tabActiveStyle.logs : tabInactive}`}
           >
-            <ScrollText size={14} /> Logs
+            <ScrollText size={14} /> {tr.sub1.logs || 'Logs'}
           </button>
         </div>
 

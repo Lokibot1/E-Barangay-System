@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { HelpCircle, ChevronDown, Mail, MousePointer2, ShieldAlert } from 'lucide-react';
 import themeTokens from '../../Themetokens';
 
 export default function Support() {
+  const { tr } = useLanguage();
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem('appTheme') || 'modern'
   );
@@ -41,10 +43,10 @@ export default function Support() {
       {/* Page Header */}
       <div>
         <h1 className={`text-2xl font-spartan font-bold ${t.cardText} uppercase tracking-tight`}>
-          Support &amp; Resources
+          {tr.sub1.support}
         </h1>
         <p className={`text-[10px] font-kumbh ${t.subtleText} uppercase tracking-[3px] mt-1`}>
-          Barangay Management Technical Guide
+          {tr.sub1.supportDesc}
         </p>
       </div>
 

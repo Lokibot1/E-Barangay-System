@@ -1,4 +1,5 @@
 ﻿import React, { useEffect, useState } from "react";
+import { useLanguage } from "../../context/LanguageContext";
 import { Image, Upload, Trash2, UserRound } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import themeTokens from "../../Themetokens";
@@ -12,6 +13,7 @@ import {
 import defaultLogo from "../../assets/images/bgylogo.png";
 
 export default function Settings() {
+  const { tr } = useLanguage();
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem("appTheme") || "modern",
   );
@@ -101,10 +103,10 @@ export default function Settings() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <h1 className={`text-lg font-bold font-spartan ${t.cardText}`}>
-                Settings
+                {tr.sub1.settings}
               </h1>
               <p className={`text-xs font-kumbh ${t.subtleText}`}>
-                Manage barangay branding settings.
+                {tr.sub1.settingsDesc}
               </p>
             </div>
           </div>
@@ -123,7 +125,7 @@ export default function Settings() {
               }`}
             >
               <UserRound size={14} />
-              View Profile
+              {tr.profilePage?.title || 'View Profile'}
               {activeTab === "profile" && (
                 <span className={`absolute left-0 right-0 -bottom-px h-0.5 ${t.primarySolid}`} />
               )}
@@ -167,10 +169,10 @@ export default function Settings() {
                 </div>
                 <div className="min-w-0">
                   <h2 className={`text-[15px] font-bold font-spartan leading-tight ${t.cardText}`}>
-                    Profile Overview
+                    {tr.profilePage?.title || 'Profile Overview'}
                   </h2>
                   <p className={`text-[12px] font-kumbh leading-4 ${t.subtleText}`}>
-                    Review your personal information and security settings.
+                    {tr.sub1.settingsProfileDesc}
                   </p>
                 </div>
               </div>
@@ -218,10 +220,10 @@ export default function Settings() {
                 </div>
                 <div className="min-w-0">
                   <h2 className={`text-[15px] font-bold font-spartan leading-tight ${t.cardText}`}>
-                    Barangay Logo
+                    {tr.sub1.barangayLogo || 'Barangay Logo'}
                   </h2>
                   <p className={`text-[12px] font-kumbh leading-4 ${t.subtleText}`}>
-                    Update the logo used across the portal.
+                    {tr.sub1.barangayLogoDesc}
                   </p>
                 </div>
               </div>

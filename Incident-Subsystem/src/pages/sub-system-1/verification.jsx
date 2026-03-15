@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { Clock, MapPin, XCircle } from 'lucide-react';
 
 // Hooks
@@ -21,6 +22,7 @@ import MinimizedSuccessCard from '../../components/sub-system-1/verification/Min
 import ScreenLoader from '../../components/shared/ScreenLoader';
 
 const Verification = () => {
+  const { tr } = useLanguage();
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem('appTheme') || 'modern'
   );
@@ -172,10 +174,10 @@ const Verification = () => {
             <section className="max-w-3xl space-y-3 text-left">
               <div className="space-y-2 text-left">
                 <h1 className={`text-[2.25rem] sm:text-[2.1rem] font-bold tracking-tight text-left ${t.cardText} font-spartan`}>
-                  Identity Verification
+                  {tr.sub1.verification}
                 </h1>
                 <p className={`max-w-2xl text-[13px] leading-6 sm:text-[13px] text-left ${t.subtleText} font-kumbh`}>
-                  Review resident identity submissions, schedule on-site visits, and finalize approvals from one clean queue.
+                  {tr.sub1.verificationDesc}
                 </p>
               </div>
             </section>
@@ -207,7 +209,7 @@ const Verification = () => {
               {loading ? (
                 <div className="p-20 flex flex-col items-center justify-center gap-4 text-slate-400">
                   <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                  <p className="text-sm font-medium animate-pulse italic">Updating records...</p>
+                  <p className="text-sm font-medium animate-pulse italic">{tr.sub1.loading}</p>
                 </div>
               ) : (
                 <>

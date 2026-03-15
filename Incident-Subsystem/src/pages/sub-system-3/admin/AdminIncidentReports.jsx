@@ -7,6 +7,7 @@ import React, {
   useRef,
   memo,
 } from "react";
+import { useLanguage } from "../../../context/LanguageContext";
 import {
   MapContainer,
   TileLayer,
@@ -433,6 +434,7 @@ const TableRow = memo(
 
 // ════════════════════════════════════════════════════════════════════════
 const AdminIncidentReports = () => {
+  const { tr } = useLanguage();
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem("appTheme") || "modern",
   );
@@ -852,7 +854,7 @@ const AdminIncidentReports = () => {
           <h1
             className={`text-2xl sm:text-3xl font-bold ${t.cardText} font-spartan uppercase`}
           >
-            Incident & Complaints Report Management
+            {tr.adminIncidents.title}
           </h1>
           <div className="relative ml-auto" ref={kebabRef}>
             <button
@@ -889,7 +891,7 @@ const AdminIncidentReports = () => {
                       d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
                     />
                   </svg>
-                  Generate Insights
+                  {tr.adminIncidents.generateInsights}
                 </button>
                 <div
                   className={`border-t ${isDark ? "border-slate-600" : "border-gray-100"}`}
@@ -915,7 +917,7 @@ const AdminIncidentReports = () => {
                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                     />
                   </svg>
-                  Update Incident Form
+                  {tr.adminIncidents.updateIncidentForm}
                 </button>
                 <button
                   onClick={() => {
@@ -938,7 +940,7 @@ const AdminIncidentReports = () => {
                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                     />
                   </svg>
-                  Update Complaint Form
+                  {tr.adminIncidents.updateComplaintForm}
                 </button>
               </div>
             )}
@@ -982,7 +984,7 @@ const AdminIncidentReports = () => {
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
             </svg>
-            Incidents
+            {tr.adminIncidents.incidents}
           </button>
           <button
             onClick={() => handlePageTab("complaints")}
@@ -1007,7 +1009,7 @@ const AdminIncidentReports = () => {
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            Complaints
+            {tr.adminIncidents.complaints}
           </button>
         </div>
 
@@ -1063,7 +1065,7 @@ const AdminIncidentReports = () => {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  File Complaint
+                  {tr.adminIncidents.fileComplaint}
                 </button>
               )}
             </div>
@@ -1075,13 +1077,13 @@ const AdminIncidentReports = () => {
                   <label
                     className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
                   >
-                    Search
+                    {tr.sub1.search}
                   </label>
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by type, details, reporter..."
+                    placeholder={tr.adminIncidents.searchPlaceholder}
                     className={`w-full px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
                   />
                 </div>
@@ -1089,7 +1091,7 @@ const AdminIncidentReports = () => {
                   <label
                     className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
                   >
-                    Start Date
+                    {tr.adminIncidents.startDate}
                   </label>
                   <input
                     type="date"
@@ -1102,7 +1104,7 @@ const AdminIncidentReports = () => {
                   <label
                     className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
                   >
-                    End Date
+                    {tr.adminIncidents.endDate}
                   </label>
                   <input
                     type="date"
@@ -1130,23 +1132,23 @@ const AdminIncidentReports = () => {
                       className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[24%]`}
                     >
                       {pageTab === "incidents"
-                        ? "Type of Incident"
-                        : "Type of Complaint"}
+                        ? tr.adminIncidents.typeOfIncident
+                        : tr.adminIncidents.typeOfComplaint}
                     </th>
                     <th
                       className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[18%]`}
                     >
-                      Date
+                      {tr.adminIncidents.date}
                     </th>
                     <th
                       className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[28%]`}
                     >
-                      Reported By
+                      {tr.adminIncidents.reportedBy}
                     </th>
                     <th
                       className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[24%]`}
                     >
-                      {pageTab === "incidents" ? "Incident ID" : "Complaint ID"}
+                      {pageTab === "incidents" ? tr.adminIncidents.incidentId : tr.adminIncidents.complaintId}
                     </th>
                   </tr>
                 </thead>
@@ -1171,8 +1173,8 @@ const AdminIncidentReports = () => {
                         className={`px-4 py-8 text-center ${t.subtleText}`}
                       >
                         {loading
-                          ? "Loading reports..."
-                          : "No reports found for the selected filters."}
+                          ? tr.adminIncidents.loadingReports
+                          : tr.adminIncidents.noReportsFound}
                       </td>
                     </tr>
                   )}
@@ -1185,12 +1187,10 @@ const AdminIncidentReports = () => {
                   className={`flex items-center justify-between pt-4 border-t ${isDark ? "border-slate-700" : "border-gray-100"} mt-2`}
                 >
                   <p className={`text-xs ${t.subtleText} font-kumbh`}>
-                    Showing {(currentPage - 1) * ROWS_PER_PAGE + 1}–
-                    {Math.min(
-                      currentPage * ROWS_PER_PAGE,
-                      filteredTableData.length,
-                    )}{" "}
-                    of {filteredTableData.length} results
+                    {tr.adminIncidents.showingResults
+                      .replace("{from}", (currentPage - 1) * ROWS_PER_PAGE + 1)
+                      .replace("{to}", Math.min(currentPage * ROWS_PER_PAGE, filteredTableData.length))
+                      .replace("{total}", filteredTableData.length)}
                   </p>
                   <div className="flex items-center gap-1">
                     <button
@@ -1206,7 +1206,7 @@ const AdminIncidentReports = () => {
                             : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
-                      Prev
+                      {tr.adminIncidents.prev}
                     </button>
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                       (page) => (
@@ -1240,7 +1240,7 @@ const AdminIncidentReports = () => {
                             : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
-                      Next
+                      {tr.adminIncidents.next}
                     </button>
                   </div>
                 </div>
@@ -1275,7 +1275,7 @@ const AdminIncidentReports = () => {
                   <h3
                     className={`text-lg font-bold ${isDark ? "text-green-400" : "text-green-700"} font-spartan uppercase`}
                   >
-                    Map Legend
+                    {tr.adminIncidents.mapLegend}
                   </h3>
 
                   {/* Map download dropdown */}
@@ -1319,7 +1319,7 @@ const AdminIncidentReports = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          Download as PNG
+                          {tr.adminIncidents.downloadAsPNG}
                         </button>
                         <div className={`border-t ${isDark ? "border-slate-600" : "border-gray-100"}`} />
                         <button
@@ -1332,7 +1332,7 @@ const AdminIncidentReports = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
-                          Download as PDF
+                          {tr.adminIncidents.downloadAsPDF}
                         </button>
                       </div>
                     )}
@@ -1345,8 +1345,8 @@ const AdminIncidentReports = () => {
                     className={`block text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} mb-1.5 font-kumbh uppercase`}
                   >
                     {pageTab === "incidents"
-                      ? "Type of Incident"
-                      : "Type of Complaint"}
+                      ? tr.adminIncidents.typeOfIncident
+                      : tr.adminIncidents.typeOfComplaint}
                   </label>
                   <select
                     value={mapType}
@@ -1366,7 +1366,7 @@ const AdminIncidentReports = () => {
                   <label
                     className={`block text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} mb-1.5 font-kumbh uppercase`}
                   >
-                    Date
+                    {tr.adminIncidents.date}
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -1397,7 +1397,7 @@ const AdminIncidentReports = () => {
                         <span
                           className={`text-sm font-bold ${isDark ? "text-green-400" : "text-green-700"} font-kumbh`}
                         >
-                          RESOLVED
+                          {tr.adminIncidents.legendResolved}
                         </span>
                       </div>
                       <button
@@ -1431,7 +1431,7 @@ const AdminIncidentReports = () => {
                     <p
                       className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}
                     >
-                      Issue has been cleared or fixed
+                      {tr.adminIncidents.legendResolvedDesc}
                     </p>
                   </div>
 
@@ -1445,7 +1445,7 @@ const AdminIncidentReports = () => {
                         <span
                           className={`text-sm font-bold ${isDark ? "text-amber-400" : "text-amber-700"} font-kumbh`}
                         >
-                          DISPATCHED
+                          {tr.adminIncidents.legendDispatched}
                         </span>
                       </div>
                       <button
@@ -1479,7 +1479,7 @@ const AdminIncidentReports = () => {
                     <p
                       className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}
                     >
-                      Barangay officials dispatched on the site to check.
+                      {tr.adminIncidents.legendDispatchedDesc}
                     </p>
                   </div>
 
@@ -1493,7 +1493,7 @@ const AdminIncidentReports = () => {
                         <span
                           className={`text-sm font-bold ${isDark ? "text-blue-400" : "text-blue-700"} font-kumbh`}
                         >
-                          IN-PROGRESS
+                          {tr.adminIncidents.legendInProgress}
                         </span>
                       </div>
                       <button
@@ -1527,7 +1527,7 @@ const AdminIncidentReports = () => {
                     <p
                       className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}
                     >
-                      Barangay officials or maintenance teams are on-site.
+                      {tr.adminIncidents.legendInProgressDesc}
                     </p>
                   </div>
 
@@ -1541,7 +1541,7 @@ const AdminIncidentReports = () => {
                         <span
                           className={`text-sm font-bold ${isDark ? "text-red-400" : "text-red-700"} font-kumbh`}
                         >
-                          NEW/ACTIVE
+                          {tr.adminIncidents.legendNewActive}
                         </span>
                       </div>
                       <button
@@ -1575,7 +1575,7 @@ const AdminIncidentReports = () => {
                     <p
                       className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}
                     >
-                      Issue recently reported and awaiting dispatch.
+                      {tr.adminIncidents.legendNewActiveDesc}
                     </p>
                   </div>
 
@@ -1589,7 +1589,7 @@ const AdminIncidentReports = () => {
                         <span
                           className={`text-sm font-bold ${isDark ? "text-gray-300" : "text-gray-700"} font-kumbh`}
                         >
-                          REJECTED
+                          {tr.adminIncidents.legendRejected}
                         </span>
                       </div>
                       <button
@@ -1623,7 +1623,7 @@ const AdminIncidentReports = () => {
                     <p
                       className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} font-kumbh`}
                     >
-                      Report was rejected or deemed invalid.
+                      {tr.adminIncidents.legendRejectedDesc}
                     </p>
                   </div>
                 </div>

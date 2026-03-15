@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLanguage } from "../../../context/LanguageContext";
 import themeTokens from "../../../Themetokens";
 import { getUser } from "../../../homepage/services/loginService";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
@@ -84,6 +85,7 @@ const normalizeStatus = (status) => {
 };
 
 export default function AdminLanding() {
+  const { tr } = useLanguage();
   const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem("appTheme") || "modern");
   const [incidents, setIncidents] = useState([]);
   const [complaints, setComplaints] = useState([]);
@@ -375,13 +377,13 @@ export default function AdminLanding() {
           <div className="relative grid grid-cols-1 lg:grid-cols-[1fr_auto] items-start gap-4 sm:gap-6">
             <div className="space-y-2 text-left justify-self-start">
               <div className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-medium ${heroChipClass}`}>
-                Overview
+                {tr.adminLanding.overview}
               </div>
               <h1 className={`font-spartan text-[2.2rem] sm:text-[2.8rem] font-bold leading-none tracking-tight ${t.cardText}`}>
-                Welcome back, {firstName}
+                {tr.adminLanding.welcomeBack} {firstName}
               </h1>
               <p className={`text-[11px] sm:text-[13px] font-kumbh ${t.subtleText}`}>
-                Monitor requests, complaints, reports, and appointment activity in real time.
+                {tr.adminLanding.monitorDesc}
               </p>
             </div>
             <div className="flex items-start self-start justify-self-start lg:justify-self-end">
@@ -394,7 +396,7 @@ export default function AdminLanding() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20l-6-3-6 3V5a2 2 0 012-2h8a2 2 0 012 2v15z" />
                   </svg>
                 </span>
-                View Announcements
+                {tr.adminLanding.viewAnnouncements}
               </button>
             </div>
           </div>
@@ -404,11 +406,11 @@ export default function AdminLanding() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h2 className={`font-spartan text-lg sm:text-2xl font-semibold tracking-tight leading-none ${t.cardText}`}>
-                Analytics Dashboard
+                {tr.adminLanding.analyticsDashboard}
               </h2>
               <span className={`inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-medium font-kumbh ${liveBadgeClass}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${liveDotClass}`} />
-                Live
+                {tr.adminLanding.live}
               </span>
             </div>
             <div className="relative" ref={kebabRef}>
@@ -444,7 +446,7 @@ export default function AdminLanding() {
                     <svg className="h-4 w-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
-                    Generate Insights
+                    {tr.adminLanding.generateInsights}
                   </button>
                 </div>
               )}
@@ -455,7 +457,7 @@ export default function AdminLanding() {
         <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2.5">
           <article className={`${cardClass} p-3.5`}>
             <div className="flex items-start justify-between">
-              <p className={`text-[13px] sm:text-[14px] font-normal ${t.cardText}`}>Pending requests</p>
+              <p className={`text-[13px] sm:text-[14px] font-normal ${t.cardText}`}>{tr.adminLanding.pendingRequests}</p>
               <span className="inline-flex h-[26px] w-[26px] items-center justify-center rounded-md" style={iconChipStyles.pendingRequests}>
                 <svg className="h-[14px] w-[14px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V9m-6-4h6m0 0v6m0-6L10 14" />
@@ -464,13 +466,13 @@ export default function AdminLanding() {
             </div>
             <p className={`mt-2 text-[2rem] font-semibold leading-none ${t.cardText}`}>{loading ? "..." : overview.pendingRequests}</p>
             <div className="mt-2.5">
-              <span className={`text-[10px] sm:text-[11px] font-medium ${t.subtleText}`}>Awaiting resident review</span>
+              <span className={`text-[10px] sm:text-[11px] font-medium ${t.subtleText}`}>{tr.adminLanding.awaitingReview}</span>
             </div>
           </article>
 
           <article className={`${cardClass} p-3.5`}>
             <div className="flex items-start justify-between">
-              <p className={`text-[13px] sm:text-[14px] font-normal ${t.cardText}`}>Open complaints</p>
+              <p className={`text-[13px] sm:text-[14px] font-normal ${t.cardText}`}>{tr.adminLanding.openComplaints}</p>
               <span className="inline-flex h-[26px] w-[26px] items-center justify-center rounded-md" style={iconChipStyles.openComplaints}>
                 <svg className="h-[14px] w-[14px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -479,13 +481,13 @@ export default function AdminLanding() {
             </div>
             <p className={`mt-2 text-[2rem] font-semibold leading-none ${t.cardText}`}>{loading ? "..." : overview.openComplaints}</p>
             <div className="mt-2.5">
-              <span className={`text-[10px] sm:text-[11px] font-medium ${t.subtleText}`}>Active unresolved complaints</span>
+              <span className={`text-[10px] sm:text-[11px] font-medium ${t.subtleText}`}>{tr.adminLanding.activeUnresolved}</span>
             </div>
           </article>
 
           <article className={`${cardClass} p-3.5`}>
             <div className="flex items-start justify-between">
-              <p className={`text-[13px] sm:text-[14px] font-normal ${t.cardText}`}>Incident reports</p>
+              <p className={`text-[13px] sm:text-[14px] font-normal ${t.cardText}`}>{tr.adminLanding.incidentReports}</p>
               <span className="inline-flex h-[26px] w-[26px] items-center justify-center rounded-md" style={iconChipStyles.incidentReports}>
                 <svg className="h-[14px] w-[14px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -494,13 +496,13 @@ export default function AdminLanding() {
             </div>
             <p className={`mt-2 text-[2rem] font-semibold leading-none ${t.cardText}`}>{loading ? "..." : overview.incidentReports}</p>
             <div className="mt-2.5">
-              <span className={`text-[10px] sm:text-[11px] font-medium ${t.subtleText}`}>Filed incident reports</span>
+              <span className={`text-[10px] sm:text-[11px] font-medium ${t.subtleText}`}>{tr.adminLanding.filedReports}</span>
             </div>
           </article>
 
           <article className={`${cardClass} p-3.5`}>
             <div className="flex items-start justify-between">
-              <p className={`text-[13px] sm:text-[14px] font-normal ${t.cardText}`}>Pending appointments</p>
+              <p className={`text-[13px] sm:text-[14px] font-normal ${t.cardText}`}>{tr.adminLanding.pendingAppointments}</p>
               <span className="inline-flex h-[26px] w-[26px] items-center justify-center rounded-md" style={iconChipStyles.pendingAppointments}>
                 <svg className="h-[14px] w-[14px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -509,14 +511,14 @@ export default function AdminLanding() {
             </div>
             <p className={`mt-2 text-[2rem] font-semibold leading-none ${t.cardText}`}>{loading ? "..." : overview.pendingAppointments}</p>
             <div className="mt-2.5">
-              <span className={`text-[10px] sm:text-[11px] font-medium ${t.subtleText}`}>Waiting for schedule slot</span>
+              <span className={`text-[10px] sm:text-[11px] font-medium ${t.subtleText}`}>{tr.adminLanding.waitingSlot}</span>
             </div>
           </article>
         </section>
 
         <section className="grid grid-cols-1 xl:grid-cols-2 gap-3">
           <article className={`${cardClass} p-4`}>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Monthly Reports</h3>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>{tr.adminLanding.monthlyReports}</h3>
             <div className="h-[290px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyData}>
@@ -533,7 +535,7 @@ export default function AdminLanding() {
           </article>
 
           <article className={`${cardClass} p-4`}>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Case Resolution Status</h3>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>{tr.adminLanding.caseResolution}</h3>
             <div className="h-[290px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -550,7 +552,7 @@ export default function AdminLanding() {
           </article>
 
           <article className={`${cardClass} p-4`}>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Report Trend (14 days)</h3>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>{tr.adminLanding.reportTrend}</h3>
             <div className="h-[290px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trendData}>
@@ -567,7 +569,7 @@ export default function AdminLanding() {
           </article>
 
           <article className={`${cardClass} p-4`}>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Report Categories</h3>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>{tr.adminLanding.reportCategories}</h3>
             <div className="h-[290px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -584,7 +586,7 @@ export default function AdminLanding() {
           </article>
 
           <article className={`${cardClass} p-4`}>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Appointment Status</h3>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>{tr.adminLanding.appointmentStatus}</h3>
             <div className="h-[290px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -601,7 +603,7 @@ export default function AdminLanding() {
           </article>
 
           <article className={`${cardClass} p-4`}>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Monthly Appointments</h3>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>{tr.adminLanding.monthlyAppointments}</h3>
             <div className="h-[290px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyAppointmentData}>
@@ -621,7 +623,7 @@ export default function AdminLanding() {
 
         <section className="grid grid-cols-1 gap-3">
           <article className={`${cardClass} p-4`}>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Requests vs Appointments Trend</h3>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>{tr.adminLanding.requestsVsAppointments}</h3>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={combinedLoadData}>
@@ -654,12 +656,12 @@ export default function AdminLanding() {
 
         <section className={`${cardClass} p-4 sm:p-5 space-y-4`}>
           <div>
-            <h2 className={`text-2xl font-bold ${t.cardText}`}>Issuance Application Factors</h2>
-            <p className={`text-sm mt-1 ${t.subtleText}`}>Volumes, operations, and socio-economy chart groups</p>
+            <h2 className={`text-2xl font-bold ${t.cardText}`}>{tr.adminLanding.issuanceFactors}</h2>
+            <p className={`text-sm mt-1 ${t.subtleText}`}>{tr.adminLanding.issuanceFactorsDesc}</p>
           </div>
 
           <div>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Volumes</h3>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>{tr.adminLanding.volumes}</h3>
             <VolumesFactors t={t} isDark={isDark} currentTheme={currentTheme} />
           </div>
 
@@ -669,7 +671,7 @@ export default function AdminLanding() {
           </div>
 
           <div>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Socio-economy</h3>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>{tr.adminLanding.socioEconomy}</h3>
             <SocioEconomyFactors t={t} isDark={isDark} currentTheme={currentTheme} />
           </div>
         </section>

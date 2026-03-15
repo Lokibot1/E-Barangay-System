@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { Printer as PrinterIcon, UserPlus, Users, Archive, ScrollText, Loader2, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -40,6 +41,7 @@ const tabAccentMap = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const Residents = () => {
+    const { tr } = useLanguage();
     const [currentTheme, setCurrentTheme] = useState(
         () => localStorage.getItem('appTheme') || 'modern'
     );
@@ -156,10 +158,10 @@ const Residents = () => {
                     <section className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                         <div className="max-w-3xl space-y-2 text-left">
                             <h1 className={`text-[2.25rem] sm:text-[2.1rem] font-bold tracking-tight ${t.cardText} font-spartan`}>
-                                Resident Index
+                                {tr.sub1.residents}
                             </h1>
                             <p className={`max-w-2xl text-[13px] leading-6 ${t.subtleText} font-kumbh`}>
-                                Maintain the official masterlist, manage archived records, and review edit history from one organized workspace.
+                                {tr.sub1.residentsDesc}
                             </p>
                         </div>
 
@@ -169,7 +171,7 @@ const Residents = () => {
                                     onClick={() => navigate('/admin/residents/add')}
                                     className={`inline-flex items-center gap-2 rounded-[20px] px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition-all active:scale-[0.98] ${t.primarySolid} ${t.primaryHover}`}
                                 >
-                                    <UserPlus size={16} /> Add Resident
+                                    <UserPlus size={16} /> {tr.sub1.addResident}
                                 </button>
                                 <button
                                     onClick={() => printTable(
@@ -189,7 +191,7 @@ const Residents = () => {
                                         isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-800 hover:bg-slate-900'
                                     }`}
                                 >
-                                    <PrinterIcon size={15} /> Export Masterlist
+                                    <PrinterIcon size={15} /> {tr.sub1.export}
                                 </button>
                             </div>
                         )}
