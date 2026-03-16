@@ -2,6 +2,7 @@
  * HouseholdArchivesTab.jsx
  * CHANGED: Replaced full-page `if (loading)` spinner with skeleton rows inside
  *   the table tbody — filters and header remain visible while loading.
+ * CHANGED: Replaced alert() with onToast callback prop.
  * All original logic preserved.
  */
 
@@ -127,7 +128,10 @@ const ArchiveRow = ({ item, onRestore, t, currentTheme }) => {
 
 // ─── Main exported component ──────────────────────────────────────────────────
 
-const HouseholdArchivesTab = ({ t, currentTheme = 'modern' }) => {
+/**
+ * @prop onToast - (toast) => void  — parent provides addToast, used for error feedback
+ */
+const HouseholdArchivesTab = ({ t, currentTheme = 'modern', onToast }) => {
   const isDark = currentTheme === 'dark';
 
   const [archived,       setArchived]       = useState([]);
@@ -167,8 +171,19 @@ const HouseholdArchivesTab = ({ t, currentTheme = 'modern' }) => {
       await householdService.restore(restoreTarget.db_id);
       await fetchArchived();
       setRestoreTarget(null);
+      onToast?.({
+        type: 'success',
+        title: 'Household Restored',
+        message: `${restoreTarget.head || 'Household'} has been moved back to the active registry.`,
+        duration: 4000,
+      });
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to restore household.');
+      onToast?.({
+        type: 'error',
+        title: 'Restore Failed',
+        message: err.response?.data?.message || 'Failed to restore household.',
+        duration: 5000,
+      });
     } finally {
       setRestoring(false);
     }

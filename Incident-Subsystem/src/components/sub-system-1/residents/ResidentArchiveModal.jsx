@@ -36,7 +36,7 @@ const ResidentArchiveModal = ({
     isOpen,
     onClose,
     resident,       // the archived resident object
-    onRestore,      // async (id) => bool
+    onRestore,      // async (id) => bool — throws on error, parent catches and toasts
     currentTheme = 'modern',
     t,
 }) => {
@@ -53,11 +53,12 @@ const ResidentArchiveModal = ({
         : 'Unknown date';
 
     const handleRestore = async () => {
-        if (!window.confirm('Restore this resident? Their account will also be reactivated.')) return;
         setRestoring(true);
         try {
+            // onRestore throws on error — parent (ResidentArchivesTab / Residents)
+            // wraps this in handleRestoreWithToast which shows the toast
             await onRestore(resident.id);
-            onClose(); // parent refreshes archived list
+            onClose();
         } finally {
             setRestoring(false);
         }

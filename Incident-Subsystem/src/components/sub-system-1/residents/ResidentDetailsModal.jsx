@@ -154,7 +154,7 @@ const ACCENT = {
 
 // ── Reset Password Mini-Modal ─────────────────────────────────────────────────
 
-const ResetPasswordModal = ({ residentId, residentName, onClose, t, isDark }) => {
+const ResetPasswordModal = ({ residentId, residentName, onClose, onSuccess, onError, t, isDark }) => {
     const [pass,        setPass]        = useState('');
     const [confirm,     setConfirm]     = useState('');
     const [showPass,    setShowPass]    = useState(false);
@@ -171,16 +171,18 @@ const ResetPasswordModal = ({ residentId, residentName, onClose, t, isDark }) =>
         try {
             await api.put(`/residents/${residentId}/reset-password`, { password: pass });
             setSuccess(true);
+            onSuccess?.(); // notify parent to show toast
             setTimeout(onClose, 1500);
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to reset password.');
+            const msg = err.response?.data?.error || 'Failed to reset password.';
+            setError(msg);
+            onError?.(msg); // notify parent to show toast
         } finally {
             setSubmitting(false);
         }
     };
 
     return (
-        // Backdrop sits on top of the main modal
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
             <div className={`w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
                 {/* Header */}
@@ -221,7 +223,6 @@ const ResetPasswordModal = ({ residentId, residentName, onClose, t, isDark }) =>
                             </div>
                         )}
 
-                        {/* Show/hide toggle */}
                         <div className="flex items-center justify-between mb-1">
                             <label className={`text-[10px] font-black uppercase tracking-widest ${t?.subtleText || 'text-slate-400'}`}>New Password</label>
                             <button type="button" onClick={() => setShowPass(!showPass)}
@@ -296,7 +297,14 @@ const ResetPasswordModal = ({ residentId, residentName, onClose, t, isDark }) =>
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t, currentTheme = 'modern' }) => {
+/**
+ * ResidentDetailsModal
+ *
+ * Props:
+ *   onSave     - async (formData) => bool  — should throw on error
+ *   onToast    - (toast) => void           — parent provides addToast callback
+ */
+const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, onToast, mode, t, currentTheme = 'modern' }) => {
     const [formData,  setFormData]  = useState({});
     const [isEdit,    setIsEdit]    = useState(false);
     const [loading,   setLoading]   = useState(false);
@@ -305,10 +313,8 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t, curr
     const [emailBusy, setEmailBusy] = useState(false);
     const [emailErr,  setEmailErr]  = useState('');
 
-    // ── Reset password modal ──────────────────────────────────────────────────
     const [showResetPass, setShowResetPass] = useState(false);
 
-    // ── Head-of-family conflict state ─────────────────────────────────────────
     const [headConf,        setHeadConf]        = useState(false);
     const [headConflictMsg, setHeadConflictMsg] = useState('');
     const headCheckTimer = useRef(null);
@@ -324,7 +330,6 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t, curr
     const today  = new Date().toISOString().split('T')[0];
     const isDark = currentTheme === 'dark';
 
-    // ── Reference data ────────────────────────────────────────────────────────
     const [refs, setRefs] = useState({
         puroks: [], streets: [], marital_statuses: [], sectors: [],
         genders: [], birth_registrations: [], residency_statuses: [],
@@ -341,7 +346,6 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t, curr
         ],
     });
 
-    // ── Init ──────────────────────────────────────────────────────────────────
     const initModal = useCallback(async (r, m) => {
         try {
             const res = await api.get('/reference-data');
@@ -370,7 +374,6 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t, curr
         if (justOpened && resident) initModal(resident, mode);
     }, [isOpen, resident, mode, initModal]);
 
-    // ── Head-of-family conflict check ─────────────────────────────────────────
     useEffect(() => {
         if (!isEdit) { setHeadConf(false); setHeadConflictMsg(''); return; }
         if (formData.household_position !== 'Head of Family') { setHeadConf(false); setHeadConflictMsg(''); return; }
@@ -401,7 +404,6 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t, curr
         return () => clearTimeout(headCheckTimer.current);
     }, [isEdit, formData.household_position, formData.temp_house_number, formData.temp_purok_id, formData.temp_street_id, resident?.id]);
 
-    // ── Lazy history ──────────────────────────────────────────────────────────
     useEffect(() => {
         if (activeTab !== 'history' || !resident?.id || history.length > 0) return;
         (async () => {
@@ -412,7 +414,6 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t, curr
         })();
     }, [activeTab, resident?.id]); // eslint-disable-line
 
-    // ── Errors ────────────────────────────────────────────────────────────────
     const liveErrors = useMemo(() => isEdit ? validate(formData) : {}, [formData, isEdit]);
     const errors = useMemo(() => ({
         ...submitErr, ...liveErrors,
@@ -427,7 +428,6 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t, curr
         setEmailErr(emailDupError || '');
     }, []);
 
-    // ── Handlers ──────────────────────────────────────────────────────────────
     const handleChange = useCallback((e) => {
         const { name, value } = e.target;
         setSubmitErr(prev => ({ ...prev, [name]: '' }));
@@ -451,12 +451,24 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t, curr
             return;
         }
         setLoading(true);
-        const ok = await onSave(formData);
-        setLoading(false);
-        if (ok) {
-            setIsEdit(false); setSubmitErr({}); setEmailErr('');
-            setHeadConf(false); setHeadConflictMsg('');
-            setHistory([]); snapRef.current = { ...formData };
+        try {
+            const ok = await onSave(formData);
+            if (ok) {
+                setIsEdit(false); setSubmitErr({}); setEmailErr('');
+                setHeadConf(false); setHeadConflictMsg('');
+                setHistory([]); snapRef.current = { ...formData };
+                // Success toast fired by parent (Residents.jsx handleUpdateWithToast)
+            }
+        } catch (err) {
+            // Error toast fired by parent (Residents.jsx handleUpdateWithToast)
+            onToast?.({
+                type: 'error',
+                title: 'Save Failed',
+                message: err.message || 'Failed to save changes.',
+                duration: 5000,
+            });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -467,7 +479,6 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t, curr
         setHeadConf(false); setHeadConflictMsg('');
     };
 
-    // ── Address display ───────────────────────────────────────────────────────
     const fullAddress = () => {
         const street = (refs.streets || []).find(s => String(s.id) === String(formData.temp_street_id));
         const purok  = (refs.puroks  || []).find(p => String(p.id) === String(formData.temp_purok_id));
@@ -479,7 +490,6 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t, curr
         ].filter(Boolean).join(', ');
     };
 
-    // ── Tab config ────────────────────────────────────────────────────────────
     const TAB_FIELDS = {
         basic:   ['first_name', 'last_name', 'middle_name', 'suffix', 'email', 'birthdate', 'contact_number'],
         address: ['temp_house_number', 'temp_purok_id', 'temp_street_id', 'residency_start_date', 'household_position'],
@@ -512,7 +522,6 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t, curr
         );
     };
 
-    // ── Render ────────────────────────────────────────────────────────────────
     return (
         <>
             <ModalWrapper
@@ -621,7 +630,6 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t, curr
 
                         <div className="flex items-center gap-3">
                             {activeTab !== 'history' && (<>
-                                {/* Reset Password — only in view mode, not while editing */}
                                 {!isEdit && (
                                     <button type="button"
                                         onClick={() => setShowResetPass(true)}
@@ -668,7 +676,6 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t, curr
                 </div>
             </ModalWrapper>
 
-            {/* Reset Password mini-modal — rendered outside ModalWrapper so it layers on top */}
             {showResetPass && (
                 <ResetPasswordModal
                     residentId={resident?.id}
@@ -676,6 +683,18 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, mode, t, curr
                         ? `${formData.first_name} ${formData.last_name}`
                         : (resident?.name || 'Resident')}
                     onClose={() => setShowResetPass(false)}
+                    onSuccess={() => onToast?.({
+                        type: 'success',
+                        title: 'Password Reset',
+                        message: 'The resident password has been updated successfully.',
+                        duration: 4000,
+                    })}
+                    onError={(msg) => onToast?.({
+                        type: 'error',
+                        title: 'Reset Failed',
+                        message: msg || 'Failed to reset password.',
+                        duration: 5000,
+                    })}
                     t={t}
                     isDark={isDark}
                 />
