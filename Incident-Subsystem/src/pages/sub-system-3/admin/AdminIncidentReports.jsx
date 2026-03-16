@@ -22,6 +22,7 @@ import InsightsModal from "../../../components/sub-system-3/InsightsModal";
 import UpdateFormModal from "../../../components/sub-system-3/UpdateFormModal";
 import ComplaintModal from "../../../components/sub-system-3/ComplaintModal";
 import Toast from "../../../components/shared/modals/Toast";
+import DatePickerField from "../../../components/shared/DatePickerField";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
 import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
 import { useRealTime } from "../../../context/RealTimeContext";
@@ -1093,11 +1094,14 @@ const AdminIncidentReports = () => {
                   >
                     {tr.adminIncidents.startDate}
                   </label>
-                  <input
-                    type="date"
+                  <DatePickerField
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
+                    onChange={setStartDate}
+                    placeholder="mm/dd/yyyy"
+                    ariaLabel={tr.adminIncidents.startDate}
+                    isDark={isDark}
+                    t={t}
+                    triggerClassName={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500 inline-flex items-center justify-between gap-2`}
                   />
                 </div>
                 <div>
@@ -1106,11 +1110,14 @@ const AdminIncidentReports = () => {
                   >
                     {tr.adminIncidents.endDate}
                   </label>
-                  <input
-                    type="date"
+                  <DatePickerField
                     value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
+                    onChange={setEndDate}
+                    placeholder="mm/dd/yyyy"
+                    ariaLabel={tr.adminIncidents.endDate}
+                    isDark={isDark}
+                    t={t}
+                    triggerClassName={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500 inline-flex items-center justify-between gap-2`}
                   />
                 </div>
               </div>
@@ -1369,18 +1376,24 @@ const AdminIncidentReports = () => {
                     {tr.adminIncidents.date}
                   </label>
                   <div className="flex items-center gap-2">
-                    <input
-                      type="date"
+                    <DatePickerField
                       value={mapStartDate}
-                      onChange={(e) => setMapStartDate(e.target.value)}
-                      className={`flex-1 px-2 py-2 rounded-lg border ${t.cardBorder} ${isDark ? "bg-slate-700 text-slate-200" : "bg-white text-gray-800"} text-xs font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500`}
+                      onChange={setMapStartDate}
+                      placeholder="mm/dd/yyyy"
+                      ariaLabel={tr.adminIncidents.startDate}
+                      isDark={isDark}
+                      t={t}
+                      triggerClassName={`flex-1 px-2 py-2 rounded-lg border ${t.cardBorder} ${isDark ? "bg-slate-700 text-slate-200" : "bg-white text-gray-800"} text-xs font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500 inline-flex items-center justify-between gap-2`}
                     />
                     <span className={`text-xs ${t.subtleText}`}>-</span>
-                    <input
-                      type="date"
+                    <DatePickerField
                       value={mapEndDate}
-                      onChange={(e) => setMapEndDate(e.target.value)}
-                      className={`flex-1 px-2 py-2 rounded-lg border ${t.cardBorder} ${isDark ? "bg-slate-700 text-slate-200" : "bg-white text-gray-800"} text-xs font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500`}
+                      onChange={setMapEndDate}
+                      placeholder="mm/dd/yyyy"
+                      ariaLabel={tr.adminIncidents.endDate}
+                      isDark={isDark}
+                      t={t}
+                      triggerClassName={`flex-1 px-2 py-2 rounded-lg border ${t.cardBorder} ${isDark ? "bg-slate-700 text-slate-200" : "bg-white text-gray-800"} text-xs font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500 inline-flex items-center justify-between gap-2`}
                     />
                   </div>
                 </div>

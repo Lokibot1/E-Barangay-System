@@ -15,10 +15,10 @@ const IdentitySection = ({ details, onZoom, t, currentTheme = 'modern' }) => {
   const [topBorder, leftBorder, iconColor] = accent.split(' ');
 
   return (
-  <div className={`${t.cardBg} p-8 border ${t.cardBorder} border-t-4 ${topBorder} rounded-2xl shadow-sm`}>
+  <div className={`${t.cardBg} p-6 sm:p-7 border ${t.cardBorder} border-t-4 ${topBorder} rounded-[26px] shadow-[0_12px_30px_rgba(15,23,42,0.08)]`}>
     <div className={`flex items-center gap-2 mb-8 border-l-4 ${leftBorder} pl-3`}>
       <ShieldCheck size={18} className={iconColor} />
-      <p className={`text-xs font-black uppercase tracking-[2px] ${t.subtleText}`}>
+      <p className={`text-xs font-semibold ${t.subtleText}`}>
         Identity Documents ({details?.idType || 'Not Specified'})
       </p>
     </div>

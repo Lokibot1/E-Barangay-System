@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { transactionRequests, totalTransactionCount } from "./data";
 import themeTokens from "../../../Themetokens";
+import DatePickerField from "../../shared/DatePickerField";
 
 const ROWS_PER_PAGE = 10;
 
@@ -245,11 +246,14 @@ const TransactionsTable = () => {
                   >
                     Start Date
                   </label>
-                  <input
-                    type="date"
+                  <DatePickerField
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-kumbh`}
+                    onChange={setStartDate}
+                    placeholder="mm/dd/yyyy"
+                    ariaLabel="Start Date"
+                    isDark={isDark}
+                    t={t}
+                    triggerClassName={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm font-kumbh focus:outline-none focus:ring-2 focus:ring-blue-500 inline-flex items-center justify-between gap-2`}
                   />
                 </div>
                 <div>
@@ -258,11 +262,14 @@ const TransactionsTable = () => {
                   >
                     End Date
                   </label>
-                  <input
-                    type="date"
+                  <DatePickerField
                     value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-kumbh`}
+                    onChange={setEndDate}
+                    placeholder="mm/dd/yyyy"
+                    ariaLabel="End Date"
+                    isDark={isDark}
+                    t={t}
+                    triggerClassName={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm font-kumbh focus:outline-none focus:ring-2 focus:ring-blue-500 inline-flex items-center justify-between gap-2`}
                   />
                 </div>
               </div>

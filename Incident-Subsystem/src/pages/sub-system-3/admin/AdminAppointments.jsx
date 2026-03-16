@@ -9,6 +9,7 @@ import React, {
 import { useLanguage } from "../../../context/LanguageContext";
 import themeTokens from "../../../Themetokens";
 import Toast from "../../../components/shared/modals/Toast";
+import DatePickerField from "../../../components/shared/DatePickerField";
 import {
   rescheduleAppointment,
   createAppointment,
@@ -2095,11 +2096,14 @@ const AdminAppointments = () => {
                   >
                     {tr.adminAppointments.from}
                   </label>
-                  <input
-                    type="date"
+                  <DatePickerField
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
+                    onChange={setStartDate}
+                    placeholder="mm/dd/yyyy"
+                    ariaLabel={tr.adminAppointments.from}
+                    isDark={isDark}
+                    t={t}
+                    triggerClassName={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500 inline-flex items-center justify-between gap-2`}
                   />
                 </div>
                 <div>
@@ -2108,11 +2112,14 @@ const AdminAppointments = () => {
                   >
                     {tr.adminAppointments.to}
                   </label>
-                  <input
-                    type="date"
+                  <DatePickerField
                     value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
+                    onChange={setEndDate}
+                    placeholder="mm/dd/yyyy"
+                    ariaLabel={tr.adminAppointments.to}
+                    isDark={isDark}
+                    t={t}
+                    triggerClassName={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500 inline-flex items-center justify-between gap-2`}
                   />
                 </div>
                 {(selectedDate || startDate || endDate || searchQuery) && (

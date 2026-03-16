@@ -8,7 +8,11 @@ import React, {
   useRef,
 } from "react";
 import useUserRealTimeEvents from "../hooks/shared/useUserRealTimeEvents";
-import { fetchNotifications, markNotificationsRead } from "../services/sub-system-3/notificationService";
+import {
+  fetchNotifications,
+  markNotificationsRead,
+  createNotifications,
+} from "../services/sub-system-3/notificationService";
 
 const UserRealTimeContext = createContext(null);
 
@@ -48,12 +52,28 @@ const mapUserBackendNotification = (n) => {
     return {
       id: `api-${n.id}`,
       backendId: n.id,
+      externalId: n.external_id || null,
       source: "appointment",
       type: n.type,
       description: n.message || "An appointment has been scheduled for your complaint.",
       timestamp: n.created_at,
       read: n.is_read,
       data: n.data,
+    };
+  }
+
+  if (n.type === "profile_updated") {
+    return {
+      id: `api-${n.id}`,
+      backendId: n.id,
+      externalId: n.external_id || null,
+      source: "resident",
+      type: n.type,
+      description: n.message || "Your profile information was updated.",
+      timestamp: n.created_at,
+      read: n.is_read,
+      data: n.data,
+      reportedBy: n.data?.editor_name || "",
     };
   }
 
@@ -64,6 +84,7 @@ const mapUserBackendNotification = (n) => {
     return {
       id: `api-${n.id}`,
       backendId: n.id,
+      externalId: n.external_id || null,
       source: src,
       type: n.type,
       description: oldStatus && newStatus
@@ -80,6 +101,7 @@ const mapUserBackendNotification = (n) => {
   return {
     id: `api-${n.id}`,
     backendId: n.id,
+    externalId: n.external_id || null,
     source: n.type?.includes("complaint") ? "complaint" : "incident",
     type: n.type || "Notification",
     description: n.message || "No description",
@@ -130,7 +152,7 @@ export const UserRealTimeProvider = ({ children }) => {
   // These are merged with the localStorage cache — deduplicated by id.
   // Unread notifications not in the localStorage cache also trigger toasts.
   useEffect(() => {
-    fetchNotifications({ perPage: 50 }).then((response) => {
+    fetchNotifications({ perPage: 50, scope: "user" }).then((response) => {
       if (!response?.data) return;
 
       const backendItems = response.data.map(mapUserBackendNotification);
@@ -139,7 +161,12 @@ export const UserRealTimeProvider = ({ children }) => {
       // notifications (poll-detected status changes without a backendId) are preserved.
       setNotifications((prev) => {
         const backendIds = new Set(backendItems.map((n) => n.id));
-        const localOnly = prev.filter((n) => !n.backendId && !backendIds.has(n.id));
+        const backendExternal = new Set(
+          backendItems.map((n) => n.externalId).filter(Boolean),
+        );
+        const localOnly = prev.filter(
+          (n) => !n.backendId && !backendIds.has(n.id) && !backendExternal.has(n.id),
+        );
         return [...backendItems, ...localOnly];
       });
 
@@ -186,6 +213,21 @@ export const UserRealTimeProvider = ({ children }) => {
           data: event.data,
         };
       }
+      if (event.source === "resident" || event.type === "profile_updated") {
+        return {
+          id: event.id,
+          source: "resident",
+          type: "profile_updated",
+          description:
+            event.description ||
+            event.data?.description ||
+            "Your profile information was updated.",
+          timestamp: event.timestamp,
+          read: false,
+          reportedBy: event.data?.editor_name || "",
+          data: event.data,
+        };
+      }
       return {
         id: event.id,
         source: event.source,
@@ -206,6 +248,8 @@ export const UserRealTimeProvider = ({ children }) => {
       return [...unique, ...prev];
     });
 
+    createNotifications(fresh, { scope: "user" });
+
     // Set the latest batch — consumers read this ONCE then ignore
     setLatestBatch(fresh);
     setEventVersion((v) => v + 1);
@@ -220,14 +264,24 @@ export const UserRealTimeProvider = ({ children }) => {
     setNotifications((prev) => {
       const notification = prev.find((n) => n.id === notificationId);
       if (notification?.backendId && !notification.read) {
-        markNotificationsRead({ ids: [notification.backendId], read: true });
+        markNotificationsRead({
+          ids: [notification.backendId],
+          read: true,
+          scope: "user",
+        });
+      } else if (notification && !notification.read) {
+        markNotificationsRead({
+          externalIds: [notification.externalId || notification.id],
+          read: true,
+          scope: "user",
+        });
       }
       return prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n));
     });
   }, []);
 
   const markAllAsRead = useCallback(() => {
-    markNotificationsRead({ markAll: true, read: true });
+    markNotificationsRead({ markAll: true, read: true, scope: "user" });
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   }, []);
 

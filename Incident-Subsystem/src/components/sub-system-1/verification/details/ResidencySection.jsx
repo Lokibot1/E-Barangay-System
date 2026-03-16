@@ -3,17 +3,17 @@ import { MapPin, Calendar, Home, Droplets } from 'lucide-react';
 import { InfoFieldWhite } from '../../common/InfoField';
 
 const ResidencySection = ({ details, t }) => (
-  <div className={`${t.cardBg} p-8 border ${t.cardBorder} border-t-4 border-t-emerald-500 rounded-2xl shadow-sm`}>
+  <div className={`${t.cardBg} p-6 sm:p-7 border ${t.cardBorder} border-t-4 border-t-emerald-500 rounded-[26px] shadow-[0_12px_30px_rgba(15,23,42,0.08)]`}>
     <div className="flex items-center gap-2 mb-6 border-l-4 border-emerald-500 pl-3">
       <Home size={18} className="text-emerald-500" />
-      <p className="text-xs font-black text-slate-400 uppercase tracking-[2px]">Residency & Housing</p>
+      <p className="text-xs font-semibold text-slate-500">Residency & Housing</p>
     </div>
 
     <div className="mb-8 p-5 bg-emerald-50 dark:bg-emerald-900/10 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
-      <p className="text-[10px] font-black text-emerald-600 uppercase mb-2 flex items-center gap-2">
+      <p className="text-[11px] font-semibold text-emerald-600 mb-2 flex items-center gap-2">
         <MapPin size={12} /> Current Address Summary
       </p>
-      <p className={`text-lg font-bold ${t.cardText} leading-tight uppercase`}>
+      <p className={`text-lg font-semibold ${t.cardText} leading-tight`}>
         {details?.addressSummary || 'No Address Provided'}
       </p>
     </div>

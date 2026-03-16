@@ -14,6 +14,7 @@ const VerificationActions = ({
   const isVerified = status === 'verified';
   const isRejected = status === 'rejected';
   const isForVerification = status === 'for verification';
+  const actionClass = '!rounded-[16px] px-4 py-2.5 text-[12px] !font-semibold font-kumbh !normal-case !tracking-normal shadow-[0_10px_20px_rgba(15,23,42,0.06)] active:scale-95';
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full md:w-[500px]">
@@ -27,6 +28,7 @@ const VerificationActions = ({
           onClick={onVisitBgy}
     
           disabled={isForVerification || isVerified || isActionSubmitting}
+          className={actionClass}
           t={t}
         />
       ) : (
@@ -39,6 +41,7 @@ const VerificationActions = ({
         variant="outline"
         onClick={onReject}
         disabled={isVerified || isRejected || isActionSubmitting}
+        className={actionClass}
         t={t}
       />
 
@@ -48,6 +51,7 @@ const VerificationActions = ({
         variant="primary"
         onClick={onApprove}
         disabled={isVerified || isActionSubmitting}
+        className={actionClass}
         t={t}
       />
       

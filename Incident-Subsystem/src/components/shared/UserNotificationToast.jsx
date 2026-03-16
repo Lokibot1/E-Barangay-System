@@ -70,9 +70,13 @@ const SingleToast = memo(({ event, onDismiss, currentTheme }) => {
   const isDark = currentTheme === "dark";
 
   const isAppointment = event.type === "appointment_scheduled";
-  const style = isAppointment
-    ? { border: "border-l-amber-500", bg: "bg-amber-100", bgDark: "bg-amber-900/60", text: "text-amber-600", textDark: "text-amber-400" }
-    : getStatusStyle(event.newStatus);
+  const isProfileUpdate =
+    event.source === "resident" || event.type === "profile_updated";
+  const style = isProfileUpdate
+    ? { border: "border-l-blue-500", bg: "bg-blue-100", bgDark: "bg-blue-900/60", text: "text-blue-600", textDark: "text-blue-400" }
+    : isAppointment
+      ? { border: "border-l-amber-500", bg: "bg-amber-100", bgDark: "bg-amber-900/60", text: "text-amber-600", textDark: "text-amber-400" }
+      : getStatusStyle(event.newStatus);
 
   useEffect(() => {
     const timer = setTimeout(() => setExiting(true), TOAST_DURATION);
@@ -86,9 +90,13 @@ const SingleToast = memo(({ event, onDismiss, currentTheme }) => {
   }, [exiting, event.id, onDismiss]);
 
   const handleClick = useCallback(() => {
-    navigate("/incident-complaint/case-management");
+    if (isProfileUpdate) {
+      navigate("/profile");
+    } else {
+      navigate("/incident-complaint/case-management");
+    }
     onDismiss(event.id);
-  }, [navigate, event.id, onDismiss]);
+  }, [navigate, event.id, onDismiss, isProfileUpdate]);
 
   const isIncident = event.source === "incident";
 
@@ -115,7 +123,21 @@ const SingleToast = memo(({ event, onDismiss, currentTheme }) => {
       <div
         className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${isDark ? style.bgDark : style.bg}`}
       >
-        {isAppointment ? (
+        {isProfileUpdate ? (
+          <svg
+            className={`w-5 h-5 ${isDark ? style.textDark : style.text}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5.121 17.804A9 9 0 1119.07 6.93M15 11a3 3 0 11-6 0 3 3 0 016 0zm-9 8a6 6 0 0112 0"
+            />
+          </svg>
+        ) : isAppointment ? (
           <svg
             className={`w-5 h-5 ${isDark ? style.textDark : style.text}`}
             fill="none"
@@ -142,23 +164,33 @@ const SingleToast = memo(({ event, onDismiss, currentTheme }) => {
         <p
           className={`font-semibold text-sm ${isDark ? "text-slate-100" : "text-slate-900"} font-kumbh`}
         >
-          {isAppointment
-            ? "Appointment Scheduled"
-            : `${isIncident ? "Incident" : "Complaint"} Status Updated`}
+          {isProfileUpdate
+            ? "Profile Updated"
+            : isAppointment
+              ? "Appointment Scheduled"
+              : `${isIncident ? "Incident" : "Complaint"} Status Updated`}
         </p>
         <p
           className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-slate-600"} font-kumbh line-clamp-1`}
         >
-          {isAppointment
-            ? apptScheduledAt
-              ? `Scheduled: ${apptScheduledAt}`
-              : "Your complaint appointment has been set."
-            : `${capitalize(event.oldStatus)} → ${capitalize(event.newStatus)}`}
+          {isProfileUpdate
+            ? event.data?.editor_name
+              ? `Updated by ${event.data.editor_name}${
+                  event.data?.fields_preview
+                    ? ` · ${event.data.fields_preview}`
+                    : ""
+                }`
+              : event.data?.description || "Your profile information was updated."
+            : isAppointment
+              ? apptScheduledAt
+                ? `Scheduled: ${apptScheduledAt}`
+                : "Your complaint appointment has been set."
+              : `${capitalize(event.oldStatus)} → ${capitalize(event.newStatus)}`}
         </p>
         <p
           className={`text-xs mt-1 ${isDark ? "text-slate-500" : "text-slate-400"} font-kumbh`}
         >
-          Click to view details
+          {isProfileUpdate ? "Click to view profile" : "Click to view details"}
         </p>
       </div>
 
