@@ -4,11 +4,12 @@
  *   The page now renders immediately; ResidentStats and ResidentTable
  *   each handle their own loading state via the skeleton loader.
  *   Pagination is hidden while loading to avoid layout jumping.
+ * CHANGED: Replaced alert() and custom inline error div with Toast notifications.
  * All original logic preserved.
  */
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { Printer as PrinterIcon, UserPlus, Users, Archive, ScrollText, Loader2, AlertCircle } from 'lucide-react';
+import { Printer as PrinterIcon, UserPlus, Users, Archive, ScrollText, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import ResidentTable        from '../../components/sub-system-1/residents/ResidentTable';
@@ -19,6 +20,7 @@ import ResidentLogsTab      from '../../components/sub-system-1/residents/subtab
 import Pagination           from '../../components/sub-system-1/common/pagination';
 import HouseholdModal       from '../../components/sub-system-1/household/modals/householdmodal';
 import EditHouseholdModal   from '../../components/sub-system-1/household/modals/EditHouseholdModal';
+import Toast                from '../../components/shared/modals/Toast';
 
 import { useResidents }      from '../../hooks/sub-system-1/useResidents';
 import { usePrinter }        from '../../hooks/sub-system-1/usePrinter';
@@ -62,6 +64,13 @@ const Residents = () => {
     const isDark = currentTheme === 'dark';
     const accent = tabAccentMap[currentTheme] || tabAccentMap.modern;
 
+    // ── Toast state ───────────────────────────────────────────────────────────
+    const [toasts, setToasts] = useState([]);
+    const addToast = (toast) =>
+        setToasts((prev) => [...prev, { ...toast, id: Date.now() }]);
+    const removeToast = (id) =>
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+
     const {
         residents,
         filteredResidents,
@@ -82,7 +91,7 @@ const Residents = () => {
 
     // ── Household view modal state ────────────────────────────────────────────
     const [hhModal, setHhModal] = useState({
-        open: false, data: null, loading: false, error: null,
+        open: false, data: null, loading: false,
     });
 
     // ── Household edit modal state ────────────────────────────────────────────
@@ -92,29 +101,109 @@ const Residents = () => {
 
     const openHouseholdModal = async (householdId) => {
         if (!householdId) return;
-        setHhModal({ open: false, data: null, loading: true, error: null });
+        setHhModal({ open: false, data: null, loading: true });
         try {
             const res = await api.get(`/households/${householdId}`);
-            setHhModal({ open: true, data: res.data, loading: false, error: null });
+            setHhModal({ open: true, data: res.data, loading: false });
         } catch (err) {
             console.error('Household fetch failed:', err);
             const msg = err.response?.status === 404
                 ? 'Household not found.'
                 : (err.response?.data?.error || 'Failed to load household.');
-            setHhModal({ open: false, data: null, loading: false, error: msg });
-            setTimeout(() => setHhModal(prev => ({ ...prev, error: null })), 4000);
+            setHhModal({ open: false, data: null, loading: false });
+            addToast({ type: 'error', title: 'Load Failed', message: msg, duration: 4000 });
         }
     };
 
     const closeHouseholdModal = () =>
-        setHhModal({ open: false, data: null, loading: false, error: null });
+        setHhModal({ open: false, data: null, loading: false });
 
     const handleHouseholdUpdate = async (db_id, updatedData) => {
         try {
             await householdService.update(db_id, updatedData);
             setHhEditModal({ open: false, data: null });
+            addToast({
+                type: 'success',
+                title: 'Household Updated',
+                message: 'Household record has been saved successfully.',
+                duration: 4000,
+            });
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to update household record.');
+            addToast({
+                type: 'error',
+                title: 'Update Failed',
+                message: err.response?.data?.message || 'Failed to update household record.',
+                duration: 5000,
+            });
+        }
+    };
+
+    // ── Wrapped handlers that show toasts ─────────────────────────────────────
+    const handleUpdateWithToast = async (updatedData) => {
+        try {
+            const ok = await handleUpdate(updatedData);
+            if (ok) {
+                addToast({
+                    type: 'success',
+                    title: 'Record Updated',
+                    message: 'Resident profile has been saved successfully.',
+                    duration: 4000,
+                });
+            }
+            return ok;
+        } catch (err) {
+            addToast({
+                type: 'error',
+                title: 'Update Failed',
+                message: err.message || 'Failed to update resident.',
+                duration: 5000,
+            });
+            return false;
+        }
+    };
+
+    const handleDeleteWithToast = async (id) => {
+        try {
+            const res = await handleDelete(id);
+            if (res?.success) {
+                addToast({
+                    type: 'success',
+                    title: 'Resident Archived',
+                    message: 'The resident has been moved to archives.',
+                    duration: 4000,
+                });
+            }
+            return res;
+        } catch (err) {
+            addToast({
+                type: 'error',
+                title: 'Delete Failed',
+                message: err.message || 'Failed to archive resident.',
+                duration: 5000,
+            });
+        }
+    };
+
+    const handleRestoreWithToast = async (id) => {
+        try {
+            const ok = await handleRestore(id);
+            if (ok) {
+                addToast({
+                    type: 'success',
+                    title: 'Resident Restored',
+                    message: 'The resident account has been reactivated.',
+                    duration: 4000,
+                });
+            }
+            return ok;
+        } catch (err) {
+            addToast({
+                type: 'error',
+                title: 'Restore Failed',
+                message: err.message || 'Failed to restore resident.',
+                duration: 5000,
+            });
+            return false;
         }
     };
 
@@ -144,10 +233,12 @@ const Residents = () => {
 
     useEffect(() => { setCurrentPage(1); }, [searchTerm, categoryFilter, purokFilter, residencyFilter]);
 
-    // ── No more full-page loading bail-out — page renders immediately ─────────
-
     return (
         <div className={`font-sans min-h-screen py-4 pb-24 px-3 sm:px-4 lg:px-5 relative ${t.pageBg}`}>
+
+            {/* ── TOAST ──────────────────────────────────────────────────────── */}
+            <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
+
             <div className="mx-auto w-full max-w-[1600px]">
                 <div className="animate-in fade-in duration-500 space-y-6 pt-4 sm:pt-5">
 
@@ -238,18 +329,16 @@ const Residents = () => {
                                     t={t} currentTheme={currentTheme}
                                 />
                                 <div className="overflow-x-auto">
-                                    {/* Table handles its own skeleton via loading prop */}
                                     <ResidentTable
                                         residents={currentItems}
                                         loading={loading}
-                                        onUpdate={handleUpdate}
-                                        onDelete={handleDelete}
+                                        onUpdate={handleUpdateWithToast}
+                                        onDelete={handleDeleteWithToast}
                                         onHouseholdClick={openHouseholdModal}
                                         t={t}
                                         currentTheme={currentTheme}
                                     />
                                 </div>
-                                {/* Hide pagination while data is still loading */}
                                 {!loading && (
                                     <Pagination
                                         currentPage={currentPage}
@@ -267,7 +356,7 @@ const Residents = () => {
                             <ResidentArchivesTab
                                 t={t}
                                 currentTheme={currentTheme}
-                                onRestore={handleRestore}
+                                onRestore={handleRestoreWithToast}
                             />
                         )}
 
@@ -277,14 +366,6 @@ const Residents = () => {
                     </div>
                 </div>
             </div>
-
-            {/* ── Error toast (auto-clears after 4s) ── */}
-            {hhModal.error && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl bg-rose-600 text-white text-sm font-semibold font-kumbh">
-                    <AlertCircle size={16} className="shrink-0" />
-                    {hhModal.error}
-                </div>
-            )}
 
             {/* ── Loading overlay (household fetch) ── */}
             {hhModal.loading && (

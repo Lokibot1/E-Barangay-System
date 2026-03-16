@@ -4,6 +4,7 @@
  *   PendingVerificationTable and VerificationStats — skeleton is now rendered
  *   inside those components. The ternary `loading ? spinner : table+pagination`
  *   is replaced by always rendering both (table handles its own skeleton).
+ * CHANGED: Replaced alert() calls with Toast notifications.
  * All original logic preserved.
  */
 import React, { useState, useEffect } from 'react';
@@ -26,6 +27,7 @@ import VerificationTabs          from '../../components/sub-system-1/verificatio
 import ImageZoomOverlay          from '../../components/sub-system-1/common/ImageZoomOverlay';
 import MinimizedSuccessCard      from '../../components/sub-system-1/verification/MinimizedSuccessCard';
 import ScreenLoader              from '../../components/shared/ScreenLoader';
+import Toast                     from '../../components/shared/modals/Toast';
 
 const Verification = () => {
   const { tr } = useLanguage();
@@ -40,6 +42,13 @@ const Verification = () => {
     window.addEventListener('themeChange', handler);
     return () => window.removeEventListener('themeChange', handler);
   }, []);
+
+  // ── Toast state ───────────────────────────────────────────────────────────
+  const [toasts, setToasts] = useState([]);
+  const addToast = (toast) =>
+    setToasts((prev) => [...prev, { ...toast, id: Date.now() }]);
+  const removeToast = (id) =>
+    setToasts((prev) => prev.filter((t) => t.id !== id));
 
   const { submissions, loading, error, updateStatus, refresh } = useVerification();
   const { playFeedback } = useSound();
@@ -97,6 +106,34 @@ const Verification = () => {
           setAccountDetails({ name: selectedRes?.name, ...result.residentData });
           setShowSuccess(true);
           setIsMinimized(false);
+          addToast({
+            type: 'success',
+            title: 'Resident Approved',
+            message: `${selectedRes?.name || 'Resident'} has been successfully verified.`,
+            duration: 4000,
+          });
+        } else if (status === 'For Verification') {
+          playFeedback('success');
+          addToast({
+            type: 'success',
+            title: 'Set for Visit',
+            message: `${selectedRes?.name || 'Resident'} has been marked for barangay visit.`,
+            duration: 4000,
+          });
+          setView('list');
+          setSelectedRes(null);
+          setActiveTab(status);
+        } else if (status === 'Rejected') {
+          playFeedback('success');
+          addToast({
+            type: 'success',
+            title: 'Application Rejected',
+            message: `${selectedRes?.name || 'Resident'}'s application has been rejected.`,
+            duration: 4000,
+          });
+          setView('list');
+          setSelectedRes(null);
+          setActiveTab(status);
         } else {
           setView('list');
           setSelectedRes(null);
@@ -104,11 +141,21 @@ const Verification = () => {
         }
       } else {
         playFeedback('error');
-        alert(`Error: ${result.message}`);
+        addToast({
+          type: 'error',
+          title: 'Action Failed',
+          message: result.message || 'Failed to update status. Please try again.',
+          duration: 5000,
+        });
       }
     } catch (error) {
       playFeedback('error');
-      alert(`Error: ${error?.message || 'Failed to update status.'}`);
+      addToast({
+        type: 'error',
+        title: 'Something Went Wrong',
+        message: error?.message || 'Failed to update status. Please try again.',
+        duration: 5000,
+      });
     } finally {
       setIsActionSubmitting(false);
     }
@@ -126,6 +173,10 @@ const Verification = () => {
 
   return (
     <div className={`font-sans min-h-screen py-4 pb-24 px-3 sm:px-4 lg:px-5 relative ${t.pageBg}`}>
+
+      {/* ── TOAST ──────────────────────────────────────────────────────────── */}
+      <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
+
       <ScreenLoader
         show={isActionSubmitting}
         title="Processing Request"
@@ -204,7 +255,7 @@ const Verification = () => {
                 currentTheme={currentTheme}
               />
 
-              {/* Table — shows skeleton rows while loading, no more inline spinner */}
+              {/* Table — shows skeleton rows while loading */}
               <PendingVerificationTable
                 data={currentData}
                 loading={loading}

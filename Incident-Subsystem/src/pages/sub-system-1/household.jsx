@@ -4,6 +4,7 @@
  *   The page now renders immediately. HouseholdStats and HouseholdTable
  *   each handle their own loading skeleton via the loading prop.
  *   Pagination is hidden while loading to avoid layout jumping.
+ * CHANGED: Replaced all alert() calls with Toast notifications.
  * All original logic preserved.
  */
 
@@ -20,6 +21,7 @@ import DeactivateHouseholdModal  from '../../components/sub-system-1/household/m
 import HouseholdArchivesTab      from '../../components/sub-system-1/household/tabs/HouseholdArchivesTab';
 import HouseholdLogsTab          from '../../components/sub-system-1/household/tabs/HouseholdLogsTab';
 import Pagination                from '../../components/sub-system-1/common/pagination';
+import Toast                     from '../../components/shared/modals/Toast';
 
 import { useHouseholds }              from '../../hooks/sub-system-1/useHousehold';
 import { usePrinter }                 from '../../hooks/sub-system-1/usePrinter';
@@ -56,6 +58,13 @@ const Households = () => {
   const { households, loading, refresh } = useHouseholds();
   const { printTable } = usePrinter();
 
+  // ── Toast state ───────────────────────────────────────────────────────────
+  const [toasts, setToasts] = useState([]);
+  const addToast = (toast) =>
+    setToasts((prev) => [...prev, { ...toast, id: Date.now() }]);
+  const removeToast = (id) =>
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+
   // ── Active tab ─────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState('registry');
 
@@ -78,13 +87,27 @@ const Households = () => {
   const handleUpdate = async (db_id, updatedData) => {
     try {
       const targetId = db_id || selectedHousehold?.db_id;
-      if (!targetId) { alert('Error: Household ID not found.'); return; }
+      if (!targetId) {
+        addToast({ type: 'error', title: 'Error', message: 'Household ID not found.', duration: 4000 });
+        return;
+      }
       await householdService.update(targetId, updatedData);
       await refresh();
       setIsEditModalOpen(false);
       setSelectedHousehold(null);
+      addToast({
+        type: 'success',
+        title: 'Household Updated',
+        message: 'Household record has been saved successfully.',
+        duration: 4000,
+      });
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to update household record.');
+      addToast({
+        type: 'error',
+        title: 'Update Failed',
+        message: err.response?.data?.message || 'Failed to update household record.',
+        duration: 5000,
+      });
     }
   };
 
@@ -95,9 +118,20 @@ const Households = () => {
       await householdService.deactivate(selectedHousehold.db_id);
       await refresh();
       setIsDeactivateModalOpen(false);
+      addToast({
+        type: 'success',
+        title: 'Household Deactivated',
+        message: `${selectedHousehold.head || 'Household'} has been moved to archives.`,
+        duration: 4000,
+      });
       setSelectedHousehold(null);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to deactivate household.');
+      addToast({
+        type: 'error',
+        title: 'Deactivation Failed',
+        message: err.response?.data?.message || 'Failed to deactivate household.',
+        duration: 5000,
+      });
     } finally {
       setDeactivating(false);
     }
@@ -162,6 +196,9 @@ const Households = () => {
   return (
     <div className="p-6 sm:p-8 space-y-6 pb-20">
 
+      {/* ── TOAST ──────────────────────────────────────────────────────────── */}
+      <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
+
       {/* ── Page header ── */}
       <div className="flex justify-between items-center">
         <div>
@@ -183,7 +220,7 @@ const Households = () => {
         )}
       </div>
 
-      {/* ── Stats — skeleton shown while loading ── */}
+      {/* ── Stats ── */}
       {activeTab === 'registry' && (
         <HouseholdStats
           stats={stats}
@@ -221,7 +258,6 @@ const Households = () => {
               t={t}
               currentTheme={currentTheme}
             />
-            {/* Table — handles its own skeleton via loading prop */}
             <HouseholdTable
               households={currentData}
               loading={loading}
@@ -231,7 +267,6 @@ const Households = () => {
               onDeactivate={(h) => { setSelectedHousehold(h); setIsDeactivateModalOpen(true); }}
               currentTheme={currentTheme}
             />
-            {/* Hide pagination while data is still loading */}
             {!loading && (
               <div className={`p-6 border-t ${t.cardBorder}`}>
                 <Pagination
@@ -248,7 +283,11 @@ const Households = () => {
         )}
 
         {activeTab === 'archives' && (
-          <HouseholdArchivesTab t={t} currentTheme={currentTheme} />
+          <HouseholdArchivesTab
+            t={t}
+            currentTheme={currentTheme}
+            onToast={addToast}
+          />
         )}
 
         {activeTab === 'logs' && (
@@ -276,6 +315,7 @@ const Households = () => {
           data={selectedHousehold}
           t={t}
           currentTheme={currentTheme}
+          onToast={addToast}
           onClose={() => { setIsModalOpen(false); setSelectedHousehold(null); }}
           onEdit={(h) => {
             setIsModalOpen(false);

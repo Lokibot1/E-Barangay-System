@@ -82,20 +82,23 @@ export const useResidents = () => {
                 await loadData();
                 return true;
             }
-            alert('Update failed: ' + (res.error || 'Unknown error'));
-            return false;
+            // Throw so calling component can show a toast
+            throw new Error(res.error || 'Update failed.');
         } catch (err) {
             console.error('Update Hook Error:', err);
-            return false;
+            throw err;
         }
     };
 
     // ── Delete (soft-delete / archive) ────────────────────────────────────────
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this resident?')) return;
         const res = await residentService.deleteResident(id);
-        if (res.success) loadData();
-        return res;
+        if (res.success) {
+            loadData();
+            return res;
+        }
+        // Throw so calling component can show a toast
+        throw new Error(res.error || 'Failed to delete resident.');
     };
 
     // ── Restore ───────────────────────────────────────────────────────────────
@@ -106,11 +109,11 @@ export const useResidents = () => {
                 await loadData();
                 return true;
             }
-            alert('Restore failed: ' + (res.error || 'Unknown error'));
-            return false;
+            // Throw so calling component can show a toast
+            throw new Error(res.error || 'Restore failed.');
         } catch (err) {
             console.error('Restore Hook Error:', err);
-            return false;
+            throw err;
         }
     };
 
