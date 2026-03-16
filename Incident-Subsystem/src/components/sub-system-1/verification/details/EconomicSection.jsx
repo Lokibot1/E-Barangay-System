@@ -30,7 +30,7 @@ const EconomicSection = ({
   const handleToggle = (e) => {
     e.preventDefault();
     if (canModify) {
-      setIsIndigent(isIndigent === 1 ? 0 : 1);
+     setIsIndigent(Number(!isIndigent)); 
     }
   };
 
@@ -81,24 +81,15 @@ const EconomicSection = ({
       </div>
 
       <div className={`pt-8 border-t ${t.cardBorder}`}>
-        <p className="text-[10px] font-semibold text-emerald-600 mb-6 flex items-center gap-2">
-          <Home size={14} /> Housing Conditions
-        </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <InfoField label="Tenure Status"  val={details?.tenureStatus}  t={t} />
-          <InfoField label="Wall Material"  val={details?.wallMaterial}  t={t} />
-          <InfoField label="Roof Material"  val={details?.roofMaterial}  t={t} />
-          <InfoField label="Water Source"   val={details?.waterSource}   t={t} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+          <InfoField label="Educational Status"  val={details?.educationalStatus}  t={t} />
+          <InfoField label="School Type"  val={details?.schoolType}  t={t} />
+          <InfoField label="School Level"  val={details?.schoolLevel}  t={t} />
+          <InfoField label="Highest Grade"   val={details?.highestGrade}   t={t} />
         </div>
       </div>
 
-      {!canModify && (
-        <div className="mt-4 py-2 px-4 bg-slate-50 border border-slate-100 rounded-xl">
-          <p className="text-[9px] text-slate-500 italic text-center leading-tight">
-            ReadOnly: Status is inherited from Household Records
-          </p>
-        </div>
-      )}
+
     </div>
   );
 };

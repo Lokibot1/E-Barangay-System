@@ -29,13 +29,22 @@ export const useVerification = () => {
   }, []);
 
   // Update Status function
-  const updateStatus = async (id, status, isIndigent = 0, additionalData = {}) => {
-    const res = await verificationService.updateStatus(id, status, isIndigent, additionalData);
-    if (res.success) {
-      await loadData(false); // Silent refresh after manual update
+ const updateStatus = async (id, status, isIndigent = 0, additionalData = {}) => {
+    try {
+        const res = await verificationService.updateStatus(id, status, isIndigent, additionalData);
+        
+        if (res.success) {
+
+            setSubmissions(prev => prev.filter(item => item.id !== id));
+            
+            await loadData(false); 
+        }
+        return res;
+    } catch (err) {
+        console.error("Update Error:", err);
+        throw err;
     }
-    return res;
-  };
+};
 
 
   useEffect(() => {
