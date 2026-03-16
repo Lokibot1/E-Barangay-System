@@ -8,7 +8,11 @@ import {
   useRef,
 } from "react";
 import useRealTimeEvents from "../hooks/shared/useRealTimeEvents";
-import { fetchNotifications } from "../services/sub-system-3/notificationService";
+import {
+  fetchNotifications,
+  createNotifications,
+  markNotificationsRead,
+} from "../services/sub-system-3/notificationService";
 
 const RealTimeContext = createContext(null);
 
@@ -35,6 +39,7 @@ const SAFE_DEFAULTS = {
 const mapBackendNotification = (n) => ({
   id: `api-${n.id}`,
   backendId: n.id,
+  externalId: n.external_id || null,
   source: n.type?.includes("complaint") ? "complaint" : "incident",
   type:
     n.type === "incident_created"
@@ -92,16 +97,20 @@ export const RealTimeProvider = ({ children }) => {
   // These are merged with the localStorage cache — deduplicated by id.
   // Unread notifications not in the localStorage cache also trigger toasts.
   useEffect(() => {
-    fetchNotifications({ perPage: 50 }).then((response) => {
+    fetchNotifications({ perPage: 50, scope: "admin" }).then((response) => {
       if (!response?.data) return;
 
       const backendItems = response.data.map(mapBackendNotification);
 
       setNotifications((prev) => {
-        const existingIds = new Set(prev.map((n) => n.id));
+        const backendExternal = new Set(
+          backendItems.map((n) => n.externalId).filter(Boolean),
+        );
+        const prunedPrev = prev.filter((n) => !backendExternal.has(n.id));
+        const existingIds = new Set(prunedPrev.map((n) => n.id));
         const newOnes = backendItems.filter((n) => !existingIds.has(n.id));
-        if (newOnes.length === 0) return prev;
-        return [...newOnes, ...prev];
+        if (newOnes.length === 0 && prunedPrev.length === prev.length) return prev;
+        return [...newOnes, ...prunedPrev];
       });
 
       // Show toasts for unread notifications that weren't cached locally at mount
@@ -136,19 +145,29 @@ export const RealTimeProvider = ({ children }) => {
 
     if (newItems.length === 0) return;
 
-    const fresh = newItems.map((event) => ({
-      id: event.id,
-      source: event.source,
-      type: event.type,
-      description:
-        event.data.description || event.data.additional_notes || "",
-      reportedBy: event.data.user
-        ? `${event.data.user.last_name || ""}, ${event.data.user.first_name || ""}`
-        : event.data.complainant_name || "Unknown",
-      timestamp: event.timestamp,
-      read: false,
-      data: event.data,
-    }));
+    const fresh = newItems.map((event) => {
+      const isResident = event.source === "resident";
+      const description =
+        event?.data?.description ||
+        event?.data?.additional_notes ||
+        (isResident ? "Resident updated profile information." : "");
+      const reportedBy = isResident
+        ? event?.data?.editor_name || event?.data?.resident_name || "Resident"
+        : event?.data?.user
+          ? `${event.data.user.last_name || ""}, ${event.data.user.first_name || ""}`
+          : event?.data?.complainant_name || "Unknown";
+
+      return {
+        id: event.id,
+        source: event.source,
+        type: event.type,
+        description,
+        reportedBy,
+        timestamp: event.timestamp,
+        read: false,
+        data: event.data,
+      };
+    });
 
     // Update persistent notification list (for bell dropdown)
     setNotifications((prev) => {
@@ -156,6 +175,8 @@ export const RealTimeProvider = ({ children }) => {
       const unique = fresh.filter((n) => !existingIds.has(n.id));
       return [...unique, ...prev];
     });
+
+    createNotifications(fresh, { scope: "admin" });
 
     // Set the latest batch — consumers read this ONCE then ignore
     setLatestBatch(fresh);
@@ -168,12 +189,31 @@ export const RealTimeProvider = ({ children }) => {
   );
 
   const markAsRead = useCallback((notificationId) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
-    );
+    setNotifications((prev) => {
+      const notification = prev.find((n) => n.id === notificationId);
+      if (notification && !notification.read) {
+        if (notification.backendId) {
+          markNotificationsRead({
+            ids: [notification.backendId],
+            read: true,
+            scope: "admin",
+          });
+        } else {
+          markNotificationsRead({
+            externalIds: [notification.externalId || notification.id],
+            read: true,
+            scope: "admin",
+          });
+        }
+      }
+      return prev.map((n) =>
+        n.id === notificationId ? { ...n, read: true } : n,
+      );
+    });
   }, []);
 
   const markAllAsRead = useCallback(() => {
+    markNotificationsRead({ markAll: true, read: true, scope: "admin" });
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   }, []);
 

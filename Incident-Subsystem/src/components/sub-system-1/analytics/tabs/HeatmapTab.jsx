@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { CircleDot, Map, Table2 } from 'lucide-react';
+import { CircleDot, Map, Table2, X } from 'lucide-react';
 import { SectionHeader, EmptyState, ChartCard } from '../AnalyticsInterface';
 import {
   BARANGAY_BOUNDARY,
@@ -59,8 +59,36 @@ function getMetricFriendlyLabel(metricLabel) {
   return labelMap[metricLabel] ?? metricLabel.toLowerCase();
 }
 
-function buildPurokInsight({ metric, metricLabel, purok, metricValue, verificationRate, sharePct, rank }) {
-  const priorityText = rank === 1 ? 'Highest priority area for this metric.' : rank <= 3 ? 'High-priority area.' : 'Standard monitoring area.';
+function getPriorityByShare(sharePct, metricValue) {
+  const pct = Number(sharePct ?? 0);
+  const count = Number(metricValue ?? 0);
+  const highPct = pct >= 50;
+  const medPct = pct >= 25;
+  const highCount = count >= 30;
+  const medCount = count >= 15;
+
+  if (highPct && highCount) {
+    return {
+      level: 'High',
+      text: `High share (${pct}%) with strong volume (${count}).`,
+    };
+  }
+
+  if ((highPct && medCount) || (medPct && medCount)) {
+    return {
+      level: 'Medium',
+      text: `Medium priority at ${pct}% share with ${count} volume.`,
+    };
+  }
+
+  return {
+    level: 'Low',
+    text: `Low priority at ${pct}% share with ${count} volume.`,
+  };
+}
+
+function buildPurokInsight({ metric, metricLabel, purok, metricValue, verificationRate, sharePct }) {
+  const priority = getPriorityByShare(sharePct, metricValue);
   const metricGuides = {
     verified: 'Sustain validation operations and replicate effective verification practices.',
     total: 'Allocate baseline manpower, forms, and logistics proportional to population load.',
@@ -73,7 +101,8 @@ function buildPurokInsight({ metric, metricLabel, purok, metricValue, verificati
 
   return {
     title: `${purok}: ${metricLabel} insight`,
-    priorityText,
+    priorityLabel: priority.level,
+    priorityText: priority.text,
     recommendation: metricGuides[metric] ?? 'Use this metric to prioritize local assistance planning.',
     summary: `${metricValue} (${sharePct}% of barangay ${metricLabel.toLowerCase()}) with ${verificationRate}% verification rate.`,
   };
@@ -117,7 +146,26 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
     const L = window.L;
     if (!L) return;
 
-    const map = L.map(mapRef.current, { center: BARANGAY_CENTER, zoom: 15 });
+    const map = L.map(mapRef.current, { center: BARANGAY_CENTER, zoom: 15, keyboard: false });
+    const container = map.getContainer();
+    let removeFocusHandlers;
+    if (container) {
+      container.setAttribute('tabindex', '-1');
+      container.style.outline = 'none';
+      container.style.boxShadow = 'none';
+
+      const blurOnFocus = () => {
+        if (document.activeElement === container) {
+          container.blur();
+        }
+      };
+      container.addEventListener('focus', blurOnFocus);
+      container.addEventListener('mousedown', blurOnFocus);
+      removeFocusHandlers = () => {
+        container.removeEventListener('focus', blurOnFocus);
+        container.removeEventListener('mousedown', blurOnFocus);
+      };
+    }
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: 'OpenStreetMap and CARTO',
@@ -146,6 +194,7 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
 
     leafletRef.current = map;
     return () => {
+      if (removeFocusHandlers) removeFocusHandlers();
       map.remove();
       leafletRef.current = null;
     };
@@ -172,6 +221,32 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
       .heatmap-map-shell .leaflet-tooltip-pane,
       .heatmap-map-shell .leaflet-marker-pane {
         z-index: 1 !important;
+      }
+
+      .heatmap-map-shell,
+      .heatmap-map-shell .leaflet-container,
+      .heatmap-map-shell .leaflet-pane,
+      .heatmap-map-shell .leaflet-map-pane,
+      .heatmap-map-shell .leaflet-tile-pane,
+      .heatmap-map-shell .leaflet-overlay-pane,
+      .heatmap-map-shell .leaflet-image-layer,
+      .heatmap-map-shell canvas,
+      .heatmap-map-shell svg,
+      .heatmap-map-shell img {
+        outline: none !important;
+        box-shadow: none !important;
+      }
+
+      .heatmap-map-shell:focus,
+      .heatmap-map-shell:focus-visible,
+      .heatmap-map-shell:focus-within,
+      .heatmap-map-shell *:focus,
+      .heatmap-map-shell *:focus-visible,
+      .heatmap-map-shell .leaflet-container:focus,
+      .heatmap-map-shell .leaflet-container:focus-visible,
+      .heatmap-map-shell .leaflet-container:focus-within {
+        outline: none !important;
+        box-shadow: none !important;
       }
     `;
     document.head.appendChild(style);
@@ -423,13 +498,9 @@ export default function HeatmapTab({ raw, t }) {
 
   const maxVal = Math.max(...purokData.map((p) => Number(p[metric] ?? 0)), 1);
   const metricTotal = purokData.reduce((sum, p) => sum + Number(p[metric] ?? 0), 0);
-  const sortedByMetric = [...purokData].sort((a, b) => Number(b[metric] ?? 0) - Number(a[metric] ?? 0));
 
   const selectedMetricValue = Number(selectedPurok?.[metric] ?? 0);
   const selectedSharePct = metricTotal > 0 ? Math.round((selectedMetricValue / metricTotal) * 100) : 0;
-  const selectedRank = selectedPurok
-    ? (sortedByMetric.findIndex((p) => p.purok === selectedPurok.purok) + 1 || sortedByMetric.length)
-    : null;
   const selectedInsight = selectedPurok
     ? buildPurokInsight({
       metric,
@@ -438,7 +509,6 @@ export default function HeatmapTab({ raw, t }) {
       metricValue: selectedMetricValue,
       verificationRate: calcVerifRate(selectedPurok),
       sharePct: selectedSharePct,
-      rank: selectedRank,
     })
     : null;
 
@@ -554,17 +624,18 @@ export default function HeatmapTab({ raw, t }) {
                 <HeatmapMap purokData={purokData} metric={metric} t={t} onAreaClick={setSelectedPurok} />
 
                 {selectedPurok ? (
-                  <div className="pointer-events-none absolute right-4 top-4 z-10 w-[240px] max-w-[75%] sm:w-[260px]">
+                  <div className="pointer-events-none absolute right-24 top-4 z-10 w-[240px] max-w-[75%] sm:w-[260px]">
                     <div className={`pointer-events-auto max-h-[340px] overflow-y-auto rounded-[22px] border shadow-[0_18px_36px_rgba(15,23,42,0.14)] backdrop-blur-sm ${t ? `${t.cardBg} ${t.cardBorder}` : 'bg-white border-gray-200'} bg-white/90`}>
                       <div className={`px-4 py-3 border-b ${t ? t.cardBorder : 'border-gray-200'} flex items-center justify-between`}>
                         <div>
                           <h3 className={`text-[13px] font-bold ${t ? t.cardText : 'text-gray-800'}`}>{selectedPurok.purok}</h3>
                         </div>
                         <button
-                          className={`text-[12px] font-semibold ${t ? t.subtleText : 'text-gray-500'}`}
+                          className={`inline-flex items-center justify-center rounded-full p-1 text-[12px] font-semibold ${t ? t.subtleText : 'text-gray-500'}`}
                           onClick={() => setSelectedPurok(null)}
+                          aria-label="Close"
                         >
-                          Close
+                          <X size={14} />
                         </button>
                       </div>
 
@@ -583,12 +654,12 @@ export default function HeatmapTab({ raw, t }) {
                         </div>
 
                         {selectedInsight ? (
-                          <div className={`${t ? t.inlineBg : 'bg-gray-50'} rounded-lg border ${t ? t.cardBorder : 'border-gray-200'} p-3 text-center`}>
+                          <div className={`${t ? t.inlineBg : 'bg-gray-50'} rounded-lg border ${t ? t.cardBorder : 'border-gray-200'} p-3 text-left`}>
                             <p className={`text-[9px] uppercase font-bold mb-1 ${t ? t.subtleText : 'text-gray-500'}`}>Decision Guide</p>
                             <p className={`text-[12px] font-bold ${t ? t.cardText : 'text-gray-800'}`}>{selectedInsight.title}</p>
                             <p className={`text-[11px] mt-1 ${t ? t.subtleText : 'text-gray-600'}`}>{selectedInsight.summary}</p>
                             <p className={`text-[11px] mt-2 ${t ? t.cardText : 'text-gray-700'}`}>
-                              <span className="font-bold">Priority:</span> {selectedInsight.priorityText}
+                              <span className="font-bold">Priority:</span> {selectedInsight.priorityLabel} - {selectedInsight.priorityText}
                             </p>
                             <p className={`text-[11px] mt-1 ${t ? t.cardText : 'text-gray-700'}`}>
                               <span className="font-bold">Recommended action:</span> {selectedInsight.recommendation}
