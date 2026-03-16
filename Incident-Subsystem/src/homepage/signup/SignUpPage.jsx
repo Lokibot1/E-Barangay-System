@@ -10,6 +10,7 @@
  *    - Cleared automatically on successful registration (authSuccess)
  * 2. "Clear draft" button shown in the notice banner so users can start fresh
  * 3. All existing logic (autofill listener, address search props, etc.) preserved
+ * 4. [NEW] Toast notifications for submit success, error, and validation feedback
  */
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -27,6 +28,7 @@ import {
 
 import themeTokens from "../../Themetokens";
 import SignupForm from "./SignUpForm";
+import Toast from "../../components/shared/modals/Toast";
 import { useAuthLogic } from "../hooks/useAuthLogic";
 import { isAuthenticated, isAdmin } from "../services/loginService";
 import { handleDownloadSlip } from "../../utils/sub-system-1/documentGenerator";
@@ -46,6 +48,16 @@ const SignupPage = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [slidingOut, setSlidingOut] = useState(false);
   const [draftBanner, setDraftBanner] = useState(false); // show resume-draft notice
+
+  // ── Toast state ───────────────────────────────────────────────────────────
+  const [toasts, setToasts] = useState([]);
+  const addToast = useCallback((toast) => {
+    setToasts((prev) => [...prev, { ...toast, id: Date.now() }]);
+  }, []);
+  const removeToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
   const { logoDataUrl } = useBranding();
   const logoSrc = logoDataUrl || bgyLogo;
 
@@ -53,7 +65,7 @@ const SignupPage = () => {
     formData,
     setFormData,
     handleChange,
-    submitAuth,
+    submitAuth: _submitAuth,
     loading,
     authSuccess,
     setAuthSuccess,
@@ -67,6 +79,32 @@ const SignupPage = () => {
     isSearchingAddress,
     selectAddress,
   } = useAuthLogic(navigate);
+
+  // ── Wrap submitAuth to inject toast feedback ──────────────────────────────
+  const submitAuth = useCallback(
+    async (e, overrides) => {
+      try {
+        await _submitAuth(e, overrides);
+        // Success toast — shown briefly before the modal takes over
+        addToast({
+          type: "success",
+          title: "Registration Submitted",
+          message: "Your application has been sent for verification.",
+          duration: 4000,
+        });
+      } catch (err) {
+        const msg =
+          err?.message || "Something went wrong. Please try again.";
+        addToast({
+          type: "error",
+          title: "Submission Failed",
+          message: msg,
+          duration: 5000,
+        });
+      }
+    },
+    [_submitAuth, addToast],
+  );
 
   // ── DRAFT: restore on mount ──────────────────────────────────────────────
   useEffect(() => {
@@ -116,7 +154,6 @@ const SignupPage = () => {
   const clearDraft = useCallback(() => {
     localStorage.removeItem(DRAFT_KEY);
     setDraftBanner(false);
-    // Reset only text fields, keep default values from useAuthLogic initial state
     setFormData((prev) => ({
       ...prev,
       firstName: "",
@@ -159,7 +196,13 @@ const SignupPage = () => {
       numberOfFamilies: "1",
       isIndigent: 0,
     }));
-  }, [setFormData]);
+    addToast({
+      type: "success",
+      title: "Draft Cleared",
+      message: "Form has been reset. You can start fresh.",
+      duration: 3000,
+    });
+  }, [setFormData, addToast]);
 
   // ── AUTOFILL LISTENER (existing) ─────────────────────────────────────────
   useEffect(() => {
@@ -206,6 +249,9 @@ const SignupPage = () => {
     <div
       className={`min-h-screen w-screen relative overflow-x-hidden ${t.pageBg}`}
     >
+      {/* ── TOAST ──────────────────────────────────────────────────────────── */}
+      <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
+
       {/* Background */}
       <div className="fixed inset-0 z-0">
         <img

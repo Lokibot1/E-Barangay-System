@@ -28,16 +28,23 @@ const VerificationDetailView = (props) => {
   }, [data, isHead, isNewHousehold, existingIndigentStatus]);
 
   const combinedDetails = useMemo(() => {
-    const payload = data?.registration_payload || {};
-    return {
-      ...data?.details,
-      tenureStatus: payload.tenure_status || data?.details?.tenureStatus,
-      wallMaterial: payload.wall_material || data?.details?.wallMaterial,
-      roofMaterial: payload.roof_material || data?.details?.roofMaterial,
-      waterSource:  payload.water_source  || data?.details?.waterSource,
-      numberOfFamilies: payload.num_families_reported || payload.number_of_families || data?.details?.numberOfFamilies || 1,
-    };
-  }, [data]);
+  const payload = data?.registration_payload || {};
+ 
+  const household = data?.household || {}; 
+
+  return {
+    ...data?.details,
+
+    household: household, 
+    
+
+    tenureStatus: payload.tenure_status || household.tenure_status || data?.details?.tenureStatus,
+    wallMaterial: payload.wall_material || household.wall_material || data?.details?.wallMaterial,
+    roofMaterial: payload.roof_material || household.roof_material || data?.details?.roofMaterial,
+    waterSource:  payload.water_source  || household.water_source  || data?.details?.waterSource,
+    numberOfFamilies: payload.num_families_reported || household.num_families_reported || data?.details?.numberOfFamilies || 1,
+  };
+}, [data]);
 
   const formatDate = (dateString) => {
     if (!dateString || dateString === 'N/A') return null;
