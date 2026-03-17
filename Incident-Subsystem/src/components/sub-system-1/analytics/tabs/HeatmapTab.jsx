@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { CircleDot, Map, Table2, X } from 'lucide-react';
-import { SectionHeader, EmptyState, ChartCard } from '../AnalyticsInterface';
+import { EmptyState, ChartCard } from '../AnalyticsInterface';
 import {
   BARANGAY_BOUNDARY,
   BARANGAY_CENTER,
@@ -513,13 +513,7 @@ export default function HeatmapTab({ raw, t }) {
     : null;
 
   return (
-    <div className="space-y-5">
-      <SectionHeader
-        title="Purok Heatmap"
-        subtitle="Barangay Gulod, Novaliches, Quezon City - click a purok for details"
-        t={t}
-      />
-
+    <div className="space-y-4">
       <div className="grid grid-cols-1 gap-5">
         <ChartCard
           title={view === 'map' ? 'Purok Distribution Map' : 'Purok Metric Table'}
@@ -574,7 +568,7 @@ export default function HeatmapTab({ raw, t }) {
             </div>
 
             {view === 'map' ? (
-              <div className="flex flex-wrap justify-start gap-2.5 pt-8">
+              <div className="flex flex-wrap justify-start gap-2.5 pt-4">
                 {MAP_METRICS.map((item) => {
                   const metricStyle = HEATMAP_METRIC_COLORS[item.key] ?? HEATMAP_METRIC_COLORS.total;
                   const isActive = metric === item.key;

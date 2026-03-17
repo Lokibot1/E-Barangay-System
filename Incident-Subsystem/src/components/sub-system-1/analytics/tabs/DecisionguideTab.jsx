@@ -1,5 +1,5 @@
 import { AlertTriangle, Eye, Siren } from 'lucide-react';
-import { StatCard, ChartCard, SectionHeader, EmptyState } from '../AnalyticsInterface';
+import { StatCard, ChartCard, EmptyState } from '../AnalyticsInterface';
 
 function detectPurok(text = '') {
   const m = String(text).match(/purok\s*\d+/i);
@@ -169,13 +169,7 @@ export default function DecisionGuideTab({ raw, t }) {
   ];
 
   return (
-    <div className="space-y-6">
-      <SectionHeader
-        title="Decision Guide & Actionable Insights"
-        subtitle="Data-driven analysis and recommended actions for barangay officials"
-        t={t}
-      />
-
+    <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {priorityGroups.map((pg) => {
           const computedCount = computedInsights.filter((i) => i.__priority === pg.key).length;

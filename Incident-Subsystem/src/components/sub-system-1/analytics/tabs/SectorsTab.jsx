@@ -9,7 +9,7 @@ import {
   Legend,
 } from 'recharts';
 import { Baby, Accessibility, UserRound, Rainbow, AlertTriangle } from 'lucide-react';
-import { StatCard, ChartCard, DonutSummaryCard, SectionHeader, analyticsChartTheme, AnalyticsTooltip } from '../AnalyticsInterface';
+import { StatCard, ChartCard, DonutSummaryCard, analyticsChartTheme, AnalyticsTooltip } from '../AnalyticsInterface';
 import { COLORS, SECTOR_COLORS } from '../analyticsConfig';
 
 export default function SectorsTab({ raw, t }) {
@@ -33,9 +33,7 @@ export default function SectorsTab({ raw, t }) {
   const { gridStroke, axisTick, legendStyle, barRadius } = analyticsChartTheme;
 
   return (
-    <div className="space-y-6">
-      <SectionHeader title="Sectoral Classification" subtitle="Sector breakdown, seniors and PWD per purok" t={t} />
-
+    <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard icon={Baby} label="Senior Citizens" value={totalSenior} sub="Aged 60+" color="danger" t={t} />
         <StatCard icon={Accessibility} label="PWD" value={totalPwd} sub="Persons w/ Disability" color="warning" t={t} />

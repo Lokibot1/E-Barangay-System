@@ -12,7 +12,6 @@ import {
 import {
   ChartCard,
   DonutSummaryCard,
-  SectionHeader,
   analyticsChartTheme,
   AnalyticsTooltip,
 } from '../AnalyticsInterface';
@@ -51,9 +50,7 @@ export default function DemographicsTab({ raw, t }) {
   const { gridStroke, axisTick, legendStyle, barRadius, horizontalBarRadius } = analyticsChartTheme;
 
   return (
-    <div className="space-y-6">
-      <SectionHeader title="Demographic Analysis" subtitle="Age groups, gender, marital status, household positions" t={t} />
-
+    <div className="space-y-4">
       <ChartCard
         title="Age Group Distribution"
         subtitle="Resident count across major age brackets, with senior citizens highlighted."
