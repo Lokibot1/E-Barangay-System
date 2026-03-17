@@ -298,7 +298,7 @@ const Req_BIDPage = () => {
                   FEES
                 </h4>
                 <p className={`text-sm ${t.subtleText} font-kumbh`}>
-                  P20.00 for registered voters, P30.00 for non-voters.
+                  P100.00 for processing. Payment is made at the barangay office after verification.
                   The ID is valid for 1 year from the date of issuance.
                 </p>
               </div>

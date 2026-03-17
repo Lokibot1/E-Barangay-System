@@ -99,7 +99,7 @@ export default function Req_COR() {
             <div className="card p-6 mb-6">
               <h3 className="font-bold text-xl mb-3">Service Information</h3>
               <p className="text-sm"><strong>Requirements:</strong><br />Valid ID, Proof of Billing, Personal Appearance.</p>
-              <p className="mt-3 text-sm"><strong>Fees:</strong><br />₱50.00</p>
+                            <p className="mt-3 text-sm"><strong>Fees:</strong><br />Free for residents.</p>
               <p className="mt-3 text-sm"><strong>Validity:</strong><br />6 Months</p>
             </div>
 
