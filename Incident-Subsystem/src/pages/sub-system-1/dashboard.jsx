@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { TABS } from '../../components/sub-system-1/analytics/analyticsConfig';
-import OverviewTab from '../../components/sub-system-1/analytics/tabs/OverviewTab';
 import HeatmapTab from '../../components/sub-system-1/analytics/tabs/HeatmapTab';
 import DemographicsTab from '../../components/sub-system-1/analytics/tabs/DemographicsTab';
 import SectorsTab from '../../components/sub-system-1/analytics/tabs/SectorsTab';
@@ -13,6 +12,7 @@ import { API_BASE_URL } from '../../config/api';
 import themeTokens from '../../Themetokens';
 
 const API_BASE = import.meta.env.VITE_API_URL || API_BASE_URL;
+const DASHBOARD_TABS = TABS.filter((tab) => tab.id !== 'overview');
 
 function renderTab(id, data, t) {
   switch (id) {
@@ -48,7 +48,7 @@ export default function Dashboard() {
   const t = themeTokens[currentTheme] || themeTokens.modern || themeTokens.blue;
   const isDark = currentTheme === 'dark';
 
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(DASHBOARD_TABS[0]?.id || 'heatmap');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -72,7 +72,7 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  const tabMeta = TABS.find((tb) => tb.id === activeTab);
+  const tabMeta = DASHBOARD_TABS.find((tb) => tb.id === activeTab);
 
   return (
     <div className={`flex flex-col min-h-full ${t.pageBg}`}>
@@ -100,7 +100,7 @@ export default function Dashboard() {
 
         <div className="px-6 sm:px-8 pb-3 overflow-x-auto">
           <div className="flex gap-2 min-w-max">
-            {TABS.map((tab) => {
+            {DASHBOARD_TABS.map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
               return (

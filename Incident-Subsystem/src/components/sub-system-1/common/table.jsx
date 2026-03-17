@@ -98,8 +98,8 @@ const Table = ({
               <tr>
                 <td colSpan={columnCount} className="px-6 py-20 text-center">
                   <div className="flex flex-col items-center justify-center space-y-2">
-                    <p className={`text-sm font-bold ${cardText} opacity-40 uppercase tracking-widest`}>
-                      No Records Found
+                    <p className={`text-sm font-semibold ${cardText} opacity-60`}>
+                      No records found
                     </p>
                     <p className={`text-[11px] ${subtleText} italic font-medium`}>
                       Try adjusting your search or filters.

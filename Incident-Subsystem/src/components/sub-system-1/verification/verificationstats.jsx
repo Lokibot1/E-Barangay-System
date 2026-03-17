@@ -1,4 +1,4 @@
-/**
+﻿/**
  * VerificationStats.jsx
  * ADDED: loading prop — renders StatSkeleton when true.
  * All original logic preserved.
@@ -44,7 +44,7 @@ const toneMap = {
 const VerificationStats = ({ submissions = [], loading = false, t, currentTheme = 'modern' }) => {
   const isDark = currentTheme === 'dark';
 
-  // ── Show skeleton while loading ───────────────────────────────────────────
+  // —— Show skeleton while loading ——
   if (loading) {
     return <SkeletonLoader variant="stat" count={4} isDark={isDark} />;
   }
@@ -82,7 +82,7 @@ const VerificationStats = ({ submissions = [], loading = false, t, currentTheme 
           >
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1 space-y-2 text-left">
-                <p className={`text-[11px] font-semibold uppercase tracking-[0.22em] ${t.subtleText}`}>
+                <p className={`text-[14px] font-semibold ${t.subtleText}`}>
                   {stat.title}
                 </p>
                 <div className={`block w-full text-left text-3xl font-bold leading-none ${t.cardText} font-spartan sm:text-[2.15rem]`}>
@@ -120,3 +120,6 @@ const VerificationStats = ({ submissions = [], loading = false, t, currentTheme 
 };
 
 export default VerificationStats;
+
+
+

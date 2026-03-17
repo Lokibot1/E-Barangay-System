@@ -224,20 +224,20 @@ const CreateAccounts = () => {
 
   // ==========================================================================
   return (
-    <div className="min-h-screen bg-slate-50 p-6 md:p-10 font-sans">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-50 font-sans">
+      <div className="w-full px-4 sm:px-5 py-6 sm:py-8 space-y-6">
 
         {/* ── Header ── */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Shield size={18} className="text-slate-400" />
-              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">System Access</span>
+              <span className="text-[10px] font-semibold   text-slate-400">System Access</span>
             </div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Account Management</h1>
+            <h1 className="text-3xl font-semibold text-slate-900 ">Account Management</h1>
           </div>
           <button type="button" onClick={() => { setShowAddModal(true); setApiError(''); }}
-            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest shadow-lg hover:bg-slate-800 active:scale-95 transition-all">
+            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-slate-900 text-white text-xs font-semibold   shadow-lg hover:bg-slate-800 active:scale-95 transition-all">
             <UserPlus size={15} /> New Account
           </button>
         </div>
@@ -270,11 +270,11 @@ const CreateAccounts = () => {
         <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl w-fit">
           {TABS.map(tab => (
             <button key={tab} type="button" onClick={() => setActiveTab(tab)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold   transition-all ${
                 activeTab === tab ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'
               }`}>
               {tab === 'active' ? <><Users size={12} /> Active</> : <><UserX size={12} /> Inactive</>}
-              <span className={`ml-1 px-2 py-0.5 rounded-full text-[9px] font-black ${
+              <span className={`ml-1 px-2 py-0.5 rounded-full text-[9px] font-semibold ${
                 activeTab === tab
                   ? tab === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
                   : 'bg-slate-200 text-slate-500'
@@ -308,7 +308,7 @@ const CreateAccounts = () => {
                       {/* Identity */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black shrink-0 ${
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-semibold shrink-0 ${
                             u.role === 'admin' ? 'bg-violet-100 text-violet-600' : 'bg-sky-100 text-sky-600'
                           }`}>
                             {(u.name || u.username || '?').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
@@ -324,8 +324,8 @@ const CreateAccounts = () => {
 
                       {/* Role */}
                       <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getRoleStyle(u.role)}`}>
-                          {getRoleIcon(u.role)} {u.role}
+                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-semibold   border ${getRoleStyle(u.role)}`}>
+                          {getRoleIcon(u.role)} {u.role === 'admin' ? 'Admin' : u.role === 'staff' ? 'Staff' : u.role}
                         </span>
                       </td>
 
@@ -351,7 +351,7 @@ const CreateAccounts = () => {
                               setResetForm({ pass: '', confirm: '' });
                               setApiError('');
                             }}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider text-slate-500 border border-slate-200 hover:border-sky-300 hover:text-sky-700 hover:bg-sky-50 active:scale-95 transition-all"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-semibold   text-slate-500 border border-slate-200 hover:border-sky-300 hover:text-sky-700 hover:bg-sky-50 active:scale-95 transition-all"
                           >
                             <RefreshCw size={11} /> Reset Pass
                           </button>
@@ -384,8 +384,8 @@ const CreateAccounts = () => {
           <div className="w-full max-w-lg bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between px-8 py-5 border-b border-slate-100">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">System Access</p>
-                <h2 className="text-lg font-black text-slate-900 tracking-tight">Provision Account</h2>
+                <p className="text-[10px] font-semibold   text-slate-400">System Access</p>
+                <h2 className="text-lg font-semibold text-slate-900 ">Provision Account</h2>
               </div>
               <button type="button" onClick={closeAdd} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400"><X size={18} /></button>
             </div>
@@ -396,14 +396,14 @@ const CreateAccounts = () => {
                 </div>
               )}
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Legal Full Name</label>
+                <label className="text-[10px] font-semibold   text-slate-400">Legal Full Name</label>
                 <input type="text" placeholder="e.g. Juan Dela Cruz" value={form.name} required
                   onChange={e => setForm({ ...form, name: e.target.value })}
                   className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 outline-none focus:bg-white focus:border-slate-400 focus:ring-2 focus:ring-slate-100 text-sm font-medium transition-all" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Gmail Address</label>
+                  <label className="text-[10px] font-semibold   text-slate-400">Gmail Address</label>
                   <input type="email" placeholder="name@gmail.com" value={form.email} required
                     onChange={e => setForm({ ...form, email: e.target.value })}
                     className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium outline-none transition-all ${
@@ -411,22 +411,22 @@ const CreateAccounts = () => {
                       form.email && isGmail && !isEmailTaken  ? 'border-emerald-400 bg-emerald-50' :
                       'border-slate-200 bg-slate-50 focus:bg-white focus:border-slate-400 focus:ring-2 focus:ring-slate-100'
                     }`} />
-                  {form.email && !isGmail     && <p className="text-[9px] font-black text-rose-500 uppercase mt-1 flex items-center gap-1"><AlertCircle size={9} /> Gmail only</p>}
-                  {form.email && isEmailTaken && <p className="text-[9px] font-black text-rose-500 uppercase mt-1 flex items-center gap-1"><AlertCircle size={9} /> Already taken</p>}
+                  {form.email && !isGmail     && <p className="text-[9px] font-semibold text-rose-500  mt-1 flex items-center gap-1"><AlertCircle size={9} /> Gmail only</p>}
+                  {form.email && isEmailTaken && <p className="text-[9px] font-semibold text-rose-500  mt-1 flex items-center gap-1"><AlertCircle size={9} /> Already taken</p>}
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Username</label>
+                  <label className="text-[10px] font-semibold   text-slate-400">Username</label>
                   <input type="text" placeholder="bgn00001" value={form.username} required
                     onChange={e => setForm({ ...form, username: e.target.value })}
                     className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 outline-none focus:bg-white focus:border-slate-400 focus:ring-2 focus:ring-slate-100 text-sm font-medium font-mono transition-all" />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Role</label>
+                <label className="text-[10px] font-semibold   text-slate-400">Role</label>
                 <div className="flex gap-2">
                   {ROLES.map(r => (
                     <button key={r.value} type="button" onClick={() => setForm({ ...form, role: r.value })}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest border transition-all ${
+                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-xs font-semibold   border transition-all ${
                         form.role === r.value ? r.color + ' shadow-sm' : 'border-slate-200 text-slate-400 hover:border-slate-300'
                       }`}>
                       {r.value === 'admin' ? <Crown size={11} /> : <User size={11} />} {r.label}
@@ -436,9 +436,9 @@ const CreateAccounts = () => {
               </div>
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Password</label>
+                  <label className="text-[10px] font-semibold   text-slate-400">Password</label>
                   <button type="button" onClick={() => setShowPass(!showPass)}
-                    className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-sky-500 hover:text-sky-700 transition-colors">
+                    className="flex items-center gap-1 text-[9px] font-semibold   text-sky-500 hover:text-sky-700 transition-colors">
                     {showPass ? <><EyeOff size={10} /> Hide</> : <><Eye size={10} /> Show</>}
                   </button>
                 </div>
@@ -448,14 +448,14 @@ const CreateAccounts = () => {
                     className={form.confirmPassword && !isPassMatch ? 'border-rose-400 bg-rose-50' : form.confirmPassword && isPassMatch ? 'border-emerald-400 bg-emerald-50' : ''} />
                 </div>
                 {form.confirmPassword && !isPassMatch && (
-                  <p className="text-[9px] font-black text-rose-500 uppercase flex items-center gap-1 mt-1"><AlertCircle size={9} /> Passwords do not match</p>
+                  <p className="text-[9px] font-semibold text-rose-500  flex items-center gap-1 mt-1"><AlertCircle size={9} /> Passwords do not match</p>
                 )}
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={closeAdd} disabled={submitting}
-                  className="flex-1 py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-400 border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50">Cancel</button>
+                  className="flex-1 py-3 rounded-2xl text-xs font-semibold   text-slate-400 border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50">Cancel</button>
                 <button type="submit" disabled={!canSave || submitting}
-                  className={`flex-[2] py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-white transition-all active:scale-[0.98] ${
+                  className={`flex-[2] py-3 rounded-2xl text-xs font-semibold   text-white transition-all active:scale-[0.98] ${
                     canSave && !submitting ? 'bg-slate-900 hover:bg-slate-800 shadow-lg' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                   }`}>
                   {submitting ? <span className="flex items-center justify-center gap-2"><Loader2 size={13} className="animate-spin" /> Saving…</span> : 'Save Account'}
@@ -472,13 +472,13 @@ const CreateAccounts = () => {
           <div className="w-full max-w-sm bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Account Security</p>
-                <h3 className="text-base font-black text-slate-900 tracking-tight">Reset Password</h3>
+                <p className="text-[10px] font-semibold   text-slate-400">Account Security</p>
+                <h3 className="text-base font-semibold text-slate-900 ">Reset Password</h3>
               </div>
               <button type="button" onClick={closeReset} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400"><X size={16} /></button>
             </div>
             <div className="mx-7 mt-5 flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl border border-slate-100">
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shrink-0 border ${getRoleStyle(resetTarget.role)}`}>
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-semibold shrink-0 border ${getRoleStyle(resetTarget.role)}`}>
                 {(resetTarget.name || resetTarget.username || '?').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
               </div>
               <div>
@@ -493,9 +493,9 @@ const CreateAccounts = () => {
                 </div>
               )}
               <div className="flex items-center justify-between mb-1">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">New Password</label>
+                <label className="text-[10px] font-semibold   text-slate-400">New Password</label>
                 <button type="button" onClick={() => setShowResetPass(!showResetPass)}
-                  className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-sky-500 hover:text-sky-700 transition-colors">
+                  className="flex items-center gap-1 text-[9px] font-semibold   text-sky-500 hover:text-sky-700 transition-colors">
                   {showResetPass ? <><EyeOff size={10} /> Hide</> : <><Eye size={10} /> Show</>}
                 </button>
               </div>
@@ -503,13 +503,13 @@ const CreateAccounts = () => {
               <PasswordInput placeholder="Confirm new password" value={resetForm.confirm} onChange={e => setResetForm({ ...resetForm, confirm: e.target.value })} show={showResetPass}
                 className={resetForm.confirm && resetForm.pass !== resetForm.confirm ? 'border-rose-400 bg-rose-50' : resetForm.confirm && canReset ? 'border-emerald-400 bg-emerald-50' : ''} />
               {resetForm.confirm && !canReset && (
-                <p className="text-[9px] font-black text-rose-500 uppercase flex items-center gap-1"><AlertCircle size={9} /> Passwords do not match</p>
+                <p className="text-[9px] font-semibold text-rose-500  flex items-center gap-1"><AlertCircle size={9} /> Passwords do not match</p>
               )}
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={closeReset} disabled={submitting}
-                  className="flex-1 py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-400 border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50">Cancel</button>
+                  className="flex-1 py-3 rounded-2xl text-xs font-semibold   text-slate-400 border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50">Cancel</button>
                 <button type="submit" disabled={!canReset || submitting}
-                  className={`flex-[2] py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-white transition-all active:scale-[0.98] ${
+                  className={`flex-[2] py-3 rounded-2xl text-xs font-semibold   text-white transition-all active:scale-[0.98] ${
                     canReset && !submitting ? 'bg-sky-600 hover:bg-sky-700 shadow-lg' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                   }`}>
                   {submitting ? <span className="flex items-center justify-center gap-2"><Loader2 size={13} className="animate-spin" /> Resetting…</span> : 'Confirm Reset'}
@@ -538,7 +538,7 @@ const CreateAccounts = () => {
                       ? <ToggleLeft  size={24} className="text-rose-600" />
                       : <ToggleRight size={24} className="text-emerald-600" />}
                   </div>
-                  <h3 className="text-lg font-black text-slate-900 tracking-tight">
+                  <h3 className="text-lg font-semibold text-slate-900 ">
                     {willDeactivate ? 'Deactivate Account?' : 'Activate Account?'}
                   </h3>
                   <p className="text-xs text-slate-400 font-medium mt-1 mb-6">
@@ -546,7 +546,7 @@ const CreateAccounts = () => {
                   </p>
                   <div className="flex flex-col gap-2">
                     <button type="button" onClick={confirmToggle} disabled={submitting}
-                      className={`w-full py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest text-white transition-all active:scale-[0.98] disabled:opacity-60 ${
+                      className={`w-full py-3.5 rounded-2xl text-xs font-semibold   text-white transition-all active:scale-[0.98] disabled:opacity-60 ${
                         willDeactivate ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700'
                       }`}>
                       {submitting
@@ -554,7 +554,7 @@ const CreateAccounts = () => {
                         : 'Yes, Proceed'}
                     </button>
                     <button type="button" onClick={() => { setPendingToggle(null); setApiError(''); }} disabled={submitting}
-                      className="w-full py-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors">
+                      className="w-full py-2 text-xs font-semibold   text-slate-400 hover:text-slate-600 transition-colors">
                       Cancel
                     </button>
                   </div>
@@ -572,18 +572,18 @@ const CreateAccounts = () => {
             <div className="w-16 h-16 bg-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-200">
               <CheckCircle size={28} className="text-white" />
             </div>
-            <h2 className="text-xl font-black text-slate-900 tracking-tight">Account Created</h2>
-            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1 mb-6">Successfully provisioned</p>
+            <h2 className="text-xl font-semibold text-slate-900 ">Account Created</h2>
+            <p className="text-xs text-slate-400 font-bold   mt-1 mb-6">Successfully provisioned</p>
             <div className="bg-slate-50 rounded-2xl p-4 text-left space-y-2 mb-6 border border-slate-100">
               {[['Name', successData.name], ['Username', '@' + successData.username], ['Email', successData.email], ['Role', successData.role]].map(([label, value]) => (
                 <div key={label} className="flex justify-between items-center">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{label}</span>
+                  <span className="text-[9px] font-semibold   text-slate-400">{label}</span>
                   <span className="text-xs font-bold text-slate-700">{value}</span>
                 </div>
               ))}
             </div>
             <button type="button" onClick={() => setSuccessData(null)}
-              className="w-full py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest text-white bg-slate-900 hover:bg-slate-800 active:scale-[0.98] transition-all shadow-lg">
+              className="w-full py-3.5 rounded-2xl text-xs font-semibold   text-white bg-slate-900 hover:bg-slate-800 active:scale-[0.98] transition-all shadow-lg">
               Continue
             </button>
           </div>
@@ -594,3 +594,6 @@ const CreateAccounts = () => {
 };
 
 export default CreateAccounts;
+
+
+
