@@ -40,9 +40,9 @@ const AdminLanding = () => {
           <h1 className="text-white text-3xl sm:text-4xl lg:text-5xl font-bold font-spartan leading-tight text-left">
             {tr.sub2Admin?.title || 'Document Services Analytics'}
           </h1>
-          <p className="text-white/85 text-base sm:text-lg font-kumbh mt-3 text-left max-w-3xl">
+         {/*  <p className="text-white/85 text-base sm:text-lg font-kumbh mt-3 text-left max-w-3xl">
             {tr.sub2Admin?.desc || 'Volumes, operations, socio-economy, and transaction insights for BID, COR, and COI requests.'}
-          </p>
+          </p> */}
         </div>
       </div>
 
@@ -69,9 +69,9 @@ const AdminLanding = () => {
           <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>{tr.sub2Admin?.operations || 'Operations'}</h2>
           <OperationsFactors t={t} isDark={isDark} currentTheme={currentTheme} />
 
-          <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>{tr.sub2Admin?.socioEconomy || 'Socio-Economy'}</h2>
+         {/*  <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>{tr.sub2Admin?.socioEconomy || 'Socio-Economy'}</h2>
           <SocioEconomyFactors t={t} isDark={isDark} currentTheme={currentTheme} />
-
+ */}
           <h2 className={`font-spartan text-2xl font-bold ${t.cardText}`}>{tr.sub2Admin?.reports || 'Reports'}</h2>
           <ReportsSection />
 

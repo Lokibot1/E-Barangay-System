@@ -49,7 +49,7 @@ const SocioEconomyFactors = ({ t, isDark, currentTheme = "modern" }) => {
       </ResponsiveContainer>
     </ChartCard> */}
 
-    <ChartCard title="Purpose of Requests" subtitle="Service intent breakdown" rightLabel="Distribution" t={t} currentTheme={currentTheme}>
+    {/* <ChartCard title="Purpose of Requests" subtitle="Service intent breakdown" rightLabel="Distribution" t={t} currentTheme={currentTheme}>
       <ResponsiveContainer width="100%" height={250}>
         <PieChart>
           <Pie data={purposeOfRequests} dataKey="value" nameKey="name" cx="50%" cy="45%" innerRadius={44} outerRadius={78} paddingAngle={2} label>
@@ -61,7 +61,7 @@ const SocioEconomyFactors = ({ t, isDark, currentTheme = "modern" }) => {
           <Legend wrapperStyle={{ fontSize: "12px" }} />
         </PieChart>
       </ResponsiveContainer>
-    </ChartCard>
+    </ChartCard> */}
     </div>
   );
 };
