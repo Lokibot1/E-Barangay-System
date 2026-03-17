@@ -1,21 +1,5 @@
-const resolveHost = () => {
-  if (import.meta.env.VITE_NOTIF_API_HOST) return import.meta.env.VITE_NOTIF_API_HOST;
-  if (typeof window !== "undefined" && window.location?.hostname) {
-    return window.location.hostname;
-  }
-  return "127.0.0.1";
-};
-
-const NOTIF_API_BASE = import.meta.env.VITE_NOTIF_API_BASE;
-const API_MODE = NOTIF_API_BASE ? "rest" : "php";
-const API_HOST = resolveHost();
-const API_BASE = NOTIF_API_BASE || `http://${API_HOST}/E-Barangay-System/api`;
-const NOTIF_ENDPOINT = API_MODE === "php"
-  ? `${API_BASE}/notifications/notifications.php`
-  : `${API_BASE}/notifications`;
-const APPT_NOTIFY_ENDPOINT = API_MODE === "php"
-  ? `${API_BASE}/appointments/notify-reschedule.php`
-  : null;
+const API_BASE = "http://localhost:8000/api";
+const NOTIF_ENDPOINT = `${API_BASE}/notifications`;
 
 const getAuthUser = () => {
   try {
@@ -127,9 +111,7 @@ export const notifyAppointmentReschedule = async (appointmentId) => {
 
   try {
     const { scope, userId } = resolveUserContext();
-    const url = API_MODE === "php"
-      ? `${APPT_NOTIFY_ENDPOINT}?appointment_id=${encodeURIComponent(appointmentId)}`
-      : `${API_BASE}/appointments/${appointmentId}/notify-reschedule`;
+    const url = `${API_BASE}/appointments/${appointmentId}/notify-reschedule`;
     const res = await fetch(url, {
       method: "POST",
       headers: {
