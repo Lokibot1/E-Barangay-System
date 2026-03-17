@@ -492,7 +492,7 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
 });
 
 // ── Header ──────────────────────────────────────────────────────────────
-const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onViewAppointment, onViewRegistration, onViewProfileUpdate, onCloseMenu }) => {
+const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onViewAppointment, onViewRegistration, onViewProfileUpdate, onCloseMenu, onNavigateToAction }) => {
   const unread = !notification.read;
   const timeAgo = getRelativeTime(notification.timestamp);
   const absoluteDate = formatNotificationDate(notification.timestamp);
@@ -529,7 +529,11 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
     ? "View"
     : isAppointment
       ? "Open details"
-      : null;
+      : isIncident || notification.type === "incident_status_updated"
+        ? "View incident"
+        : notification.source === "complaint" || notification.type === "complaint_status_updated"
+          ? "View complaint"
+          : null;
 
   const capitalize = (str) =>
     str ? str.replace(/\b\w/g, (c) => c.toUpperCase()) : str;
@@ -551,7 +555,16 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
       onViewProfileUpdate(notification);
       return;
     }
+    if (onNavigateToAction) {
+      onNavigateToAction(notification);
+      return;
+    }
     onCloseMenu?.();
+  };
+
+  const handleMarkReadOnly = (e) => {
+    e.stopPropagation();
+    onMarkAsRead(notification.id);
   };
 
   return (
@@ -568,7 +581,7 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
             : "border-slate-200 bg-white hover:bg-slate-50"
       }`}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           {isStatusChange && (
             <div className="flex items-center gap-2 flex-wrap">
@@ -612,6 +625,22 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
             )}
           </div>
         </div>
+
+        {/* Mark as read button — right side, only for unread */}
+        {unread && (
+          <button
+            type="button"
+            onClick={handleMarkReadOnly}
+            title="Mark as read"
+            className={`flex-shrink-0 self-start mt-0.5 rounded-lg px-2 py-1 text-[10px] font-semibold font-kumbh transition-colors ${
+              isDark
+                ? "bg-violet-500/20 text-violet-300 hover:bg-violet-500/35"
+                : "bg-violet-100 text-violet-600 hover:bg-violet-200"
+            }`}
+          >
+            Mark read
+          </button>
+        )}
       </div>
     </button>
   );
@@ -819,6 +848,24 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
     [isAdminUser],
   );
 
+  const handleNotificationNavigate = useCallback(
+    (notification) => {
+      const source = notification.source;
+      const type = notification.type;
+      const isIncidentType = source === "incident" || type === "incident_status_updated";
+      const isComplaintType = source === "complaint" || type === "complaint_status_updated";
+      const isResidentType = source === "resident" || type === "profile_updated";
+
+      if (isIncidentType || isComplaintType) {
+        navigate(isAdminUser ? "/admin/incidents" : "/incident-complaint/case-management");
+      } else if (isResidentType && isAdminUser) {
+        navigate("/admin/residents");
+      }
+      closeAllMenus();
+    },
+    [navigate, isAdminUser, closeAllMenus],
+  );
+
   return (
     <>
       <header className={`${t.cardBg} border-b ${t.cardBorder} shadow-sm relative z-20`}>
@@ -914,6 +961,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                             onViewRegistration={handleViewRegistration}
                             onViewProfileUpdate={handleViewProfileUpdate}
                             onCloseMenu={closeAllMenus}
+                            onNavigateToAction={handleNotificationNavigate}
                           />
                         ))
                       ) : (
