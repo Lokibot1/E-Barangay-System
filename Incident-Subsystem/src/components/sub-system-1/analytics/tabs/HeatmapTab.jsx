@@ -17,8 +17,7 @@ const verifiedMetric = baseMetrics.find((metric) => metric.key === 'verified');
 
 const MAP_METRICS = [
   ...(verifiedMetric ? [verifiedMetric] : []),
-  { key: 'total', label: 'Total' },
-  ...baseMetrics.filter((metric) => metric.key !== 'verified'),
+  ...baseMetrics.filter((metric) => metric.key !== 'verified' && metric.key !== 'unregistered'),
 ];
 
 const TABLE_ROWS = [
