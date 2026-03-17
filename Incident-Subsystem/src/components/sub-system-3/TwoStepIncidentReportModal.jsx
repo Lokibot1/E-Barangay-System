@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import TwoStepIncidentForm from "../../components/sub-system-3/TwoStepIncidentForm";
 import ProgressIndicator from "../../components/sub-system-3/ProgressIndicator";
 import Toast from "../../components/shared/modals/Toast";
+import DiscardConfirmModal from "../../components/sub-system-3/DiscardConfirmModal";
 import themeTokens from "../../Themetokens";
 import { incidentService } from "../../services/sub-system-3/incidentService";
 import { getAllCustomFields } from "../../services/sub-system-3/customFieldService";
@@ -39,6 +40,7 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const bodyRef = useRef(null);
   const [incidentTypeOptions, setIncidentTypeOptions] = useState([]);
   const [typesLoading, setTypesLoading] = useState(false);
@@ -149,14 +151,19 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
     };
   }, [isOpen]);
 
+  // ─── Request close (shows discard confirm) ──────────────────────────────────
+  const handleRequestClose = useCallback(() => {
+    if (!isSubmitting) setShowDiscardConfirm(true);
+  }, [isSubmitting]);
+
   // ─── ESC key ────────────────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === "Escape" && isOpen && !isSubmitting) onClose();
+      if (e.key === "Escape" && isOpen && !isSubmitting) handleRequestClose();
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [isOpen, onClose, isSubmitting]);
+  }, [isOpen, isSubmitting, handleRequestClose]);
 
   // ─── Input change – clears its own error ────────────────────────────────────
   const handleInputChange = (field, value) => {
@@ -253,7 +260,7 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
   };
 
   const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget && !isSubmitting) onClose();
+    if (e.target === e.currentTarget) handleRequestClose();
   };
 
   if (!isOpen) return null;
@@ -264,6 +271,14 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
         toasts={toasts}
         onRemove={removeToast}
         currentTheme={currentTheme}
+      />
+
+      <DiscardConfirmModal
+        isOpen={showDiscardConfirm}
+        onConfirm={() => { setShowDiscardConfirm(false); onClose(); }}
+        onCancel={() => setShowDiscardConfirm(false)}
+        currentTheme={currentTheme}
+        type="incident"
       />
 
       <div
@@ -310,7 +325,7 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
             </div>
 
             <button
-              onClick={onClose}
+              onClick={handleRequestClose}
               disabled={isSubmitting}
               className={`p-2 ${t.modalCloseBtnColor} ${t.modalCloseBtnHover} ${t.modalCloseBtnHoverBg} rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
               aria-label="Close modal"

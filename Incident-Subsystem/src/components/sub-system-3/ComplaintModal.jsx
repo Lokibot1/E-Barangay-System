@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import ComplaintForm from "../../components/sub-system-3/Complaintform";
 import ProgressIndicator from "../../components/sub-system-3/ProgressIndicator";
 import Toast from "../../components/shared/modals/Toast";
+import DiscardConfirmModal from "../../components/sub-system-3/DiscardConfirmModal";
 import { fileComplaint } from "../../services/sub-system-3/complaintService";
 import { getUser } from "../../homepage/services/loginService";
 import { getAllCustomFields } from "../../services/sub-system-3/customFieldService";
@@ -69,6 +70,7 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [customFieldDefs, setCustomFieldDefs] = useState([]);
 
   const totalSteps = 4;
@@ -169,14 +171,19 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
     };
   }, [isOpen]);
 
+  // ─── Request close (shows discard confirm) ──────────────────────────────────
+  const handleRequestClose = useCallback(() => {
+    if (!isSubmitting) setShowDiscardConfirm(true);
+  }, [isSubmitting]);
+
   // ─── ESC key ────────────────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === "Escape" && isOpen && !isSubmitting) onClose();
+      if (e.key === "Escape" && isOpen && !isSubmitting) handleRequestClose();
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [isOpen, onClose, isSubmitting]);
+  }, [isOpen, isSubmitting, handleRequestClose]);
 
   // ─── Input change — clears its own error ────────────────────────────────────
   const handleInputChange = (field, value) => {
@@ -291,7 +298,7 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
   };
 
   const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget && !isSubmitting) onClose();
+    if (e.target === e.currentTarget) handleRequestClose();
   };
 
   if (!isOpen) return null;
@@ -302,6 +309,14 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
         toasts={toasts}
         onRemove={removeToast}
         currentTheme={currentTheme}
+      />
+
+      <DiscardConfirmModal
+        isOpen={showDiscardConfirm}
+        onConfirm={() => { setShowDiscardConfirm(false); onClose(); }}
+        onCancel={() => setShowDiscardConfirm(false)}
+        currentTheme={currentTheme}
+        type="complaint"
       />
 
       <div
@@ -341,7 +356,7 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
             </div>
 
             <button
-              onClick={onClose}
+              onClick={handleRequestClose}
               disabled={isSubmitting}
               className="p-2 text-white hover:text-white hover:bg-white/20 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Close modal"

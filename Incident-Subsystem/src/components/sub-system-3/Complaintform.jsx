@@ -399,10 +399,13 @@ const ComplaintForm = ({
           {/* Witnesses */}
           <div>
             <label
-              className={`block text-sm font-semibold ${t.labelText} mb-3 font-kumbh`}
+              className={`block text-sm font-semibold ${t.labelText} mb-1 font-kumbh`}
             >
               {cf.witnesses}
             </label>
+            <p className={`text-xs ${t.subtleText} mb-3 font-kumbh`}>
+              Witnesses must be present and available to come to the Barangay when summoned for the appointment.
+            </p>
             <div className="space-y-3">
               {formData.witnesses.map((witness, index) => (
                 <div key={index} className="flex gap-2">
