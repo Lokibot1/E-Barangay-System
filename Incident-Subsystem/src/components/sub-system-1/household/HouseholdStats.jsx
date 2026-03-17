@@ -1,4 +1,4 @@
-/**
+﻿/**
  * HouseholdStats.jsx
  * ADDED: loading prop — renders StatSkeleton when true.
  * All original logic preserved.
@@ -68,7 +68,7 @@ const HouseholdStats = ({ stats, loading = false, t, currentTheme = 'modern' }) 
           >
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1 space-y-2 text-left">
-                <p className={`text-[11px] font-semibold uppercase tracking-[0.22em] ${t.subtleText}`}>
+                <p className={`text-[14px] font-semibold ${t.subtleText}`}>
                   {card.title}
                 </p>
                 <div className={`block w-full text-left text-3xl font-bold leading-none ${t.cardText} font-spartan sm:text-[2.15rem]`}>
@@ -92,3 +92,4 @@ const HouseholdStats = ({ stats, loading = false, t, currentTheme = 'modern' }) 
 };
 
 export default HouseholdStats;
+

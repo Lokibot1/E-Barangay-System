@@ -4,6 +4,8 @@ import themeTokens from "../../../Themetokens";
 import { getUser } from "../../../homepage/services/loginService";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
 import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
+import { analyticsService } from "../../../services/sub-system-1/analytics";
+import OverviewTab from "../../../components/sub-system-1/analytics/tabs/OverviewTab";
 import InsightsModal from "../../../components/sub-system-3/InsightsModal";
 import VolumesFactors from "../../../components/sub-system-2/factors/VolumesFactors";
 import OperationsFactors from "../../../components/sub-system-2/factors/OperationsFactors";
@@ -91,6 +93,9 @@ export default function AdminLanding() {
   const [complaints, setComplaints] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [analyticsError, setAnalyticsError] = useState(null);
   const [showKebab, setShowKebab] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
   const kebabRef = useRef(null);
@@ -144,6 +149,26 @@ export default function AdminLanding() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const fetchAnalytics = async () => {
+      setAnalyticsLoading(true);
+      setAnalyticsError(null);
+      try {
+        const result = await analyticsService.getAllData();
+        if (active) setAnalyticsData(result);
+      } catch (err) {
+        if (active) setAnalyticsError(err?.message || "Failed to fetch analytics data");
+      } finally {
+        if (active) setAnalyticsLoading(false);
+      }
+    };
+    fetchAnalytics();
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -400,6 +425,22 @@ export default function AdminLanding() {
               </button>
             </div>
           </div>
+        </section>
+
+        <section className="px-1 sm:px-1">
+          {analyticsLoading && (
+            <div className={`${cardClass} p-4 text-sm ${t.subtleText}`}>
+              Loading barangay overview...
+            </div>
+          )}
+          {!analyticsLoading && analyticsError && (
+            <div className={`${cardClass} p-4 text-sm text-red-500`}>
+              {analyticsError}
+            </div>
+          )}
+          {!analyticsLoading && !analyticsError && analyticsData && (
+            <OverviewTab raw={analyticsData} t={t} />
+          )}
         </section>
 
         <section className="px-1 sm:px-1 pt-6 sm:pt-7">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, X, LogIn, LayoutDashboard, Sun, Moon } from "lucide-react";
+import { Menu, X, LogIn, LayoutDashboard, Sun, Moon, UserPlus } from "lucide-react";
 import { isAuthenticated, isAdmin } from "../services/loginService";
 import { useBranding } from "../../context/BrandingContext";
 import logoPic from "../../assets/images/bgylogo.png";
@@ -115,13 +115,26 @@ export default function HomeNavbar({ isDarkMode, onScrollTo }) {
               Go to Portal
             </button>
           ) : (
-            <button
-              onClick={() => navigate("/login")}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all"
-            >
-              <LogIn size={14} />
-              Login
-            </button>
+            <>
+              <button
+                onClick={() => navigate("/login")}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all"
+              >
+                <LogIn size={14} />
+                Login
+              </button>
+              <button
+                onClick={() => navigate("/signup")}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all ${
+                  isDarkMode
+                    ? "border-emerald-400 text-emerald-300 hover:bg-emerald-400/10"
+                    : "border-emerald-600 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                }`}
+              >
+                <UserPlus size={14} />
+                Register
+              </button>
+            </>
           )}
         </div>
 
@@ -187,13 +200,26 @@ export default function HomeNavbar({ isDarkMode, onScrollTo }) {
                 Go to Portal
               </button>
             ) : (
-              <button
-                onClick={() => navigate("/login")}
-                className="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all"
-              >
-                <LogIn size={14} />
-                Login
-              </button>
+              <>
+                <button
+                  onClick={() => navigate("/login")}
+                  className="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all"
+                >
+                  <LogIn size={14} />
+                  Login
+                </button>
+                <button
+                  onClick={() => navigate("/signup")}
+                  className={`flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
+                    isDarkMode
+                      ? "border-emerald-400 text-emerald-300 hover:bg-emerald-400/10"
+                      : "border-emerald-600 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                  }`}
+                >
+                  <UserPlus size={14} />
+                  Register
+                </button>
+              </>
             )}
           </div>
         </div>
