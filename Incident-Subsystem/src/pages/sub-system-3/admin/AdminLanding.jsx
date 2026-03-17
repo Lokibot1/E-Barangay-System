@@ -655,7 +655,7 @@ export default function AdminLanding() {
         <section className={`${cardClass} p-4 sm:p-5 space-y-4`}>
           <div>
             <h2 className={`text-2xl font-bold ${t.cardText}`}>Issuance Application Factors</h2>
-            <p className={`text-sm mt-1 ${t.subtleText}`}>Volumes, operations, and socio-economy chart groups</p>
+            <p className={`text-sm mt-1 ${t.subtleText}`}>Volumes, operations chart groups</p>
           </div>
 
           <div>
@@ -669,8 +669,8 @@ export default function AdminLanding() {
           </div>
 
           <div>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Socio-economy</h3>
-            <SocioEconomyFactors t={t} isDark={isDark} currentTheme={currentTheme} />
+            {/* <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>Socio-economy</h3> */}
+            {/* <SocioEconomyFactors t={t} isDark={isDark} currentTheme={currentTheme} /> */}
           </div>
         </section>
       </div>

@@ -1,89 +1,93 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { transactionRequests, totalTransactionCount } from "./data";
+import Swal from "sweetalert2";
 import themeTokens from "../../../Themetokens";
 
+// Constants
 const ROWS_PER_PAGE = 10;
-
 const statusTabs = ["All", "Pending", "Paid"];
-
 const STATUS_TAB_CONFIG = {
   All:      { bg: "bg-gray-700",    text: "text-white", border: "border-gray-700" },
   Pending:  { bg: "bg-amber-500",   text: "text-white", border: "border-amber-500" },
   Paid:     { bg: "bg-emerald-600", text: "text-white", border: "border-emerald-600" },
-  Failed:   { bg: "bg-red-600",     text: "text-white", border: "border-red-600" },
-  Refunded: { bg: "bg-sky-500",     text: "text-white", border: "border-sky-500" },
 };
 
+// Helpers
 const toDate = (dateText) => {
-  const [month, day, year] = dateText.split("/").map(Number);
-  const parsed = new Date(year, month - 1, day);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
+  const d = new Date(dateText);
+  return isNaN(d.getTime()) ? null : d;
 };
 
-const toAmount = (amountText) =>
-  Number(String(amountText || "0").replace(/[^\d.]/g, ""));
+const toAmount = (amountText) => Number(String(amountText || "0").replace(/[^\d.]/g, ""));
 
-const avatarPalette = [
-  "bg-indigo-500", "bg-emerald-500", "bg-rose-500", "bg-amber-500",
-  "bg-sky-500",    "bg-violet-500",  "bg-teal-500", "bg-fuchsia-500",
-];
+const avatarPalette = ["bg-indigo-500", "bg-emerald-500", "bg-rose-500", "bg-amber-500","bg-sky-500","bg-violet-500","bg-teal-500","bg-fuchsia-500"];
 
 const getInitials = (fullName) => {
   const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "--";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  if (!parts.length) return "--";
+  if (parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length-1][0]}`.toUpperCase();
 };
 
 const getAvatarClass = (fullName) => {
-  const seed = Array.from(String(fullName || "")).reduce(
-    (sum, ch) => sum + ch.charCodeAt(0),
-    0,
-  );
+  const seed = Array.from(String(fullName || "")).reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
   return avatarPalette[seed % avatarPalette.length];
 };
 
+// Components
 const PaymentStatusBadge = ({ status }) => {
   const styleMap = {
     Pending:  "bg-amber-100 text-amber-700 border-amber-200",
     Paid:     "bg-emerald-100 text-emerald-700 border-emerald-200",
-    Failed:   "bg-red-100 text-red-700 border-red-200",
-    Refunded: "bg-sky-100 text-sky-700 border-sky-200",
   };
   return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-kumbh ${styleMap[status] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}
-    >
+    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-kumbh ${styleMap[status] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}>
       {status}
     </span>
   );
 };
 
-const PreviewField = ({ label, value, mono = false, t }) => (
+const PreviewField = ({ label, value, mono=false, t }) => (
   <div>
-    <p className={`text-[10px] font-kumbh font-bold uppercase tracking-widest ${t.subtleText}`}>
-      {label}
-    </p>
-    <p className={`mt-0.5 text-sm font-kumbh font-medium ${t.cardText} ${mono ? "font-mono" : ""}`}>
-      {value}
-    </p>
+    <p className={`text-[10px] font-kumbh font-bold uppercase tracking-widest ${t.subtleText}`}>{label}</p>
+    <p className={`mt-0.5 text-sm font-kumbh font-medium ${t.cardText} ${mono ? "font-mono" : ""}`}>{value}</p>
   </div>
 );
 
 const TransactionsTable = () => {
-  const [currentTheme, setCurrentTheme] = useState(
-    () => localStorage.getItem("appTheme") || "modern",
-  );
-
+  // Theme
+  const [currentTheme, setCurrentTheme] = useState(localStorage.getItem("appTheme") || "modern");
   useEffect(() => {
     const handler = (e) => setCurrentTheme(e.detail);
     window.addEventListener("themeChange", handler);
     return () => window.removeEventListener("themeChange", handler);
   }, []);
-
   const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
 
+  // Data state
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+  const fetchTransactions = async () => {
+    try {
+      const res = await fetch("http://127.0.0.1:8001/api/transactions");
+      const data = await res.json();
+
+      // Exclude rejected transactions
+      const filtered = data.filter(tx => tx.status !== "Rejected");
+      setTransactions(filtered);
+
+    } catch (err) {
+      console.error("Failed to fetch transactions:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchTransactions();
+}, []);
+
+  // Table states
   const [activeStatus, setActiveStatus] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -92,178 +96,106 @@ const TransactionsTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPaymentId, setSelectedPaymentId] = useState(null);
 
+  // Status counts
   const statusCounts = useMemo(() => {
-    const counts = { All: transactionRequests.length, Pending: 0, Paid: 0, Failed: 0, Refunded: 0 };
-    transactionRequests.forEach((item) => {
-      if (counts[item.status] !== undefined) counts[item.status] += 1;
-    });
+    const counts = { All: transactions.length, Pending: 0, Paid: 0};
+    transactions.forEach(item => { if (counts[item.status] !== undefined) counts[item.status] += 1; });
     return counts;
-  }, []);
+  }, [transactions]);
 
+  // Filtered & sorted rows
   const visibleRows = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
     const start = startDate ? new Date(startDate) : null;
     const end = endDate ? new Date(endDate) : null;
-    if (start) start.setHours(0, 0, 0, 0);
-    if (end) end.setHours(23, 59, 59, 999);
+    if (start) start.setHours(0,0,0,0);
+    if (end) end.setHours(23,59,59,999);
 
-    const rows = transactionRequests.filter((row) => {
+    const rows = transactions.filter(row => {
       const rowDate = toDate(row.date);
-      const matchesStatus = activeStatus === "All" || row.status === activeStatus;
-      const matchesSearch =
-        query.length === 0 ||
-        row.documentType.toLowerCase().includes(query) ||
-        row.payee.toLowerCase().includes(query) ||
-        row.paymentId.toLowerCase().includes(query);
+      const matchesStatus = activeStatus==="All" || row.status===activeStatus;
+      const matchesSearch = !query.length || row.documentType.toLowerCase().includes(query) || row.full_name.toLowerCase().includes(query) || row.paymentId.toLowerCase().includes(query);
       const matchesStart = !start || (rowDate && rowDate >= start);
       const matchesEnd = !end || (rowDate && rowDate <= end);
       return matchesStatus && matchesSearch && matchesStart && matchesEnd;
     });
 
-    rows.sort((a, b) => {
-      if (sortByDate === "amount-desc") return toAmount(b.amount) - toAmount(a.amount);
-      if (sortByDate === "type-asc") return a.documentType.localeCompare(b.documentType);
-      if (sortByDate === "type-desc") return b.documentType.localeCompare(a.documentType);
-      const dateA = toDate(a.date)?.getTime() ?? 0;
-      const dateB = toDate(b.date)?.getTime() ?? 0;
-      return sortByDate === "oldest" ? dateA - dateB : dateB - dateA;
+    rows.sort((a,b)=>{
+      if(sortByDate==="amount-desc") return toAmount(b.amount)-toAmount(a.amount);
+      if(sortByDate==="type-asc") return a.documentType.localeCompare(b.documentType);
+      if(sortByDate==="type-desc") return b.documentType.localeCompare(a.documentType);
+      const dateA = toDate(a.date)?.getTime()??0;
+      const dateB = toDate(b.date)?.getTime()??0;
+      return sortByDate==="oldest"? dateA-dateB : dateB-dateA;
     });
 
     return rows;
-  }, [activeStatus, searchTerm, startDate, endDate, sortByDate]);
+  }, [transactions, activeStatus, searchTerm, startDate, endDate, sortByDate]);
 
   const totalPages = Math.ceil(visibleRows.length / ROWS_PER_PAGE);
-
   const paginatedRows = useMemo(() => {
-    const start = (currentPage - 1) * ROWS_PER_PAGE;
-    return visibleRows.slice(start, start + ROWS_PER_PAGE);
+    const start = (currentPage-1)*ROWS_PER_PAGE;
+    return visibleRows.slice(start, start+ROWS_PER_PAGE);
   }, [visibleRows, currentPage]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeStatus, searchTerm, startDate, endDate, sortByDate]);
+  useEffect(()=>{ setCurrentPage(1); }, [activeStatus, searchTerm, startDate, endDate, sortByDate]);
 
-  const selectedRow = useMemo(() => {
-    if (!selectedPaymentId) return null;
-    return visibleRows.find((row) => row.paymentId === selectedPaymentId) ?? null;
+  const selectedRow = useMemo(()=>{
+    if(!selectedPaymentId) return null;
+    return visibleRows.find(r=>r.paymentId===selectedPaymentId) ?? null;
   }, [selectedPaymentId, visibleRows]);
 
+  // Render
   return (
     <div className={`min-h-full ${t.pageBg} pb-10`}>
       <div className="w-full px-3 sm:px-4 lg:px-5 py-6">
 
-        {/* ── Page Header ─────────────────────────────────────────── */}
+        {/* Header */}
         <div className="flex items-center gap-4 mb-6">
-          <div
-            className={`w-12 h-12 ${isDark ? "bg-slate-700" : "bg-gray-200"} rounded-lg flex items-center justify-center flex-shrink-0`}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              className={`w-7 h-7 ${isDark ? "text-slate-300" : "text-gray-600"}`}
-              strokeWidth="2"
-            >
+          <div className={`w-12 h-12 ${isDark?"bg-slate-700":"bg-gray-200"} rounded-lg flex items-center justify-center flex-shrink-0`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={`w-7 h-7 ${isDark?"text-slate-300":"text-gray-600"}`} strokeWidth="2">
               <path d="M8 7h8M8 11h8M8 15h5" />
               <rect x="4" y="3" width="16" height="18" rx="2" />
             </svg>
           </div>
-          <h1
-            className={`text-2xl sm:text-3xl font-bold ${t.cardText} font-spartan uppercase`}
-          >
-            Payments Management
-          </h1>
+          <h1 className={`text-2xl sm:text-3xl font-bold ${t.cardText} font-spartan uppercase`}>Payments Management</h1>
         </div>
 
-        {/* ── Content (table + slide-in preview pane) ──────────────── */}
+        {/* Table + Preview */}
         <div className="flex items-start gap-6">
-          {/* ── Table Card ─────────────────────────────────────────── */}
-          <div
-            className={`flex-1 min-w-0 ${t.cardBg} border ${t.cardBorder} rounded-2xl shadow-lg overflow-hidden`}
-          >
+          {/* Table card */}
+          <div className={`flex-1 min-w-0 ${t.cardBg} border ${t.cardBorder} rounded-2xl shadow-lg overflow-hidden`}>
+
             {/* Status Tabs */}
             <div className="flex flex-wrap gap-2 px-5 pt-5">
-              {statusTabs.map((tab) => {
+              {statusTabs.map(tab=>{
                 const cfg = STATUS_TAB_CONFIG[tab];
-                const active = tab === activeStatus;
-                return (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveStatus(tab)}
-                    className={`px-4 py-2 rounded-lg text-xs font-bold font-kumbh uppercase tracking-wide border-2 transition-all ${
-                      active
-                        ? `${cfg.bg} ${cfg.text} ${cfg.border} shadow-md`
-                        : isDark
-                          ? "bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-200 hover:text-slate-800 hover:border-slate-400"
-                          : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    {tab} ({statusCounts[tab] ?? 0})
-                  </button>
-                );
+                const active = tab===activeStatus;
+                return <button key={tab} onClick={()=>setActiveStatus(tab)} className={`px-4 py-2 rounded-lg text-xs font-bold font-kumbh uppercase tracking-wide border-2 transition-all ${active?`${cfg.bg} ${cfg.text} ${cfg.border} shadow-md`:isDark?"bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-200 hover:text-slate-800 hover:border-slate-400":"bg-white text-gray-500 border-gray-200 hover:border-gray-300"}`}>{tab} ({statusCounts[tab]??0})</button>
               })}
             </div>
 
-            {/* Search + Filters */}
+            {/* Filters */}
             <div className="px-5 pt-5 pb-3">
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="flex-1">
-                  <label
-                    className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
-                  >
-                    Search
-                  </label>
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search by type, payee, payment ID..."
-                    className={`w-full px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-kumbh`}
-                  />
+                  <label className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}>Search</label>
+                  <input type="text" value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} placeholder="Search by type, payee, payment ID..." className={`w-full px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-kumbh`} />
                 </div>
                 <div>
-                  <label
-                    className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
-                  >
-                    Sort
-                  </label>
-                  <select
-                    value={sortByDate}
-                    onChange={(e) => setSortByDate(e.target.value)}
-                    className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-kumbh`}
-                  >
-                    <option value="newest">Newest First</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="amount-desc">Highest Amount</option>
-                    <option value="type-asc">Document Type (A-Z)</option>
-                    <option value="type-desc">Document Type (Z-A)</option>
-                  </select>
+                  <label className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}>Sort</label>
+                  <select value={sortByDate} onChange={e=>setSortByDate(e.target.value)} className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-kumbh`}>
+                    <option value="newest">Date (DESC)</option>
+                    <option value="oldest">Date (ASC)</option>
+                    </select>
                 </div>
                 <div>
-                  <label
-                    className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
-                  >
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-kumbh`}
-                  />
+                  <label className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}>Start Date</label>
+                  <input type="date" value={startDate} onChange={e=>setStartDate(e.target.value)} className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-kumbh`} />
                 </div>
                 <div>
-                  <label
-                    className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
-                  >
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-kumbh`}
-                  />
+                  <label className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}>End Date</label>
+                  <input type="date" value={endDate} onChange={e=>setEndDate(e.target.value)} className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-kumbh`} />
                 </div>
               </div>
             </div>
@@ -272,178 +204,141 @@ const TransactionsTable = () => {
             <div className="overflow-x-auto px-5 pb-5">
               <table className="w-full text-sm font-kumbh table-fixed">
                 <thead>
-                  <tr
-                    className={`${isDark ? "bg-slate-700 border-y border-slate-600" : "bg-gray-100 border-y border-gray-200"}`}
-                  >
-                    <th
-                      className={`text-center px-3 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[6%]`}
-                    >
-                      #
-                    </th>
-                    <th
-                      className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[24%]`}
-                    >
-                      Document Type
-                    </th>
-                    <th
-                      className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[15%]`}
-                    >
-                      Date
-                    </th>
-                    <th
-                      className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[22%]`}
-                    >
-                      Payer
-                    </th>
-                    <th
-                      className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[15%]`}
-                    >
-                      Status
-                    </th>
-                    <th
-                      className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-[18%]`}
-                    >
-                      Payment ID
-                    </th>
+                  <tr className={`${isDark?"bg-slate-700 border-y border-slate-600":"bg-gray-100 border-y border-gray-200"}`}>
+                    <th className={`text-center px-3 py-3 text-xs font-bold ${isDark?"text-slate-300":"text-gray-600"} uppercase w-[5%]`}>#</th>
+                    <th className={`text-left px-4 py-3 text-xs font-bold ${isDark?"text-slate-300":"text-gray-600"} uppercase w-[20%]`}>Document Type</th>
+                    <th className={`text-left px-4 py-3 text-xs font-bold ${isDark?"text-slate-300":"text-gray-600"} uppercase w-[12%]`}>Date</th>
+                    <th className={`text-left px-4 py-3 text-xs font-bold ${isDark?"text-slate-300":"text-gray-600"} uppercase w-[20%]`}>Payer</th>
+                    <th className={`text-left px-4 py-3 text-xs font-bold ${isDark?"text-slate-300":"text-gray-600"} uppercase w-[12%]`}>Status</th>
+                    <th className={`text-left px-4 py-3 text-xs font-bold ${isDark?"text-slate-300":"text-gray-600"} uppercase w-[15%]`}>Payment ID</th>
+                    <th className={`text-left px-4 py-3 text-xs font-bold ${isDark?"text-slate-300":"text-gray-600"} uppercase w-[16%]`}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedRows.length > 0 ? (
-                    paginatedRows.map((row, index) => {
-                      const isActive = selectedRow?.paymentId === row.paymentId;
+                  {loading ? (
+                    <tr><td colSpan={7} className={`px-4 py-8 text-center ${t.subtleText}`}>Loading...</td></tr>
+                  ) : paginatedRows.length > 0 ? (
+                    paginatedRows.map((row,index)=>{
+                      const isActive = selectedRow?.paymentId===row.paymentId;
                       return (
-                        <tr
-                          key={`${row.paymentId}-${index}`}
-                          onClick={() =>
-                            setSelectedPaymentId((prev) =>
-                              prev === row.paymentId ? null : row.paymentId,
-                            )
-                          }
-                          className={`border-b ${t.cardBorder} transition-colors cursor-pointer ${
-                            isActive
-                              ? isDark ? "bg-slate-600" : "bg-slate-50"
-                              : isDark ? "hover:bg-slate-600" : "hover:bg-gray-50"
-                          }`}
-                        >
-                          <td className={`text-center px-3 py-3 ${t.cardText}`}>
-                            {(currentPage - 1) * ROWS_PER_PAGE + index + 1}
-                          </td>
-                          <td className={`text-left px-4 py-3 ${t.cardText} truncate`}>
-                            {row.documentType}
-                          </td>
-                          <td className={`text-left px-4 py-3 ${t.cardText} whitespace-nowrap`}>
-                            {row.date}
-                          </td>
-                          <td className={`text-left px-4 py-3 ${t.cardText} truncate`}>
-                            {row.payee}
-                          </td>
+                        <tr key={`${row.paymentId}-${index}`} onClick={()=>setSelectedPaymentId(prev=>prev===row.paymentId?null:row.paymentId)} className={`border-b ${t.cardBorder} transition-colors cursor-pointer ${isActive?isDark?"bg-slate-600":"bg-slate-50":isDark?"hover:bg-slate-600":"hover:bg-gray-50"}`}>
+                          <td className={`text-center px-3 py-3 ${t.cardText}`}>{(currentPage-1)*ROWS_PER_PAGE+index+1}</td>
+                          <td className={`text-left px-4 py-3 ${t.cardText} truncate`}>{row.documentType}</td>
+                          <td className={`text-left px-4 py-3 ${t.cardText} whitespace-nowrap`}>{new Date(row.date).toLocaleDateString()}</td>
+                          <td className={`text-left px-4 py-3 ${t.cardText} truncate`}>{row.full_name}</td>
+                          <td className="text-left px-4 py-3"><PaymentStatusBadge status={row.status}/></td>
+                          <td className={`text-left px-4 py-3 font-bold ${t.cardText}`}>{row.paymentId}</td>
                           <td className="text-left px-4 py-3">
-                            <PaymentStatusBadge status={row.status} />
-                          </td>
-                          <td className={`text-left px-4 py-3 font-bold ${t.cardText}`}>
-                            {row.paymentId}
+                            {row.status !== "Paid" && (
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    const confirmResult = await Swal.fire({
+                                      icon: "question",
+                                      title: "Mark payment as paid?",
+                                      text: `Payment ID: ${row.paymentId}`,
+                                      showCancelButton: true,
+                                      confirmButtonText: "Yes, mark paid",
+                                      cancelButtonText: "Cancel",
+                                      confirmButtonColor: "#059669",
+                                      cancelButtonColor: "#64748b",
+                                      reverseButtons: true,
+                                    });
+
+                                    if (!confirmResult.isConfirmed) {
+                                      return;
+                                    }
+
+                                    const res = await fetch(`http://127.0.0.1:8001/api/transactions/${row.paymentId}/mark-paid`, {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json" },
+                                    });
+                                    if(!res.ok) throw new Error("Failed to mark as paid");
+                                    setTransactions(prev =>
+                                      prev.map(tx => tx.paymentId === row.paymentId ? { ...tx, status: "Paid" } : tx)
+                                    );
+
+                                    await Swal.fire({
+                                      icon: "success",
+                                      title: "Payment marked as paid",
+                                      text: `Payment ${row.paymentId} updated successfully.`,
+                                      confirmButtonColor: "#059669",
+                                    });
+                                  } catch(err) {
+                                    console.error(err);
+                                    await Swal.fire({
+                                      icon: "error",
+                                      title: "Update failed",
+                                      text: err.message || "Failed to update status.",
+                                      confirmButtonColor: "#dc2626",
+                                    });
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-semibold hover:bg-emerald-600 transition"
+                              >
+                                Mark Paid
+                              </button>
+                            )}
                           </td>
                         </tr>
                       );
                     })
                   ) : (
-                    <tr>
-                      <td
-                        colSpan={6}
-                        className={`px-4 py-8 text-center ${t.subtleText} font-kumbh`}
-                      >
-                        No transactions found for the selected filters.
-                      </td>
-                    </tr>
+                    <tr><td colSpan={7} className={`px-4 py-8 text-center ${t.subtleText}`}>No transactions found for the selected filters.</td></tr>
                   )}
                 </tbody>
               </table>
 
               {/* Pagination */}
-              {totalPages > 1 && (
-                <div
-                  className={`flex items-center justify-between pt-4 border-t ${isDark ? "border-slate-700" : "border-gray-100"} mt-2`}
-                >
-                  <p className={`text-xs ${t.subtleText} font-kumbh`}>
-                    Showing {(currentPage - 1) * ROWS_PER_PAGE + 1}–
-                    {Math.min(currentPage * ROWS_PER_PAGE, visibleRows.length)} of{" "}
-                    {visibleRows.length} results
-                  </p>
+              {totalPages>1 && (
+                <div className={`flex items-center justify-between pt-4 border-t ${isDark?"border-slate-700":"border-gray-100"} mt-2`}>
+                  <p className={`text-xs ${t.subtleText} font-kumbh`}>Showing {(currentPage-1)*ROWS_PER_PAGE+1}-{Math.min(currentPage*ROWS_PER_PAGE,visibleRows.length)} of {visibleRows.length} results</p>
                   <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-kumbh font-semibold transition-colors ${
-                        currentPage === 1
-                          ? isDark
-                            ? "text-slate-600 cursor-not-allowed"
-                            : "text-gray-300 cursor-not-allowed"
-                          : isDark
-                            ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800"
-                            : "text-gray-600 hover:bg-gray-100"
-                      }`}
-                    >
-                      Prev
-                    </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button onClick={()=>setCurrentPage(p=>Math.max(1,p-1))} disabled={currentPage===1} className={`px-3 py-1.5 rounded-lg text-xs font-kumbh font-semibold transition-colors ${currentPage===1?isDark?"text-slate-600 cursor-not-allowed":"text-gray-300 cursor-not-allowed":isDark?"text-slate-300 hover:bg-slate-200 hover:text-slate-800":"text-gray-600 hover:bg-gray-100"}`}>Prev</button>
+                    {Array.from({length:totalPages                    }, (_, i) => i + 1).map(page => (
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`w-8 h-8 rounded-lg text-xs font-kumbh font-bold transition-colors ${
-                          page === currentPage
-                            ? "bg-slate-700 text-white"
-                            : isDark
-                              ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800"
-                              : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                        className={`w-8 h-8 rounded-lg text-xs font-kumbh font-bold transition-colors ${page === currentPage ? "bg-slate-700 text-white" : isDark ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800" : "text-gray-600 hover:bg-gray-100"}`}
                       >
                         {page}
                       </button>
                     ))}
                     <button
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-kumbh font-semibold transition-colors ${
-                        currentPage === totalPages
-                          ? isDark
-                            ? "text-slate-600 cursor-not-allowed"
-                            : "text-gray-300 cursor-not-allowed"
-                          : isDark
-                            ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800"
-                            : "text-gray-600 hover:bg-gray-100"
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-kumbh font-semibold transition-colors ${currentPage === totalPages ? isDark ? "text-slate-600 cursor-not-allowed" : "text-gray-300 cursor-not-allowed" : isDark ? "text-slate-300 hover:bg-slate-200 hover:text-slate-800" : "text-gray-600 hover:bg-gray-100"}`}
                     >
                       Next
                     </button>
                   </div>
                 </div>
               )}
-
-              {/* Row count */}
-              {totalPages <= 1 && (
-                <p className={`pt-3 text-xs ${t.subtleText} font-kumbh`}>
-                  Showing {visibleRows.length} of {totalTransactionCount} entries
-                </p>
-              )}
             </div>
           </div>
 
-          {/* ── Preview Pane (slide in/out) ───────────────────────────── */}
+          {/* Preview pane */}
           <div
-            className={`flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
-              selectedRow
-                ? "w-[300px] opacity-100"
-                : "w-0 opacity-0 pointer-events-none"
-            }`}
+            className={`flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${selectedRow ? "w-[300px] opacity-100" : "w-0 opacity-0 pointer-events-none"}`}
           >
-            {/* Inner card — fixed width so content never reflows during animation */}
             <div className={`w-[300px] ${t.cardBg} border ${t.cardBorder} rounded-2xl shadow-lg flex flex-col`}>
 
               {/* Panel header */}
               <div className={`flex items-center justify-between px-5 py-4 border-b ${t.cardBorder}`}>
                 <div className="flex items-center gap-2">
-                  <svg className={`w-4 h-4 ${t.subtleText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    className={`w-4 h-4 ${t.subtleText}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                   <span className={`text-xs font-spartan font-bold uppercase tracking-widest ${t.subtleText}`}>
                     Transaction Detail
@@ -454,37 +349,43 @@ const TransactionsTable = () => {
                   className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-700" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"}`}
                   aria-label="Close panel"
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <svg
+                    className="w-3.5 h-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2.5}
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
 
-              {/* Avatar + name section */}
+              {/* Avatar + Name */}
               <div className={`flex flex-col items-center text-center px-5 py-6 border-b ${t.cardBorder}`}>
-                <span className={`inline-flex h-16 w-16 items-center justify-center rounded-full text-xl font-spartan font-bold text-white shadow-md ${getAvatarClass(selectedRow?.payee ?? "")}`}>
-                  {getInitials(selectedRow?.payee ?? "")}
+                <span
+                  className={`inline-flex h-16 w-16 items-center justify-center rounded-full text-xl font-spartan font-bold text-white shadow-md ${getAvatarClass(selectedRow?.full_name ?? "")}`}
+                >
+                  {getInitials(selectedRow?.full_name ?? "")}
                 </span>
                 <p className={`mt-3 text-base font-spartan font-bold ${t.cardText} leading-tight`}>
-                  {selectedRow?.payee}
+                  {selectedRow?.full_name}
                 </p>
                 <p className={`text-xs font-kumbh ${t.subtleText} mt-0.5`}>Payer</p>
               </div>
 
-              {/* Amount highlight */}
+              {/* Amount & Status */}
               <div className={`flex flex-col items-center py-5 border-b ${t.cardBorder} ${isDark ? "bg-slate-700/50" : "bg-gray-50"}`}>
-                <p className={`text-[10px] font-kumbh font-bold uppercase tracking-widest ${t.subtleText} mb-1`}>
-                  Amount
-                </p>
+                <p className={`text-[10px] font-kumbh font-bold uppercase tracking-widest ${t.subtleText} mb-1`}>Amount</p>
                 <p className={`text-3xl font-spartan font-bold ${t.cardText} leading-none`}>
-                  {selectedRow?.amount ?? "—"}
+                  {selectedRow?.amount ?? "100"}
                 </p>
                 <div className="mt-3">
                   <PaymentStatusBadge status={selectedRow?.status ?? ""} />
                 </div>
               </div>
 
-              {/* Detail fields */}
+              {/* Detail Fields */}
               <div className="px-5 py-5 flex flex-col gap-4">
                 <PreviewField label="Document Type" value={selectedRow?.documentType ?? "—"} t={t} />
                 <PreviewField label="Date" value={selectedRow?.date ?? "—"} t={t} />
@@ -494,12 +395,9 @@ const TransactionsTable = () => {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );
 };
 
 export default TransactionsTable;
-
-

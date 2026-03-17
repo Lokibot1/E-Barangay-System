@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import Swal from "sweetalert2";
 import themeTokens from "../../Themetokens";
 
 // ── Constants ────────────────────────────────────────────────
@@ -35,6 +36,23 @@ const StatusBadge = ({ status }) => {
 
 const IconActionButtons = ({ isDark, referenceNumber, onPreview, onStatusUpdated }) => {
   const updateStatus = async (action) => {
+    const isVerifyAction = action === "verify";
+    const confirmResult = await Swal.fire({
+      icon: "question",
+      title: `${isVerifyAction ? "Verify" : "Reject"} request?`,
+      text: `Reference # ${referenceNumber}`,
+      showCancelButton: true,
+      confirmButtonText: isVerifyAction ? "Yes, verify" : "Yes, reject",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: isVerifyAction ? "#16a34a" : "#dc2626",
+      cancelButtonColor: "#64748b",
+      reverseButtons: true,
+    });
+
+    if (!confirmResult.isConfirmed) {
+      return;
+    }
+
     const url = `http://127.0.0.1:8001/api/documents/${referenceNumber}/${action}`;
     try {
       const res = await fetch(url, { method: "POST" });
@@ -43,9 +61,22 @@ const IconActionButtons = ({ isDark, referenceNumber, onPreview, onStatusUpdated
 
       const newStatus = action === "verify" ? "Verified" : "Rejected";
       onStatusUpdated(referenceNumber, newStatus);
-      alert(data.message);
+
+      await Swal.fire({
+        icon: "success",
+        title: `Request ${newStatus.toLowerCase()}`,
+        text: data.message || `The request has been ${newStatus.toLowerCase()} successfully.`,
+        confirmButtonColor: isVerifyAction ? "#16a34a" : "#dc2626",
+      });
+
+      window.location.reload();
     } catch (err) {
-      alert(err.message);
+      await Swal.fire({
+        icon: "error",
+        title: "Update failed",
+        text: err.message || "Failed to update status.",
+        confirmButtonColor: "#dc2626",
+      });
     }
   };
 
@@ -259,7 +290,13 @@ const DocumentsInquiryPage = () => {
                 <p><strong>Document:</strong> {previewData.documentType}</p>
                 <p><strong>Contact:</strong> {previewData.contact_number}</p>
                 <p><strong>Status:</strong> {previewData.status}</p>
-                <p><strong>Submitted:</strong> {new Date(previewData.dateSubmitted).toLocaleDateString()}</p>
+                {previewData.documentType !== "Barangay ID" && 
+ previewData.documentType !== "Certificate of Residency" && (
+  <p>
+    <strong>Purpose of Request:</strong> {previewData.purpose_of_request}
+  </p>
+)}
+<p><strong>Submitted:</strong> {new Date(previewData.dateSubmitted).toLocaleDateString()}</p>
               </div>
               <div className="flex justify-end mt-5">
                 <button onClick={() => setShowPreview(false)} className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">Close</button>
