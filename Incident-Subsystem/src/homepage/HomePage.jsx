@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useBranding } from "../context/BrandingContext";
 
 import bsbPic from "../assets/images/bgygulod.png";
 import logoPic from "../assets/images/bgylogo.png";
@@ -10,6 +11,7 @@ import EventsCalendarSection from "./components/EventsCalendarSection";
 import FAQSection from "./components/FAQSection";
 import HeroSection from "./components/HeroSection";
 import HomeFooter from "./components/HomeFooter";
+import HomeNavbar from "./components/HomeNavbar";
 import NewsModal from "./components/NewsModal";
 import OfficialsSection from "./components/OfficialsSection";
 import ServiceCard from "./components/ServiceCard";
@@ -39,6 +41,8 @@ export default function HomePage() {
   const [selectedNews, setSelectedNews] = useState(null);
   const [contactData, setContactData] = useState({ name: "", email: "", message: "" });
   const [formStatus, setFormStatus] = useState("idle");
+  const { logoDataUrl } = useBranding();
+  const logoSrc = logoDataUrl || logoPic;
 
   const navigate = useNavigate();
 
@@ -71,6 +75,8 @@ export default function HomePage() {
         isDarkMode ? "bg-slate-950 text-white" : "bg-white text-slate-900"
       }`}
     >
+      <HomeNavbar isDarkMode={isDarkMode} onScrollTo={scrollToSection} />
+
       <HeroSection
         isDarkMode={isDarkMode}
         backgroundImage={bsbPic}
@@ -126,7 +132,7 @@ export default function HomePage() {
 
       <HomeFooter
         isDarkMode={isDarkMode}
-        logoSrc={logoPic}
+        logoSrc={logoSrc}
         socialLinks={socialLinks}
         onNewsClick={() => scrollToSection("news")}
         onCitizenPortalClick={() => navigate("/sub-system-2")}

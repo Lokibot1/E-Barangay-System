@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import themeTokens from "../../../Themetokens";
+import DatePickerField from "../../shared/DatePickerField";
 
 // Constants
 const ROWS_PER_PAGE = 10;
@@ -190,12 +191,36 @@ const TransactionsTable = () => {
                     </select>
                 </div>
                 <div>
-                  <label className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}>Start Date</label>
-                  <input type="date" value={startDate} onChange={e=>setStartDate(e.target.value)} className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-kumbh`} />
+                  <label
+                    className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
+                  >
+                    Start Date
+                  </label>
+                  <DatePickerField
+                    value={startDate}
+                    onChange={setStartDate}
+                    placeholder="mm/dd/yyyy"
+                    ariaLabel="Start Date"
+                    isDark={isDark}
+                    t={t}
+                    triggerClassName={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm font-kumbh focus:outline-none focus:ring-2 focus:ring-blue-500 inline-flex items-center justify-between gap-2`}
+                  />
                 </div>
                 <div>
-                  <label className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}>End Date</label>
-                  <input type="date" value={endDate} onChange={e=>setEndDate(e.target.value)} className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-kumbh`} />
+                  <label
+                    className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
+                  >
+                    End Date
+                  </label>
+                  <DatePickerField
+                    value={endDate}
+                    onChange={setEndDate}
+                    placeholder="mm/dd/yyyy"
+                    ariaLabel="End Date"
+                    isDark={isDark}
+                    t={t}
+                    triggerClassName={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm font-kumbh focus:outline-none focus:ring-2 focus:ring-blue-500 inline-flex items-center justify-between gap-2`}
+                  />
                 </div>
               </div>
             </div>

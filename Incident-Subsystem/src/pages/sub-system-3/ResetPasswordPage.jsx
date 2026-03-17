@@ -4,6 +4,7 @@ import { ArrowLeft, Loader2, Sun, Moon } from "lucide-react";
 import themeTokens from "../../Themetokens";
 import InputField from "../../components/shared/InputField";
 import Toast from "../../components/shared/modals/Toast";
+import { useBranding } from "../../context/BrandingContext";
 import { resetPassword } from "../../homepage/services/loginService";
 import bsbPic from "../../assets/images/bgygulod.png";
 import bgyLogo from "../../assets/images/bgylogo.png";
@@ -29,6 +30,8 @@ const ResetPasswordPage = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const { logoDataUrl } = useBranding();
+  const logoSrc = logoDataUrl || bgyLogo;
 
   // Always show light mode on public pages
   useEffect(() => { setIsDarkMode(false); }, []);
@@ -176,7 +179,7 @@ const ResetPasswordPage = () => {
                       isDarkMode ? "border-white/20 bg-white/95" : "border-slate-200 bg-white"
                     }`}
                   >
-                    <img src={bgyLogo} alt="Barangay Gulod Logo" className="w-full h-full object-cover rounded-full" />
+                    <img src={logoSrc} alt="Barangay Gulod Logo" className="w-full h-full object-cover rounded-full" />
                   </div>
                   <h2 className={`text-3xl sm:text-4xl font-black uppercase leading-[0.95] tracking-tight font-spartan ${t.primaryText}`}>
                     Barangay<br />Gulod<br />Novaliches

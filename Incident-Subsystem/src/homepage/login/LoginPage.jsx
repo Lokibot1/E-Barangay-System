@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, useLocation } from "react-router-dom";
 import {
   Sun, Moon, Loader2, CheckCircle2, Download,
   ArrowLeft, Search, Info,
@@ -15,6 +15,7 @@ import {
 import themeTokens from "../../Themetokens";
 import ForgotPasswordModal from "../../components/shared/ForgotPasswordModal";
 import Toast from "../../components/shared/modals/Toast";
+import { useBranding } from "../../context/BrandingContext";
 
 import LoginForm from "./LogInForm";
 import { useAuthLogic } from "../hooks/useAuthLogic";
@@ -33,8 +34,11 @@ const THEME_PRIMARY_CSS = {
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from; // 'signup' when coming from signup page
   const [currentTheme] = useState(() => localStorage.getItem("appTheme") || "blue");
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [slidingOut, setSlidingOut] = useState(false);
 
   // -- Login-specific state --
   const [email, setEmail] = useState("");
@@ -44,6 +48,8 @@ const LoginPage = () => {
   const [loginLoading, setLoginLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const { logoDataUrl } = useBranding();
+  const logoSrc = logoDataUrl || bgyLogo;
 
   const addToast = (toast) => setToasts((prev) => [...prev, { ...toast, id: Date.now() }]);
   const removeToast = (id) => setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -62,15 +68,16 @@ const LoginPage = () => {
     return <Navigate to={isAdmin() ? "/admin" : "/sub-system-2"} replace />;
   }
 
-  const t = themeTokens[currentTheme];
-  const primaryCss = THEME_PRIMARY_CSS[currentTheme] || THEME_PRIMARY_CSS.blue;
+  const lightTheme = currentTheme === "dark" ? "modern" : currentTheme;
+  const t = isDarkMode ? themeTokens.dark : (themeTokens[lightTheme] || themeTokens.modern);
+  const primaryCss = isDarkMode ? "#475569" : (THEME_PRIMARY_CSS[lightTheme] || THEME_PRIMARY_CSS.blue);
   const panelClass = isDarkMode
-    ? "bg-slate-900/95 border-white/10 text-white"
+    ? `${t.cardBg} border-white/10 ${t.cardText}`
     : `${t.cardBg} border-slate-200 ${t.cardText}`;
   const sideClass = isDarkMode
-    ? "bg-slate-950/40 border-white/10"
+    ? `${t.inlineBg} border-white/10`
     : "bg-slate-100/95 border-slate-200";
-  const mutedClass = isDarkMode ? "text-slate-400" : t.subtleText;
+  const mutedClass = t.subtleText;
   const strongMutedClass = isDarkMode ? "text-slate-300" : "text-slate-700";
 
   const validate = () => {
@@ -101,33 +108,38 @@ const LoginPage = () => {
     }
   };
 
+  const goToSignup = () => {
+    setSlidingOut(true);
+    setTimeout(() => navigate("/signup", { state: { from: "login" } }), 280);
+  };
+
   const SidebarBrand = () => (
-    <div className="mb-5 flex flex-col items-center text-center">
-      <div className={`mb-3 w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 shadow-sm ${
+    <div className="mt-4 mb-5 flex flex-col items-center text-center">
+      <div className={`mb-3 w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-4 shadow-sm ${
         isDarkMode ? "border-white/20 bg-white/95" : "border-slate-200 bg-white"
       }`}>
-        <img src={bgyLogo} alt="Logo" className="w-full h-full object-cover rounded-full" />
+        <img src={logoSrc} alt="Logo" className="w-full h-full object-cover rounded-full" />
       </div>
-      <h2 className={`text-3xl sm:text-4xl font-black uppercase leading-[0.95] tracking-tight font-spartan ${t.primaryText}`}>
-        Barangay<br />Gulod<br />Novaliches
+      <h2 className={`text-2xl sm:text-3xl font-black uppercase leading-[0.95] tracking-tight font-spartan text-center ${t.primaryText}`}>
+        Barangay Gulod<br />Novaliches
       </h2>
-      <div className={`mt-2.5 w-12 h-1 rounded-full bg-gradient-to-r ${t.primaryGrad}`} />
-      <p className={`mt-3 text-[10px] sm:text-[11px] font-black leading-relaxed font-kumbh uppercase ${mutedClass}`}>
+      <div className={`mt-2 w-10 h-1 rounded-full bg-gradient-to-r mx-auto ${t.primaryGrad}`} />
+      <p className={`mt-4 text-[9px] sm:text-[10px] font-black leading-relaxed font-kumbh uppercase text-center ${mutedClass}`}>
         OFFICE HOURS: 7:00 AM - 5:00 PM MONDAY - FRIDAY
       </p>
     </div>
   );
 
   const DistrictBadge = () => (
-    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.28em] mb-6 font-kumbh ${
+    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.24em] mb-5 font-kumbh self-start ${
       isDarkMode ? "bg-emerald-900/30 text-emerald-400" : `${t.primaryLight} ${t.primaryText}`
     }`}>
-      <Info size={12} /> District 5, Quezon City
+      <Info size={10} /> District 5, Quezon City
     </div>
   );
 
   return (
-    <div className={`min-h-screen w-screen relative overflow-x-hidden ${isDarkMode ? "bg-slate-950" : t.pageBg}`}>
+    <div className={`min-h-screen w-screen relative overflow-x-hidden ${t.pageBg}`}>
       <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
 
       <ForgotPasswordModal
@@ -145,7 +157,7 @@ const LoginPage = () => {
           className={`w-full h-full object-cover ${isDarkMode ? "opacity-20 grayscale" : "opacity-[0.38]"}`} />
         <div className={`absolute inset-0 ${
           isDarkMode
-            ? "bg-gradient-to-b from-slate-950/95 via-slate-950/85 to-slate-950/95"
+            ? "bg-gradient-to-b from-slate-900/80 via-slate-800/70 to-slate-900/80"
             : "bg-gradient-to-b from-white/60 via-white/38 to-white/65"
         }`} />
       </div>
@@ -220,53 +232,78 @@ const LoginPage = () => {
             <div className="grid lg:grid-cols-[360px_1fr]">
               
               {/* Sidebar: Branding & Tracking */}
-              <aside className={`p-5 sm:p-8 lg:p-8 border-b lg:border-b-0 lg:border-r flex flex-col ${sideClass}`}>
+              <aside className={`p-5 sm:p-8 lg:p-8 border-b lg:border-b-0 lg:border-r flex flex-col ${sideClass} ${slidingOut ? "auth-side-exit" : from === "signup" ? "auth-side-enter" : "auth-fade-in"}`}>
                 <DistrictBadge />
                 <SidebarBrand />
 
                 <div className={`rounded-[28px] p-5 border mt-6 lg:mt-auto ${
                   isDarkMode ? "bg-slate-950/70 border-white/10" : `${t.cardBg} border-slate-200`
                 }`}>
-                  <label className={`text-[10px] font-black uppercase tracking-[0.25em] mb-3 block font-kumbh ${mutedClass}`}>
+                  <label className={`text-[9px] font-black uppercase tracking-[0.22em] mb-2 block font-kumbh ${mutedClass}`}>
                     Track Application
                   </label>
                   <div className="relative">
-                    <Search size={14} className={`absolute left-4 top-1/2 -translate-y-1/2 ${mutedClass}`} />
+                    <Search size={12} className={`absolute left-4 top-1/2 -translate-y-1/2 ${mutedClass}`} />
                     <input 
                       type="text" 
                       value={trackingNum} 
                       onChange={(e) => handleTrackSearch(e.target.value)}
-                      placeholder="BGN-XXXX"
-                      className={`w-full pl-11 pr-4 py-3 rounded-2xl border-2 text-xs font-black uppercase tracking-widest outline-none transition-colors bg-transparent font-kumbh ${
+                      placeholder="BGNXXXXX"
+                      className={`w-full pl-10 pr-4 py-2.5 rounded-2xl border text-[11px] font-black uppercase tracking-widest outline-none transition-colors bg-transparent font-kumbh ${
                         isDarkMode ? "border-slate-300/30 text-white" : `border-slate-300 ${t.cardText}`
                       }`} 
                     />
                   </div>
                   {searchResult && (
-                    <div className={`mt-4 rounded-2xl p-4 border ${
-                      isDarkMode ? "bg-slate-900/80 border-white/10" : "bg-slate-50 border-slate-200"
-                    }`}>
-                      <div className="flex items-center justify-between mb-2 gap-2">
-                        <p className={`text-[10px] font-black uppercase tracking-widest font-kumbh ${mutedClass}`}>Status</p>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border font-kumbh ${
-                          searchResult.status === "Verified" ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                          : searchResult.status === "Rejected" ? "bg-rose-100 text-rose-700 border-rose-200"
-                          : "bg-amber-100 text-amber-700 border-amber-200"
-                        }`}>{searchResult.status}</span>
-                      </div>
-                      <p className={`text-sm font-black leading-tight mb-1 font-kumbh ${isDarkMode ? "text-slate-100" : "text-slate-800"}`}>
-                        {searchResult.message}
-                      </p>
-                    </div>
-                  )}
+  <div className={`mt-4 rounded-2xl p-4 border ${
+    isDarkMode ? "bg-slate-900/80 border-white/10" : "bg-slate-50 border-slate-200"
+  }`}>
+    <div className="flex items-center justify-between mb-2 gap-2">
+      <p className={`text-[10px] font-black uppercase tracking-widest font-kumbh ${mutedClass}`}>Status</p>
+      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border font-kumbh ${
+        searchResult.status === "Verified" ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+        : searchResult.status === "Rejected" ? "bg-rose-100 text-rose-700 border-rose-200"
+        : "bg-amber-100 text-amber-700 border-amber-200"
+      }`}>{searchResult.status}</span>
+    </div>
+
+    <p className={`text-sm font-black leading-tight mb-1 font-kumbh ${isDarkMode ? "text-slate-100" : "text-slate-800"}`}>
+      {searchResult.message}
+    </p>
+
+    {/* REJECTION DETAILS BOX */}
+    {searchResult.status === "Rejected" && (
+      <div className={`mt-3 p-3 rounded-xl border font-kumbh ${
+        isDarkMode ? "bg-rose-500/10 border-rose-500/20" : "bg-rose-50 border-rose-100"
+      }`}>
+        <p className="text-[10px] font-black text-rose-500 uppercase tracking-tight mb-1">
+          Reason for Rejection:
+        </p>
+        <p className={`text-xs font-bold leading-normal ${isDarkMode ? "text-rose-200" : "text-rose-800"}`}>
+          {searchResult.rejection_reason || "Incomplete documents/Invalid information."}
+        </p>
+
+        {/* REMARKS SECTION */}
+        {searchResult.rejection_remarks && (
+          <div className="mt-2 pt-2 border-t border-rose-500/10">
+            <p className="text-[9px] font-black text-rose-400 uppercase opacity-70">Staff Remarks:</p>
+            <p className={`text-[11px] italic font-medium ${isDarkMode ? "text-rose-300/80" : "text-rose-700"}`}>
+              "{searchResult.rejection_remarks}"
+            </p>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+)}
                 </div>
               </aside>
 
               {/* Main Login Form Section */}
-              <section className="p-5 sm:p-8 lg:p-8">
-                <div className="max-w-xl mx-auto lg:mx-0">
-                  <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tighter leading-none mb-3 font-spartan">Sign In</h1>
-                  <p className={`text-sm leading-relaxed mb-6 font-kumbh ${strongMutedClass}`}>
+              <section className={`p-5 sm:p-8 lg:p-8 ${slidingOut ? "auth-section-exit" : from === "signup" ? "auth-section-enter" : "auth-fade-in"}`}>
+                <div className="max-w-xl mx-auto lg:mx-0 text-left">
+                  <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tighter leading-none mb-1 font-spartan">Sign In</h1>
+                  <p className={`text-xs sm:text-sm leading-relaxed mb-3 font-kumbh ${strongMutedClass}`}>
                     Use your registered email and password to access your account.
                   </p>
 
@@ -277,42 +314,44 @@ const LoginPage = () => {
                     </div>
                   )}
 
-                  <form onSubmit={handleLoginSubmit} className="space-y-5">
-                    <LoginForm
-                      email={email}
-                      password={password}
-                      onChange={(e) => {
-                        if (e.target.name === "email") setEmail(e.target.value);
-                        if (e.target.name === "password") setPassword(e.target.value);
-                      }}
-                      errors={errors}
-                      isDarkMode={isDarkMode}
-                    />
+                  <div className="mt-8">
+                    <form onSubmit={handleLoginSubmit} className="space-y-5">
+                      <LoginForm
+                        email={email}
+                        password={password}
+                        onChange={(e) => {
+                          if (e.target.name === "email") setEmail(e.target.value);
+                          if (e.target.name === "password") setPassword(e.target.value);
+                        }}
+                        errors={errors}
+                        isDarkMode={isDarkMode}
+                      />
 
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                      <label className={`inline-flex items-center gap-2 text-xs font-bold font-kumbh ${strongMutedClass}`}>
-                        <input type="checkbox" className="w-4 h-4" style={{ accentColor: primaryCss }} />
-                        Remember me
-                      </label>
-                      <button type="button" onClick={() => setShowForgotModal(true)}
-                        className={`text-xs font-black uppercase tracking-wide font-kumbh ${t.primaryText}`}>
-                        Forgot password?
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <label className={`inline-flex items-center gap-2 text-sm font-semibold font-kumbh ${strongMutedClass}`}>
+                          <input type="checkbox" className="w-4 h-4" style={{ accentColor: primaryCss }} />
+                          Remember me
+                        </label>
+                        <button type="button" onClick={() => setShowForgotModal(true)}
+                          className={`text-sm font-semibold font-kumbh ${t.primaryText}`}>
+                          Forgot password?
+                        </button>
+                      </div>
+
+                      <button type="submit" disabled={loginLoading}
+                        className={`w-full sm:w-auto sm:min-w-[280px] py-4 px-8 bg-gradient-to-r ${t.primaryGrad} text-white rounded-[24px] font-bold text-sm tracking-normal shadow-2xl disabled:opacity-30 transition-all active:scale-95 flex items-center justify-center gap-2 mx-auto !mt-10 font-kumbh`}>
+                        {loginLoading ? <Loader2 className="animate-spin" size={20} /> : "Login"}
+                      </button>
+                    </form>
+
+                    <div className={`mt-8 text-sm font-semibold tracking-normal flex flex-wrap items-center justify-center gap-2 font-kumbh ${mutedClass}`}>
+                      <span>No account yet?</span>
+                      <button type="button"
+                        onClick={goToSignup}
+                        className={`${t.primaryText} transition-colors font-semibold hover:underline`}>
+                        Register here!
                       </button>
                     </div>
-
-                    <button type="submit" disabled={loginLoading}
-                      className={`w-full sm:w-auto sm:min-w-[280px] py-4 px-8 bg-gradient-to-r ${t.primaryGrad} text-white rounded-[24px] font-black text-sm uppercase tracking-widest shadow-2xl disabled:opacity-30 transition-all active:scale-95 flex items-center justify-center gap-2 mx-auto !mt-10 font-kumbh`}>
-                      {loginLoading ? <Loader2 className="animate-spin" size={20} /> : "Login Portal"}
-                    </button>
-                  </form>
-
-                  <div className={`mt-8 text-[11px] font-black uppercase tracking-[0.2em] flex flex-wrap items-center justify-center gap-2 font-kumbh ${mutedClass}`}>
-                    <span>No account yet?</span>
-                    <button type="button"
-                      onClick={() => navigate("/signup")}
-                      className={`${t.primaryText} transition-colors font-black uppercase tracking-[0.05em] hover:underline`}>
-                      Register here!
-                    </button>
                   </div>
                 </div>
               </section>
@@ -323,6 +362,16 @@ const LoginPage = () => {
       </main>
 
       <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes authSideEnterLogin { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes authSideExitLogin { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-60px); } }
+        @keyframes authSectionEnterLogin { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes authSectionExitLogin { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
+        @keyframes authFadeInLogin { from { opacity: 0; } to { opacity: 1; } }
+        .auth-side-enter { animation: authSideEnterLogin 0.35s cubic-bezier(0.4,0,0.2,1) both; }
+        .auth-side-exit { animation: authSideExitLogin 0.28s cubic-bezier(0.4,0,0.2,1) both; }
+        .auth-section-enter { animation: authSectionEnterLogin 0.35s cubic-bezier(0.4,0,0.2,1) both; }
+        .auth-section-exit { animation: authSectionExitLogin 0.28s cubic-bezier(0.4,0,0.2,1) both; }
+        .auth-fade-in { animation: authFadeInLogin 0.3s ease both; }
         .custom-scrollbar { scrollbar-width: thin; scrollbar-color: ${primaryCss} rgba(148,163,184,0.22); }
         .custom-scrollbar::-webkit-scrollbar { width: 10px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(148,163,184,0.22); border-radius: 999px; }

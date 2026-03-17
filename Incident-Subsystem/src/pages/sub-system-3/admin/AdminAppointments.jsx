@@ -6,8 +6,10 @@ import React, {
   useCallback,
   useRef,
 } from "react";
+import { useLanguage } from "../../../context/LanguageContext";
 import themeTokens from "../../../Themetokens";
 import Toast from "../../../components/shared/modals/Toast";
+import DatePickerField from "../../../components/shared/DatePickerField";
 import {
   rescheduleAppointment,
   createAppointment,
@@ -232,18 +234,26 @@ const TimeSlotPicker = ({ date, value, onChange, availability = {}, isDark, t })
     );
   }
 
+  const todayStr = new Date().toISOString().split("T")[0];
+  const isToday = date === todayStr;
+  const nowMinutes = isToday
+    ? new Date().getHours() * 60 + new Date().getMinutes()
+    : -1;
+
   return (
     <div className="grid grid-cols-5 gap-1.5">
       {slots.map((slot) => {
         const selected = value === slot.value;
-        const taken = !slot.available;
+        const [slotH, slotM] = slot.value.split(":").map(Number);
+        const isPastTime = isToday && slotH * 60 + slotM <= nowMinutes;
+        const taken = !slot.available || isPastTime;
         return (
           <button
             key={slot.value}
             type="button"
             disabled={taken}
             onClick={() => !taken && onChange(slot.value)}
-            title={taken ? "Slot already taken" : slot.label}
+            title={isPastTime ? "Time has passed" : taken ? "Slot already taken" : slot.label}
             className={`py-1.5 rounded-lg text-[11px] font-kumbh font-semibold text-center transition-all ${
               taken
                 ? `cursor-not-allowed line-through ${isDark ? "bg-slate-700 text-slate-600" : "bg-gray-100 text-gray-400"}`
@@ -274,6 +284,8 @@ const WeekdayPicker = ({ value, onChange, isDark, t, availability = {} }) => {
 
   const year = viewMonth.getFullYear();
   const month = viewMonth.getMonth();
+  const todayNow = new Date();
+  const isCurrentMonth = year === todayNow.getFullYear() && month === todayNow.getMonth();
 
   const MONTH_NAMES = [
     "January",
@@ -306,8 +318,9 @@ const WeekdayPicker = ({ value, onChange, isDark, t, availability = {} }) => {
       <div className="flex items-center justify-between mb-2">
         <button
           type="button"
-          onClick={() => setViewMonth(new Date(year, month - 1, 1))}
-          className={`p-1 rounded-lg transition-colors ${isDark ? "hover:bg-slate-700 text-slate-300" : "hover:bg-gray-100 text-gray-600"}`}
+          disabled={isCurrentMonth}
+          onClick={() => !isCurrentMonth && setViewMonth(new Date(year, month - 1, 1))}
+          className={`p-1 rounded-lg transition-colors ${isCurrentMonth ? "opacity-30 cursor-not-allowed" : isDark ? "hover:bg-slate-700 text-slate-300" : "hover:bg-gray-100 text-gray-600"}`}
         >
           <svg
             className="w-4 h-4"
@@ -418,6 +431,7 @@ const RescheduleModal = ({
   t,
   availability = {},
 }) => {
+  const { tr } = useLanguage();
   const { date: initDate, time: initTime } = parseScheduledAt(
     appointment.scheduled_at,
   );
@@ -482,7 +496,7 @@ const RescheduleModal = ({
             </div>
             <div className="flex-1">
               <h3 className={`text-sm font-bold ${t.cardText} font-spartan`}>
-                Reschedule Appointment
+                {tr.adminAppointments.rescheduleAppointment}
               </h3>
               <p className={`text-xs ${t.subtleText} font-kumbh`}>
                 {(() => {
@@ -523,9 +537,9 @@ const RescheduleModal = ({
                 <label
                   className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
                 >
-                  New Date{" "}
+                  {tr.adminAppointments.newDate}{" "}
                   <span className={`normal-case font-normal ${t.subtleText}`}>
-                    (Mon – Fri only)
+                    {tr.adminAppointments.weekdaysOnly}
                   </span>
                 </label>
                 <WeekdayPicker
@@ -537,7 +551,7 @@ const RescheduleModal = ({
                 />
                 {date && (
                   <p className={`text-xs mt-1.5 font-kumbh ${t.subtleText}`}>
-                    Selected:{" "}
+                    {tr.adminAppointments.selected}{" "}
                     <span className={`font-semibold ${t.cardText}`}>
                       {formatDate(date)}
                     </span>
@@ -552,9 +566,9 @@ const RescheduleModal = ({
                 <label
                   className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
                 >
-                  New Time{" "}
+                  {tr.adminAppointments.newTime}{" "}
                   <span className={`normal-case font-normal ${t.subtleText}`}>
-                    (7:00 AM – 5:00 PM)
+                    {tr.adminAppointments.timeRange}
                   </span>
                 </label>
                 <TimeSlotPicker
@@ -584,7 +598,7 @@ const RescheduleModal = ({
                     />
                   </svg>
                   <p className="text-xs text-red-600 font-kumbh">
-                    This slot is already booked. Please choose a different date or time.
+                    {tr.adminAppointments.slotBooked}
                   </p>
                 </div>
               )}
@@ -609,7 +623,7 @@ const RescheduleModal = ({
                 <p
                   className={`text-xs ${isDark ? "text-slate-300" : "text-blue-700"} font-kumbh`}
                 >
-                  The complainant will be notified of this schedule change automatically.
+                  {tr.adminAppointments.autoNotify}
                 </p>
               </div>
             </div>
@@ -624,7 +638,7 @@ const RescheduleModal = ({
             onClick={onClose}
             className={`px-5 py-2 rounded-lg text-sm font-kumbh font-semibold transition-colors ${isDark ? "bg-slate-700 text-slate-300 hover:bg-slate-600" : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"}`}
           >
-            Cancel
+            {tr.adminAppointments.cancel}
           </button>
           <button
             onClick={handleSave}
@@ -635,7 +649,7 @@ const RescheduleModal = ({
                 : "bg-amber-500 text-white hover:bg-amber-600 shadow-sm"
             }`}
           >
-            {saving ? "Saving…" : "Confirm Reschedule"}
+            {saving ? tr.adminAppointments.saving : tr.adminAppointments.confirmReschedule}
           </button>
         </div>
       </div>
@@ -698,6 +712,7 @@ const AppointmentDetailsModal = ({
   isDark,
   t,
 }) => {
+  const { tr } = useLanguage();
   const { date, time } = parseScheduledAt(appointment.scheduled_at);
   const status = (appointment.status || "scheduled")
     .toLowerCase()
@@ -812,7 +827,7 @@ const AppointmentDetailsModal = ({
               <p
                 className={`text-[10px] font-bold uppercase tracking-wide mb-1 font-kumbh ${isDark ? "text-slate-400" : "text-blue-500"}`}
               >
-                Date
+                {tr.adminAppointments.date}
               </p>
               <p className={`text-sm font-bold font-spartan ${t.cardText}`}>
                 {fullDate}
@@ -825,7 +840,7 @@ const AppointmentDetailsModal = ({
               <p
                 className={`text-[10px] font-bold uppercase tracking-wide mb-1 font-kumbh ${isDark ? "text-slate-400" : "text-blue-500"}`}
               >
-                Time
+                {tr.adminAppointments.time}
               </p>
               <p className={`text-sm font-bold font-spartan ${t.cardText}`}>
                 {formatTime(time)}
@@ -839,20 +854,20 @@ const AppointmentDetailsModal = ({
           >
             {[
               {
-                label: "Complainant",
+                label: tr.adminAppointments.complainantLabel,
                 value: appointment.complainant_name || "—",
               },
               {
-                label: "Respondent",
+                label: tr.adminAppointments.respondentLabel,
                 value: appointment.respondent_name || "—",
               },
               {
-                label: "Respondent Address",
+                label: tr.adminAppointments.respondentAddress,
                 value: appointment.respondent_address || "—",
               },
-              { label: "Appointment ID", value: `#${appointment.id}` },
+              { label: tr.adminAppointments.appointmentId, value: `#${appointment.id}` },
               {
-                label: "Complaint ID",
+                label: tr.adminAppointments.complaintId,
                 value: `#${appointment.complaint_id || "—"}`,
               },
             ].map(({ label, value }) => (
@@ -877,7 +892,7 @@ const AppointmentDetailsModal = ({
                 <span
                   className={`text-xs font-semibold font-kumbh ${t.subtleText} block mb-1`}
                 >
-                  Description
+                  {tr.adminAppointments.description}
                 </span>
                 <span
                   className={`text-xs font-kumbh ${t.cardText} leading-relaxed`}
@@ -899,13 +914,13 @@ const AppointmentDetailsModal = ({
                 onClick={() => openConfirm("completed")}
                 className="px-4 py-2 rounded-lg text-sm font-kumbh font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors shadow-sm"
               >
-                Mark as Completed
+                {tr.adminAppointments.markCompleted}
               </button>
               <button
                 onClick={() => openConfirm("no-show")}
                 className="px-4 py-2 rounded-lg text-sm font-kumbh font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm"
               >
-                Mark as No Show
+                {tr.adminAppointments.markNoShow}
               </button>
             </>
           )}
@@ -917,7 +932,7 @@ const AppointmentDetailsModal = ({
               }}
               className="px-4 py-2 rounded-lg text-sm font-kumbh font-semibold bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-sm"
             >
-              Reschedule
+              {tr.adminAppointments.rescheduleBtn}
             </button>
           )}
         </div>
@@ -930,18 +945,18 @@ const AppointmentDetailsModal = ({
         variant={confirm.action === "completed" ? "success" : "danger"}
         title={
           confirm.action === "completed"
-            ? "Mark as Completed?"
-            : "Mark as No Show?"
+            ? tr.adminAppointments.confirmMarkCompleted
+            : tr.adminAppointments.confirmMarkNoShow
         }
         message={
           confirm.action === "completed"
-            ? `This will mark Appointment #${appointment.id} as completed. This action cannot be undone.`
-            : `This will mark Appointment #${appointment.id} as no-show. This action cannot be undone.`
+            ? tr.adminAppointments.confirmMarkCompletedMsg.replace("{id}", appointment.id)
+            : tr.adminAppointments.confirmMarkNoShowMsg.replace("{id}", appointment.id)
         }
         confirmLabel={
           confirm.action === "completed"
-            ? "Yes, Mark Completed"
-            : "Yes, Mark No Show"
+            ? tr.adminAppointments.yesMarkCompleted
+            : tr.adminAppointments.yesMarkNoShow
         }
         onConfirm={handleConfirm}
         onCancel={closeConfirm}
@@ -959,6 +974,7 @@ const CreateAppointmentModal = ({
   t,
   availability = {},
 }) => {
+  const { tr } = useLanguage();
   const [complaints, setComplaints] = useState([]);
   const [loadingC, setLoadingC] = useState(true);
   const [complaintId, setComplaintId] = useState("");
@@ -1039,10 +1055,10 @@ const CreateAppointmentModal = ({
             </div>
             <div className="flex-1">
               <h3 className={`text-sm font-bold ${t.cardText} font-spartan`}>
-                Create New Appointment
+                {tr.adminAppointments.createNewAppointment}
               </h3>
               <p className={`text-xs ${t.subtleText} font-kumbh`}>
-                Mon – Fri · 7:00 AM – 5:00 PM · 1 slot per hour
+                {tr.adminAppointments.subtitle}
               </p>
             </div>
             <button
@@ -1076,14 +1092,14 @@ const CreateAppointmentModal = ({
                 <label
                   className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
                 >
-                  Complaint <span className="text-red-500">*</span>
+                  {tr.adminAppointments.complaint} <span className="text-red-500">*</span>
                 </label>
                 {loadingC ? (
                   <div
                     className={`${selectCls} flex items-center gap-2 text-sm opacity-60`}
                   >
                     <div className="w-3.5 h-3.5 border-2 border-green-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                    Loading complaints…
+                    {tr.adminAppointments.loadingComplaints}
                   </div>
                 ) : (
                   <select
@@ -1091,7 +1107,7 @@ const CreateAppointmentModal = ({
                     onChange={(e) => setComplaintId(e.target.value)}
                     className={selectCls}
                   >
-                    <option value="">Select a complaint…</option>
+                    <option value="">{tr.adminAppointments.selectComplaint}</option>
                     {complaints.map((c) => (
                       <option key={c.id} value={c.id}>
                         #{c.id} — {c.complainant_name || "Unknown"} vs{" "}
@@ -1107,7 +1123,7 @@ const CreateAppointmentModal = ({
                 <label
                   className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
                 >
-                  Title <span className="text-red-500">*</span>
+                  {tr.adminAppointments.titleField} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -1124,9 +1140,9 @@ const CreateAppointmentModal = ({
                 <label
                   className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
                 >
-                  Description{" "}
+                  {tr.adminAppointments.descriptionField}{" "}
                   <span className={`normal-case font-normal ${t.subtleText}`}>
-                    (optional)
+                    {tr.adminAppointments.optional}
                   </span>
                 </label>
                 <textarea
@@ -1146,9 +1162,9 @@ const CreateAppointmentModal = ({
                 <label
                   className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
                 >
-                  Date <span className="text-red-500">*</span>{" "}
+                  {tr.adminAppointments.date} <span className="text-red-500">*</span>{" "}
                   <span className={`normal-case font-normal ${t.subtleText}`}>
-                    (Mon – Fri only)
+                    {tr.adminAppointments.weekdaysOnly}
                   </span>
                 </label>
                 <WeekdayPicker
@@ -1160,7 +1176,7 @@ const CreateAppointmentModal = ({
                 />
                 {date && (
                   <p className={`text-xs mt-1.5 font-kumbh ${t.subtleText}`}>
-                    Selected:{" "}
+                    {tr.adminAppointments.selected}{" "}
                     <span className={`font-semibold ${t.cardText}`}>
                       {formatDate(date)}
                     </span>
@@ -1173,9 +1189,9 @@ const CreateAppointmentModal = ({
                 <label
                   className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
                 >
-                  Time <span className="text-red-500">*</span>{" "}
+                  {tr.adminAppointments.time} <span className="text-red-500">*</span>{" "}
                   <span className={`normal-case font-normal ${t.subtleText}`}>
-                    (7:00 AM – 5:00 PM)
+                    {tr.adminAppointments.timeRange}
                   </span>
                 </label>
                 <TimeSlotPicker
@@ -1205,8 +1221,7 @@ const CreateAppointmentModal = ({
                     />
                   </svg>
                   <p className="text-xs text-red-600 font-kumbh">
-                    This slot is already booked. Please choose a different date
-                    or time.
+                    {tr.adminAppointments.slotBooked}
                   </p>
                 </div>
               )}
@@ -1222,7 +1237,7 @@ const CreateAppointmentModal = ({
             onClick={onClose}
             className={`px-5 py-2 rounded-lg text-sm font-kumbh font-semibold transition-colors ${isDark ? "bg-slate-700 text-slate-300 hover:bg-slate-600" : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"}`}
           >
-            Cancel
+            {tr.adminAppointments.cancel}
           </button>
           <button
             onClick={handleSave}
@@ -1233,7 +1248,7 @@ const CreateAppointmentModal = ({
                 : "bg-green-600 text-white hover:bg-green-700 shadow-sm"
             }`}
           >
-            {saving ? "Creating…" : "Create Appointment"}
+            {saving ? tr.adminAppointments.creating : tr.adminAppointments.createAppointment}
           </button>
         </div>
       </div>
@@ -1243,6 +1258,7 @@ const CreateAppointmentModal = ({
 
 // ── Overdue Alert Modal ───────────────────────────────────────────────────────
 const OverdueAlertModal = ({ appointments, onAction, onClose, isDark, t }) => {
+  const { tr } = useLanguage();
   const [actioning, setActioning] = useState({});
   const [done, setDone] = useState(new Set());
 
@@ -1290,11 +1306,10 @@ const OverdueAlertModal = ({ appointments, onAction, onClose, isDark, t }) => {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className={`text-sm font-bold ${t.cardText} font-spartan`}>
-              Appointments Requiring Action
+              {tr.adminAppointments.overdueTitle}
             </h3>
             <p className={`text-xs ${t.subtleText} font-kumbh`}>
-              {remaining.length} appointment{remaining.length !== 1 ? "s" : ""}{" "}
-              past their scheduled date
+              {tr.adminAppointments.overdueDesc.replace("{n}", remaining.length)}
             </p>
           </div>
           <button
@@ -1372,11 +1387,11 @@ const OverdueAlertModal = ({ appointments, onAction, onClose, isDark, t }) => {
                   {/* Detail fields */}
                   {[
                     {
-                      label: "Scheduled",
+                      label: tr.adminAppointments.scheduled_label,
                       value: `${formatDate(date)} at ${formatTime(time)}`,
                     },
                     {
-                      label: "Complainant",
+                      label: tr.adminAppointments.complainantLabel,
                       value: appt.complainant_name || "—",
                     },
                   ].map(({ label, value }) => (
@@ -1430,7 +1445,7 @@ const OverdueAlertModal = ({ appointments, onAction, onClose, isDark, t }) => {
                         />
                       </svg>
                     )}
-                    {busy === "completed" ? "Processing…" : "Mark as Completed"}
+                    {busy === "completed" ? tr.adminAppointments.processing : tr.adminAppointments.markCompleted}
                   </button>
                   <button
                     onClick={() => handleAction(appt, "no-show")}
@@ -1462,7 +1477,7 @@ const OverdueAlertModal = ({ appointments, onAction, onClose, isDark, t }) => {
                         />
                       </svg>
                     )}
-                    {busy === "no-show" ? "Processing…" : "Mark as No Show"}
+                    {busy === "no-show" ? tr.adminAppointments.processing : tr.adminAppointments.markNoShow}
                   </button>
                 </div>
               </div>
@@ -1482,7 +1497,7 @@ const OverdueAlertModal = ({ appointments, onAction, onClose, isDark, t }) => {
                 : "border-gray-300 text-gray-700 hover:bg-gray-100"
             }`}
           >
-            Dismiss
+            {tr.adminAppointments.dismiss}
           </button>
         </div>
       </div>
@@ -1492,6 +1507,7 @@ const OverdueAlertModal = ({ appointments, onAction, onClose, isDark, t }) => {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const AdminAppointments = () => {
+  const { tr } = useLanguage();
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem("appTheme") || "modern",
   );
@@ -1897,10 +1913,10 @@ const AdminAppointments = () => {
               <h1
                 className={`text-2xl font-bold ${t.cardText} font-spartan uppercase`}
               >
-                Appointment Management
+                {tr.adminAppointments.title}
               </h1>
               <p className={`text-xs ${t.subtleText} font-kumbh mt-0.5`}>
-                Complaint hearing appointments · Mon – Fri · 7:00 AM – 5:00 PM
+                {tr.adminAppointments.subtitle}
               </p>
             </div>
           </div>
@@ -1910,7 +1926,7 @@ const AdminAppointments = () => {
             {[
               {
                 key: "all",
-                label: "TOTAL",
+                label: tr.adminAppointments.statTotal,
                 border: "border-blue-500",
                 bg: "bg-blue-100",
                 ic: "text-blue-600",
@@ -1918,7 +1934,7 @@ const AdminAppointments = () => {
               },
               {
                 key: "scheduled",
-                label: "SCHEDULED",
+                label: tr.adminAppointments.statScheduled,
                 border: "border-blue-400",
                 bg: "bg-blue-50",
                 ic: "text-blue-500",
@@ -1926,7 +1942,7 @@ const AdminAppointments = () => {
               },
               {
                 key: "completed",
-                label: "COMPLETED",
+                label: tr.adminAppointments.statCompleted,
                 border: "border-green-500",
                 bg: "bg-green-100",
                 ic: "text-green-600",
@@ -1934,7 +1950,7 @@ const AdminAppointments = () => {
               },
               {
                 key: "cancelled",
-                label: "CANCELLED",
+                label: tr.adminAppointments.statCancelled,
                 border: "border-gray-400",
                 bg: "bg-gray-100",
                 ic: "text-gray-500",
@@ -2007,22 +2023,32 @@ const AdminAppointments = () => {
                       : "none",
                   }}
                 />
-                {Object.entries(STATUS_CFG).map(([key, cfg]) => (
-                  <button
-                    key={key}
-                    data-tab={key}
-                    onClick={() => setActiveTab(key)}
-                    className={`relative z-10 px-4 py-2 rounded-lg text-xs font-bold font-kumbh uppercase tracking-wide border-2 transition-colors duration-200 ${
-                      activeTab === key
-                        ? "text-white border-transparent"
-                        : isDark
-                          ? "bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600 hover:text-slate-100 hover:border-slate-500"
-                          : `bg-white text-gray-500 border-gray-200 ${t.primaryHoverBorder}`
-                    }`}
-                  >
-                    {cfg.label} ({statusCounts[key] ?? 0})
-                  </button>
-                ))}
+                {Object.entries(STATUS_CFG).map(([key, cfg]) => {
+                  const tabLabels = {
+                    all: tr.adminAppointments.all,
+                    scheduled: tr.adminAppointments.scheduled,
+                    rescheduled: tr.adminAppointments.rescheduled,
+                    completed: tr.adminAppointments.completed,
+                    cancelled: tr.adminAppointments.cancelled,
+                    no_show: tr.adminAppointments.noShow,
+                  };
+                  return (
+                    <button
+                      key={key}
+                      data-tab={key}
+                      onClick={() => setActiveTab(key)}
+                      className={`relative z-10 px-4 py-2 rounded-lg text-xs font-bold font-kumbh uppercase tracking-wide border-2 transition-colors duration-200 ${
+                        activeTab === key
+                          ? "text-white border-transparent"
+                          : isDark
+                            ? "bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600 hover:text-slate-100 hover:border-slate-500"
+                            : `bg-white text-gray-500 border-gray-200 ${t.primaryHoverBorder}`
+                      }`}
+                    >
+                      {tabLabels[key] || cfg.label} ({statusCounts[key] ?? 0})
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Create New Appointment button */}
@@ -2043,7 +2069,7 @@ const AdminAppointments = () => {
                     d="M12 4v16m8-8H4"
                   />
                 </svg>
-                Create New Appointment
+                {tr.adminAppointments.createNewAppointment}
               </button>
             </div>
 
@@ -2054,13 +2080,13 @@ const AdminAppointments = () => {
                   <label
                     className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
                   >
-                    Search
+                    {tr.sub1.search}
                   </label>
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Complaint ID, appointment ID, or complainant…"
+                    placeholder={tr.adminAppointments.searchPlaceholder}
                     className={`w-full px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
                   />
                 </div>
@@ -2068,26 +2094,32 @@ const AdminAppointments = () => {
                   <label
                     className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
                   >
-                    From
+                    {tr.adminAppointments.from}
                   </label>
-                  <input
-                    type="date"
+                  <DatePickerField
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
+                    onChange={setStartDate}
+                    placeholder="mm/dd/yyyy"
+                    ariaLabel={tr.adminAppointments.from}
+                    isDark={isDark}
+                    t={t}
+                    triggerClassName={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500 inline-flex items-center justify-between gap-2`}
                   />
                 </div>
                 <div>
                   <label
                     className={`block text-xs font-semibold ${t.subtleText} mb-1.5 font-kumbh uppercase`}
                   >
-                    To
+                    {tr.adminAppointments.to}
                   </label>
-                  <input
-                    type="date"
+                  <DatePickerField
                     value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
+                    onChange={setEndDate}
+                    placeholder="mm/dd/yyyy"
+                    ariaLabel={tr.adminAppointments.to}
+                    isDark={isDark}
+                    t={t}
+                    triggerClassName={`px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm font-kumbh focus:outline-none focus:ring-2 focus:ring-green-500 inline-flex items-center justify-between gap-2`}
                   />
                 </div>
                 {(selectedDate || startDate || endDate || searchQuery) && (
@@ -2101,7 +2133,7 @@ const AdminAppointments = () => {
                       }}
                       className="px-4 py-2.5 text-xs font-kumbh font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors whitespace-nowrap"
                     >
-                      Clear Filters
+                      {tr.adminAppointments.clearFilters}
                     </button>
                   </div>
                 )}
@@ -2123,7 +2155,7 @@ const AdminAppointments = () => {
                     />
                   </svg>
                   <span className={`text-xs ${t.subtleText} font-kumbh`}>
-                    Showing appointments for{" "}
+                    {tr.adminAppointments.showingAppointmentsFor}{" "}
                     <strong>{formatDate(selectedDate)}</strong>
                   </span>
                 </div>
@@ -2145,37 +2177,37 @@ const AdminAppointments = () => {
                     <th
                       className={`px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase text-left w-[12%]`}
                     >
-                      Appt ID
+                      {tr.adminAppointments.apptId}
                     </th>
                     <th
                       className={`px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase text-left w-[12%]`}
                     >
-                      Complaint
+                      {tr.adminAppointments.complaint}
                     </th>
                     <th
                       className={`px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase text-left w-[20%]`}
                     >
-                      Complainant
+                      {tr.adminAppointments.complainant}
                     </th>
                     <th
                       className={`px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase text-left w-[14%]`}
                     >
-                      Date
+                      {tr.adminAppointments.date}
                     </th>
                     <th
                       className={`px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase text-left w-[11%]`}
                     >
-                      Time
+                      {tr.adminAppointments.time}
                     </th>
                     <th
                       className={`px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase text-left w-[12%]`}
                     >
-                      Status
+                      {tr.adminAppointments.status}
                     </th>
                     <th
                       className={`px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase text-left w-[14%]`}
                     >
-                      Actions
+                      {tr.adminAppointments.actions}
                     </th>
                   </tr>
                 </thead>
@@ -2189,7 +2221,7 @@ const AdminAppointments = () => {
                         <div className="flex flex-col items-center gap-3">
                           <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full" />
                           <span className="text-sm font-kumbh">
-                            Loading appointments…
+                            {tr.adminAppointments.loading}
                           </span>
                         </div>
                       </td>
@@ -2266,7 +2298,7 @@ const AdminAppointments = () => {
                                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                   }`}
                                 >
-                                  Reschedule
+                                  {tr.adminAppointments.reschedule}
                                 </button>
                               )}
                               {status !== "scheduled" && (
@@ -2301,7 +2333,7 @@ const AdminAppointments = () => {
                           />
                         </svg>
                         <p className="text-sm font-kumbh">
-                          No appointments found for the selected filters.
+                          {tr.adminAppointments.noAppointments}
                         </p>
                       </td>
                     </tr>
@@ -2315,9 +2347,10 @@ const AdminAppointments = () => {
                   className={`flex items-center justify-between pt-3 border-t ${isDark ? "border-slate-700" : "border-gray-100"} mt-2`}
                 >
                   <p className={`text-xs ${t.subtleText} font-kumbh`}>
-                    Showing {(currentPage - 1) * ROWS_PER_PAGE + 1}–
-                    {Math.min(currentPage * ROWS_PER_PAGE, filteredData.length)}{" "}
-                    of {filteredData.length} results
+                    {tr.adminAppointments.showingResults
+                      .replace("{from}", (currentPage - 1) * ROWS_PER_PAGE + 1)
+                      .replace("{to}", Math.min(currentPage * ROWS_PER_PAGE, filteredData.length))
+                      .replace("{total}", filteredData.length)}
                   </p>
                   <div className="flex items-center gap-1">
                     <button
@@ -2333,7 +2366,7 @@ const AdminAppointments = () => {
                             : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
-                      Prev
+                      {tr.adminAppointments.prev}
                     </button>
                     {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
                       // Show pages around current page
@@ -2378,7 +2411,7 @@ const AdminAppointments = () => {
                             : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
-                      Next
+                      {tr.adminAppointments.next}
                     </button>
                   </div>
                 </div>

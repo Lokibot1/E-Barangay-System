@@ -12,6 +12,9 @@
  * receives that as submitAdminEntry(e, { isIndigent }) and spreads it into
  * cleanData BEFORE calling authService.adminEntry(). Guaranteed current value.
  *
+ * CHANGE: Removed all alert() calls. Errors are now thrown so the calling
+ * component (SignupPage, etc.) can catch them and show toast notifications.
+ *
  * Usage from SignupForm:
  *   handleSubmit(e, { isIndigent: 1 })   ← staff + Head
  *   handleSubmit(e)                       ← public or non-Head staff
@@ -50,6 +53,7 @@ export const useAuthLogic = (navigate) => {
     username: "", password: "",
     tenureStatus: "Owned", wallMaterial: "Concrete",
     roofMaterial: "G.I. Sheet", waterSource: "Maynilad",
+    numberOfFamilies: 1,
     isIndigent: 0,
   });
 
@@ -167,7 +171,7 @@ export const useAuthLogic = (navigate) => {
     try {
       const { age, ...baseData } = formData;
 
-      // FIX: Merge overrides here — isIndigent is always the value at call time
+      // Merge overrides here — isIndigent is always the value at call time
       const cleanData = { ...baseData, ...overrides };
 
       const res = await authService.adminEntry(cleanData);
@@ -187,7 +191,8 @@ export const useAuthLogic = (navigate) => {
       });
       return res;
     } catch (error) {
-      alert(error?.message || "Failed to add resident.");
+      // Throw so the calling component can catch and show a toast
+      throw new Error(error?.message || "Failed to add resident.");
     } finally {
       setLoading(false);
     }
@@ -214,7 +219,8 @@ export const useAuthLogic = (navigate) => {
         });
       }
     } catch (error) {
-      alert(error?.message || "Registration failed.");
+      // Throw so the calling component can catch and show a toast
+      throw new Error(error?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }

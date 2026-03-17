@@ -24,27 +24,45 @@ const SingleToast = memo(({ event, onDismiss, currentTheme }) => {
     return () => clearTimeout(timer);
   }, [exiting, event.id, onDismiss]);
 
-  const handleClick = useCallback(() => {
-    navigate("/admin/incidents");
-    onDismiss(event.id);
-  }, [navigate, event.id, onDismiss]);
-
   const isIncident = event.source === "incident";
-  const borderColor = isIncident ? "border-l-red-500" : "border-l-amber-500";
+  const isResident = event.source === "resident";
+
+  const handleClick = useCallback(() => {
+    if (isResident) {
+      navigate("/admin/residents");
+    } else {
+      navigate("/admin/incidents");
+    }
+    onDismiss(event.id);
+  }, [navigate, event.id, onDismiss, isResident]);
+
+  const borderColor = isIncident
+    ? "border-l-red-500"
+    : isResident
+      ? "border-l-blue-500"
+      : "border-l-amber-500";
   const iconBg = isIncident
     ? isDark
       ? "bg-red-900/60"
       : "bg-red-100"
-    : isDark
-      ? "bg-amber-900/60"
-      : "bg-amber-100";
+    : isResident
+      ? isDark
+        ? "bg-blue-900/60"
+        : "bg-blue-100"
+      : isDark
+        ? "bg-amber-900/60"
+        : "bg-amber-100";
   const iconColor = isIncident
     ? isDark
       ? "text-red-400"
       : "text-red-600"
-    : isDark
-      ? "text-amber-400"
-      : "text-amber-600";
+    : isResident
+      ? isDark
+        ? "text-blue-400"
+        : "text-blue-600"
+      : isDark
+        ? "text-amber-400"
+        : "text-amber-600";
 
   return (
     <div
@@ -82,7 +100,9 @@ const SingleToast = memo(({ event, onDismiss, currentTheme }) => {
         <p
           className={`font-semibold text-sm ${isDark ? "text-slate-100" : "text-slate-900"} font-kumbh`}
         >
-          New {isIncident ? "Incident" : "Complaint"} Reported
+          {isResident
+            ? "Resident Profile Updated"
+            : `New ${isIncident ? "Incident" : "Complaint"} Reported`}
         </p>
         <p
           className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-slate-600"} font-kumbh line-clamp-1`}

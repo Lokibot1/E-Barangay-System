@@ -1,16 +1,25 @@
+/**
+ * HouseholdTable.jsx
+ * ADDED: loading prop — renders TableSkeleton inside tbody when true.
+ * All original logic preserved.
+ */
+
 import React from 'react';
 import HouseholdRow from './householdrow';
+import SkeletonLoader from '../common/SkeletonLoader';
 
-const HouseholdTable = ({ households, onView, onEdit, t, currentTheme = 'modern' }) => {
+const HouseholdTable = ({ households, loading = false, onView, onEdit, onDeactivate, t, currentTheme = 'modern' }) => {
   const isDark = currentTheme === 'dark';
 
   const headers = [
-    "Household head and ID", 
-    "Location", 
-    "Classification", 
-    "Members", 
-    "Action" 
+    'Household head and ID',
+    'Location',
+    'Classification',
+    'Members',
+    'Action',
   ];
+
+  const COLS = headers.length;
 
   return (
     <div className="w-full overflow-x-auto">
@@ -28,11 +37,12 @@ const HouseholdTable = ({ households, onView, onEdit, t, currentTheme = 'modern'
             {headers.map((header) => {
               const lower = header.toLowerCase();
               const isCentered = lower === 'members' || lower === 'action';
-
               return (
                 <th
                   key={header}
-                  className={`border-b px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.22em] ${isCentered ? 'text-center' : 'text-left'} ${t.subtleText} ${t.cardBorder} font-kumbh`}
+                  className={`border-b px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.22em] ${
+                    isCentered ? 'text-center' : 'text-left'
+                  } ${t.subtleText} ${t.cardBorder} font-kumbh`}
                 >
                   {header}
                 </th>
@@ -42,20 +52,23 @@ const HouseholdTable = ({ households, onView, onEdit, t, currentTheme = 'modern'
         </thead>
 
         <tbody className={t.cardBg}>
-          {households && households.length > 0 ? (
+          {loading ? (
+            <SkeletonLoader variant="table" rows={8} cols={COLS} isDark={isDark} />
+          ) : households && households.length > 0 ? (
             households.map((h) => (
               <HouseholdRow
                 key={h.db_id || h.id}
                 item={h}
                 onView={onView}
                 onEdit={onEdit}
+                onDeactivate={onDeactivate}
                 t={t}
                 currentTheme={currentTheme}
               />
             ))
           ) : (
             <tr>
-              <td colSpan={5} className="px-6 py-28 text-center">
+              <td colSpan={COLS} className="px-6 py-28 text-center">
                 <div className="flex flex-col items-center justify-center space-y-3">
                   <span className={`text-2xl font-bold ${t.cardText} font-spartan`}>
                     No household records found

@@ -18,8 +18,15 @@ const Toast = ({ toasts, onRemove, currentTheme }) => {
 
 const ToastItem = ({ toast, onRemove, currentTheme }) => {
   const [exiting, setExiting] = useState(false);
+  const [progress, setProgress] = useState(100);
   const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
+
+  useEffect(() => {
+    setProgress(100);
+    const raf = requestAnimationFrame(() => setProgress(0));
+    return () => cancelAnimationFrame(raf);
+  }, [toast.id]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -110,7 +117,10 @@ const ToastItem = ({ toast, onRemove, currentTheme }) => {
 
       {/* Close button */}
       <button
-        onClick={() => setExiting(true)}
+        onClick={() => {
+          setProgress(0);
+          setExiting(true);
+        }}
         className={`flex-shrink-0 ${t.toastCloseBtn} ${t.toastCloseBtnHover} transition-colors`}
       >
         <svg
@@ -133,10 +143,8 @@ const ToastItem = ({ toast, onRemove, currentTheme }) => {
         <div
           className={`h-full ${c.progressBg} transition-all ease-linear`}
           style={{
-            width: exiting ? "0%" : "100%",
-            transitionDuration: exiting
-              ? "300ms"
-              : `${toast.duration || 4000}ms`,
+            width: `${progress}%`,
+            transitionDuration: `${toast.duration || 4000}ms`,
           }}
         />
       </div>

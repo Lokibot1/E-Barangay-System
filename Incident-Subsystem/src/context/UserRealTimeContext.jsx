@@ -8,7 +8,11 @@ import React, {
   useRef,
 } from "react";
 import useUserRealTimeEvents from "../hooks/shared/useUserRealTimeEvents";
-import { fetchNotifications } from "../services/sub-system-3/notificationService";
+import {
+  fetchNotifications,
+  markNotificationsRead,
+  createNotifications,
+} from "../services/sub-system-3/notificationService";
 
 const UserRealTimeContext = createContext(null);
 
@@ -48,6 +52,7 @@ const mapUserBackendNotification = (n) => {
     return {
       id: `api-${n.id}`,
       backendId: n.id,
+      externalId: n.external_id || null,
       source: "appointment",
       type: n.type,
       description: n.message || "An appointment has been scheduled for your complaint.",
@@ -56,9 +61,47 @@ const mapUserBackendNotification = (n) => {
       data: n.data,
     };
   }
+
+  if (n.type === "profile_updated") {
+    return {
+      id: `api-${n.id}`,
+      backendId: n.id,
+      externalId: n.external_id || null,
+      source: "resident",
+      type: n.type,
+      description: n.message || "Your profile information was updated.",
+      timestamp: n.created_at,
+      read: n.is_read,
+      data: n.data,
+      reportedBy: n.data?.editor_name || "",
+    };
+  }
+
+  if (n.type === "incident_status_updated" || n.type === "complaint_status_updated") {
+    const src = n.type === "complaint_status_updated" ? "complaint" : "incident";
+    const oldStatus = n.data?.old_status || "";
+    const newStatus = n.data?.new_status || "";
+    return {
+      id: `api-${n.id}`,
+      backendId: n.id,
+      externalId: n.external_id || null,
+      source: src,
+      type: n.type,
+      description: oldStatus && newStatus
+        ? `Your ${src} report status changed from ${capitalize(oldStatus)} to ${capitalize(newStatus)}`
+        : (n.message || "Your report status has been updated."),
+      oldStatus,
+      newStatus,
+      timestamp: n.created_at,
+      read: n.is_read,
+      data: n.data,
+    };
+  }
+
   return {
     id: `api-${n.id}`,
     backendId: n.id,
+    externalId: n.external_id || null,
     source: n.type?.includes("complaint") ? "complaint" : "incident",
     type: n.type || "Notification",
     description: n.message || "No description",
@@ -109,13 +152,23 @@ export const UserRealTimeProvider = ({ children }) => {
   // These are merged with the localStorage cache — deduplicated by id.
   // Unread notifications not in the localStorage cache also trigger toasts.
   useEffect(() => {
-    fetchNotifications({ perPage: 50 }).then((response) => {
+    fetchNotifications({ perPage: 50, scope: "user" }).then((response) => {
       if (!response?.data) return;
 
       const backendItems = response.data.map(mapUserBackendNotification);
 
-      // Replace cache with backend data — keeps it in sync (handles DB clears, etc.)
-      setNotifications(backendItems);
+      // Merge: backend notifications are synced by their api-* id, but locally-detected
+      // notifications (poll-detected status changes without a backendId) are preserved.
+      setNotifications((prev) => {
+        const backendIds = new Set(backendItems.map((n) => n.id));
+        const backendExternal = new Set(
+          backendItems.map((n) => n.externalId).filter(Boolean),
+        );
+        const localOnly = prev.filter(
+          (n) => !n.backendId && !backendIds.has(n.id) && !backendExternal.has(n.id),
+        );
+        return [...backendItems, ...localOnly];
+      });
 
       // Show toasts for unread notifications that weren't cached locally at mount
       if (initialNotifIdsRef.current) {
@@ -160,6 +213,21 @@ export const UserRealTimeProvider = ({ children }) => {
           data: event.data,
         };
       }
+      if (event.source === "resident" || event.type === "profile_updated") {
+        return {
+          id: event.id,
+          source: "resident",
+          type: "profile_updated",
+          description:
+            event.description ||
+            event.data?.description ||
+            "Your profile information was updated.",
+          timestamp: event.timestamp,
+          read: false,
+          reportedBy: event.data?.editor_name || "",
+          data: event.data,
+        };
+      }
       return {
         id: event.id,
         source: event.source,
@@ -180,6 +248,8 @@ export const UserRealTimeProvider = ({ children }) => {
       return [...unique, ...prev];
     });
 
+    createNotifications(fresh, { scope: "user" });
+
     // Set the latest batch — consumers read this ONCE then ignore
     setLatestBatch(fresh);
     setEventVersion((v) => v + 1);
@@ -191,12 +261,27 @@ export const UserRealTimeProvider = ({ children }) => {
   );
 
   const markAsRead = useCallback((notificationId) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
-    );
+    setNotifications((prev) => {
+      const notification = prev.find((n) => n.id === notificationId);
+      if (notification?.backendId && !notification.read) {
+        markNotificationsRead({
+          ids: [notification.backendId],
+          read: true,
+          scope: "user",
+        });
+      } else if (notification && !notification.read) {
+        markNotificationsRead({
+          externalIds: [notification.externalId || notification.id],
+          read: true,
+          scope: "user",
+        });
+      }
+      return prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n));
+    });
   }, []);
 
   const markAllAsRead = useCallback(() => {
+    markNotificationsRead({ markAll: true, read: true, scope: "user" });
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   }, []);
 

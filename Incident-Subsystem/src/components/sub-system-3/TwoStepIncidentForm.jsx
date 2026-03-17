@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import themeTokens from "../../Themetokens";
 import MapComponent from "../shared/MapComponent";
 
@@ -25,10 +25,33 @@ const TwoStepIncidentForm = ({
     onInputChange("location", address && !isCoordinateString ? address : "");
   };
 
+  const fileInputRef = useRef(null);
+
   const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
-    onInputChange("attachments", files);
+    const newFiles = Array.from(e.target.files);
+    onInputChange("attachments", [...(formData.attachments || []), ...newFiles]);
+    // Reset so the same file can be re-selected if removed
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  const removeAttachment = (index) => {
+    onInputChange("attachments", (formData.attachments || []).filter((_, i) => i !== index));
+  };
+
+  // Object URLs for image/video previews
+  const attachments = formData.attachments || [];
+  const previewUrls = useMemo(
+    () => attachments.map((f) =>
+      f.type?.startsWith("image/") || f.type?.startsWith("video/")
+        ? URL.createObjectURL(f)
+        : null,
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [attachments],
+  );
+  useEffect(() => {
+    return () => previewUrls.forEach((u) => u && URL.revokeObjectURL(u));
+  }, [previewUrls]);
 
   const handleAddCustomType = () => {
     const trimmed = customTypeInput.trim();
@@ -309,113 +332,119 @@ const TwoStepIncidentForm = ({
             </span>
           </label>
 
-          <div
-            className={`relative border-2 border-dashed ${t.cardBorder} rounded-lg p-6 ${t.cardBg} ${isDark ? "hover:border-slate-400 hover:bg-slate-200/10" : "hover:border-blue-500"} transition-all cursor-pointer group`}
-          >
-            <input
-              type="file"
-              multiple
-              accept="image/*,video/*"
-              onChange={handleFileChange}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            />
-            <div className="text-center">
-              <svg
-                className={`w-12 h-12 ${t.subtleText} mx-auto mb-3 group-hover:text-blue-500 transition-colors`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
-              </svg>
-              <p
-                className={`text-sm ${t.cardText} font-semibold mb-1 font-kumbh`}
-              >
-                Click to upload or drag and drop
-              </p>
-              <p className={`text-xs ${t.subtleText} font-kumbh`}>
-                Images & Videos up to 100MB
-              </p>
-            </div>
-          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,video/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
 
-          {/* Display selected files */}
-          {formData.attachments && formData.attachments.length > 0 && (
-            <div className="mt-3 space-y-2">
-              {formData.attachments.map((file, index) => (
-                <div
-                  key={index}
-                  className={`flex items-center gap-3 p-3 rounded-lg border ${t.cardBorder} ${t.cardBg}`}
+          <div
+            className={`border-2 border-dashed rounded-lg transition-all ${t.cardBorder} ${isDark ? "hover:border-slate-400" : "hover:border-blue-500"} ${attachments.length > 0 ? "p-3" : "p-6"}`}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const dropped = Array.from(e.dataTransfer.files).filter(
+                (f) => f.type.startsWith("image/") || f.type.startsWith("video/"),
+              );
+              if (dropped.length) onInputChange("attachments", [...attachments, ...dropped]);
+            }}
+          >
+            {attachments.length > 0 ? (
+              /* ── Thumbnail grid ── */
+              <div className="grid grid-cols-3 gap-2">
+                {attachments.map((file, index) => (
+                  <div
+                    key={index}
+                    className="relative group rounded-lg overflow-hidden bg-black/10"
+                    style={{ aspectRatio: "4/3" }}
+                  >
+                    {file.type?.startsWith("image/") && previewUrls[index] ? (
+                      <img
+                        src={previewUrls[index]}
+                        alt={file.name}
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                      />
+                    ) : file.type?.startsWith("video/") && previewUrls[index] ? (
+                      <video
+                        src={previewUrls[index]}
+                        className="w-full h-full object-cover"
+                        muted
+                        playsInline
+                        preload="metadata"
+                        onLoadedMetadata={(e) => { e.currentTarget.currentTime = 0.5; }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center gap-1 px-2">
+                        <svg className={`w-8 h-8 ${t.subtleText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        <p className={`text-[10px] font-kumbh text-center break-all leading-tight ${t.subtleText}`}>{file.name}</p>
+                      </div>
+                    )}
+
+                    {/* Video badge */}
+                    {file.type?.startsWith("video/") && (
+                      <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1 bg-black/60 rounded px-1.5 py-0.5">
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                        <span className="text-[9px] text-white font-bold font-kumbh uppercase tracking-wide">Video</span>
+                      </div>
+                    )}
+
+                    {/* File size */}
+                    <div className="absolute bottom-1.5 right-1.5 bg-black/60 rounded px-1.5 py-0.5">
+                      <span className="text-[9px] text-white font-kumbh">{(file.size / 1024 / 1024).toFixed(1)} MB</span>
+                    </div>
+
+                    {/* Remove button */}
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(index)}
+                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+
+                    {/* Hover overlay + filename */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors rounded-lg pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 right-0 px-2 pb-2 pt-6 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <p className="text-[10px] text-white font-kumbh truncate">{file.name}</p>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Add-more tile */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{ aspectRatio: "4/3" }}
+                  className={`rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1.5 transition-colors ${isDark ? "border-slate-600 hover:border-slate-400 text-slate-500 hover:text-slate-300" : "border-gray-300 hover:border-blue-400 text-gray-400 hover:text-blue-500"}`}
                 >
-                  {file.type?.startsWith("video/") ? (
-                    <svg
-                      className="w-5 h-5 text-purple-600 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 10l4.553-2.277A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      className="w-5 h-5 text-blue-600 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                  )}
-                  <span
-                    className={`text-sm ${t.cardText} flex-1 truncate font-kumbh`}
-                  >
-                    {file.name}
-                  </span>
-                  <span className={`text-xs ${t.subtleText} font-kumbh`}>
-                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                  </span>
-                  <button
-                    onClick={() => {
-                      const newFiles = formData.attachments.filter(
-                        (_, i) => i !== index,
-                      );
-                      onInputChange("attachments", newFiles);
-                    }}
-                    className="text-red-500 hover:text-red-700 p-1"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span className="text-[10px] font-bold font-kumbh uppercase tracking-wide">Add more</span>
+                </button>
+              </div>
+            ) : (
+              /* ── Empty state ── */
+              <div
+                className="text-center cursor-pointer group"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <svg className={`w-12 h-12 ${t.subtleText} mx-auto mb-3 group-hover:text-blue-500 transition-colors`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <p className={`text-sm ${t.cardText} font-semibold mb-1 font-kumbh`}>Click to upload or drag and drop</p>
+                <p className={`text-xs ${t.subtleText} font-kumbh`}>Images & Videos up to 100MB</p>
+              </div>
+            )}
+          </div>
 
           {errors.attachments && (
             <p className="text-red-500 text-sm mt-2 font-kumbh">

@@ -8,14 +8,17 @@
  *          ↑ overrides dropped here, isIndigent never reached the API
  * After:   handleFormSubmit(e, overrides) → submitAdminEntry(e, overrides)
  *          ↑ { isIndigent } flows through correctly
+ *
+ * CHANGED: Added Toast for submit success and error feedback.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SignupForm from '../../../../homepage/signup/SignUpForm';
 import VerificationSuccessModal from '../../verification/modals/VerificationSuccessModal';
 import MinimizedSuccessCard from '../../verification/MinimizedSuccessCard';
+import Toast from '../../../shared/modals/Toast';
 import { useAuthLogic } from '../../../../homepage/hooks/useAuthLogic';
 import themeTokens from '../../../../Themetokens';
 
@@ -46,6 +49,15 @@ const AddResident = () => {
   );
 
   const [isModalExpanded, setIsModalExpanded] = useState(false);
+
+  // ── Toast state ───────────────────────────────────────────────────────────
+  const [toasts, setToasts] = useState([]);
+  const addToast = useCallback((toast) => {
+    setToasts((prev) => [...prev, { ...toast, id: Date.now() }]);
+  }, []);
+  const removeToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   useEffect(() => {
     if (authSuccess) setIsModalExpanded(true);
@@ -83,11 +95,26 @@ const AddResident = () => {
   const handleMinimize = () => setIsModalExpanded(false);
 
   // FIX: Accept overrides as second param and forward to submitAdminEntry.
-  // SignupForm calls handleSubmit(e, { isIndigent }) for staff + Head residents.
-  // Without forwarding overrides, isIndigent was always 0 in the payload.
+  // CHANGED: Wrapped in try/catch to show toast on error.
   const handleFormSubmit = async (e, overrides = {}) => {
     if (e?.preventDefault) e.preventDefault();
-    await submitAdminEntry(e, overrides);
+    try {
+      await submitAdminEntry(e, overrides);
+      // Success toast — brief, modal takes over immediately
+      addToast({
+        type: 'success',
+        title: 'Resident Enrolled',
+        message: 'The resident profile has been created successfully.',
+        duration: 3000,
+      });
+    } catch (err) {
+      addToast({
+        type: 'error',
+        title: 'Enrollment Failed',
+        message: err.message || 'Failed to add resident. Please try again.',
+        duration: 5000,
+      });
+    }
   };
 
   const getFormattedSuccessData = () => {
@@ -103,6 +130,10 @@ const AddResident = () => {
 
   return (
     <div className={`p-5 sm:p-6 min-h-screen ${t.pageBg} transition-colors duration-300 pb-16`}>
+
+      {/* ── TOAST ──────────────────────────────────────────────────────────── */}
+      <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
+
       <div className="max-w-4xl mx-auto space-y-6">
 
         {/* Header */}
@@ -116,7 +147,7 @@ const AddResident = () => {
           </button>
           <div>
             <h1 className={`text-2xl font-bold font-spartan ${t.cardText} uppercase tracking-tight`}>
-              Resident Enrollment
+              Resident Registration
             </h1>
             <p className={`text-[10px] ${t.subtleText} uppercase tracking-[0.2em] font-bold mt-1`}>
               System Administrator Module

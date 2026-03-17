@@ -16,6 +16,7 @@ import { LanguageProvider } from "./context/LanguageContext";
 import { RealTimeProvider } from "./context/RealTimeContext";
 import { UserRealTimeProvider } from "./context/UserRealTimeContext";
 import { UserProvider } from "./context/UserContext";
+import { BrandingProvider } from "./context/BrandingContext";
 import Layout from "./components/shared/Layout";
 
 // ── Route guards ─────────────────────────────────────────────────────────────
@@ -48,6 +49,7 @@ import AdminLanding from "./pages/sub-system-3/admin/AdminLanding";
 import AdminIncidentReports from "./pages/sub-system-3/admin/AdminIncidentReports";
 import AdminAppointments from "./pages/sub-system-3/admin/AdminAppointments";
 import ResetPasswordPage from "./pages/sub-system-3/ResetPasswordPage";
+import CreateAccounts from "./pages/sub-system-3/admin/CreateAccounts";
 
 // ── Sub-System 1 (RS) pages ──────────────────────────────────────────────────
 import Dashboard from "./pages/sub-system-1/dashboard";
@@ -131,12 +133,14 @@ function App() {
   return (
     <LanguageProvider>
       <UserProvider>
-        <Router>
-          <ScrollToTop />
-          <div className="App">
-            <Routes>
+        <BrandingProvider>
+          <Router>
+            <ScrollToTop />
+            <div className="App">
+              <Routes>
 
               {/* ── PUBLIC ROUTES ───────────────────────────────────── */}
+              <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -151,7 +155,6 @@ function App() {
                     </UserRealTimeProvider>
                   }
                 >
-                  <Route path="/" element={<HomePage />} />
                   <Route path="/sub-system-2" element={<SubSystem2MainPage />} />
                   <Route path="/sub-system-2/req-bid" element={<Req_BIDPage />} />
                   <Route path="/sub-system-2/req-coi" element={<Req_COIPage />} />
@@ -207,17 +210,19 @@ function App() {
                   <Route path="/admin/settings" element={<Settings />} />
                   <Route path="/admin/profile" element={<ProfilePage />} />
                   <Route path="/admin/support" element={<Support />} />
+                  <Route path="/admin/accounts" element={<CreateAccounts />} />
                 </Route>
               </Route>
 
-              <Route path="*" element={<Navigate to="/login" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
 
-            </Routes>
-            
-            <DebugAutofillGate setFormData={activeSetFormData} />
-            
-          </div>
-        </Router>
+              </Routes>
+              
+              <DebugAutofillGate setFormData={activeSetFormData} />
+              
+            </div>
+          </Router>
+        </BrandingProvider>
       </UserProvider>
     </LanguageProvider>
   );

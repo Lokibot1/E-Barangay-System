@@ -98,9 +98,9 @@ const VerificationRow = ({ res, onReview, t, currentTheme }) => {
       <td className={`${cellBase} text-center`}>
         <button
           onClick={() => onReview(res)}   
-          className={`inline-flex min-w-[84px] items-center justify-center rounded-[12px] border px-3.5 py-2 text-[13px] font-semibold ${accent.button} hover:text-white transition-all shadow-none active:scale-95 font-kumbh`}
+          className={`group/button inline-flex min-w-[84px] items-center justify-center rounded-[12px] border px-3.5 py-2 text-[13px] font-semibold ${accent.button} transition-all shadow-none active:scale-95 font-kumbh`}
         >
-          Review
+          <span className="group-hover/button:!text-white">Review</span>
         </button>
       </td>
     </tr>

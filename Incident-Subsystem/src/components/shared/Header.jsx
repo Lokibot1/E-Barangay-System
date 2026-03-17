@@ -6,8 +6,10 @@ import { logout, getUser, isAdmin } from "../../homepage/services/loginService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useRealTime } from "../../context/RealTimeContext";
 import { useUserRealTime } from "../../context/UserRealTimeContext";
+import { useBranding } from "../../context/BrandingContext";
 import themeTokens from "../../Themetokens";
 import logo from "../../assets/images/logo.jpg";
+import { getResidentProfilePhoto, syncResidentProfilePhoto } from "../../utils/profilePhoto";
 
 // ── Notification sound using Web Audio API (no mp3 file needed) ─────────
 const playNotificationSound = () => {
@@ -92,14 +94,14 @@ const UserAppointmentDetailsModal = ({ notification, onClose, isDark, t }) => {
       <div className={`${t.cardBg} rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden`}>
 
         {/* Header */}
-        <div className={`px-6 py-4 border-b ${isDark ? "border-slate-700 bg-slate-900" : "border-gray-200 bg-gray-50"} flex items-center gap-3`}>
+        <div className={`px-6 py-4 border-b ${isDark ? "border-slate-700 bg-slate-900" : "border-gray-200 bg-gray-50"} flex items-start gap-3`}>
           <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700" : "bg-blue-100"}`}>
             <svg className={`w-5 h-5 ${isDark ? "text-slate-300" : "text-blue-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 text-left">
             <h3 className={`text-sm font-bold ${t.cardText} font-spartan truncate`}>{title}</h3>
             {data.complaint_id && (
               <p className={`text-xs ${t.subtleText} font-kumbh`}>
@@ -185,6 +187,132 @@ const UserAppointmentDetailsModal = ({ notification, onClose, isDark, t }) => {
   );
 };
 
+// â”€â”€ Resident Profile Update Details Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const ProfileUpdateDetailsModal = ({ notification, onClose, isDark, t }) => {
+  const data = notification?.data || {};
+  const fields = Array.isArray(data.changed_fields) ? data.changed_fields : [];
+  const details = Array.isArray(data.changed_details) ? data.changed_details : [];
+  const updatedBy = data.editor_name || notification.reportedBy || "Staff";
+  const changeCount = fields.length;
+  const timestamp = formatNotificationDateTime(notification.timestamp) || "N/A";
+
+  return (
+    <div className="fixed inset-0 z-[1600] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className={`${t.cardBg} rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden`}>
+        <div className={`px-6 py-4 border-b ${isDark ? "border-slate-700 bg-slate-900" : "border-gray-200 bg-gray-50"} flex items-center gap-3`}>
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700" : "bg-blue-100"}`}>
+            <svg className={`w-5 h-5 ${isDark ? "text-slate-300" : "text-blue-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M16 11a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0 text-left">
+            <h3 className={`text-left text-sm font-bold ${t.cardText} font-spartan truncate`}>Profile Update Details</h3>
+            <p className={`text-left text-xs ${t.subtleText} font-kumbh`}>Updated by {updatedBy}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${isDark ? "hover:bg-slate-700 text-slate-400" : "hover:bg-gray-200 text-gray-400"}`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="px-6 py-5 space-y-4">
+          <div className={`rounded-xl border ${t.cardBorder} overflow-hidden`}>
+            <div className={`px-4 py-3 ${isDark ? "bg-slate-800" : "bg-white"} flex items-center justify-between`}>
+              <span className={`text-xs font-semibold font-kumbh ${t.subtleText}`}>Changed fields</span>
+              <span className={`text-xs font-bold font-kumbh ${t.cardText}`}>{changeCount || "—"}</span>
+            </div>
+            <div className={`px-4 py-3 ${isDark ? "bg-slate-800" : "bg-white"} border-t ${t.cardBorder}`}>
+              {fields.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {fields.map((field, i) => (
+                    <span
+                      key={`${field}-${i}`}
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold font-kumbh border ${
+                        isDark
+                          ? "border-slate-600 bg-slate-700 text-slate-200"
+                          : "border-slate-200 bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {field}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className={`text-xs font-kumbh ${t.subtleText}`}>
+                  No field list available for this update.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className={`rounded-xl border ${t.cardBorder} overflow-hidden`}>
+            <div className={`px-4 py-3 ${isDark ? "bg-slate-800" : "bg-white"} flex items-center justify-between`}>
+              <span className={`text-xs font-semibold font-kumbh ${t.subtleText}`}>Value changes</span>
+              <span className={`text-xs font-bold font-kumbh ${t.cardText}`}>{details.length || "—"}</span>
+            </div>
+            <div className={`px-4 py-3 ${isDark ? "bg-slate-800" : "bg-white"} border-t ${t.cardBorder}`}>
+              {details.length > 0 ? (
+                <div className="space-y-2">
+                  {details.map((item, i) => (
+                    <div
+                      key={`${item.field || "field"}-${i}`}
+                      className={`flex items-start gap-3 rounded-lg border px-3 py-2 text-[11px] font-kumbh ${
+                        isDark
+                          ? "border-slate-700 bg-slate-700/70 text-slate-200"
+                          : "border-slate-200 bg-slate-50 text-slate-700"
+                      }`}
+                    >
+                      <div className={`w-28 flex-shrink-0 font-semibold ${isDark ? "text-slate-200" : "text-slate-600"}`}>
+                        {item.field || "Field"}
+                      </div>
+                      <div className="flex-1">
+                        <span className={`${isDark ? "text-slate-300" : "text-slate-600"}`}>
+                          {item.old_value ?? "N/A"}
+                        </span>
+                        <span className={`mx-2 ${isDark ? "text-slate-400" : "text-slate-500"}`}>-&gt;</span>
+                        <span className={`${isDark ? "text-white" : "text-slate-900"}`}>
+                          {item.new_value ?? "N/A"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className={`text-xs font-kumbh ${t.subtleText}`}>
+                  No value details available for this update.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className={`rounded-xl border ${t.cardBorder} overflow-hidden`}>
+            <div className={`flex items-center px-4 py-3 ${isDark ? "bg-slate-800" : "bg-white"}`}>
+              <span className={`text-xs font-semibold w-28 flex-shrink-0 font-kumbh ${t.subtleText}`}>Updated on</span>
+              <span className={`text-xs font-kumbh ${t.cardText}`}>{timestamp}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={`px-6 py-4 border-t ${isDark ? "border-slate-700 bg-slate-900" : "border-gray-100 bg-gray-50"} flex justify-end`}>
+          <button
+            onClick={onClose}
+            className={`px-4 py-2 rounded-lg text-sm font-kumbh font-semibold transition-colors ${
+              isDark ? "bg-slate-700 text-slate-300 hover:bg-slate-600" : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+            }`}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Relative time utility ───────────────────────────────────────────────
 // Laravel may return timestamps as "YYYY-MM-DD HH:MM:SS" or
 // "YYYY-MM-DDTHH:MM:SS.ffffff" without a timezone indicator — these are UTC.
@@ -197,6 +325,28 @@ const normalizeTimestamp = (date) => {
   return date;
 };
 
+const formatNotificationDate = (date) => {
+  if (!date) return "";
+  const normalized = normalizeTimestamp(date);
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return parsed.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
+
+const formatNotificationDateTime = (date) => {
+  if (!date) return "";
+  const normalized = normalizeTimestamp(date);
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return parsed.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
 const getRelativeTime = (date) => {
   if (!date) return "";
   const now = new Date();
@@ -207,28 +357,56 @@ const getRelativeTime = (date) => {
   return `${Math.floor(diff / 86400)} days ago`;
 };
 
+const BellOutlineIcon = ({ className = "", strokeWidth = 2 }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={strokeWidth}
+      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+    />
+  </svg>
+);
+
 // ── Memoized notification list item ─────────────────────────────────────
-const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppointment, onViewRegistration, onCloseMenu }) => {
+const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppointment, onViewRegistration, onViewProfileUpdate, onCloseMenu }) => {
   const statusColor = notification.read ? "bg-gray-400" : "bg-amber-500";
   const statusLabel = notification.read ? "Read" : "New";
   const timeAgo = getRelativeTime(notification.timestamp);
+  const absoluteDate = formatNotificationDate(notification.timestamp);
   const isIncident = notification.source === "incident";
   const isAppointment = notification.source === "appointment";
   const isRegistration = notification.source === "registration";
+  const isResident = notification.source === "resident";
   const isStatusChange = !!notification.oldStatus;
+  const byLabel = isResident ? "Updated by" : "Reported by";
 
   const sourceLabel = isRegistration
     ? "Registration"
     : isAppointment
       ? "Appointment"
-      : isIncident
-        ? "Incident"
-        : "Complaint";
+      : isResident
+        ? "Resident"
+        : isIncident
+          ? "Incident"
+          : "Complaint";
   const displayType = notification.type === "appointment_scheduled"
     ? "Appointment Scheduled"
     : notification.type === "registration_pending"
       ? "New Resident Registration"
-    : notification.type;
+      : notification.type === "profile_updated"
+        ? "Profile Updated"
+      : notification.type === "incident_status_updated"
+        ? "Incident Status Updated"
+        : notification.type === "complaint_status_updated"
+          ? "Complaint Status Updated"
+          : notification.type;
 
   const capitalize = (str) =>
     str ? str.replace(/\b\w/g, (c) => c.toUpperCase()) : str;
@@ -243,6 +421,11 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
     if (isRegistration && onViewRegistration) {
       onCloseMenu?.();
       onViewRegistration(notification);
+      return;
+    }
+    if (isResident && onViewProfileUpdate) {
+      onCloseMenu?.();
+      onViewProfileUpdate(notification);
       return;
     }
     onCloseMenu?.();
@@ -294,7 +477,9 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
       </div>
       <div className="flex items-center justify-between mt-2">
         <p className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"} font-kumbh`}>
-          {timeAgo}{notification.reportedBy ? ` · Reported by ${notification.reportedBy}` : ""}
+          {timeAgo}
+          {(isResident || notification.type === "profile_updated") && absoluteDate ? ` · ${absoluteDate}` : ""}
+          {notification.reportedBy ? ` · ${byLabel} ${notification.reportedBy}` : ""}
         </p>
         {(isAppointment || isRegistration) && (
           <span className={`text-[10px] font-semibold font-kumbh ${isDark ? "text-blue-400" : "text-blue-500"}`}>
@@ -307,30 +492,41 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
 });
 
 // ── Header ──────────────────────────────────────────────────────────────
-const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onViewAppointment, onViewRegistration, onCloseMenu }) => {
+const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onViewAppointment, onViewRegistration, onViewProfileUpdate, onCloseMenu }) => {
   const unread = !notification.read;
   const timeAgo = getRelativeTime(notification.timestamp);
+  const absoluteDate = formatNotificationDate(notification.timestamp);
   const isIncident = notification.source === "incident";
   const isAppointment = notification.source === "appointment";
   const isRegistration = notification.source === "registration";
+  const isResident = notification.source === "resident";
   const isStatusChange = !!notification.oldStatus;
+  const byLabel = isResident ? "Updated by" : "Reported by";
 
   const sourceLabel = isRegistration
     ? "Registration"
     : isAppointment
       ? "Appointment"
-      : isIncident
-        ? "Incident"
-        : "Complaint";
+      : isResident
+        ? "Resident"
+        : isIncident
+          ? "Incident"
+          : "Complaint";
 
   const displayType = notification.type === "appointment_scheduled"
     ? "Appointment Scheduled"
     : notification.type === "registration_pending"
       ? "New Resident Registration"
-      : notification.type;
+      : notification.type === "profile_updated"
+        ? "Profile Updated"
+      : notification.type === "incident_status_updated"
+        ? "Incident Status Updated"
+        : notification.type === "complaint_status_updated"
+          ? "Complaint Status Updated"
+          : notification.type;
 
   const actionLabel = isRegistration
-    ? "Open pending list"
+    ? "View"
     : isAppointment
       ? "Open details"
       : null;
@@ -348,6 +544,11 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
     if (isRegistration && onViewRegistration) {
       onCloseMenu?.();
       onViewRegistration(notification);
+      return;
+    }
+    if (isResident && onViewProfileUpdate) {
+      onCloseMenu?.();
+      onViewProfileUpdate(notification);
       return;
     }
     onCloseMenu?.();
@@ -369,33 +570,17 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={`inline-flex items-center rounded-full px-2 py-1 text-[10px] font-bold font-kumbh uppercase tracking-wide ${
-              isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-600"
-            }`}>
-              {sourceLabel}
-            </span>
-            <span className={`inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold font-kumbh ${
-              unread
-                ? isDark
-                  ? "border border-violet-400/30 bg-violet-500/20 text-violet-200"
-                  : "border border-violet-200 bg-violet-100 text-violet-700"
-                : isDark
-                  ? "border border-slate-600 bg-slate-700 text-slate-300"
-                  : "border border-slate-200 bg-slate-100 text-slate-500"
-            }`}>
-              {unread ? "Unread" : "Read"}
-            </span>
-            {isStatusChange && (
+          {isStatusChange && (
+            <div className="flex items-center gap-2 flex-wrap">
               <span className={`rounded-full px-2 py-1 text-[10px] font-medium font-kumbh ${
                 isDark ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-600"
               }`}>
                 {capitalize(notification.oldStatus)} {"->"} {capitalize(notification.newStatus)}
               </span>
-            )}
-          </div>
+            </div>
+          )}
 
-          <p className={`mt-2.5 text-[13px] font-semibold leading-4.5 font-kumbh ${
+          <p className={`${isStatusChange ? "mt-2.5" : ""} text-[13px] font-semibold leading-4.5 font-kumbh ${
             isDark ? "text-slate-100" : "text-slate-900"
           }`}>
             {displayType}
@@ -411,12 +596,16 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
             <p className={`text-[10px] font-kumbh ${
               isDark ? "text-slate-500" : "text-slate-500"
             }`}>
-              {timeAgo}{notification.reportedBy ? ` · Reported by ${notification.reportedBy}` : ""}
+              {timeAgo}
+              {(isResident || notification.type === "profile_updated") && absoluteDate ? ` · ${absoluteDate}` : ""}
+              {notification.reportedBy ? ` · ${byLabel} ${notification.reportedBy}` : ""}
             </p>
 
             {actionLabel && (
-              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[9px] font-semibold font-kumbh ${
-                isDark ? "bg-slate-700 text-violet-200" : "bg-violet-50 text-violet-700"
+              <span className={`inline-flex items-center rounded-lg border px-3 py-1.5 text-[9px] font-semibold font-kumbh shadow-sm transition-colors ${
+                isDark
+                  ? "border-violet-400/30 bg-violet-500/20 text-violet-200"
+                  : "border-violet-200 bg-violet-100 text-violet-700"
               }`}>
                 {actionLabel}
               </span>
@@ -428,7 +617,7 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
   );
 });
 
-const Header = ({ currentTheme, onThemeChange }) => {
+const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSidebarOpen }) => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -436,6 +625,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [appointmentDetail, setAppointmentDetail] = useState(null);
+  const [profileUpdateDetail, setProfileUpdateDetail] = useState(null);
   const notificationRef = useRef(null);
   const settingsRef = useRef(null);
   const profileRef = useRef(null);
@@ -443,6 +633,8 @@ const Header = ({ currentTheme, onThemeChange }) => {
   const location = useLocation();
   const { language, setLanguage, tr } = useLanguage();
   const isSubSystem2Route = location.pathname.startsWith("/sub-system-2") || location.pathname.startsWith("/incident-complaint");
+  const { logoDataUrl } = useBranding();
+  const logoSrc = logoDataUrl || logo;
 
   // Real-time notifications — merge admin and user contexts
   const adminRT = useRealTime();
@@ -460,6 +652,29 @@ const Header = ({ currentTheme, onThemeChange }) => {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+  const [residentPhoto, setResidentPhoto] = useState(() =>
+    isAdminUser ? "" : getResidentProfilePhoto(user),
+  );
+
+  useEffect(() => {
+    if (isAdminUser) return;
+    setResidentPhoto(getResidentProfilePhoto(user));
+    syncResidentProfilePhoto(user)
+      .then((remote) => {
+        if (remote) setResidentPhoto(remote);
+      })
+      .catch(() => {});
+  }, [isAdminUser, user]);
+
+  useEffect(() => {
+    const handler = () => {
+      if (!isAdminUser) {
+        setResidentPhoto(getResidentProfilePhoto(user));
+      }
+    };
+    window.addEventListener("residentPhotoUpdated", handler);
+    return () => window.removeEventListener("residentPhotoUpdated", handler);
+  }, [isAdminUser, user]);
 
   const t = themeTokens[currentTheme];
   const isDark = currentTheme === "dark";
@@ -596,6 +811,14 @@ const Header = ({ currentTheme, onThemeChange }) => {
     [location.pathname, navigate],
   );
 
+  const handleViewProfileUpdate = useCallback(
+    (notification) => {
+      if (isAdminUser) return;
+      setProfileUpdateDetail(notification);
+    },
+    [isAdminUser],
+  );
+
   return (
     <>
       <header className={`${t.cardBg} border-b ${t.cardBorder} shadow-sm relative z-20`}>
@@ -603,10 +826,28 @@ const Header = ({ currentTheme, onThemeChange }) => {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center space-x-2 sm:space-x-3">
+              {/* Mobile sidebar burger */}
+              {onMobileSidebarToggle && (
+                <button
+                  onClick={onMobileSidebarToggle}
+                  className={`md:hidden flex-shrink-0 p-2 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.subtleText} hover:opacity-80 transition-all shadow-sm`}
+                  aria-label="Toggle menu"
+                >
+                  {mobileSidebarOpen ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  )}
+                </button>
+              )}
               <img
-                src={logo}
+                src={logoSrc}
                 alt="Barangay Gulod Logo"
-                className={`w-9 h-9 sm:w-11 sm:h-11 ${isAdminUser ? "rounded-xl" : "rounded-full"} shadow-lg object-cover`}
+                className="w-9 h-9 sm:w-11 sm:h-11 rounded-full shadow-lg object-cover"
               />
               <div className="hidden sm:block text-left">
                 <h1
@@ -633,19 +874,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                   className={`p-2 sm:p-2.5 ${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} ${isAdminUser ? `rounded-xl border ${t.cardBorder}` : "rounded-full"} transition-all relative`}
                   title="Notifications"
                 >
-                  <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                    />
-                  </svg>
+                  <BellOutlineIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                   {unreadCount > 0 && (
                     <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-red-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
                       {unreadCount > 99 ? "99+" : unreadCount}
@@ -683,6 +912,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                             onMarkAsRead={handleMarkAsRead}
                             onViewAppointment={setAppointmentDetail}
                             onViewRegistration={handleViewRegistration}
+                            onViewProfileUpdate={handleViewProfileUpdate}
                             onCloseMenu={closeAllMenus}
                           />
                         ))
@@ -690,19 +920,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                         <div
                           className={`rounded-2xl border p-8 text-center ${t.subtleText} ${isDark ? "border-slate-700 bg-slate-800/60" : "border-slate-200 bg-white"}`}
                         >
-                          <svg
-                            className="w-12 h-12 mx-auto mb-3 opacity-30"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={1.5}
-                              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                            />
-                          </svg>
+                          <BellOutlineIcon className="w-12 h-12 mx-auto mb-3 opacity-30" strokeWidth={1.5} />
                           <p className="text-sm font-kumbh font-semibold">
                             No history yet
                           </p>
@@ -725,7 +943,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                               : "bg-violet-50 text-violet-700 hover:bg-violet-100"
                           }`}
                         >
-                          Mark All as Read
+                          Mark all as read
                         </button>
                         <button
                           onClick={handleClearHistory}
@@ -735,7 +953,7 @@ const Header = ({ currentTheme, onThemeChange }) => {
                               : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800"
                           }`}
                         >
-                          Clear
+                          Clear all
                         </button>
                       </div>
                     )}
@@ -905,7 +1123,15 @@ const Header = ({ currentTheme, onThemeChange }) => {
                   <div
                     className={`w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br ${t.primaryGrad} rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm`}
                   >
-                    {userInitials}
+                    {residentPhoto ? (
+                      <img
+                        src={residentPhoto}
+                        alt="Resident profile"
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    ) : (
+                      userInitials
+                    )}
                   </div>
                   <svg
                     className={`w-3 h-3 sm:w-4 sm:h-4 ${t.subtleText} hidden sm:block`}
@@ -933,7 +1159,15 @@ const Header = ({ currentTheme, onThemeChange }) => {
                         <div
                           className={`w-10 h-10 bg-gradient-to-br ${t.primaryGrad} rounded-[16px] flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-lg`}
                         >
-                          {userInitials}
+                          {residentPhoto ? (
+                            <img
+                              src={residentPhoto}
+                              alt="Resident profile"
+                              className="h-full w-full rounded-[16px] object-cover"
+                            />
+                          ) : (
+                            userInitials
+                          )}
                         </div>
                         <div className="flex-1 min-w-0 text-left">
                           <p
@@ -1021,6 +1255,15 @@ const Header = ({ currentTheme, onThemeChange }) => {
         <UserAppointmentDetailsModal
           notification={appointmentDetail}
           onClose={() => setAppointmentDetail(null)}
+          isDark={isDark}
+          t={t}
+        />
+      )}
+
+      {profileUpdateDetail && !isAdminUser && (
+        <ProfileUpdateDetailsModal
+          notification={profileUpdateDetail}
+          onClose={() => setProfileUpdateDetail(null)}
           isDark={isDark}
           t={t}
         />

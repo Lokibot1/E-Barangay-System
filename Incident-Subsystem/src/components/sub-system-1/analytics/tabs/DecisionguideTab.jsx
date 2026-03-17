@@ -6,12 +6,51 @@ function detectPurok(text = '') {
   return m ? m[0] : 'the affected purok';
 }
 
+function toNumber(value) {
+  if (value === null || value === undefined || value === '') return NaN;
+  const cleaned = String(value).replace('%', '').trim();
+  const num = Number(cleaned);
+  return Number.isFinite(num) ? num : NaN;
+}
+
+function resolveInsightCount(insight) {
+  const label = String(insight?.metric_label ?? '').toLowerCase();
+  if (label.includes('%') || label.includes('percent')) return NaN;
+  return toNumber(insight?.metric);
+}
+
+function resolvePriority(insight) {
+  const rawPct = insight?.metric_percentage ?? insight?.metricPercent ?? insight?.percentage ?? insight?.share_pct ?? insight?.sharePct;
+  const pct = toNumber(rawPct);
+  if (Number.isFinite(pct)) {
+    const count = resolveInsightCount(insight);
+    if (Number.isFinite(count)) {
+      if (pct >= 50 && count >= 30) return 'HIGH';
+      if ((pct >= 50 && count >= 15) || (pct >= 25 && count >= 15)) return 'MEDIUM';
+      return 'LOW';
+    }
+    if (pct >= 50) return 'HIGH';
+    if (pct >= 25) return 'MEDIUM';
+    return 'LOW';
+  }
+  return String(insight?.priority ?? 'LOW').toUpperCase();
+}
+
+function resolveMetricDisplay(insight) {
+  const rawPct = insight?.metric_percentage ?? insight?.metricPercent ?? insight?.percentage ?? insight?.share_pct ?? insight?.sharePct;
+  const pct = toNumber(rawPct);
+  if (Number.isFinite(pct)) {
+    return { value: pct, label: '% share' };
+  }
+  return { value: insight?.metric ?? 0, label: insight?.metric_label ?? 'items' };
+}
+
 function buildRecommendedAction(insight) {
   const title = String(insight?.title ?? '').toLowerCase();
   const description = String(insight?.description ?? '').toLowerCase();
   const metricLabel = String(insight?.metric_label ?? '').toLowerCase();
   const metric = Number(insight?.metric ?? 0);
-  const priority = String(insight?.priority ?? '').toUpperCase();
+  const priority = resolvePriority(insight);
   const text = `${title} ${description} ${metricLabel}`;
   const purok = detectPurok(insight?.title);
 
@@ -50,7 +89,8 @@ function buildRecommendedAction(insight) {
 
 function PriorityInsightCard({ insight, t }) {
   const autoAction = buildRecommendedAction(insight);
-  const priority = String(insight?.priority ?? 'LOW').toUpperCase();
+  const priority = resolvePriority(insight);
+  const metricDisplay = resolveMetricDisplay(insight);
   const tone = {
     HIGH: {
       iconWrap: 'bg-rose-50 text-rose-600',
@@ -91,7 +131,7 @@ function PriorityInsightCard({ insight, t }) {
           <div className="min-w-0">
             <h4 className={`text-base font-black ${t ? t.cardText : 'text-slate-900'}`}>{insight.title}</h4>
             <p className={`mt-1 text-sm ${t ? t.subtleText : 'text-slate-600'}`}>
-              {insight.metric ?? 0} {insight.metric_label ?? 'items'}
+              {metricDisplay.value ?? 0} {metricDisplay.label ?? 'items'}
             </p>
           </div>
         </div>
@@ -117,6 +157,10 @@ export default function DecisionGuideTab({ raw, t }) {
   const ins = raw?.insights ?? {};
   const insights = ins.insights ?? [];
   const summary = ins.summary ?? {};
+  const computedInsights = insights.map((insight) => ({
+    ...insight,
+    __priority: resolvePriority(insight),
+  }));
 
   const priorityGroups = [
     { key: 'HIGH', label: 'High Priority', icon: Siren, color: 'danger' },
@@ -134,7 +178,10 @@ export default function DecisionGuideTab({ raw, t }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {priorityGroups.map((pg) => {
-          const count = summary[`${pg.key.toLowerCase()}_priority`] ?? insights.filter((i) => i.priority === pg.key).length;
+          const computedCount = computedInsights.filter((i) => i.__priority === pg.key).length;
+          const count = computedInsights.length
+            ? computedCount
+            : (summary[`${pg.key.toLowerCase()}_priority`] ?? 0);
           return (
             <StatCard
               key={pg.key}
@@ -150,7 +197,7 @@ export default function DecisionGuideTab({ raw, t }) {
       </div>
 
       {priorityGroups.map((pg) => {
-        const filtered = insights.filter((i) => i.priority === pg.key);
+        const filtered = computedInsights.filter((i) => i.__priority === pg.key);
         if (!filtered.length) return null;
         return (
           <ChartCard

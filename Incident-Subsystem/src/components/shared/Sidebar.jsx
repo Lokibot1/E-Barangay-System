@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { isAdmin } from "../../homepage/services/loginService";
 import { useLanguage } from "../../context/LanguageContext";
+import { useBranding } from "../../context/BrandingContext";
 import themeTokens from "../../Themetokens";
 import logo from "../../assets/images/logo.jpg";
 import {
@@ -105,9 +106,9 @@ const getAdminNavItems = (s) => [
   },
   {
     id: "resident-registry",
-    label: s.residents,
+    label: s.userManagement,
     icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
-    path: "/admin/user-management",
+    path: "/admin/user-management",  
     children: [
       {
         id: "reports",
@@ -199,18 +200,33 @@ const getAdminNavItems = (s) => [
       },
     ],
   },
+ {
+  id: "accounts",
+  label: s.accounts || "Official Accounts",
+  icon: "M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z",
+  path: "/admin/accounts",
+}
 ];
 
 // ── Sidebar ─────────────────────────────────────────────────────────────────
-const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
+const Sidebar = ({ currentTheme, collapsed, onToggle, mobileOpen = false, onMobileToggle }) => {
   const t = themeTokens[currentTheme] || themeTokens.modern || themeTokens.blue;
   const isDark = currentTheme === "dark";
   const { tr } = useLanguage();
+  const { logoDataUrl } = useBranding();
+  const logoSrc = logoDataUrl || logo;
   const navigate = useNavigate();
   const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isMobileMenuOpen = mobileOpen;
+  const setIsMobileMenuOpen = (val) => {
+    if (onMobileToggle) onMobileToggle(typeof val === "function" ? val(mobileOpen) : val);
+  };
   const [flyoutMenu, setFlyoutMenu] = useState(null);
   const itemButtonRefs = React.useRef({});
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.matchMedia("(min-width: 768px)").matches;
+  });
   const adminMode = isAdmin();
   const isSubSystem2Route = location.pathname.startsWith("/sub-system-2");
   const isIncidentRoute = location.pathname.startsWith("/incident-complaint");
@@ -257,20 +273,43 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
 
   const [expandedItems, setExpandedItems] = useState(getExpandedFromPath);
 
+  React.useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const media = window.matchMedia("(min-width: 768px)");
+    const handler = (event) => setIsDesktop(event.matches);
+    handler(media);
+    if (media.addEventListener) {
+      media.addEventListener("change", handler);
+      return () => media.removeEventListener("change", handler);
+    }
+    media.addListener(handler);
+    return () => media.removeListener(handler);
+  }, []);
+
+  const isCollapsed = collapsed && isDesktop;
+  const sidebarWidthClass = isDesktop
+    ? isCollapsed
+      ? "w-[72px]"
+      : "w-[224px]"
+    : isMobileMenuOpen
+      ? "w-[86vw] max-w-[280px]"
+      : "w-0";
+  const sidebarOverflowClass = isDesktop ? "overflow-visible" : "overflow-hidden";
+
   // Update expanded state when route changes
   React.useEffect(() => {
     setExpandedItems(getExpandedFromPath());
   }, [location.pathname]);
 
   React.useEffect(() => {
-    if (!collapsed) {
+    if (!isCollapsed) {
       setFlyoutMenu(null);
     }
-  }, [collapsed, location.pathname]);
+  }, [isCollapsed, location.pathname]);
 
   React.useEffect(() => {
     const handleOutsideClick = (event) => {
-      if (!collapsed) return;
+      if (!isCollapsed) return;
       const target = event.target;
       if (
         target.closest("[data-flyout-menu]") ||
@@ -284,12 +323,12 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
 
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, [collapsed]);
+  }, [isCollapsed]);
 
   const handleItemClick = (item) => {
     if (item.children && item.children.length > 0) {
       // Collapsed mode: show floating submenu (no full sidebar expansion).
-      if (collapsed) {
+      if (isCollapsed) {
         const buttonEl = itemButtonRefs.current[item.id];
         const rect = buttonEl?.getBoundingClientRect();
         const nextFlyout = {
@@ -337,7 +376,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
     e.stopPropagation();
     navigate(subItem.path);
     setFlyoutMenu(null);
-    if (collapsed) setExpandedItems({});
+    if (isCollapsed) setExpandedItems({});
     setIsMobileMenuOpen(false);
   };
 
@@ -424,35 +463,6 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className={`fixed top-3 left-3 z-50 md:hidden p-2 ${t.cardBg} ${t.cardBorder} border rounded-lg shadow-lg`}
-      >
-        <svg
-          className={`w-6 h-6 ${t.cardText}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          {isMobileMenuOpen ? (
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          ) : (
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          )}
-        </svg>
-      </button>
-
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div
@@ -468,19 +478,19 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
           flex flex-col h-screen
           transition-all duration-300 ease-in-out
           flex-shrink-0
-          relative overflow-visible
+          relative ${sidebarOverflowClass}
           fixed md:relative
           z-40
+          ${sidebarWidthClass}
           ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
-        style={{ width: collapsed ? "72px" : "224px" }}
       >
         {/* ── Logo row ────────────────────────────────────────────────────── */}
         <div
           className={`
             flex items-center border-b ${t.sidebarBorder}
             flex-shrink-0
-            ${collapsed ? "justify-center px-0 py-3" : "gap-1.5 px-3 py-3"}
+            ${isCollapsed ? "justify-center px-0 py-3" : "gap-1.5 px-3 py-3"}
           `}
         >
           <button
@@ -491,18 +501,18 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
             }}
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             className={`hidden md:inline-flex flex-shrink-0 items-center justify-center ${t.subtleText} transition-colors ${
-              collapsed ? "h-7 w-7" : "h-8 w-8"
+              isCollapsed ? "h-7 w-7" : "h-8 w-8"
             } ${isDark ? "hover:text-slate-200" : "hover:text-slate-700"}`}
           >
-            <Menu className={collapsed ? "h-3.5 w-3.5" : "h-[14px] w-[14px]"} />
+            <Menu className={isCollapsed ? "h-3.5 w-3.5" : "h-[14px] w-[14px]"} />
           </button>
 
-          {!collapsed && (
+          {!isCollapsed && (
             <>
               {/* Logo mark */}
               <button className="w-8 h-8 rounded-full shadow-sm flex-shrink-0 overflow-hidden">
                 <img
-                  src={logo}
+                  src={logoSrc}
                   alt="Barangay Gulod Logo"
                   className="w-full h-full object-cover"
                 />
@@ -531,9 +541,9 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
 
         {/* ── Nav links ───────────────────────────────────────────────────── */}
         <nav
-          className={`flex-1 overflow-y-auto ${collapsed ? "py-3 px-2" : "py-3 px-2"}`}
+          className={`flex-1 overflow-y-auto ${isCollapsed ? "py-3 px-2" : "py-3 px-2"}`}
         >
-          <ul className={`flex flex-col ${collapsed ? "gap-2" : "gap-1"}`}>
+          <ul className={`flex flex-col ${isCollapsed ? "gap-2" : "gap-1"}`}>
             {NAV_ITEMS.map((item) => {
               const active = item.path ? isParentActive(item) : false;
               const expanded = expandedItems[item.id];
@@ -545,7 +555,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                   key={item.id}
                   className={`relative ${
                     item.id === "settings"
-                      ? collapsed
+                      ? isCollapsed
                         ? `mt-3 pt-3 border-t ${t.sidebarBorder}`
                         : "mt-1 pt-1"
                       : ""
@@ -558,12 +568,12 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                     }}
                     data-flyout-trigger="true"
                     onClick={() => handleItemClick(item)}
-                    title={collapsed ? item.label : undefined}
+                    title={isCollapsed ? item.label : undefined}
                     className={`
                       w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl
                       transition-all duration-150 text-left
                       border
-                      ${collapsed ? "inline-flex items-center justify-center gap-0 px-0 py-0 w-9 h-9 mx-auto text-center rounded-lg" : ""}
+                      ${isCollapsed ? "inline-flex items-center justify-center gap-0 px-0 py-0 w-9 h-9 mx-auto text-center rounded-lg" : ""}
                       ${
                         active
                           ? `${t.sidebarActiveBg} ${t.sidebarActiveText} ${t.sidebarActiveBorder} shadow-sm`
@@ -575,14 +585,14 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                     {/* Icon */}
                     <span
                       className={`inline-flex items-center justify-center flex-shrink-0 transition-colors duration-150 ${
-                        collapsed
+                        isCollapsed
                           ? `h-8 w-8 ${active ? t.sidebarIconActive : isDark ? "text-slate-300" : "text-slate-500"}`
                           : `w-8 h-8 rounded-lg ${
                               active
                                 ? `${t.primaryLight} ${t.sidebarIconActive}`
                                 : `${isDark ? "bg-slate-800/80 text-slate-400" : "bg-slate-100 text-slate-500"}`
                             }`
-                      } ${collapsed ? "mx-auto" : ""}`}
+                      } ${isCollapsed ? "mx-auto" : ""}`}
                     >
                       <span
                         className={`transition-colors duration-150 ${active ? t.sidebarIconActive : "text-current"}`}
@@ -592,7 +602,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                     </span>
 
                     {/* Label — slides out when collapsed */}
-                    {!collapsed && (
+                    {!isCollapsed && (
                       <span
                         className="font-kumbh text-[13px] font-medium whitespace-nowrap truncate transition-all duration-300 flex-1"
                         style={{ width: "112px", opacity: 1 }}
@@ -602,7 +612,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                     )}
 
                     {/* Badge (admin items) */}
-                    {item.badge && !collapsed && (
+                    {item.badge && !isCollapsed && (
                       <span
                         className={`text-xs font-semibold font-kumbh px-2 py-0.5 rounded-md flex-shrink-0 ${
                           active
@@ -615,7 +625,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                     )}
 
                     {/* Chevron for expandable items */}
-                    {hasChildren && !collapsed && (
+                    {hasChildren && !isCollapsed && (
                       <svg
                         className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${t.subtleText} ${
                           expanded ? "rotate-180" : ""
@@ -635,7 +645,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
                   </button>
 
                   {/* Sublinks */}
-                  {hasChildren && expanded && !collapsed && (
+                  {hasChildren && expanded && !isCollapsed && (
                     <div className="relative mt-1 ml-3 pl-4">
                       <span
                         aria-hidden="true"
@@ -696,7 +706,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle }) => {
         </nav>
 
         {/* Floating sublinks (collapsed mode) - portal layer to stay above page content */}
-        {collapsed &&
+        {isCollapsed &&
           flyoutMenu &&
           typeof document !== "undefined" &&
           (() => {
