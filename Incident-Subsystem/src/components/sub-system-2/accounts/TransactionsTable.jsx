@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import Swal from "sweetalert2";
+import Swal from "../../../utils/swal";
 import themeTokens from "../../../Themetokens";
 import DatePickerField from "../../shared/DatePickerField";
 
