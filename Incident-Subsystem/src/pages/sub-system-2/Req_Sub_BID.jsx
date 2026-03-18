@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import themeTokens from "../../Themetokens";
+import qrImage from "../../pages/sub-system-2/qr.jpeg";
 
 const Req_Sub_BID = () => {
   const navigate = useNavigate();
@@ -27,11 +28,23 @@ const Req_Sub_BID = () => {
           <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-4`}>
             <div className="flex flex-col items-center text-center">
               <div className="w-28 h-28 rounded-full bg-green-500 flex items-center justify-center mb-5">
-                <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                <svg
+                  className="w-16 h-16 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               </div>
-              <h1 className={`font-spartan text-2xl font-bold ${t.cardText}`}>Request Submitted Successfully</h1>
+              <h1 className={`font-spartan text-2xl font-bold ${t.cardText}`}>
+                Request Submitted Successfully
+              </h1>
               <p className={`font-kumbh text-base ${t.subtleText} mt-2`}>
                 Your application for a Barangay ID has been received.
               </p>
@@ -39,12 +52,15 @@ const Req_Sub_BID = () => {
 
             <div className={`border-t ${t.cardBorder} my-6`} />
 
-            <p><span className="font-bold">Date Submitted:</span> {formattedDate}</p>
+            <p>
+              <span className="font-bold">Date Submitted:</span> {formattedDate}
+            </p>
 
             <div className={`border-t ${t.cardBorder} my-6`} />
 
             <p className={`font-kumbh text-sm ${t.cardText}`}>
-              Please wait for an email notification regarding the status of your request. You will receive an email once it has been processed.
+              Please wait for an email notification regarding the status of your request. You
+              will receive an email once it has been processed.
             </p>
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center items-center">
@@ -66,12 +82,20 @@ const Req_Sub_BID = () => {
           {/* Sidebar */}
           <div className="space-y-4">
             <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-3`}>
-              <h3 className={`font-spartan text-xl font-bold ${t.cardText} mb-2`}>Service Information</h3>
+              <h3 className={`font-spartan text-xl font-bold ${t.cardText} mb-2`}>
+                Service Information
+              </h3>
               <p className={`font-kumbh text-base font-bold ${t.cardText}`}>Requirements:</p>
-              <p className={`font-kumbh text-sm ${t.cardText} mt-1`}>Valid ID, Proof of Billing, Personal Appearance.</p>
+              <p className={`font-kumbh text-sm ${t.cardText} mt-1`}>
+                Valid ID, Proof of Billing, Personal Appearance.
+              </p>
               <p className={`font-kumbh text-base font-bold ${t.cardText} mt-2`}>Fees:</p>
-              <p className={`font-kumbh text-sm ${t.cardText} mt-1`}>₱20.00 (Voter)</p>
-              <p className={`font-kumbh text-sm ${t.cardText} mt-1`}>₱30.00 (Non-voter)</p>
+              <p className={`font-kumbh text-sm ${t.cardText} mt-1`}>₱100.00</p>
+
+              <div className="flex justify-center items-center mb-5">
+                <img src={qrImage} alt="QR Code" className="w-35 h-35 object-contain" />
+              </div>
+
               <p className={`font-kumbh text-base font-bold ${t.cardText} mt-2`}>Validity:</p>
               <p className={`font-kumbh text-sm ${t.cardText} mt-1`}>1 Year</p>
             </div>
@@ -79,7 +103,9 @@ const Req_Sub_BID = () => {
             <div className={`${t.cardBg} ${t.cardBorder} border rounded-2xl p-3`}>
               <h3 className={`font-spartan text-lg font-bold ${t.cardText} mb-1`}>Need Help?</h3>
               <p className={`font-kumbh text-sm ${t.cardText}`}>8-3663-198</p>
-              <p className={`font-kumbh text-sm ${t.cardText} mt-1`}>teamtolentino@gmail.com</p>
+              <p className={`font-kumbh text-sm ${t.cardText} mt-1`}>
+                teamtolentino@gmail.com
+              </p>
             </div>
           </div>
         </div>
