@@ -7,10 +7,14 @@ const resolveHost = () => {
 };
 
 export const API_HOST = resolveHost();
+export const RESIDENT_API_PORT = import.meta.env.VITE_RESIDENT_API_PORT || "8002";
+export const RESIDENT_API_BASE_URL =
+  import.meta.env.VITE_RESIDENT_API_BASE_URL ||
+  `http://${API_HOST}:${RESIDENT_API_PORT}/api`;
 
 export const BRANDING_API_URL =
   import.meta.env.VITE_BRANDING_API_URL ||
-  `http://${API_HOST}/E-Barangay-System/api/branding/logo.php`;
+  `${RESIDENT_API_BASE_URL}/branding/logo`;
 
 export const PROFILE_PHOTO_API_URL =
   import.meta.env.VITE_PROFILE_PHOTO_API_URL ||

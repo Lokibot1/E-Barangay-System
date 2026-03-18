@@ -1,4 +1,5 @@
 import { BRANDING_API_URL } from "../config/runtimeApi";
+import { getToken } from "../homepage/services/loginService";
 
 const STORAGE_KEY = "barangay_logo_data_url";
 
@@ -47,15 +48,35 @@ export const fetchBarangayLogoDataUrlRemote = async () => {
   }
 };
 
+const buildBrandingHeaders = (includeJson = false) => {
+  const token = getToken();
+  const headers = { Accept: "application/json" };
+
+  if (includeJson) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  return headers;
+};
+
 export const saveBarangayLogoDataUrlRemote = async (dataUrl) => {
   const res = await fetch(BRANDING_API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    headers: buildBrandingHeaders(true),
     body: JSON.stringify({ dataUrl }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data?.message || "Failed to save logo.");
+    throw new Error(
+      data?.message ||
+      (res.status === 401 || res.status === 403
+        ? "Only an authenticated admin can update the barangay logo."
+        : "Failed to save logo."),
+    );
   }
   return data?.dataUrl || data?.imageUrl || dataUrl || "";
 };
@@ -63,10 +84,15 @@ export const saveBarangayLogoDataUrlRemote = async (dataUrl) => {
 export const clearBarangayLogoDataUrlRemote = async () => {
   const res = await fetch(BRANDING_API_URL, {
     method: "DELETE",
-    headers: { Accept: "application/json" },
+    headers: buildBrandingHeaders(),
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data?.message || "Failed to remove logo.");
+    throw new Error(
+      data?.message ||
+      (res.status === 401 || res.status === 403
+        ? "Only an authenticated admin can update the barangay logo."
+        : "Failed to remove logo."),
+    );
   }
 };
