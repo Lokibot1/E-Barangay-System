@@ -567,10 +567,18 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
     onMarkAsRead(notification.id);
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    handleClick();
+  };
+
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
       className={`w-full rounded-xl border p-3 text-left transition-all ${
         unread
           ? isDark
@@ -642,7 +650,7 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
           </button>
         )}
       </div>
-    </button>
+    </div>
   );
 });
 

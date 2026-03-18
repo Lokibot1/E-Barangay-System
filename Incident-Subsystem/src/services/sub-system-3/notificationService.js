@@ -1,5 +1,11 @@
-const API_BASE = "http://localhost:8000/api";
+import { INCIDENT_API_BASE_URL } from "../../config/runtimeApi";
+
+const API_BASE = INCIDENT_API_BASE_URL;
 const NOTIF_ENDPOINT = `${API_BASE}/notifications`;
+const SUPPORTS_NOTIFICATION_CREATE =
+  String(import.meta.env.VITE_NOTIFICATION_CREATE_ENABLED || "").toLowerCase() === "true";
+const SUPPORTS_EXTERNAL_ID_MARK_READ =
+  String(import.meta.env.VITE_NOTIFICATION_EXTERNAL_IDS_ENABLED || "").toLowerCase() === "true";
 
 const getAuthUser = () => {
   try {
@@ -159,10 +165,22 @@ export const markNotificationsRead = async ({
     scope,
     userId,
   });
+  const hasIds = Array.isArray(ids) && ids.length > 0;
+  const hasExternalIds = Array.isArray(externalIds) && externalIds.length > 0;
+
+  if (!markAll && !hasIds && !(SUPPORTS_EXTERNAL_ID_MARK_READ && hasExternalIds)) {
+    return null;
+  }
 
   const body = markAll
     ? { mark_all: true, read }
-    : { ids, external_ids: externalIds, read };
+    : {
+        ...(hasIds ? { ids } : {}),
+        ...(SUPPORTS_EXTERNAL_ID_MARK_READ && hasExternalIds
+          ? { external_ids: externalIds }
+          : {}),
+        read,
+      };
 
   if (resolvedScope) body.scope = resolvedScope;
   if (resolvedUserId !== null && resolvedUserId !== undefined) {
@@ -234,7 +252,7 @@ export const fetchNotifications = async ({ perPage = 50, scope, userId } = {}) =
  * @returns {Promise<object|null>}
  */
 export const createNotification = async (notification, options = {}) => {
-  if (!notification) return null;
+  if (!notification || !SUPPORTS_NOTIFICATION_CREATE) return null;
   const token = localStorage.getItem("authToken");
   if (!token) return null;
 

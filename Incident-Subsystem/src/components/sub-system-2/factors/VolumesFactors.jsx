@@ -17,30 +17,55 @@ import {
 import ChartCard from "./ChartCard";
 import { getFactorTheme } from "./chartTheme";
 import { CHART_COLORS, REPORT_TYPE_COLORS } from "./data";
+import { DOCUMENTS_API_BASE_URL } from "../../../config/runtimeApi";
 
 const GENDER_COLORS = ["#3B82F6", "#EC4899", "#FACC15"];
+let documentsFactorsUnavailable = false;
+const DEFAULT_REPORT_SHARE = [
+  { name: "BID", value: 0 },
+  { name: "COI", value: 0 },
+  { name: "COR", value: 0 },
+];
+const DEFAULT_GENDER_DISTRIBUTION = [
+  { name: "Male", value: 0 },
+  { name: "Female", value: 0 },
+];
+const DEFAULT_AGE_DISTRIBUTION = [
+  { ageGroup: "18-25", value: 0 },
+  { ageGroup: "26-35", value: 0 },
+  { ageGroup: "36-45", value: 0 },
+  { ageGroup: "46-60", value: 0 },
+  { ageGroup: "60+", value: 0 },
+];
+
+const toSafeCount = (value) => {
+  const count = Number(value);
+  return Number.isFinite(count) ? count : 0;
+};
+
+const fetchFactorData = async (endpoint) => {
+  if (documentsFactorsUnavailable) return null;
+
+  try {
+    const response = await fetch(`${DOCUMENTS_API_BASE_URL}/${endpoint}`);
+    if (!response.ok) {
+      return null;
+    }
+    return response.json();
+  } catch {
+    documentsFactorsUnavailable = true;
+    return null;
+  }
+};
 
 const VolumesFactors = ({ t, isDark, currentTheme = "modern" }) => {
   const factorTheme = getFactorTheme(currentTheme);
 
-  const [reportShare, setReportShare] = useState([
-    { name: "BID", value: 0 },
-    { name: "COI", value: 0 },
-    { name: "COR", value: 0 },
-  ]);
+  const [reportShare, setReportShare] = useState(DEFAULT_REPORT_SHARE);
 
-  const [genderDistribution, setGenderDistribution] = useState([
-    { name: "Male", value: 0 },
-    { name: "Female", value: 0 },
-  ]);
+  const [genderDistribution, setGenderDistribution] = useState(DEFAULT_GENDER_DISTRIBUTION);
 
-  const [ageDistribution, setAgeDistribution] = useState([
-    { ageGroup: "18-25", value: 0 },
-    { ageGroup: "26-35", value: 0 },
-    { ageGroup: "36-45", value: 0 },
-    { ageGroup: "46-60", value: 0 },
-    { ageGroup: "60+", value: 0 },
-  ]);
+  const [ageDistribution, setAgeDistribution] = useState(DEFAULT_AGE_DISTRIBUTION);
 
   const tooltipStyle = {
     borderRadius: "10px",
@@ -51,62 +76,54 @@ const VolumesFactors = ({ t, isDark, currentTheme = "modern" }) => {
   };
 
   useEffect(() => {
-    async function fetchRequestCounts() {
-      try {
-        const response = await fetch(
-          "http://127.0.0.1:8001/api/request-counts"
-        );
-        const data = await response.json();
+    let cancelled = false;
 
+    async function loadFactorCharts() {
+      const requestData = await fetchFactorData("request-counts");
+      if (cancelled) return;
+      if (requestData) {
         setReportShare([
-          { name: "BID", value: data.bid },
-          { name: "COI", value: data.coi },
-          { name: "COR", value: data.cor },
+          { name: "BID", value: toSafeCount(requestData?.bid) },
+          { name: "COI", value: toSafeCount(requestData?.coi) },
+          { name: "COR", value: toSafeCount(requestData?.cor) },
         ]);
-      } catch (error) {
-        console.error("Failed to fetch request counts:", error);
+      } else {
+        setReportShare(DEFAULT_REPORT_SHARE);
+        setGenderDistribution(DEFAULT_GENDER_DISTRIBUTION);
+        setAgeDistribution(DEFAULT_AGE_DISTRIBUTION);
+        return;
       }
-    }
-    fetchRequestCounts();
-  }, []);
 
-  useEffect(() => {
-    async function fetchGenderCounts() {
-      try {
-        const response = await fetch("http://127.0.0.1:8001/api/gender-counts");
-        const data = await response.json();
-
+      const genderData = await fetchFactorData("gender-counts");
+      if (cancelled) return;
+      if (genderData) {
         setGenderDistribution([
-          { name: "Male", value: data.Male },
-          { name: "Female", value: data.Female },
+          { name: "Male", value: toSafeCount(genderData?.Male) },
+          { name: "Female", value: toSafeCount(genderData?.Female) },
         ]);
-      } catch (error) {
-        console.error("Failed to fetch gender counts:", error);
+      } else {
+        setGenderDistribution(DEFAULT_GENDER_DISTRIBUTION);
       }
-    }
 
-    fetchGenderCounts();
-  }, []);
-
-  useEffect(() => {
-    async function fetchAgeCounts() {
-      try {
-        const response = await fetch("http://127.0.0.1:8001/api/age-counts");
-        const data = await response.json();
-
+      const ageData = await fetchFactorData("age-counts");
+      if (cancelled) return;
+      if (ageData) {
         setAgeDistribution([
-          { ageGroup: "18-25", value: data["18-25"] },
-          { ageGroup: "26-35", value: data["26-35"] },
-          { ageGroup: "36-45", value: data["36-45"] },
-          { ageGroup: "46-60", value: data["46-60"] },
-          { ageGroup: "60+", value: data["60+"] },
+          { ageGroup: "18-25", value: toSafeCount(ageData?.["18-25"]) },
+          { ageGroup: "26-35", value: toSafeCount(ageData?.["26-35"]) },
+          { ageGroup: "36-45", value: toSafeCount(ageData?.["36-45"]) },
+          { ageGroup: "46-60", value: toSafeCount(ageData?.["46-60"]) },
+          { ageGroup: "60+", value: toSafeCount(ageData?.["60+"]) },
         ]);
-      } catch (error) {
-        console.error("Failed to fetch age counts:", error);
+      } else {
+        setAgeDistribution(DEFAULT_AGE_DISTRIBUTION);
       }
     }
 
-    fetchAgeCounts();
+    loadFactorCharts();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const generateInsightPDF = () => {
@@ -319,33 +336,35 @@ const VolumesFactors = ({ t, isDark, currentTheme = "modern" }) => {
           t={t}
           currentTheme={currentTheme}
         >
-          <ResponsiveContainer width="100%" height={260}>
-            <PieChart>
-              <Pie
-                data={reportShare}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="45%"
-                innerRadius={52}
-                outerRadius={84}
-                paddingAngle={2}
-                label
-              >
-                {reportShare.map((entry, index) => (
-                  <Cell
-                    key={entry.name}
-                    fill={
-                      REPORT_TYPE_COLORS[entry.name] ||
-                      CHART_COLORS[index % CHART_COLORS.length]
-                    }
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+          <div className="h-[260px] w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+              <PieChart>
+                <Pie
+                  data={reportShare}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="45%"
+                  innerRadius={52}
+                  outerRadius={84}
+                  paddingAngle={2}
+                  label
+                >
+                  {reportShare.map((entry, index) => (
+                    <Cell
+                      key={entry.name}
+                      fill={
+                        REPORT_TYPE_COLORS[entry.name] ||
+                        CHART_COLORS[index % CHART_COLORS.length]
+                      }
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </ChartCard>
 
         <ChartCard
@@ -355,22 +374,24 @@ const VolumesFactors = ({ t, isDark, currentTheme = "modern" }) => {
           t={t}
           currentTheme={currentTheme}
         >
-          <ResponsiveContainer width="110%" height={300}>
-            <BarChart data={genderDistribution}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                {genderDistribution.map((entry, index) => (
-                  <Cell
-                    key={entry.name}
-                    fill={GENDER_COLORS[index % GENDER_COLORS.length]}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="h-[300px] w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+              <BarChart data={genderDistribution}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                  {genderDistribution.map((entry, index) => (
+                    <Cell
+                      key={entry.name}
+                      fill={GENDER_COLORS[index % GENDER_COLORS.length]}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </ChartCard>
 
         <ChartCard
@@ -380,15 +401,17 @@ const VolumesFactors = ({ t, isDark, currentTheme = "modern" }) => {
           t={t}
           currentTheme={currentTheme}
         >
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={ageDistribution}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="ageGroup" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="value" radius={[8, 8, 0, 0]} fill="#6366F1" />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="h-[300px] w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+              <BarChart data={ageDistribution}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="ageGroup" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="value" radius={[8, 8, 0, 0]} fill="#6366F1" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </ChartCard>
       </div>
     </div>

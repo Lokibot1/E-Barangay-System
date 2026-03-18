@@ -1,7 +1,7 @@
-const PORTS = [8000, 8001, 8002];
+import { INCIDENT_API_BASE_URL } from "../../config/runtimeApi";
 
-const buildUrl = (port, params) => {
-  const url = new URL(`http://localhost:${port}/api/audit-logs`);
+const buildUrl = (params) => {
+  const url = new URL(`${INCIDENT_API_BASE_URL}/audit-logs`);
   Object.entries(params).forEach(([key, val]) => {
     if (val !== undefined && val !== null && val !== "") {
       url.searchParams.set(key, String(val));
@@ -10,52 +10,24 @@ const buildUrl = (port, params) => {
   return url.toString();
 };
 
-const fetchFromPort = async (port, params) => {
-  const token = localStorage.getItem("authToken");
-  const response = await fetch(buildUrl(port, params), {
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || `Port ${port}: request failed.`);
-  return data;
-};
-
 export const fetchAuditLogs = async (params = {}) => {
-  const results = await Promise.allSettled(PORTS.map((port) => fetchFromPort(port, params)));
-
-  const allItems = [];
-  let maxLastPage = 1;
-  let allFailed = true;
-  let firstError = null;
-
-  results.forEach((result) => {
-    if (result.status === "fulfilled") {
-      allFailed = false;
-      allItems.push(...(result.value.data || []));
-      const lp = result.value.meta?.last_page ?? 1;
-      if (lp > maxLastPage) maxLastPage = lp;
-    } else if (!firstError) {
-      firstError = result.reason;
+  const token = localStorage.getItem("authToken");
+  try {
+    const response = await fetch(buildUrl(params), {
+      headers: {
+        Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to fetch audit logs.");
     }
-  });
-
-  if (allFailed) {
-    throw new Error(firstError?.message || "Failed to fetch audit logs.");
+    return data;
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error("Audit log backend is unavailable.");
+    }
+    throw error;
   }
-
-  // Deduplicate by id
-  const seen = new Set();
-  const unique = allItems.filter((item) => {
-    if (seen.has(item.id)) return false;
-    seen.add(item.id);
-    return true;
-  });
-
-  // Sort by created_at descending (most recent first, LIFO)
-  unique.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-  return { data: unique, meta: { last_page: maxLastPage } };
 };

@@ -109,6 +109,7 @@ export const DebugAutofill = ({ setFormData: propsSetFormData }) => {
       ...prev,
       ...data
     }));
+    return;
     
     console.log("%c⚡ Random Data Injected!", "color: #22c55e; font-weight: bold; font-size: 12px;", data);
   };

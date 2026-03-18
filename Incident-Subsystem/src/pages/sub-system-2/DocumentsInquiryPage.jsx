@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Swal from "../../utils/swal";
 import themeTokens from "../../Themetokens";
+import { DOCUMENTS_API_BASE_URL } from "../../config/runtimeApi";
+import { getToken, isAdmin } from "../../homepage/services/loginService";
 
 // ── Constants ────────────────────────────────────────────────
 const STAT_COLOR = {
@@ -19,6 +21,26 @@ const STATUS_TAB_CONFIG = {
 };
 
 const ROWS_PER_PAGE = 6;
+
+const buildDocumentsHeaders = (includeJson = false) => {
+  const headers = { Accept: "application/json" };
+  const token = getToken();
+
+  if (includeJson) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  return headers;
+};
+
+const parseJsonSafe = async (response) => {
+  const data = await response.json().catch(() => null);
+  return data && typeof data === "object" ? data : {};
+};
 
 // ── Sub-components ────────────────────────────────────────────────
 const StatusBadge = ({ status }) => {
@@ -53,10 +75,13 @@ const IconActionButtons = ({ isDark, referenceNumber, onPreview, onStatusUpdated
       return;
     }
 
-    const url = `http://127.0.0.1:8001/api/documents/${referenceNumber}/${action}`;
+    const url = `${DOCUMENTS_API_BASE_URL}/documents/${referenceNumber}/${action}`;
     try {
-      const res = await fetch(url, { method: "POST" });
-      const data = await res.json();
+      const res = await fetch(url, {
+        method: "POST",
+        headers: buildDocumentsHeaders(),
+      });
+      const data = await parseJsonSafe(res);
       if (!res.ok) throw new Error(data.message || "Failed to update status");
 
       const newStatus = action === "verify" ? "Verified" : "Rejected";
@@ -68,8 +93,6 @@ const IconActionButtons = ({ isDark, referenceNumber, onPreview, onStatusUpdated
         text: data.message || `The request has been ${newStatus.toLowerCase()} successfully.`,
         confirmButtonColor: isVerifyAction ? "#16a34a" : "#dc2626",
       });
-
-      window.location.reload();
     } catch (err) {
       await Swal.fire({
         icon: "error",
@@ -129,9 +152,12 @@ const DocumentsInquiryPage = () => {
   const [documentCardsData, setDocumentCardsData] = useState([]);
   const [previewData, setPreviewData] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [pageError, setPageError] = useState("");
 
   const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
+  const userIsAdmin = useMemo(() => isAdmin(), []);
 
   useEffect(() => {
     const handler = (e) => setCurrentTheme(e.detail);
@@ -139,16 +165,79 @@ const DocumentsInquiryPage = () => {
     return () => window.removeEventListener("themeChange", handler);
   }, []);
 
-  // Fetch data
   useEffect(() => {
-    fetch("http://127.0.0.1:8001/api/document-status/counts")
-      .then((res) => res.json())
-      .then((data) => setSummaryCounts({ pending: data.pending ?? 0, verified: data.verified ?? 0, rejected: data.rejected ?? 0 }));
+    if (!userIsAdmin) {
+      setIsLoading(false);
+      setPageError("");
+      return undefined;
+    }
 
-    fetch("http://127.0.0.1:8001/api/documents")
-      .then((res) => res.json())
-      .then((data) => setDocumentCardsData(data));
-  }, []);
+    const controller = new AbortController();
+
+    const loadDocuments = async () => {
+      setIsLoading(true);
+      setPageError("");
+
+      try {
+        const [countsRes, docsRes] = await Promise.all([
+          fetch(`${DOCUMENTS_API_BASE_URL}/document-status/counts`, {
+            headers: buildDocumentsHeaders(),
+            signal: controller.signal,
+          }),
+          fetch(`${DOCUMENTS_API_BASE_URL}/documents`, {
+            headers: buildDocumentsHeaders(),
+            signal: controller.signal,
+          }),
+        ]);
+
+        const [countsData, docsData] = await Promise.all([
+          parseJsonSafe(countsRes),
+          parseJsonSafe(docsRes),
+        ]);
+
+        if (!countsRes.ok || !docsRes.ok) {
+          const failedResponse = !countsRes.ok ? countsRes : docsRes;
+          const failedData = !countsRes.ok ? countsData : docsData;
+
+          throw new Error(
+            failedData.message ||
+            (failedResponse.status === 401 || failedResponse.status === 403
+              ? "Your session is not authorized to view issuance applications. Please sign in again as an admin."
+              : "Failed to load issuance applications."),
+          );
+        }
+
+        setSummaryCounts({
+          pending: countsData.pending ?? 0,
+          verified: countsData.verified ?? 0,
+          rejected: countsData.rejected ?? 0,
+        });
+        setDocumentCardsData(
+          Array.isArray(docsData)
+            ? docsData
+            : Array.isArray(docsData?.data)
+              ? docsData.data
+              : [],
+        );
+      } catch (error) {
+        if (error.name === "AbortError") {
+          return;
+        }
+
+        setSummaryCounts({ pending: 0, verified: 0, rejected: 0 });
+        setDocumentCardsData([]);
+        setPageError(error.message || "Failed to load issuance applications.");
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadDocuments();
+
+    return () => controller.abort();
+  }, [userIsAdmin]);
 
   const summaryCards = [
     { key: "pending", title: "Pending Verification", value: summaryCounts.pending, subtitle: "Awaiting admin review", color: "amber" },
@@ -176,6 +265,74 @@ const DocumentsInquiryPage = () => {
     const start = (currentPage - 1) * ROWS_PER_PAGE;
     return filteredCards.slice(start, start + ROWS_PER_PAGE);
   }, [filteredCards, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeStatus, searchTerm]);
+
+  useEffect(() => {
+    if (currentPage > Math.max(totalPages, 1)) {
+      setCurrentPage(Math.max(totalPages, 1));
+    }
+  }, [currentPage, totalPages]);
+
+  const handleStatusUpdated = (referenceNumber, newStatus) => {
+    const currentDocument = documentCardsData.find(
+      (document) => document.reference_number === referenceNumber,
+    );
+    const previousStatus = currentDocument?.status?.toLowerCase();
+    const nextStatus = newStatus?.toLowerCase();
+
+    setDocumentCardsData((prev) => prev.map((document) => (
+      document.reference_number === referenceNumber
+        ? { ...document, status: newStatus }
+        : document
+    )));
+
+    setPreviewData((prev) => (
+      prev?.reference_number === referenceNumber
+        ? { ...prev, status: newStatus }
+        : prev
+    ));
+
+    if (
+      previousStatus &&
+      nextStatus &&
+      previousStatus !== nextStatus
+    ) {
+      setSummaryCounts((prev) => ({
+        ...prev,
+        [previousStatus]: Math.max(0, (prev[previousStatus] ?? 0) - 1),
+        [nextStatus]: (prev[nextStatus] ?? 0) + 1,
+      }));
+    }
+  };
+
+  if (!userIsAdmin) {
+    return (
+      <div className={`min-h-full ${t.pageBg} pb-10`}>
+        <div className="w-full px-4 py-6 space-y-6">
+          <div className="flex items-center gap-4">
+            <div className={`w-12 h-12 ${isDark ? "bg-slate-700" : "bg-gray-200"} rounded-lg flex items-center justify-center`}>
+              <svg className={`w-7 h-7 ${isDark ? "text-slate-300" : "text-gray-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h1 className={`text-2xl sm:text-3xl font-bold ${t.cardText} font-spartan uppercase`}>
+              Issuance Application
+            </h1>
+          </div>
+
+          <div className={`${t.cardBg} border ${t.cardBorder} rounded-xl p-6`}>
+            <h2 className={`text-lg font-semibold ${t.cardText}`}>Admin access required</h2>
+            <p className={`mt-2 text-sm ${t.subtleText}`}>
+              This page is only available on the admin route for document processing.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-full ${t.pageBg} pb-10`}>
@@ -227,57 +384,93 @@ const DocumentsInquiryPage = () => {
           />
         </div>
 
-        {/* Table */}
-        {/* Table */}
-<div className="overflow-x-auto mt-4">
-  <table className={`min-w-full divide-y divide-gray-200 ${t.cardBg} border ${t.cardBorder} rounded-xl`}>
-    <thead className={`${t.cardBg}`}>
-      <tr>
-        <th className="px-4 py-2 text-center text-sm font-semibold">#</th> {/* <-- Number column */}
-        <th className="px-4 py-2 text-center text-sm font-semibold">Name</th>
-        <th className="px-4 py-2 text-center text-sm font-semibold">Reference #</th>
-        <th className="px-4 py-2 text-center text-sm font-semibold">Document</th>
-        <th className="px-4 py-2 text-center text-sm font-semibold">Contact</th>
-        <th className="px-4 py-2 text-center text-sm font-semibold">Submitted</th>
-        <th className="px-4 py-2 text-center text-sm font-semibold">Status</th>
-        <th className="px-4 py-2 text-center text-sm font-semibold">Actions</th>
-      </tr>
-    </thead>
+        {pageError && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {pageError}
+          </div>
+        )}
 
-    <tbody className="divide-y divide-gray-200">
-      {paginatedCards.length > 0 ? paginatedCards.map((card, index) => (
-        <tr key={card.reference_number} className={`${t.cardBg} hover:bg-gray-100`}>
-          <td className="px-4 py-2">{(currentPage - 1) * ROWS_PER_PAGE + index + 1}</td> {/* <-- Compute row number */}
-          <td className="px-4 py-2">{card.full_name}</td>
-          <td className="px-4 py-2">{card.reference_number}</td>
-          <td className="px-4 py-2">{card.documentType}</td>
-          <td className="px-4 py-2">{card.contact_number}</td>
-          <td className="px-4 py-2">{new Date(card.dateSubmitted).toLocaleDateString()}</td>
-          <td className="px-4 py-2"><StatusBadge status={card.status} /></td>
-          <td className="px-4 py-2">
-            <IconActionButtons
-              isDark={isDark}
-              referenceNumber={card.reference_number}
-              onPreview={() => { setPreviewData(card); setShowPreview(true); }}
-              onStatusUpdated={(refNum, newStatus) => setDocumentCardsData(prev => prev.map(d => d.reference_number === refNum ? { ...d, status: newStatus } : d))}
-            />
-          </td>
-        </tr>
-      )) : (
-        <tr><td colSpan={8} className="text-center py-6 text-sm">No document requests found.</td></tr>
-      )}
-    </tbody>
-  </table>
+        <div className="overflow-x-auto mt-4">
+          <table className={`min-w-full divide-y divide-gray-200 ${t.cardBg} border ${t.cardBorder} rounded-xl`}>
+            <thead className={t.cardBg}>
+              <tr>
+                <th className="px-4 py-2 text-center text-sm font-semibold">#</th>
+                <th className="px-4 py-2 text-center text-sm font-semibold">Name</th>
+                <th className="px-4 py-2 text-center text-sm font-semibold">Reference #</th>
+                <th className="px-4 py-2 text-center text-sm font-semibold">Document</th>
+                <th className="px-4 py-2 text-center text-sm font-semibold">Contact</th>
+                <th className="px-4 py-2 text-center text-sm font-semibold">Submitted</th>
+                <th className="px-4 py-2 text-center text-sm font-semibold">Status</th>
+                <th className="px-4 py-2 text-center text-sm font-semibold">Actions</th>
+              </tr>
+            </thead>
 
-  {/* Pagination */}
-  {totalPages > 1 && (
-    <div className="flex justify-center items-center gap-2 mt-4">
-      <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className="px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300">Prev</button>
-      <span>{currentPage} / {totalPages}</span>
-      <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className="px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300">Next</button>
-    </div>
-  )}
-</div>
+            <tbody className="divide-y divide-gray-200">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} className="py-6 text-center text-sm">
+                    Loading issuance applications...
+                  </td>
+                </tr>
+              ) : paginatedCards.length > 0 ? (
+                paginatedCards.map((card, index) => (
+                  <tr key={card.reference_number} className={`${t.cardBg} hover:bg-gray-100`}>
+                    <td className="px-4 py-2 text-center">
+                      {(currentPage - 1) * ROWS_PER_PAGE + index + 1}
+                    </td>
+                    <td className="px-4 py-2">{card.full_name}</td>
+                    <td className="px-4 py-2">{card.reference_number}</td>
+                    <td className="px-4 py-2">{card.documentType}</td>
+                    <td className="px-4 py-2">{card.contact_number}</td>
+                    <td className="px-4 py-2">
+                      {new Date(card.dateSubmitted).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-2">
+                      <StatusBadge status={card.status} />
+                    </td>
+                    <td className="px-4 py-2">
+                      <IconActionButtons
+                        isDark={isDark}
+                        referenceNumber={card.reference_number}
+                        onPreview={() => {
+                          setPreviewData(card);
+                          setShowPreview(true);
+                        }}
+                        onStatusUpdated={handleStatusUpdated}
+                      />
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={8} className="py-6 text-center text-sm">
+                    No document requests found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          {totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <button
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                className="rounded-lg bg-gray-200 px-3 py-1 hover:bg-gray-300"
+              >
+                Prev
+              </button>
+              <span>
+                {currentPage} / {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                className="rounded-lg bg-gray-200 px-3 py-1 hover:bg-gray-300"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Preview Modal */}
         {showPreview && previewData && (

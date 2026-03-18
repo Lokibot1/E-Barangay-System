@@ -1,6 +1,7 @@
 import { getToken } from "../../homepage/services/loginService";
+import { INCIDENT_API_BASE_URL } from "../../config/runtimeApi";
 
-const API_BASE = "http://localhost:8000/api";
+const API_BASE = INCIDENT_API_BASE_URL;
 
 /**
  * Fetch all custom fields from the backend.

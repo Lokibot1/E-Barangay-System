@@ -1,12 +1,14 @@
 /**
  * loginService.js
  * Handles all authentication (login/logout) API calls.
- * Backend: http://localhost:8000
+ * Backend: incident-reporting API
  *
- * NOTE: Registration is handled separately by authService.js (port 8002).
+ * NOTE: Registration is handled separately by authService.js (resident backend).
  */
 
-const API_BASE = "http://localhost:8000/api";
+import { INCIDENT_API_BASE_URL } from "../../config/runtimeApi";
+
+const API_BASE = INCIDENT_API_BASE_URL;
 
 /**
  * Authenticate a user with email and password.

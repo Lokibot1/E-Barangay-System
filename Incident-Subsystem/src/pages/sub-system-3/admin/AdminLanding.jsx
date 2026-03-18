@@ -425,7 +425,7 @@ export default function AdminLanding() {
     [monthlyData, monthlyAppointmentData],
   );
 
-  const cardClass = `${t.cardBg} border ${isDark ? "border-slate-700" : "border-[#e6e8f1]"} rounded-2xl`;
+  const cardClass = `${t.cardBg} border ${isDark ? "border-slate-700" : "border-[#e6e8f1]"} rounded-2xl min-w-0`;
   const tooltipStyle = {
     backgroundColor: isDark ? "#1f2937" : "#ffffff",
     border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
@@ -775,7 +775,7 @@ export default function AdminLanding() {
               {tr.adminLanding.monthlyReports}
             </h3>
             <div className="h-[290px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <BarChart data={monthlyData}>
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -821,7 +821,7 @@ export default function AdminLanding() {
               {tr.adminLanding.caseResolution}
             </h3>
             <div className="h-[290px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <PieChart>
                   <Pie
                     data={statusData}
@@ -853,7 +853,7 @@ export default function AdminLanding() {
               {tr.adminLanding.reportTrend}
             </h3>
             <div className="h-[290px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <LineChart data={trendData}>
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -903,7 +903,7 @@ export default function AdminLanding() {
               {tr.adminLanding.reportCategories}
             </h3>
             <div className="h-[290px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <PieChart>
                   <Pie
                     data={categoryData}
@@ -937,7 +937,7 @@ export default function AdminLanding() {
               {tr.adminLanding.appointmentStatus}
             </h3>
             <div className="h-[290px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <PieChart>
                   <Pie
                     data={appointmentStatusData}
@@ -969,7 +969,7 @@ export default function AdminLanding() {
               {tr.adminLanding.monthlyAppointments}
             </h3>
             <div className="h-[290px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <BarChart data={monthlyAppointmentData}>
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -1022,7 +1022,7 @@ export default function AdminLanding() {
               {tr.adminLanding.requestsVsAppointments}
             </h3>
             <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <AreaChart data={combinedLoadData}>
                   <CartesianGrid
                     strokeDasharray="3 3"

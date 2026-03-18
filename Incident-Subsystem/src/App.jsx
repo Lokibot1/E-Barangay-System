@@ -181,7 +181,7 @@ function App() {
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/logout" element={<Logout />} />
-                  <Route path="/documents-inquiry" element={<DocumentsInquiryPage />} />
+                  <Route path="/documents-inquiry" element={<Navigate to="/sub-system-2" replace />} />
                 </Route>
               </Route>
 
