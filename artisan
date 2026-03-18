@@ -1,0 +1,56 @@
+<?php
+
+if (PHP_SAPI !== 'cli') {
+    fwrite(STDERR, "This command can only run in CLI.\n");
+    exit(1);
+}
+
+$command = $argv[1] ?? null;
+
+if ($command !== 'storage:link') {
+    fwrite(STDERR, "Unsupported command. Available command: php artisan storage:link\n");
+    exit(1);
+}
+
+$root = __DIR__;
+$target = $root . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'public';
+$publicDir = $root . DIRECTORY_SEPARATOR . 'public';
+$link = $publicDir . DIRECTORY_SEPARATOR . 'storage';
+
+if (!is_dir($target) && !mkdir($target, 0777, true) && !is_dir($target)) {
+    fwrite(STDERR, "Unable to create target directory: {$target}\n");
+    exit(1);
+}
+
+if (!is_dir($publicDir) && !mkdir($publicDir, 0777, true) && !is_dir($publicDir)) {
+    fwrite(STDERR, "Unable to create public directory: {$publicDir}\n");
+    exit(1);
+}
+
+if (file_exists($link)) {
+    $current = realpath($link);
+    $expected = realpath($target);
+    if ($current !== false && $expected !== false && str_replace('\\', '/', $current) === str_replace('\\', '/', $expected)) {
+        fwrite(STDOUT, "The [public/storage] link already exists.\n");
+        exit(0);
+    }
+
+    fwrite(STDERR, "Cannot create link because [public/storage] already exists and points elsewhere.\n");
+    exit(1);
+}
+
+$linked = @symlink($target, $link);
+
+if (!$linked && strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+    $commandLine = 'cmd /c mklink /J ' . escapeshellarg($link) . ' ' . escapeshellarg($target);
+    exec($commandLine, $output, $statusCode);
+    $linked = $statusCode === 0 && is_dir($link);
+}
+
+if (!$linked) {
+    fwrite(STDERR, "Failed to create the [public/storage] link.\n");
+    exit(1);
+}
+
+fwrite(STDOUT, "The [public/storage] link has been connected to [storage/app/public].\n");
+exit(0);

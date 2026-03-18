@@ -41,7 +41,7 @@ export const fetchBarangayLogoDataUrlRemote = async () => {
     });
     if (!res.ok) return null;
     const data = await res.json().catch(() => ({}));
-    return data?.dataUrl || "";
+    return data?.dataUrl || data?.imageUrl || "";
   } catch {
     return null;
   }
@@ -57,7 +57,7 @@ export const saveBarangayLogoDataUrlRemote = async (dataUrl) => {
   if (!res.ok) {
     throw new Error(data?.message || "Failed to save logo.");
   }
-  return data?.dataUrl || dataUrl || "";
+  return data?.dataUrl || data?.imageUrl || dataUrl || "";
 };
 
 export const clearBarangayLogoDataUrlRemote = async () => {
