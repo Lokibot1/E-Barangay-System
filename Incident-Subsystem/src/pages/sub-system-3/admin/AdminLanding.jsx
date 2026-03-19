@@ -282,6 +282,38 @@ function DonutCard({ title, data, isDark, t, cardClass, centerLabel = "Total", t
   );
 }
 
+// ─── Skeleton placeholders ────────────────────────────────────────────────────
+
+function ChartSkeleton({ height = 290, isDark, cardClass }) {
+  const pulse = isDark ? "animate-pulse bg-slate-700/60 rounded-lg" : "animate-pulse bg-gray-200 rounded-lg";
+  return (
+    <article className={`${cardClass} p-4`}>
+      <div className={`h-5 w-36 mb-3 ${pulse}`} />
+      <div className={`${pulse} rounded-xl`} style={{ height }} />
+    </article>
+  );
+}
+
+function DonutSkeleton({ isDark, cardClass }) {
+  const pulse = isDark ? "animate-pulse bg-slate-700/60" : "animate-pulse bg-gray-200";
+  return (
+    <article className={`${cardClass} p-5`}>
+      <div className={`h-5 w-36 mb-4 rounded-lg ${pulse}`} />
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative flex items-center justify-center" style={{ width: 160, height: 160 }}>
+          <div className={`w-full h-full rounded-full ${pulse}`} />
+          <div className={`absolute rounded-full ${isDark ? "bg-slate-900" : "bg-white"}`} style={{ width: 72, height: 72 }} />
+        </div>
+        <div className="flex flex-wrap justify-center gap-2">
+          {[72, 56, 64].map((w, i) => (
+            <div key={i} className={`h-6 rounded-full ${pulse}`} style={{ width: w }} />
+          ))}
+        </div>
+      </div>
+    </article>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function AdminLanding() {
@@ -835,7 +867,7 @@ export default function AdminLanding() {
             <p
               className={`mt-2 text-[2rem] font-semibold leading-none ${t.cardText}`}
             >
-              {loading ? "..." : overview.pendingRequests}
+              {loading ? <div className={`mt-2 h-8 w-14 rounded-lg animate-pulse ${isDark ? "bg-slate-700" : "bg-gray-200"}`} /> : overview.pendingRequests}
             </p>
             <div className="mt-2.5">
               <span
@@ -875,7 +907,7 @@ export default function AdminLanding() {
             <p
               className={`mt-2 text-[2rem] font-semibold leading-none ${t.cardText}`}
             >
-              {loading ? "..." : overview.openComplaints}
+              {loading ? <div className={`mt-2 h-8 w-14 rounded-lg animate-pulse ${isDark ? "bg-slate-700" : "bg-gray-200"}`} /> : overview.openComplaints}
             </p>
             <div className="mt-2.5">
               <span
@@ -915,7 +947,7 @@ export default function AdminLanding() {
             <p
               className={`mt-2 text-[2rem] font-semibold leading-none ${t.cardText}`}
             >
-              {loading ? "..." : overview.incidentReports}
+              {loading ? <div className={`mt-2 h-8 w-14 rounded-lg animate-pulse ${isDark ? "bg-slate-700" : "bg-gray-200"}`} /> : overview.incidentReports}
             </p>
             <div className="mt-2.5">
               <span
@@ -955,7 +987,7 @@ export default function AdminLanding() {
             <p
               className={`mt-2 text-[2rem] font-semibold leading-none ${t.cardText}`}
             >
-              {loading ? "..." : overview.pendingAppointments}
+              {loading ? <div className={`mt-2 h-8 w-14 rounded-lg animate-pulse ${isDark ? "bg-slate-700" : "bg-gray-200"}`} /> : overview.pendingAppointments}
             </p>
             <div className="mt-2.5">
               <span
@@ -968,7 +1000,7 @@ export default function AdminLanding() {
         </section>
 
         <section className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-          <article className={`${cardClass} p-4`}>
+          {loading ? <ChartSkeleton isDark={isDark} cardClass={cardClass} height={290} /> : <article className={`${cardClass} p-4`}>
             <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>
               {tr.adminLanding.monthlyReports}
             </h3>
@@ -1004,9 +1036,9 @@ export default function AdminLanding() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </article>
+          </article>}
 
-          <DonutCard
+          {loading ? <DonutSkeleton isDark={isDark} cardClass={cardClass} /> : <DonutCard
             title={tr.adminLanding.caseResolution}
             data={statusData}
             isDark={isDark}
@@ -1015,9 +1047,9 @@ export default function AdminLanding() {
             centerLabel="Cases"
             tooltipStyle={tooltipStyle}
             tooltipTextStyle={tooltipTextStyle}
-          />
+          />}
 
-          <article className={`${cardClass} p-4`}>
+          {loading ? <ChartSkeleton isDark={isDark} cardClass={cardClass} height={290} /> : <article className={`${cardClass} p-4`}>
             <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>
               {tr.adminLanding.reportTrend}
             </h3>
@@ -1067,9 +1099,9 @@ export default function AdminLanding() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
-          </article>
+          </article>}
 
-          <DonutCard
+          {loading ? <DonutSkeleton isDark={isDark} cardClass={cardClass} /> : <DonutCard
             title={tr.adminLanding.reportCategories}
             data={categoryData}
             isDark={isDark}
@@ -1078,9 +1110,9 @@ export default function AdminLanding() {
             centerLabel="Types"
             tooltipStyle={tooltipStyle}
             tooltipTextStyle={tooltipTextStyle}
-          />
+          />}
 
-          <DonutCard
+          {loading ? <DonutSkeleton isDark={isDark} cardClass={cardClass} /> : <DonutCard
             title={tr.adminLanding.appointmentStatus}
             data={appointmentStatusData}
             isDark={isDark}
@@ -1089,9 +1121,9 @@ export default function AdminLanding() {
             centerLabel="Appts"
             tooltipStyle={tooltipStyle}
             tooltipTextStyle={tooltipTextStyle}
-          />
+          />}
 
-          <article className={`${cardClass} p-4`}>
+          {loading ? <ChartSkeleton isDark={isDark} cardClass={cardClass} height={290} /> : <article className={`${cardClass} p-4`}>
             <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>
               {tr.adminLanding.monthlyAppointments}
             </h3>
@@ -1130,11 +1162,11 @@ export default function AdminLanding() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </article>
+          </article>}
         </section>
 
         <section className="grid grid-cols-1 gap-3">
-          <article className={`${cardClass} p-4`}>
+          {loading ? <ChartSkeleton isDark={isDark} cardClass={cardClass} height={280} /> : <article className={`${cardClass} p-4`}>
             <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>
               {tr.adminLanding.requestsVsAppointments}
             </h3>
@@ -1186,7 +1218,7 @@ export default function AdminLanding() {
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-          </article>
+          </article>}
         </section>
 
         <section className={`${cardClass} p-4 sm:p-5 space-y-4`}>

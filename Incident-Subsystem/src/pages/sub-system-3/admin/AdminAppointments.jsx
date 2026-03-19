@@ -2213,19 +2213,21 @@ const AdminAppointments = () => {
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr>
-                      <td
-                        colSpan={8}
-                        className={`px-4 py-12 text-center ${t.subtleText}`}
-                      >
-                        <div className="flex flex-col items-center gap-3">
-                          <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full" />
-                          <span className="text-sm font-kumbh">
-                            {tr.adminAppointments.loading}
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
+                    Array.from({ length: 6 }, (_, i) => {
+                      const pulse = isDark ? "bg-slate-700/60 animate-pulse rounded" : "bg-gray-200/80 animate-pulse rounded";
+                      return (
+                        <tr key={i} className={`border-b ${t.cardBorder}`}>
+                          <td className="px-3 py-3.5 text-center"><div className={`h-3 w-4 mx-auto ${pulse}`} /></td>
+                          <td className="px-4 py-3.5"><div className={`h-3 w-14 ${pulse}`} /></td>
+                          <td className="px-4 py-3.5"><div className={`h-3 w-14 ${pulse}`} /></td>
+                          <td className="px-4 py-3.5"><div className={`h-3 w-3/4 ${pulse}`} /></td>
+                          <td className="px-4 py-3.5"><div className={`h-3 w-24 ${pulse}`} /></td>
+                          <td className="px-4 py-3.5"><div className={`h-3 w-16 ${pulse}`} /></td>
+                          <td className="px-4 py-3.5"><div className={`h-5 w-20 rounded-full ${pulse}`} /></td>
+                          <td className="px-4 py-3.5"><div className={`h-7 w-24 rounded-xl ${pulse}`} /></td>
+                        </tr>
+                      );
+                    })
                   ) : paginatedData.length > 0 ? (
                     paginatedData.map((appt, idx) => {
                       const status = (appt.status || "scheduled")
