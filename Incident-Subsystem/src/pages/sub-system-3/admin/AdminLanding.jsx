@@ -102,6 +102,188 @@ const normalizeStatus = (status) => {
   return "ongoing";
 };
 
+// ─── Chart legend toggle helpers ─────────────────────────────────────────────
+
+function useToggleSet() {
+  const [hidden, setHidden] = useState(new Set());
+  const toggle = useCallback((key) => {
+    setHidden((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+  return [hidden, toggle];
+}
+
+// Custom Recharts <Legend content={}> renderer with click-to-toggle
+function ChartLegend({ payload = [], hidden, onToggle, isDark }) {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 pt-2">
+      {payload.map((entry) => {
+        const key = entry.dataKey ?? entry.value;
+        const isHidden = hidden.has(key);
+        return (
+          <button
+            key={key}
+            type="button"
+            onClick={() => onToggle(key)}
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium font-kumbh transition-all select-none ${
+              isHidden ? "opacity-40" : "opacity-100"
+            } ${isDark ? "text-slate-300 hover:bg-slate-700/60" : "text-slate-600 hover:bg-slate-100"}`}
+          >
+            <span
+              className="h-2.5 w-2.5 shrink-0 rounded-full transition-opacity"
+              style={{ backgroundColor: isHidden ? (isDark ? "#475569" : "#cbd5e1") : entry.color }}
+            />
+            <span className={isHidden ? "line-through" : ""}>{entry.value}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Shared Donut Card ────────────────────────────────────────────────────────
+
+const CHART_W = 268;
+const CHART_H = 236;
+const INNER_R = 56;
+const OUTER_R = 96;
+// Disk must fully cover the inner hole; cornerRadius={6} rounds segment inner
+// corners inward by ~6 px so add that as buffer: INNER_R*2 - 6 overlap budget
+const CENTER_DISK = INNER_R * 2 + 4; // 116px — slightly larger than the hole
+
+function DonutCard({ title, data, isDark, t, cardClass, centerLabel = "Total", tooltipStyle, tooltipTextStyle }) {
+  const [hidden, toggleHidden] = useToggleSet();
+  const visibleData = data.filter((d) => !hidden.has(d.name));
+  const total = visibleData.reduce((sum, d) => sum + Number(d.value ?? 0), 0);
+
+  return (
+    <article className={`${cardClass} p-5`}>
+      <h3 className={`text-lg font-bold font-spartan ${t.cardText} mb-3`}>{title}</h3>
+
+      <div className="flex flex-col gap-4">
+        {/* Chart + centre disk
+            Use w-full h-[236px] so the absolute overlay spans the same box
+            the PieChart SVG is centred in — mirrors AnalyticsInterface exactly. */}
+        <div className="relative mx-auto h-[236px] w-full min-w-0 flex justify-center overflow-visible">
+          <PieChart width={CHART_W} height={CHART_H}>
+            <Pie
+              data={visibleData}
+              cx={CHART_W / 2}
+              cy={CHART_H / 2}
+              innerRadius={INNER_R}
+              outerRadius={OUTER_R}
+              paddingAngle={3}
+              cornerRadius={6}
+              dataKey="value"
+              labelLine={false}
+              label={({ percent, cx, cy, midAngle, innerRadius: ir, outerRadius: or }) => {
+                if (!percent || percent < 0.07) return null;
+                const rad = (-midAngle * Math.PI) / 180;
+                const label = `${Math.round(percent * 100)}%`;
+                const pw = Math.max(30, label.length * 7 + 10);
+                const ph = 20;
+                const halfExtent =
+                  Math.abs(Math.cos(rad)) * (pw / 2) + Math.abs(Math.sin(rad)) * (ph / 2);
+                const minR = ir + halfExtent + 4;
+                const maxR = or - halfExtent - 4;
+                if (minR >= maxR) return null;
+                const r = Math.min(maxR, Math.max(ir + (or - ir) * 0.5, minR));
+                const x = cx + r * Math.cos(rad);
+                const y = cy + r * Math.sin(rad);
+                return (
+                  <g>
+                    <rect
+                      x={x - pw / 2}
+                      y={y - ph / 2}
+                      width={pw}
+                      height={ph}
+                      rx={ph / 2}
+                      fill={isDark ? "rgba(15,23,42,0.78)" : "rgba(255,255,255,0.85)"}
+                      stroke={isDark ? "rgba(148,163,184,0.2)" : "rgba(148,163,184,0.3)"}
+                      strokeWidth={1}
+                    />
+                    <text
+                      x={x}
+                      y={y}
+                      fill={isDark ? "#e2e8f0" : "#1f2937"}
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      fontSize={11}
+                      fontWeight={700}
+                    >
+                      {label}
+                    </text>
+                  </g>
+                );
+              }}
+            >
+              {data.map((entry, i) => (
+                <Cell key={`${entry.name}-${i}`} fill={entry.color} />
+              ))}
+            </Pie>
+            {/* zIndex 50 so the tooltip renders above the z-10 disk overlay */}
+            <Tooltip
+              contentStyle={tooltipStyle}
+              labelStyle={tooltipTextStyle}
+              itemStyle={tooltipTextStyle}
+              wrapperStyle={{ zIndex: 50, outline: "none" }}
+            />
+          </PieChart>
+
+          {/* Centre disk — pointer-events-none so hover still reaches the SVG.
+              top-1/2 left-1/2 -translate centres on the PieChart's cx/cy. */}
+          <div
+            className={`pointer-events-none absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-full border text-center shadow-[0_8px_24px_rgba(15,23,42,0.12)] ${
+              isDark ? "border-slate-700 bg-slate-900/95" : "border-white bg-white/95"
+            }`}
+            style={{ width: CENTER_DISK, height: CENTER_DISK }}
+          >
+            <div className="px-2">
+              <p className={`font-spartan font-bold leading-none ${
+                String(total).length > 4 ? "text-[1.1rem]" : "text-[1.5rem]"
+              } ${t.cardText}`}>
+                {total}
+              </p>
+              <p className={`mt-1 text-[8px] font-black uppercase tracking-[0.14em] ${t.subtleText}`}>
+                {centerLabel}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Legend — click to toggle slices */}
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
+          {data.map((item, i) => {
+            const isHidden = hidden.has(item.name);
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={() => toggleHidden(item.name)}
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium font-kumbh transition-all select-none ${
+                  isHidden ? "opacity-40" : "opacity-100"
+                } ${isDark ? "text-slate-300 hover:bg-slate-700/60" : "text-slate-600 hover:bg-slate-100"}`}
+              >
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: isHidden ? (isDark ? "#475569" : "#cbd5e1") : item.color }}
+                />
+                <span className={isHidden ? "line-through" : ""}>{item.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function AdminLanding() {
   const { tr } = useLanguage();
   const [currentTheme, setCurrentTheme] = useState(
@@ -116,6 +298,12 @@ export default function AdminLanding() {
   const [analyticsError, setAnalyticsError] = useState(null);
   const [showKebab, setShowKebab] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
+
+  // Per-chart legend toggle state
+  const [hiddenMonthly, toggleMonthly] = useToggleSet();
+  const [hiddenTrend, toggleTrend] = useToggleSet();
+  const [hiddenApptMonthly, toggleApptMonthly] = useToggleSet();
+  const [hiddenCombined, toggleCombined] = useToggleSet();
   const kebabRef = useRef(null);
 
   useEffect(() => {
@@ -346,7 +534,11 @@ export default function AdminLanding() {
       bucket[label] = (bucket[label] || 0) + 1;
     });
 
-    return Object.entries(bucket).map(([name, value]) => ({ name, value }));
+    return Object.entries(bucket).map(([name, value], idx) => ({
+      name,
+      value,
+      color: CHART_COLORS[idx % CHART_COLORS.length],
+    }));
   }, [incidents, complaints]);
 
   const appointmentStatusData = useMemo(() => {
@@ -384,9 +576,11 @@ export default function AdminLanding() {
         name: d.toLocaleString("default", { month: "short" }),
         monthNum: d.getMonth(),
         year: d.getFullYear(),
-        Pending: 0,
-        Approved: 0,
-        Rejected: 0,
+        Scheduled: 0,
+        Rescheduled: 0,
+        Completed: 0,
+        Cancelled: 0,
+        "No Show": 0,
       });
     }
 
@@ -399,16 +593,20 @@ export default function AdminLanding() {
       const s = String(a.status || "scheduled")
         .toLowerCase()
         .replace(/-/g, "_");
-      if (s === "completed") m.Approved += 1;
-      else if (s === "cancelled" || s === "no_show") m.Rejected += 1;
-      else m.Pending += 1;
+      if (s === "scheduled") m.Scheduled += 1;
+      else if (s === "rescheduled") m.Rescheduled += 1;
+      else if (s === "completed") m.Completed += 1;
+      else if (s === "cancelled") m.Cancelled += 1;
+      else if (s === "no_show") m["No Show"] += 1;
     });
 
-    return months.map(({ name, Pending, Approved, Rejected }) => ({
+    return months.map(({ name, Scheduled, Rescheduled, Completed, Cancelled, "No Show": noShow }) => ({
       name,
-      Pending,
-      Approved,
-      Rejected,
+      Scheduled,
+      Rescheduled,
+      Completed,
+      Cancelled,
+      "No Show": noShow,
     }));
   }, [appointments]);
 
@@ -800,53 +998,24 @@ export default function AdminLanding() {
                     labelStyle={tooltipTextStyle}
                     itemStyle={tooltipTextStyle}
                   />
-                  <Legend wrapperStyle={{ fontSize: 13, fontWeight: "500" }} />
-                  <Bar
-                    dataKey="Incidents"
-                    fill="#3B82F6"
-                    radius={[6, 6, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="Complaints"
-                    fill="#14B8A6"
-                    radius={[6, 6, 0, 0]}
-                  />
+                  <Legend content={(props) => <ChartLegend {...props} hidden={hiddenMonthly} onToggle={toggleMonthly} isDark={isDark} />} />
+                  <Bar dataKey="Incidents" fill="#3B82F6" radius={[6, 6, 0, 0]} hide={hiddenMonthly.has("Incidents")} />
+                  <Bar dataKey="Complaints" fill="#14B8A6" radius={[6, 6, 0, 0]} hide={hiddenMonthly.has("Complaints")} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </article>
 
-          <article className={`${cardClass} p-4`}>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>
-              {tr.adminLanding.caseResolution}
-            </h3>
-            <div className="h-[290px]">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                <PieChart>
-                  <Pie
-                    data={statusData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="45%"
-                    innerRadius={62}
-                    outerRadius={96}
-                    paddingAngle={4}
-                  >
-                    {statusData.map((entry, idx) => (
-                      <Cell key={`${entry.name}-${idx}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={tooltipStyle}
-                    labelStyle={tooltipTextStyle}
-                    itemStyle={tooltipTextStyle}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 13 }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </article>
+          <DonutCard
+            title={tr.adminLanding.caseResolution}
+            data={statusData}
+            isDark={isDark}
+            t={t}
+            cardClass={cardClass}
+            centerLabel="Cases"
+            tooltipStyle={tooltipStyle}
+            tooltipTextStyle={tooltipTextStyle}
+          />
 
           <article className={`${cardClass} p-4`}>
             <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>
@@ -878,13 +1047,14 @@ export default function AdminLanding() {
                     labelStyle={tooltipTextStyle}
                     itemStyle={tooltipTextStyle}
                   />
-                  <Legend wrapperStyle={{ fontSize: 13 }} />
+                  <Legend content={(props) => <ChartLegend {...props} hidden={hiddenTrend} onToggle={toggleTrend} isDark={isDark} />} />
                   <Line
                     type="monotone"
                     dataKey="Incidents"
                     stroke="#3B82F6"
                     strokeWidth={2.5}
                     dot={{ r: 2 }}
+                    hide={hiddenTrend.has("Incidents")}
                   />
                   <Line
                     type="monotone"
@@ -892,77 +1062,34 @@ export default function AdminLanding() {
                     stroke="#14B8A6"
                     strokeWidth={2.5}
                     dot={{ r: 2 }}
+                    hide={hiddenTrend.has("Complaints")}
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </article>
 
-          <article className={`${cardClass} p-4`}>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>
-              {tr.adminLanding.reportCategories}
-            </h3>
-            <div className="h-[290px]">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="45%"
-                    outerRadius={96}
-                    paddingAngle={2}
-                  >
-                    {categoryData.map((entry, idx) => (
-                      <Cell
-                        key={`${entry.name}-${idx}`}
-                        fill={CHART_COLORS[idx % CHART_COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={tooltipStyle}
-                    labelStyle={tooltipTextStyle}
-                    itemStyle={tooltipTextStyle}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 13 }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </article>
+          <DonutCard
+            title={tr.adminLanding.reportCategories}
+            data={categoryData}
+            isDark={isDark}
+            t={t}
+            cardClass={cardClass}
+            centerLabel="Types"
+            tooltipStyle={tooltipStyle}
+            tooltipTextStyle={tooltipTextStyle}
+          />
 
-          <article className={`${cardClass} p-4`}>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>
-              {tr.adminLanding.appointmentStatus}
-            </h3>
-            <div className="h-[290px]">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                <PieChart>
-                  <Pie
-                    data={appointmentStatusData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="45%"
-                    innerRadius={62}
-                    outerRadius={96}
-                    paddingAngle={4}
-                  >
-                    {appointmentStatusData.map((entry, idx) => (
-                      <Cell key={`${entry.name}-${idx}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={tooltipStyle}
-                    labelStyle={tooltipTextStyle}
-                    itemStyle={tooltipTextStyle}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 13 }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </article>
+          <DonutCard
+            title={tr.adminLanding.appointmentStatus}
+            data={appointmentStatusData}
+            isDark={isDark}
+            t={t}
+            cardClass={cardClass}
+            centerLabel="Appts"
+            tooltipStyle={tooltipStyle}
+            tooltipTextStyle={tooltipTextStyle}
+          />
 
           <article className={`${cardClass} p-4`}>
             <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>
@@ -994,22 +1121,12 @@ export default function AdminLanding() {
                     labelStyle={tooltipTextStyle}
                     itemStyle={tooltipTextStyle}
                   />
-                  <Legend wrapperStyle={{ fontSize: 13 }} />
-                  <Bar
-                    dataKey="Pending"
-                    fill={STATUS_COLORS.pending}
-                    radius={[6, 6, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="Approved"
-                    fill={STATUS_COLORS.approved}
-                    radius={[6, 6, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="Rejected"
-                    fill={STATUS_COLORS.rejected}
-                    radius={[6, 6, 0, 0]}
-                  />
+                  <Legend content={(props) => <ChartLegend {...props} hidden={hiddenApptMonthly} onToggle={toggleApptMonthly} isDark={isDark} />} />
+                  <Bar dataKey="Scheduled" fill="#2563eb" radius={[6, 6, 0, 0]} hide={hiddenApptMonthly.has("Scheduled")} />
+                  <Bar dataKey="Rescheduled" fill="#f59e0b" radius={[6, 6, 0, 0]} hide={hiddenApptMonthly.has("Rescheduled")} />
+                  <Bar dataKey="Completed" fill="#16a34a" radius={[6, 6, 0, 0]} hide={hiddenApptMonthly.has("Completed")} />
+                  <Bar dataKey="Cancelled" fill="#dc2626" radius={[6, 6, 0, 0]} hide={hiddenApptMonthly.has("Cancelled")} />
+                  <Bar dataKey="No Show" fill="#64748b" radius={[6, 6, 0, 0]} hide={hiddenApptMonthly.has("No Show")} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -1047,7 +1164,7 @@ export default function AdminLanding() {
                     labelStyle={tooltipTextStyle}
                     itemStyle={tooltipTextStyle}
                   />
-                  <Legend wrapperStyle={{ fontSize: 13 }} />
+                  <Legend content={(props) => <ChartLegend {...props} hidden={hiddenCombined} onToggle={toggleCombined} isDark={isDark} />} />
                   <Area
                     type="monotone"
                     dataKey="Requests"
@@ -1055,6 +1172,7 @@ export default function AdminLanding() {
                     fill="#3B82F6"
                     fillOpacity={0.18}
                     strokeWidth={2}
+                    hide={hiddenCombined.has("Requests")}
                   />
                   <Area
                     type="monotone"
@@ -1063,6 +1181,7 @@ export default function AdminLanding() {
                     fill="#14B8A6"
                     fillOpacity={0.14}
                     strokeWidth={2}
+                    hide={hiddenCombined.has("Appointments")}
                   />
                 </AreaChart>
               </ResponsiveContainer>
