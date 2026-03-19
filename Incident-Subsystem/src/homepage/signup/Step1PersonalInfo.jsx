@@ -1,6 +1,8 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { API_BASE_URL } from "../../config/api";
 import { CalendarDays, Phone } from "lucide-react";
+import DatePickerField from "../../components/shared/DatePickerField";
+import ModernSelectField from "../../components/shared/ModernSelectField";
 
 /**
  * Step1PersonalInfo
@@ -52,7 +54,7 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
   }[birthdateState];
 
   // ── CONSTANTS ─────────────────────────────────────────────────────────────
-  const labelClass = `text-[10px] font-black uppercase tracking-wider font-kumbh ${isDarkMode ? "text-gray-400" : "text-gray-500"}`;
+  const labelClass = `text-[10px] font-semibold tracking-[0.08em] font-kumbh ${isDarkMode ? "text-gray-400" : "text-gray-500"}`;
   const requiredStar = (
     <span className="text-rose-500 ml-0.5" aria-hidden="true">
       *
@@ -224,17 +226,21 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
         </div>
         <div className="col-span-1 space-y-1">
           <label className={labelClass}>Suffix</label>
-          <select
-            name="suffix"
+          <ModernSelectField
             value={formData.suffix || ""}
-            onChange={handleChange}
-            className="full-input-sm"
-          >
-            <option value="">None</option>
-            <option value="Jr.">Jr.</option>
-            <option value="Sr.">Sr.</option>
-            <option value="III">III</option>
-          </select>
+            onChange={(nextValue) =>
+              handleChange({ target: { name: "suffix", value: nextValue } })
+            }
+            options={[
+              { value: "Jr.", label: "Jr." },
+              { value: "Sr.", label: "Sr." },
+              { value: "III", label: "III" },
+            ]}
+            placeholder="None"
+            ariaLabel="Suffix"
+            isDark={isDarkMode}
+            triggerClassName="full-input-sm"
+          />
         </div>
       </div>
 
@@ -323,7 +329,7 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
                 handleChange({ target: { name: "contact", value: "09" } });
             }}
             placeholder="09XXXXXXXXX"
-            className={`full-input-sm font-mono tracking-widest ${
+            className={`full-input-sm ${
               formData.contact && !isContactValid
                 ? "border-rose-500 focus:ring-rose-500"
                 : ""
@@ -348,14 +354,16 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="sm:col-span-2 space-y-1">
           <label className={labelClass}>Birthdate{requiredStar}</label>
-          <input
-            type="date"
-            name="birthdate"
+          <DatePickerField
             value={formData.birthdate || ""}
-            onChange={handleChange}
+            onChange={(nextValue) =>
+              handleChange({ target: { name: "birthdate", value: nextValue } })
+            }
+            ariaLabel="Birthdate"
             min={minBirthdate}
             max={todayStr}
-            className={`full-input-sm ${
+            isDark={isDarkMode}
+            triggerClassName={`full-input-sm ${
               birthdateError ? "border-rose-500 ring-2 ring-rose-500/20" : ""
             }`}
           />
@@ -368,8 +376,8 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
             <p
               className={`text-[9px] font-bold leading-relaxed ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}
             >
-              Format: <strong>MM/DD/YYYY</strong> — use the calendar picker or
-              type directly. Future dates and dates beyond 150 years ago are not
+              Format: <strong>MM/DD/YYYY</strong> — choose the date from the
+              calendar. Future dates and dates beyond 150 years ago are not
               allowed. Age will be calculated automatically.
             </p>
           </div>
@@ -392,7 +400,7 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
             type="text"
             value={formData.age || ""}
             readOnly
-            className={`full-input-sm text-center font-bold ${
+            className={`full-input-sm text-center ${
               formData.age === "Invalid" ? "text-rose-500" : "text-emerald-600"
             }`}
           />
@@ -408,16 +416,20 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={labelClass}>Gender{requiredStar}</label>
-          <select
-            name="gender"
+          <ModernSelectField
             value={formData.gender || ""}
-            onChange={handleChange}
-            className="full-input-sm"
-          >
-            <option value="">Select Gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-          </select>
+            onChange={(nextValue) =>
+              handleChange({ target: { name: "gender", value: nextValue } })
+            }
+            options={[
+              { value: "Male", label: "Male" },
+              { value: "Female", label: "Female" },
+            ]}
+            placeholder="Select Gender"
+            ariaLabel="Gender"
+            isDark={isDarkMode}
+            triggerClassName="full-input-sm"
+          />
         </div>
         <div className="space-y-1">
           <label className={labelClass}>Nationality</label>
@@ -435,53 +447,65 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={labelClass}>Marital Status</label>
-          <select
-            name="maritalStatus"
+          <ModernSelectField
             value={formData.maritalStatus || ""}
-            onChange={handleChange}
-            className="full-input-sm"
-          >
-            <option value="">Select Status</option>
-            <option value="1">Single</option>
-            <option value="2">Married</option>
-            <option value="3">Living-In</option>
-            <option value="4">Widowed</option>
-            <option value="5">Separated</option>
-            <option value="6">Divorced</option>
-          </select>
+            onChange={(nextValue) =>
+              handleChange({ target: { name: "maritalStatus", value: nextValue } })
+            }
+            options={[
+              { value: "1", label: "Single" },
+              { value: "2", label: "Married" },
+              { value: "3", label: "Living-In" },
+              { value: "4", label: "Widowed" },
+              { value: "5", label: "Separated" },
+              { value: "6", label: "Divorced" },
+            ]}
+            placeholder="Select Status"
+            ariaLabel="Marital Status"
+            isDark={isDarkMode}
+            triggerClassName="full-input-sm"
+          />
         </div>
         <div className="space-y-1">
           <label className={labelClass}>Sector{requiredStar}</label>
-          <select
-            name="sector"
+          <ModernSelectField
             value={formData.sector || ""}
-            onChange={handleChange}
-            className={`full-input-sm ${parseInt(formData.age) >= 60 ? "border-amber-500 bg-amber-50/10" : ""}`}
-          >
-            <option value="">Select Sector</option>
-            <option value="1">Solo Parent</option>
-            <option value="2">PWD</option>
-            <option value="3">Senior Citizen</option>
-            <option value="4">LGBTQIA+</option>
-            <option value="5">Kasambahay</option>
-            <option value="6">OFW</option>
-            <option value="7">General Population</option>
-          </select>
+            onChange={(nextValue) =>
+              handleChange({ target: { name: "sector", value: nextValue } })
+            }
+            options={[
+              { value: "1", label: "Solo Parent" },
+              { value: "2", label: "PWD" },
+              { value: "3", label: "Senior Citizen" },
+              { value: "4", label: "LGBTQIA+" },
+              { value: "5", label: "Kasambahay" },
+              { value: "6", label: "OFW" },
+              { value: "7", label: "General Population" },
+            ]}
+            placeholder="Select Sector"
+            ariaLabel="Sector"
+            isDark={isDarkMode}
+            triggerClassName={`full-input-sm ${parseInt(formData.age) >= 60 ? "border-amber-500 bg-amber-50/10" : ""}`}
+          />
         </div>
       </div>
 
       <div className="space-y-1">
         <label className={labelClass}>Birth Registration{requiredStar}</label>
-        <select
-          name="birthRegistration"
+        <ModernSelectField
           value={formData.birthRegistration || ""}
-          onChange={handleChange}
-          className="full-input-sm"
-        >
-          <option value="">Select Status</option>
-          <option value="Registered">Registered</option>
-          <option value="Not Registered">Not Registered</option>
-        </select>
+          onChange={(nextValue) =>
+            handleChange({ target: { name: "birthRegistration", value: nextValue } })
+          }
+          options={[
+            { value: "Registered", label: "Registered" },
+            { value: "Not Registered", label: "Not Registered" },
+          ]}
+          placeholder="Select Status"
+          ariaLabel="Birth Registration"
+          isDark={isDarkMode}
+          triggerClassName="full-input-sm"
+        />
       </div>
 
       {/* ── Voter Consent — unchanged ─────────────────────────────────────── */}

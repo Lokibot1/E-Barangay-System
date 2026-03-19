@@ -9,6 +9,7 @@
 
 import React from 'react';
 import { ChevronRight, ChevronLeft, ShieldAlert } from 'lucide-react';
+import ModernSelectField from "../../components/shared/ModernSelectField";
 
 const EMPLOYMENT_STATUSES = [
   'Employed', 'Self-Employed', 'Unemployed', 'Student',
@@ -57,10 +58,10 @@ const Step3WorkEducation = ({
   setIsIndigent = () => {},
 }) => {
 
-  const labelClass = `block text-[10px] font-black uppercase tracking-[0.22em] mb-1.5 font-kumbh ${
+  const labelClass = `block text-[10px] font-semibold tracking-[0.08em] mb-1.5 font-kumbh ${
     isDarkMode ? 'text-slate-400' : 'text-slate-500'
   }`;
-  const inputClass = `w-full px-4 py-3 rounded-2xl border text-sm font-medium font-kumbh transition-all outline-none focus:ring-2 focus:ring-emerald-500/40 ${
+  const inputClass = `w-full px-4 py-3 rounded-2xl border text-sm font-normal font-kumbh transition-all outline-none focus:ring-2 focus:ring-emerald-500/40 ${
     isDarkMode
       ? 'bg-slate-800 border-white/10 text-white placeholder-slate-500'
       : 'bg-white border-black/10 text-slate-900 placeholder-slate-400'
@@ -85,17 +86,17 @@ const Step3WorkEducation = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>Work Status</label>
-            <select
-              name="employmentStatus"
+            <ModernSelectField
               value={formData.employmentStatus || ''}
-              onChange={handleChange}
-              className={selectClass}
-            >
-              <option value="">Select status</option>
-              {EMPLOYMENT_STATUSES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+              onChange={(nextValue) =>
+                handleChange({ target: { name: 'employmentStatus', value: nextValue } })
+              }
+              options={EMPLOYMENT_STATUSES}
+              placeholder="Select status"
+              ariaLabel="Work Status"
+              isDark={isDarkMode}
+              triggerClassName={selectClass}
+            />
           </div>
 
           <div>
@@ -111,32 +112,32 @@ const Step3WorkEducation = ({
 
           <div>
             <label className={labelClass}>Income Source</label>
-            <select
-              name="incomeSource"
+            <ModernSelectField
               value={formData.incomeSource || ''}
-              onChange={handleChange}
-              className={selectClass}
-            >
-              <option value="">Select source</option>
-              {INCOME_SOURCES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+              onChange={(nextValue) =>
+                handleChange({ target: { name: 'incomeSource', value: nextValue } })
+              }
+              options={INCOME_SOURCES}
+              placeholder="Select source"
+              ariaLabel="Income Source"
+              isDark={isDarkMode}
+              triggerClassName={selectClass}
+            />
           </div>
 
           <div>
             <label className={labelClass}>Monthly Income</label>
-            <select
-              name="monthlyIncome"
+            <ModernSelectField
               value={formData.monthlyIncome || ''}
-              onChange={handleChange}
-              className={selectClass}
-            >
-              <option value="">Select range</option>
-              {INCOME_RANGES.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
+              onChange={(nextValue) =>
+                handleChange({ target: { name: 'monthlyIncome', value: nextValue } })
+              }
+              options={INCOME_RANGES}
+              placeholder="Select range"
+              ariaLabel="Monthly Income"
+              isDark={isDarkMode}
+              triggerClassName={selectClass}
+            />
           </div>
         </div>
       </div>
@@ -151,61 +152,62 @@ const Step3WorkEducation = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>Educational Status</label>
-            <select
-              name="educationalStatus"
+            <ModernSelectField
               value={formData.educationalStatus || ''}
-              onChange={handleChange}
-              className={selectClass}
-            >
-              <option value="">Select status</option>
-              {EDU_STATUSES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+              onChange={(nextValue) =>
+                handleChange({ target: { name: 'educationalStatus', value: nextValue } })
+              }
+              options={EDU_STATUSES}
+              placeholder="Select status"
+              ariaLabel="Educational Status"
+              isDark={isDarkMode}
+              triggerClassName={selectClass}
+            />
           </div>
 
           <div>
             <label className={labelClass}>School Type</label>
-            <select
-              name="schoolType"
+            <ModernSelectField
               value={formData.schoolType || ''}
-              onChange={handleChange}
-              className={selectClass}
-            >
-              <option value="">Select type</option>
-              {SCHOOL_TYPES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+              onChange={(nextValue) =>
+                handleChange({ target: { name: 'schoolType', value: nextValue } })
+              }
+              options={SCHOOL_TYPES}
+              placeholder="Select type"
+              ariaLabel="School Type"
+              isDark={isDarkMode}
+              triggerClassName={selectClass}
+            />
           </div>
 
           <div>
             <label className={labelClass}>School Level</label>
-            <select
-              name="schoolLevel"
+            <ModernSelectField
               value={formData.schoolLevel || ''}
-              onChange={handleChange}
-              className={selectClass}
-            >
-              <option value="">Select level</option>
-              {SCHOOL_LEVELS.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+              onChange={(nextValue) =>
+                handleChange({ target: { name: 'schoolLevel', value: nextValue } })
+              }
+              options={SCHOOL_LEVELS}
+              placeholder="Select level"
+              ariaLabel="School Level"
+              isDark={isDarkMode}
+              triggerClassName={selectClass}
+            />
           </div>
 
           <div>
             <label className={labelClass}>Highest Grade Level</label>
-            <select 
-              name="highestGrade" 
-              value={formData.highestGrade || "N/A"} 
-              onChange={handleChange} 
-              className={selectClass}
-            >
-              {HIGHEST_GRADE_OPTIONS.map((grade) => (
-                <option key={grade} value={grade}>{grade}</option>
-              ))}
-            </select>
+            <ModernSelectField
+              value={formData.highestGrade || "N/A"}
+              onChange={(nextValue) =>
+                handleChange({ target: { name: 'highestGrade', value: nextValue } })
+              }
+              options={HIGHEST_GRADE_OPTIONS}
+              placeholder="Select grade"
+              ariaLabel="Highest Grade Level"
+              isDark={isDarkMode}
+              triggerClassName={selectClass}
+            />
           </div>
         </div>
       </div>

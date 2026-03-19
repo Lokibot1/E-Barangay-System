@@ -10,14 +10,14 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
   Home,
-  UserCheck,
   Search,
   MapPin,
   X,
   AlertCircle,
   Info,
-  Users,
 } from "lucide-react";
+import DatePickerField from "../../components/shared/DatePickerField";
+import ModernSelectField from "../../components/shared/ModernSelectField";
 
 const Step2Address = ({
   formData,
@@ -38,7 +38,7 @@ const Step2Address = ({
   const dropdownRef = useRef(null);
   const suggestionRefs = useRef([]);
 
-  const labelClass = `text-[10px] font-black uppercase tracking-wider font-kumbh ${isDarkMode ? "text-gray-400" : "text-gray-500"}`;
+  const labelClass = `text-[10px] font-semibold tracking-[0.08em] font-kumbh ${isDarkMode ? "text-gray-400" : "text-gray-500"}`;
   const requiredStar = <span className="text-rose-500 ml-0.5">*</span>;
   const todayStr = new Date().toISOString().split("T")[0];
 
@@ -93,7 +93,6 @@ const Step2Address = ({
   };
 
   const dateState = getDateValidationState();
-  const isDateValid = dateState === "valid" || dateState === "empty";
 
   const dateErrorMessages = {
     future: "Date cannot be in the future.",
@@ -206,7 +205,7 @@ const Step2Address = ({
               setSelectedIndex(-1);
             }}
             placeholder="Type House No. or Street name..."
-            className={`w-full pl-11 pr-10 py-3.5 border-none rounded-2xl text-xs font-bold font-kumbh focus:ring-2 focus:ring-emerald-500 transition-all ${
+            className={`w-full pl-11 pr-10 py-3.5 border-none rounded-2xl text-xs font-normal font-kumbh focus:ring-2 focus:ring-emerald-500 transition-all ${
               isDarkMode
                 ? "bg-slate-800 text-white"
                 : "bg-slate-100 text-slate-900"
@@ -288,39 +287,41 @@ const Step2Address = ({
         </div>
         <div className="space-y-1">
           <label className={labelClass}>Purok{requiredStar}</label>
-          <select
-            name="purok"
+          <ModernSelectField
             value={formData.purok || ""}
-            onChange={handleChange}
-            className="full-input-sm"
-          >
-            <option value="">Select Purok</option>
-            {(purokList || []).map((p) => (
-              <option key={p.id} value={p.id?.toString()}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+            onChange={(nextValue) =>
+              handleChange({ target: { name: "purok", value: nextValue } })
+            }
+            options={(purokList || []).map((p) => ({
+              value: p.id?.toString(),
+              label: p.name,
+            }))}
+            placeholder="Select Purok"
+            ariaLabel="Purok"
+            isDark={isDarkMode}
+            triggerClassName="full-input-sm"
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={labelClass}>Street{requiredStar}</label>
-          <select
-            name="street"
+          <ModernSelectField
             value={formData.street || ""}
+            onChange={(nextValue) =>
+              handleChange({ target: { name: "street", value: nextValue } })
+            }
             disabled={!formData.purok}
-            onChange={handleChange}
-            className="full-input-sm disabled:opacity-30"
-          >
-            <option value="">Select Street</option>
-            {filteredStreets.map((s) => (
-              <option key={s.id} value={s.id?.toString()}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+            options={filteredStreets.map((s) => ({
+              value: s.id?.toString(),
+              label: s.name,
+            }))}
+            placeholder="Select Street"
+            ariaLabel="Street"
+            isDark={isDarkMode}
+            triggerClassName="full-input-sm"
+          />
           {!formData.purok && (
             <p className="text-[9px] text-amber-600 font-bold uppercase mt-1">
               ↑ Select a Purok first to load streets
@@ -332,24 +333,22 @@ const Step2Address = ({
           <label className={labelClass}>
             Position in Household{requiredStar}
           </label>
-          <select
-            name="householdPosition"
+          <ModernSelectField
             value={formData.householdPosition || ""}
-            onChange={handleChange}
+            onChange={(nextValue) =>
+              handleChange({
+                target: { name: "householdPosition", value: nextValue },
+              })
+            }
             disabled={!isAddressComplete}
-            className="full-input-sm disabled:opacity-40"
-          >
-            <option value="">
-              {!isAddressComplete
-                ? "Complete address first..."
-                : "Select Position"}
-            </option>
-            {filteredPositions.map((pos) => (
-              <option key={pos.value} value={pos.value}>
-                {pos.label}
-              </option>
-            ))}
-          </select>
+            options={filteredPositions}
+            placeholder={
+              !isAddressComplete ? "Complete address first..." : "Select Position"
+            }
+            ariaLabel="Position in Household"
+            isDark={isDarkMode}
+            triggerClassName="full-input-sm"
+          />
 
           {/* Guide: address already has a Head */}
           {addressExists && isAddressComplete && (
@@ -393,51 +392,63 @@ const Step2Address = ({
 
           <div className="space-y-1">
             <label className={labelClass}>Housing Status{requiredStar}</label>
-            <select
-              name="tenureStatus"
+            <ModernSelectField
               value={formData.tenureStatus || ""}
-              onChange={handleChange}
-              className="full-input-sm"
-            >
-              <option value="">Select Status</option>
-              <option value="Owned">Owned</option>
-              <option value="Rented">Rented</option>
-              <option value="Sharer">Sharer</option>
-            </select>
+              onChange={(nextValue) =>
+                handleChange({ target: { name: "tenureStatus", value: nextValue } })
+              }
+              options={[
+                { value: "Owned", label: "Owned" },
+                { value: "Rented", label: "Rented" },
+                { value: "Sharer", label: "Sharer" },
+              ]}
+              placeholder="Select Status"
+              ariaLabel="Housing Status"
+              isDark={isDarkMode}
+              triggerClassName="full-input-sm"
+            />
           </div>
 
           <div className="space-y-1">
             <label className={labelClass}>Wall Material{requiredStar}</label>
-            <select
-              name="wallMaterial"
+            <ModernSelectField
               value={formData.wallMaterial || ""}
-              onChange={handleChange}
-              className="full-input-sm"
-            >
-              <option value="">Select Material</option>
-              <option value="Concrete">Concrete</option>
-              <option value="Wood">Wood</option>
-              <option value="Half Concrete">Half Concrete</option>
-              <option value="Makeshift">Makeshift</option>
-            </select>
+              onChange={(nextValue) =>
+                handleChange({ target: { name: "wallMaterial", value: nextValue } })
+              }
+              options={[
+                { value: "Concrete", label: "Concrete" },
+                { value: "Wood", label: "Wood" },
+                { value: "Half Concrete", label: "Half Concrete" },
+                { value: "Makeshift", label: "Makeshift" },
+              ]}
+              placeholder="Select Material"
+              ariaLabel="Wall Material"
+              isDark={isDarkMode}
+              triggerClassName="full-input-sm"
+            />
           </div>
 
         {/* Row 2: Roof and No. of Families */}
 
 <div className="space-y-1 flex flex-col justify-end">
   <label className={labelClass}>Roof Material{requiredStar}</label>
-  <select
-    name="roofMaterial"
+  <ModernSelectField
     value={formData.roofMaterial || ""}
-    onChange={handleChange}
-    className="full-input-sm"
-  >
-    <option value="">Select Material</option>
-    <option value="G.I. Sheet">G.I. Sheet</option>
-    <option value="Concrete Slab">Concrete Slab</option>
-    <option value="Tile">Tile</option>
-    <option value="Makeshift">Makeshift</option>
-  </select>
+    onChange={(nextValue) =>
+      handleChange({ target: { name: "roofMaterial", value: nextValue } })
+    }
+    options={[
+      { value: "G.I. Sheet", label: "G.I. Sheet" },
+      { value: "Concrete Slab", label: "Concrete Slab" },
+      { value: "Tile", label: "Tile" },
+      { value: "Makeshift", label: "Makeshift" },
+    ]}
+    placeholder="Select Material"
+    ariaLabel="Roof Material"
+    isDark={isDarkMode}
+    triggerClassName="full-input-sm"
+  />
 
   <div className="h-4 invisible"></div>
 </div>
@@ -477,7 +488,27 @@ const Step2Address = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
         <div className="space-y-1">
           <label className={labelClass}>Residency Type{requiredStar}</label>
-          <select
+          <ModernSelectField
+            value={formData.residencyStatus || ""}
+            onChange={(nextValue) =>
+              handleChange({ target: { name: "residencyStatus", value: nextValue } })
+            }
+            options={[
+              {
+                value: "Old Resident",
+                label: "Old Resident â€” living here 6+ months",
+              },
+              {
+                value: "New Resident",
+                label: "New Resident â€” moved within 6 months",
+              },
+            ]}
+            placeholder="Select Type"
+            ariaLabel="Residency Type"
+            isDark={isDarkMode}
+            triggerClassName="full-input-sm"
+          />
+          {false && <select
             name="residencyStatus"
             value={formData.residencyStatus || ""}
             onChange={handleChange}
@@ -490,7 +521,7 @@ const Step2Address = ({
             <option value="New Resident">
               New Resident — moved within 6 months
             </option>
-          </select>
+          </select>}
           {formData.residencyStatus === "Old Resident" && (
             <p
               className={`text-[9px] font-bold mt-1 ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
@@ -511,13 +542,17 @@ const Step2Address = ({
           <label className={labelClass}>
             Date Started Residency{requiredStar}
           </label>
-          <input
-            type="date"
-            name="residencyStartDate"
+          <DatePickerField
             value={formData.residencyStartDate || ""}
-            onChange={handleChange}
+            onChange={(nextValue) =>
+              handleChange({
+                target: { name: "residencyStartDate", value: nextValue },
+              })
+            }
+            ariaLabel="Date Started Residency"
             max={todayStr}
-            className={`full-input-sm ${
+            isDark={isDarkMode}
+            triggerClassName={`full-input-sm ${
               formData.residencyStartDate &&
               dateState !== "valid" &&
               dateState !== "empty"
@@ -528,7 +563,7 @@ const Step2Address = ({
           <p
             className={`font-kumbh text-[9px] font-bold mt-0.5 ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}
           >
-            Format: MM/DD/YYYY — use the calendar picker or type directly.
+            Format: MM/DD/YYYY — choose the date from the calendar.
           </p>
           {formData.residencyStartDate &&
             dateState !== "valid" &&

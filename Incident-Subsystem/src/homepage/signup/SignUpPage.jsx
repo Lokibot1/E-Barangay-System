@@ -489,6 +489,7 @@ const SignupPage = () => {
                     formData={formData}
                     handleChange={handleChange}
                     isDarkMode={isDarkMode}
+                    currentTheme={isDarkMode ? "dark" : lightTheme}
                     handleSubmit={submitAuth}
                     loading={loading}
                     purokList={purokList}

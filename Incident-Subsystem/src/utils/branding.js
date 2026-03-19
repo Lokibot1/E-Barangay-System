@@ -1,5 +1,4 @@
 import { BRANDING_API_URL } from "../config/runtimeApi";
-import { getToken } from "../homepage/services/loginService";
 
 const STORAGE_KEY = "barangay_logo_data_url";
 
@@ -49,15 +48,10 @@ export const fetchBarangayLogoDataUrlRemote = async () => {
 };
 
 const buildBrandingHeaders = (includeJson = false) => {
-  const token = getToken();
   const headers = { Accept: "application/json" };
 
   if (includeJson) {
     headers["Content-Type"] = "application/json";
-  }
-
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
   }
 
   return headers;
