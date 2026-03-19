@@ -1,11 +1,12 @@
 ﻿import React, { useEffect, useState } from "react";
 import { useLanguage } from "../../context/LanguageContext";
-import { Image, Upload, Trash2, UserRound } from "lucide-react";
+import { Image, Upload, Trash2, Users, ClipboardList } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import themeTokens from "../../Themetokens";
 import { isAdmin } from "../../homepage/services/loginService";
 import { useBranding } from "../../context/BrandingContext";
-import ProfilePage from "../shared/ProfilePage";
+import CreateAccounts from "../sub-system-3/admin/CreateAccounts";
+import ActivityLogsView from "../../components/shared/ActivityLogsView";
 import {
   isSupportedLogoFile,
   readImageFileAsDataUrl,
@@ -17,7 +18,8 @@ export default function Settings() {
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem("appTheme") || "modern",
   );
-  const [activeTab, setActiveTab] = useState("branding");
+  const VALID_TABS = ["accounts", "branding", "logs"];
+  const [activeTab, setActiveTab] = useState("accounts");
   const [logoError, setLogoError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,15 +44,11 @@ export default function Settings() {
     }
 
     const tab = new URLSearchParams(location.search).get("tab");
-    setActiveTab(tab === "branding" ? "branding" : "profile");
+    setActiveTab(VALID_TABS.includes(tab) ? tab : "accounts");
   }, [adminAccess, location.search, navigate]);
 
   if (!adminAccess) {
     return null;
-  }
-
-  if (activeTab === "profile") {
-    return <ProfilePage />;
   }
 
   const handleLogoSelect = async (event) => {
@@ -103,106 +101,41 @@ export default function Settings() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <h1 className={`text-lg font-bold font-spartan ${t.cardText}`}>
-                {tr.sub1.settings}
+                Settings (CMS)
               </h1>
               <p className={`text-xs font-kumbh ${t.subtleText}`}>
-                {tr.sub1.settingsDesc}
+                Manage official accounts, barangay branding, and system activity logs.
               </p>
             </div>
           </div>
 
           <div className={`flex items-center gap-5 border-b ${t.cardBorder} pt-3`}>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab("profile");
-                navigate("/admin/settings?tab=profile");
-              }}
-              className={`relative pb-2 text-[13px] font-semibold font-kumbh transition inline-flex items-center gap-2 ${
-                activeTab === "profile"
-                  ? `${t.primaryText}`
-                  : `${t.subtleText} hover:opacity-80`
-              }`}
-            >
-              <UserRound size={14} />
-              {tr.profilePage?.title || 'View Profile'}
-              {activeTab === "profile" && (
-                <span className={`absolute left-0 right-0 -bottom-px h-0.5 ${t.primarySolid}`} />
-              )}
-            </button>
+            {[
+              { key: "accounts", label: "Account Management", icon: <Users size={14} /> },
+              { key: "branding", label: "Barangay Logo",      icon: <Image size={14} /> },
+              { key: "logs",     label: "Activity Logs",      icon: <ClipboardList size={14} /> },
+            ].map(({ key, label, icon }) => (
               <button
+                key={key}
                 type="button"
-              onClick={() => {
-                setActiveTab("branding");
-                navigate("/admin/settings?tab=branding");
-              }}
+                onClick={() => { setActiveTab(key); navigate(`/admin/settings?tab=${key}`); }}
                 className={`relative pb-2 text-[13px] font-semibold font-kumbh transition inline-flex items-center gap-2 ${
-                  activeTab === "branding"
-                    ? `${t.primaryText}`
-                    : `${t.subtleText} hover:opacity-80`
+                  activeTab === key ? `${t.primaryText}` : `${t.subtleText} hover:opacity-80`
                 }`}
-            >
-              <Image size={14} />
-              Barangay Logo
-              {activeTab === "branding" && (
-                <span className={`absolute left-0 right-0 -bottom-px h-0.5 ${t.primarySolid}`} />
-              )}
-            </button>
+              >
+                {icon}
+                {label}
+                {activeTab === key && (
+                  <span className={`absolute left-0 right-0 -bottom-px h-0.5 ${t.primarySolid}`} />
+                )}
+              </button>
+            ))}
           </div>
         </div>
 
-        {activeTab === "profile" ? (
-          <section className={`${t.cardBg} border ${t.cardBorder} rounded-[22px] overflow-hidden shadow-[0_18px_45px_-36px_rgba(15,23,42,0.35)] text-left`}>
-            <div
-              className={`border-b px-5 py-4 ${isDark ? "border-slate-700" : "border-slate-200"}`}
-              style={{
-                background: isDark
-                  ? "linear-gradient(135deg, rgba(15,23,42,0.55), rgba(30,41,59,0.35))"
-                  : "linear-gradient(135deg, rgba(248,250,252,0.98), rgba(241,245,249,0.88))",
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${
-                  isDark ? "bg-slate-900 text-slate-200" : "bg-white text-slate-700 shadow-sm"
-                }`}>
-                  <UserRound className="h-4 w-4" />
-                </div>
-                <div className="min-w-0">
-                  <h2 className={`text-[15px] font-bold font-spartan leading-tight ${t.cardText}`}>
-                    {tr.profilePage?.title || 'Profile Overview'}
-                  </h2>
-                  <p className={`text-[12px] font-kumbh leading-4 ${t.subtleText}`}>
-                    {tr.sub1.settingsProfileDesc}
-                  </p>
-                </div>
-              </div>
-            </div>
+        {activeTab === "accounts" && <CreateAccounts />}
 
-            <div className="px-5 py-5">
-              <div className={`rounded-2xl border px-4 py-4 ${
-                isDark ? "border-slate-700 bg-slate-900/40" : "border-slate-200/70 bg-slate-50/80"
-              }`}>
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className={`text-[13px] font-semibold font-kumbh ${t.cardText}`}>
-                      Open your full profile page
-                    </p>
-                    <p className={`text-[12px] font-kumbh ${t.subtleText}`}>
-                      View account details, residency info, and activity logs.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => navigate("/admin/profile")}
-                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] font-semibold font-kumbh text-white transition ${t.primarySolid}`}
-                  >
-                    View Profile
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-        ) : (
+        {activeTab === "branding" && (
           <section className={`${t.cardBg} border ${t.cardBorder} rounded-[22px] overflow-hidden shadow-[0_18px_45px_-36px_rgba(15,23,42,0.35)] text-left`}>
             <div
               className={`border-b px-5 py-4 ${isDark ? "border-slate-700" : "border-slate-200"}`}
@@ -291,6 +224,10 @@ export default function Settings() {
               )}
             </div>
           </section>
+        )}
+
+        {activeTab === "logs" && (
+          <ActivityLogsView t={t} isDark={isDark} />
         )}
       </div>
     </div>

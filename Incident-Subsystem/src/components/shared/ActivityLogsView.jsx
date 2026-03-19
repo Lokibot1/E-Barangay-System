@@ -933,17 +933,19 @@ const ActivityLogsView = ({ t, isDark, onBack }) => {
             System activity trail — most recent first
           </p>
         </div>
-        <button
-          onClick={onBack}
-          className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-[12px] font-semibold font-kumbh transition ${
-            isDark
-              ? "border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
-              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-          }`}
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Profile
-        </button>
+        {onBack && (
+          <button
+            onClick={onBack}
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-[12px] font-semibold font-kumbh transition ${
+              isDark
+                ? "border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
+                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back to Profile
+          </button>
+        )}
       </div>
 
       {/* Filters bar */}

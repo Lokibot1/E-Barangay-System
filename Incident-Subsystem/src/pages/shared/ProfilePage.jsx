@@ -1871,26 +1871,6 @@ export default function ProfilePage() {
               {tr.profilePage.reviewDesc}
             </p>
           </div>
-          <div className={`flex items-center gap-5 border-b ${t.cardBorder} pt-3`}>
-            <button
-              type="button"
-              className={`relative pb-2 text-[13px] font-semibold font-kumbh transition inline-flex items-center gap-2 ${t.primaryText}`}
-            >
-              <UserRound size={14} />
-              {tr.profilePage.viewProfile}
-              <span className={`absolute left-0 right-0 -bottom-px h-0.5 ${t.primarySolid}`} />
-            </button>
-            {adminAccount && (
-              <button
-                type="button"
-                onClick={goToBranding}
-                className={`relative pb-2 text-[13px] font-semibold font-kumbh transition inline-flex items-center gap-2 ${t.subtleText} hover:opacity-80`}
-              >
-                <Image size={14} />
-                {tr.profilePage.barangayLogo}
-              </button>
-            )}
-          </div>
         </div>
         {/* Compact header */}
         <section
