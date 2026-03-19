@@ -7,6 +7,7 @@ import React, {
   useRef,
   memo,
 } from "react";
+import { useLocation } from "react-router-dom";
 import { useLanguage } from "../../../context/LanguageContext";
 import {
   MapContainer,
@@ -436,6 +437,7 @@ const TableRow = memo(
 // ════════════════════════════════════════════════════════════════════════
 const AdminIncidentReports = () => {
   const { tr } = useLanguage();
+  const location = useLocation();
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem("appTheme") || "modern",
   );
@@ -537,8 +539,29 @@ const AdminIncidentReports = () => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  // ── Deep-link from Activity Logs ──────────────────────────────────
+  useEffect(() => {
+    const { openId, openType, defaultTab } = location.state || {};
+    if (!openId || loading) return;
+
+    const list = openType === "complaint" ? complaints : incidents;
+    const record = list.find((r) => String(r.id) === String(openId));
+    if (!record) return;
+
+    if (openType === "complaint") handlePageTab("complaints");
+    else handlePageTab("incidents");
+
+    setModalInitialTab(defaultTab || "details");
+    setSelectedIncident(record);
+
+    // Clear the state so navigating back & forward doesn't re-open the modal
+    window.history.replaceState({}, "");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, incidents, complaints]);
+
   // ── Modal state ─────────────────────────────────────────────────────
   const [selectedIncident, setSelectedIncident] = useState(null);
+  const [modalInitialTab, setModalInitialTab] = useState("details");
   const [showKebab, setShowKebab] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
@@ -1734,8 +1757,9 @@ const AdminIncidentReports = () => {
       {/* ── Incident Detail Modal ───────────────────────────────────── */}
       <AdminReportDetailsModal
         incident={selectedIncident}
-        onClose={() => setSelectedIncident(null)}
+        onClose={() => { setSelectedIncident(null); setModalInitialTab("details"); }}
         reportType={pageTab}
+        initialTab={modalInitialTab}
         onStatusUpdate={(id, newStatus) => {
           const updateList = (list, setList) =>
             setList(
