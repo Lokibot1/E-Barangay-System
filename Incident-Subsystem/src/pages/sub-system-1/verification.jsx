@@ -28,6 +28,21 @@ import ImageZoomOverlay          from '../../components/sub-system-1/common/Imag
 import MinimizedSuccessCard      from '../../components/sub-system-1/verification/MinimizedSuccessCard';
 import ScreenLoader              from '../../components/shared/ScreenLoader';
 import Toast                     from '../../components/shared/modals/Toast';
+import { getUser }               from '../../homepage/services/loginService';
+import { createVerificationAdminLog } from '../../homepage/services/auditLogService';
+
+const VERIFICATION_LOG_ACTIONS = {
+  Verified: 'approved',
+  Approved: 'approved',
+  Rejected: 'rejected',
+  'For Verification': 'visit_set',
+};
+
+const VERIFICATION_LOG_LABELS = {
+  approved: 'Approved',
+  rejected: 'Rejected',
+  visit_set: 'Set for Visit',
+};
 
 const Verification = () => {
   const { tr } = useLanguage();
@@ -100,6 +115,42 @@ const Verification = () => {
     try {
       const result = await updateStatus(id, status, isIndigent, additionalData);
       if (result.success) {
+        const currentUser = getUser();
+        const logAction = VERIFICATION_LOG_ACTIONS[status];
+        if (logAction) {
+          try {
+            await createVerificationAdminLog({
+              action: logAction,
+              auditable_type: 'resident',
+              auditable_id: selectedRes?.barangay_id || selectedRes?.trackingNumber || selectedRes?.id || id,
+              subject_name: selectedRes?.name || 'Resident',
+              resident_id: selectedRes?.id || id,
+              user: {
+                id: currentUser?.id ?? null,
+                name: currentUser?.name || currentUser?.username || currentUser?.email || 'Administrator',
+                role: currentUser?.role || 'admin',
+                email: currentUser?.email || null,
+              },
+              old_values: {
+                status: selectedRes?.status || 'Pending',
+              },
+              new_values: {
+                status,
+                verification_action: VERIFICATION_LOG_LABELS[logAction],
+                ...(logAction === 'visit_set' ? { visit_set_at: new Date().toISOString() } : {}),
+                ...(additionalData?.rejection_reason ? { rejection_reason: additionalData.rejection_reason } : {}),
+                ...(additionalData?.rejection_remarks ? { rejection_remarks: additionalData.rejection_remarks } : {}),
+              },
+              metadata: {
+                tracking_number: selectedRes?.trackingNumber || selectedRes?.tracking_number || null,
+                resident_id: selectedRes?.id || id,
+              },
+            });
+          } catch (logError) {
+            console.warn('Failed to save verification admin log:', logError);
+          }
+        }
+
         setPendingAction(null);
         if (status === 'Verified' || status === 'Approved') {
           playFeedback('success');

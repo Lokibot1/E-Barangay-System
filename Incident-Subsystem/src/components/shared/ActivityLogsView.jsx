@@ -4,18 +4,24 @@ import {
   ArrowLeft,
   ArrowUpRight,
   Archive,
+  CheckCircle2,
   ChevronDown,
   ChevronUp,
   FilePlus,
+  MapPin,
   PencilLine,
   RotateCcw,
   Search,
   Trash2,
   UserMinus,
   X,
+  XCircle,
 } from "lucide-react";
 import DatePickerField from "./DatePickerField";
-import { fetchAuditLogs } from "../../homepage/services/auditLogService";
+import {
+  fetchAuditLogs,
+  fetchVerificationAdminLogs,
+} from "../../homepage/services/auditLogService";
 import { residentService } from "../../services/sub-system-1/residents";
 import { householdService } from "../../services/sub-system-1/household";
 
@@ -103,6 +109,39 @@ const ACTION_CONFIG = {
     statsBg: "bg-rose-50 text-rose-700",
     statsDark: "bg-rose-900/20 text-rose-300",
   },
+  approved: {
+    label: "Approved",
+    Icon: CheckCircle2,
+    iconBg: "bg-emerald-100 text-emerald-600",
+    iconBgDark: "bg-emerald-900/30 text-emerald-400",
+    dot: "bg-emerald-500",
+    badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    darkBadge: "border-emerald-800/40 bg-emerald-900/20 text-emerald-300",
+    statsBg: "bg-emerald-50 text-emerald-700",
+    statsDark: "bg-emerald-900/20 text-emerald-300",
+  },
+  rejected: {
+    label: "Rejected",
+    Icon: XCircle,
+    iconBg: "bg-rose-100 text-rose-600",
+    iconBgDark: "bg-rose-900/30 text-rose-400",
+    dot: "bg-rose-500",
+    badge: "border-rose-200 bg-rose-50 text-rose-700",
+    darkBadge: "border-rose-800/40 bg-rose-900/20 text-rose-300",
+    statsBg: "bg-rose-50 text-rose-700",
+    statsDark: "bg-rose-900/20 text-rose-300",
+  },
+  visit_set: {
+    label: "Visit Set",
+    Icon: MapPin,
+    iconBg: "bg-amber-100 text-amber-600",
+    iconBgDark: "bg-amber-900/30 text-amber-400",
+    dot: "bg-amber-500",
+    badge: "border-amber-200 bg-amber-50 text-amber-700",
+    darkBadge: "border-amber-800/40 bg-amber-900/20 text-amber-300",
+    statsBg: "bg-amber-50 text-amber-700",
+    statsDark: "bg-amber-900/20 text-amber-300",
+  },
 };
 
 const TYPE_LABELS = {
@@ -132,6 +171,7 @@ const MODAL_TYPES = new Set(["incident", "complaint"]);
 const SOURCE_LABELS = {
   resident: "Resident",
   household: "Household",
+  verification: "Verification",
   system: "System",
 };
 
@@ -178,6 +218,9 @@ const ACTION_FILTER_MAP = {
   created: "created",
   updated: "updated",
   deleted: "deleted",
+  approved: "approved",
+  rejected: "rejected",
+  visit_set: "visit_set",
 };
 
 const RESIDENT_ACTION_MAP = {
@@ -191,6 +234,8 @@ const HOUSEHOLD_ACTION_MAP = {
   deactivate: "deactivated",
   restore: "restored",
 };
+
+const CHANGE_ACTIONS = new Set(["updated", "approved", "rejected", "visit_set"]);
 
 // Convert snake_case / camelCase / raw strings to Title Case
 const toTitleCase = (val) => {
@@ -350,6 +395,37 @@ const timeAgo = (dateStr) => {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
+const formatLogDateTime = (dateStr) => {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return String(dateStr);
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+const formatVisibleIpAddress = (ipAddress) => {
+  const value = String(ipAddress ?? "").trim();
+  if (!value) return "";
+
+  const normalized = value.toLowerCase();
+  if (
+    normalized === "::1" ||
+    normalized === "127.0.0.1" ||
+    normalized === "::ffff:127.0.0.1" ||
+    normalized === "localhost"
+  ) {
+    return "";
+  }
+
+  return value;
+};
+
 const buildSentence = (log) => {
   const name = log.user?.name || "System";
   const raw = log.auditable_type || "record";
@@ -366,6 +442,9 @@ const buildSentence = (log) => {
     archived: `archived ${article} ${type}${suffix}`,
     restored: `restored ${article} ${type}${suffix}`,
     deactivated: `deactivated ${article} ${type}${suffix}`,
+    approved: `approved verification for ${article} ${type}${suffix}`,
+    rejected: `rejected verification for ${article} ${type}${suffix}`,
+    visit_set: `set a barangay visit for ${article} ${type}${suffix}`,
   };
   return { name, body: bodies[log.action] ?? `performed "${log.action}" on ${article} ${type}${suffix}` };
 };
@@ -404,10 +483,11 @@ const CHANGES_VISIBLE_DEFAULT = 2;
 const LogEntry = ({ log, isDark, t, index, onNavigate }) => {
   const cfg = ACTION_CONFIG[log.action] || ACTION_CONFIG.updated;
   const { name, body } = buildSentence(log);
-  const allChanges = log.action === "updated" ? getChanges(log.old_values, log.new_values) : [];
+  const allChanges = CHANGE_ACTIONS.has(log.action) ? getChanges(log.old_values, log.new_values) : [];
   const highlights = log.action === "created" ? getCreatedHighlights(log.new_values) : [];
   const sourceLabel = SOURCE_LABELS[log.source] || "System";
   const typeLabel = TYPE_LABELS[log.auditable_type] || (log.auditable_type ? toTitleCase(log.auditable_type) : "Record");
+  const visibleIpAddress = formatVisibleIpAddress(log.ip_address);
   const navigableRoute = TYPE_ROUTES[log.auditable_type];
   const canNavigate = !!navigableRoute && log.action !== "deleted";
 
@@ -426,7 +506,7 @@ const LogEntry = ({ log, isDark, t, index, onNavigate }) => {
       <div className="flex items-start gap-3 px-4 pt-4 pb-3">
         <ActionIcon action={log.action} isDark={isDark} />
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 text-left">
           {/* User name + role */}
           <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
             <span className={`text-[13px] font-bold font-kumbh leading-none ${isDark ? "text-slate-100" : t.cardText}`}>
@@ -436,12 +516,12 @@ const LogEntry = ({ log, isDark, t, index, onNavigate }) => {
           </div>
 
           {/* Action sentence */}
-          <p className={`text-[12px] font-kumbh leading-5 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+          <p className={`text-left text-[12px] font-kumbh leading-5 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
             {body}
           </p>
 
           {/* Meta chips */}
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-left">
             <span
               className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold font-kumbh ${
                 isDark
@@ -460,12 +540,15 @@ const LogEntry = ({ log, isDark, t, index, onNavigate }) => {
             >
               {typeLabel}
             </span>
-            {log.ip_address && (
+            {visibleIpAddress && (
               <span className={`text-[10px] font-kumbh ${isDark ? "text-slate-600" : "text-slate-400"}`}>
-                {log.ip_address}
+                IP: {visibleIpAddress}
               </span>
             )}
             <span className={`text-[10px] font-kumbh ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+              {formatLogDateTime(log.created_at)}
+            </span>
+            <span className={`text-[10px] font-kumbh ${isDark ? "text-slate-600" : "text-slate-400"}`}>
               {timeAgo(log.created_at)}
             </span>
           </div>
@@ -702,6 +785,7 @@ const POLL_INTERVAL = 20000;
 
 const ActivityLogsView = ({ t, isDark, onBack }) => {
   const navigate = useNavigate();
+  const hasBackAction = typeof onBack === "function";
 
   const [logs, setLogs] = useState([]);
   const [page, setPage] = useState(1);
@@ -758,12 +842,12 @@ const ActivityLogsView = ({ t, isDark, onBack }) => {
   }, [applyFilters]);
 
   const handleNavigate = useCallback((log, route) => {
-    onBack();
+    if (hasBackAction) onBack();
     const state = MODAL_TYPES.has(log.auditable_type) && log.auditable_id
       ? { openId: String(log.auditable_id), openType: log.auditable_type, defaultTab: "updates" }
       : undefined;
     navigate(route, state ? { state } : undefined);
-  }, [navigate, onBack]);
+  }, [hasBackAction, navigate, onBack]);
 
   // ── Fetch ──
   useEffect(() => {
@@ -783,14 +867,22 @@ const ActivityLogsView = ({ t, isDark, onBack }) => {
         if (f.end_date) params.end_date = f.end_date;
 
         const auditPromise = fetchAuditLogs(params);
+        const verificationPromise = page === 1
+          ? fetchVerificationAdminLogs(f).catch(() => ({ data: [] }))
+          : Promise.resolve({ data: [] });
         const extraPromise = page === 1
           ? Promise.allSettled([residentService.getAllLogs(), householdService.getAllLogs()])
           : Promise.resolve([]);
 
-        const [auditData, extraResults] = await Promise.all([auditPromise, extraPromise]);
+        const [auditData, verificationData, extraResults] = await Promise.all([
+          auditPromise,
+          verificationPromise,
+          extraPromise,
+        ]);
         if (cancelled) return;
 
         const auditItems = auditData.data || [];
+        const verificationItems = verificationData?.data || [];
         let extraItems = [];
 
         if (page === 1 && Array.isArray(extraResults)) {
@@ -802,7 +894,10 @@ const ActivityLogsView = ({ t, isDark, onBack }) => {
         }
 
         setLogs((prev) => {
-          const combined = mergeLogs(page === 1 ? [] : prev, [...auditItems, ...extraItems]);
+          const combined = mergeLogs(
+            page === 1 ? [] : prev,
+            [...auditItems, ...verificationItems, ...extraItems],
+          );
           combined.forEach((item) => knownIdsRef.current.add(item.id));
           return combined;
         });
@@ -845,8 +940,11 @@ const ActivityLogsView = ({ t, isDark, onBack }) => {
         if (f.start_date) params.start_date = f.start_date;
         if (f.end_date) params.end_date = f.end_date;
 
-        const data = await fetchAuditLogs(params);
-        const items = data.data || [];
+        const [data, verificationData] = await Promise.all([
+          fetchAuditLogs(params),
+          fetchVerificationAdminLogs(f).catch(() => ({ data: [] })),
+        ]);
+        const items = [...(data.data || []), ...(verificationData?.data || [])];
         const fresh = items.filter((item) => !knownIdsRef.current.has(item.id));
         if (!fresh.length) return;
 
@@ -933,7 +1031,7 @@ const ActivityLogsView = ({ t, isDark, onBack }) => {
             System activity trail — most recent first
           </p>
         </div>
-        {onBack && (
+        {hasBackAction && (
           <button
             onClick={onBack}
             className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-[12px] font-semibold font-kumbh transition ${
@@ -983,6 +1081,9 @@ const ActivityLogsView = ({ t, isDark, onBack }) => {
               <option value="created">Created</option>
               <option value="updated">Updated</option>
               <option value="deleted">Deleted</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="visit_set">Visit Set</option>
             </select>
             <ChevronDown className={`pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 ${isDark ? "text-slate-500" : "text-slate-400"}`} />
           </div>

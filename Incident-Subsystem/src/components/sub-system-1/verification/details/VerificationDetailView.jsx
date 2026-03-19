@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import DetailHeader from '../details/DetailHeader';
 import IdentitySection from '../details/IdentitySection';
 import ResidencySection from '../details/ResidencySection';
@@ -26,6 +27,17 @@ const VerificationDetailView = (props) => {
       setIsIndigent(existingIndigentStatus ? 1 : 0);
     } else { setIsIndigent(0); }
   }, [data, isHead, isNewHousehold, existingIndigentStatus]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    const previousOverflow = document.body.style.overflow;
+    if (showRejectModal) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showRejectModal]);
 
   const combinedDetails = useMemo(() => {
   const payload = data?.registration_payload || {};
@@ -85,26 +97,47 @@ const VerificationDetailView = (props) => {
         </div>
       </div>
 
-      {/* MODAL REMAINS THE SAME */}
-      {showRejectModal && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl p-8 shadow-2xl">
-            <h2 className="text-xl font-bold mb-6 text-slate-800 dark:text-white">Reject Application</h2>
+      {showRejectModal && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[10010] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+          onClick={() => setShowRejectModal(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl dark:bg-slate-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="mb-6 text-xl font-bold text-slate-800 dark:text-white">Reject Application</h2>
             <div className="space-y-4">
-              <select className="w-full p-3.5 rounded-xl border dark:bg-slate-800 text-sm" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)}>
+              <select
+                className="w-full rounded-xl border p-3.5 text-sm dark:bg-slate-800"
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+              >
                 <option value="">Select a reason...</option>
                 <option value="Incomplete Documents">Incomplete Documents</option>
                 <option value="Invalid Address">Invalid Address</option>
                 <option value="Other">Other</option>
               </select>
-              <textarea className="w-full h-28 p-4 rounded-2xl border dark:bg-slate-800 text-sm resize-none" placeholder="Remarks..." value={rejectRemarks} onChange={(e) => setRejectRemarks(e.target.value)} />
+              <textarea
+                className="h-28 w-full resize-none rounded-2xl border p-4 text-sm dark:bg-slate-800"
+                placeholder="Remarks..."
+                value={rejectRemarks}
+                onChange={(e) => setRejectRemarks(e.target.value)}
+              />
             </div>
-            <div className="flex gap-3 mt-8">
+            <div className="mt-8 flex gap-3">
               <button onClick={() => setShowRejectModal(false)} className="flex-1 py-3 text-slate-500">Cancel</button>
-              <button onClick={() => { onReject(rejectReason, rejectRemarks); setShowRejectModal(false); }} disabled={!rejectReason} className="flex-1 py-3 bg-red-600 text-white rounded-xl disabled:opacity-50">Confirm Reject</button>
+              <button
+                onClick={() => { onReject(rejectReason, rejectRemarks); setShowRejectModal(false); }}
+                disabled={!rejectReason}
+                className="flex-1 rounded-xl bg-red-600 py-3 text-white disabled:opacity-50"
+              >
+                Confirm Reject
+              </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
