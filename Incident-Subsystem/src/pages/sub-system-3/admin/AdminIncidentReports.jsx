@@ -404,6 +404,32 @@ const COMPLAINT_TYPE_MAP = {
   other: "Other",
 };
 
+// ── Skeleton row ────────────────────────────────────────────────────────
+const TableRowSkeleton = ({ isDark }) => {
+  const pulse = isDark
+    ? "bg-slate-700/60 animate-pulse rounded"
+    : "bg-gray-200/80 animate-pulse rounded";
+  return (
+    <tr className={`border-b ${isDark ? "border-slate-700/60" : "border-gray-100"}`}>
+      <td className="text-center px-3 py-3.5">
+        <div className={`h-3 w-5 mx-auto ${pulse}`} />
+      </td>
+      <td className="px-4 py-3.5">
+        <div className={`h-3 w-4/5 ${pulse}`} />
+      </td>
+      <td className="px-4 py-3.5">
+        <div className={`h-3 w-24 ${pulse}`} />
+      </td>
+      <td className="px-4 py-3.5">
+        <div className={`h-3 w-3/4 ${pulse}`} />
+      </td>
+      <td className="px-4 py-3.5">
+        <div className={`h-3 w-20 ${pulse}`} />
+      </td>
+    </tr>
+  );
+};
+
 // ── Memoized table row ─────────────────────────────────────────────────
 const TableRow = memo(
   ({ inc, index, currentPage, ROWS_PER_PAGE, onClick, t, isDark }) => (
@@ -1183,7 +1209,11 @@ const AdminIncidentReports = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedData.length > 0 ? (
+                  {loading ? (
+                    Array.from({ length: 8 }, (_, i) => (
+                      <TableRowSkeleton key={i} isDark={isDark} />
+                    ))
+                  ) : paginatedData.length > 0 ? (
                     paginatedData.map((inc, index) => (
                       <TableRow
                         key={inc.id}
@@ -1202,9 +1232,7 @@ const AdminIncidentReports = () => {
                         colSpan={5}
                         className={`px-4 py-8 text-center ${t.subtleText}`}
                       >
-                        {loading
-                          ? tr.adminIncidents.loadingReports
-                          : tr.adminIncidents.noReportsFound}
+                        {tr.adminIncidents.noReportsFound}
                       </td>
                     </tr>
                   )}
