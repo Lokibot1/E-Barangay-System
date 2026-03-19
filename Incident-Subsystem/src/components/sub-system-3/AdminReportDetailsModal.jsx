@@ -269,8 +269,9 @@ const AdminReportDetailsModal = ({
   onClose,
   reportType,
   onStatusUpdate,
+  initialTab = "details",
 }) => {
-  const [modalTab, setModalTab] = useState("details");
+  const [modalTab, setModalTab] = useState(initialTab);
   const [slideDir, setSlideDir] = useState("right");
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showDispatch, setShowDispatch] = useState(false);
@@ -298,7 +299,7 @@ const AdminReportDetailsModal = ({
   useEffect(() => {
     if (!incident) return;
     setCurrentStatus(toDisplayStatus(incident.status));
-    setModalTab("details");
+    setModalTab(initialTab);
     setPhotoIndex(0);
     setShowDispatch(false);
     setShowNotes(false);
@@ -365,7 +366,7 @@ const AdminReportDetailsModal = ({
 
     loadUpdates();
     loadAppointments();
-  }, [incident?.id, reportType]);
+  }, [incident?.id, reportType, initialTab]);
 
   if (!incident) return null;
 

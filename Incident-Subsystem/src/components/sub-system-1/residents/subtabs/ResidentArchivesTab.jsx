@@ -1,10 +1,3 @@
-/**
- * ResidentArchivesTab.jsx
- * CHANGED: Replaced full-page `if (loading) return (...)` with skeleton rows
- *   inside the table tbody — filters and header remain visible while loading.
- * All original logic preserved.
- */
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
     Search, X, RotateCcw, ArchiveX, User,
@@ -12,22 +5,25 @@ import {
 import { residentService }   from '../../../../services/sub-system-1/residents';
 import ResidentArchiveModal  from '../ResidentArchiveModal';
 import SkeletonLoader from '../../common/SkeletonLoader';
+import ConfirmModal from '../../common/ConfirmModal';
 import { PUROK_OPTIONS }     from '../../../../constants/filter';
 
 const HEADERS = ['Resident & ID', 'Last Address', 'Archived On', 'Archived By', 'Action'];
 const COLS    = HEADERS.length;
 
-// ─────────────────────────────────────────────────────────────────────────────
-
 const ResidentArchivesTab = ({ t, currentTheme = 'modern', onRestore }) => {
     const isDark = currentTheme === 'dark';
 
-    const [archived,         setArchived]         = useState([]);
-    const [loading,          setLoading]           = useState(true);
-    const [searchTerm,       setSearchTerm]        = useState('');
-    const [purokFilter,      setPurokFilter]       = useState('All');
-    const [selectedResident, setSelectedResident]  = useState(null);
-    const [modalOpen,        setModalOpen]         = useState(false);
+    const [archived, setArchived] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [purokFilter, setPurokFilter] = useState('All');
+    const [selectedResident, setSelectedResident] = useState(null);
+    const [modalOpen, setModalOpen] = useState(false);
+    
+    // -- Confirm Modal State --
+    const [confirmRestore, setConfirmRestore] = useState({ show: false, id: null, name: '' });
+    const [isRestoring, setIsRestoring] = useState(false);
 
     const fetchArchived = useCallback(async () => {
         setLoading(true);
@@ -53,13 +49,25 @@ const ResidentArchivesTab = ({ t, currentTheme = 'modern', onRestore }) => {
         return matchSearch && matchPurok;
     }), [archived, searchTerm, purokFilter]);
 
-    const handleRestore = async (id) => {
-        const success = await onRestore(id);
-        if (success) {
-            await fetchArchived();
-            setModalOpen(false);
+    // STEP 1: Intercept restore to show confirmation
+    const triggerRestore = (id, name) => {
+        setConfirmRestore({ show: true, id, name });
+    };
+
+    // STEP 2: Actual restoration logic
+    const handleFinalRestore = async () => {
+        const { id } = confirmRestore;
+        setIsRestoring(true);
+        try {
+            const success = await onRestore(id);
+            if (success) {
+                await fetchArchived();
+                setModalOpen(false);
+                setConfirmRestore({ show: false, id: null, name: '' });
+            }
+        } finally {
+            setIsRestoring(false);
         }
-        return success;
     };
 
     const purokSelectOptions = [
@@ -69,6 +77,23 @@ const ResidentArchivesTab = ({ t, currentTheme = 'modern', onRestore }) => {
 
     return (
         <>
+            {/* --- CONFIRMATION MODAL --- */}
+          <ConfirmModal 
+    isOpen={confirmRestore.show}
+    onClose={() => setConfirmRestore({ show: false, id: null, name: '' })}
+    onConfirm={handleFinalRestore}
+    isLoading={isRestoring}
+    title="Restore Resident?"
+    message={
+        <span>
+            Are you sure you want to restore <span className="font-bold text-emerald-600 underline decoration-2 underline-offset-4">{confirmRestore.name}</span>? 
+            This record will return to the active list.
+        </span>
+    }
+    confirmText="Yes, Restore"
+    variant="info" 
+/>
+
             {/* ── Filters ── */}
             <div className={`border-b px-5 py-5 sm:px-6 ${t.cardBorder} ${isDark ? 'bg-slate-950/40' : 'bg-slate-50/80'}`}>
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
@@ -142,6 +167,7 @@ const ResidentArchivesTab = ({ t, currentTheme = 'modern', onRestore }) => {
                                     key={r.id}
                                     item={r}
                                     onView={() => { setSelectedResident(r); setModalOpen(true); }}
+                                    onRestoreClick={() => triggerRestore(r.id, r.name)}
                                     t={t}
                                     isDark={isDark}
                                 />
@@ -167,7 +193,10 @@ const ResidentArchivesTab = ({ t, currentTheme = 'modern', onRestore }) => {
                 isOpen={modalOpen}
                 onClose={() => setModalOpen(false)}
                 resident={selectedResident}
-                onRestore={handleRestore}
+                onRestore={(id) => {
+                    setModalOpen(false); // Close the preview modal
+                    triggerRestore(id, selectedResident.name); // Trigger confirm modal
+                }}
                 currentTheme={currentTheme}
                 t={t}
             />
@@ -175,11 +204,9 @@ const ResidentArchivesTab = ({ t, currentTheme = 'modern', onRestore }) => {
     );
 };
 
-// ─── Table row ────────────────────────────────────────────────────────────────
-
-const ArchiveRow = ({ item, onView, t, isDark }) => {
+const ArchiveRow = ({ item, onView, onRestoreClick, t, isDark }) => {
     const divider = isDark ? 'border-slate-800/90' : 'border-slate-200';
-    const cell    = `border-b ${divider} px-6 py-5 align-middle`;
+    const cell     = `border-b ${divider} px-6 py-5 align-middle`;
 
     const archivedAt = item.formatted_archived_at
         || (item.deleted_at
@@ -192,10 +219,9 @@ const ArchiveRow = ({ item, onView, t, isDark }) => {
 
     return (
         <tr
-            onClick={onView}
-            className={`cursor-pointer transition-colors duration-200 ${t.cardText} ${isDark ? 'hover:bg-slate-900/60' : 'hover:bg-slate-50/80'}`}
+            className={`transition-colors duration-200 ${t.cardText} ${isDark ? 'hover:bg-slate-900/60' : 'hover:bg-slate-50/80'}`}
         >
-            <td className={`${cell} text-left`}>
+            <td className={`${cell} text-left cursor-pointer`} onClick={onView}>
                 <div className="flex items-center gap-3">
                     <div className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 ${isDark ? 'bg-slate-700' : 'bg-slate-100'}`}>
                         <User size={15} className={t.subtleText} />
@@ -206,7 +232,7 @@ const ArchiveRow = ({ item, onView, t, isDark }) => {
                     </div>
                 </div>
             </td>
-            <td className={`${cell} text-left`}>
+            <td className={`${cell} text-left cursor-pointer`} onClick={onView}>
                 <p className={`text-sm font-normal font-kumbh ${t.subtleText} max-w-[240px] truncate`}>{item.full_address || 'No address'}</p>
                 {item.resolved_purok && (
                     <span className={`mt-1.5 inline-flex rounded-full px-3 py-1 text-xs font-semibold font-kumbh border ${
@@ -216,10 +242,10 @@ const ArchiveRow = ({ item, onView, t, isDark }) => {
                     </span>
                 )}
             </td>
-            <td className={`${cell} text-center`}>
+            <td className={`${cell} text-center cursor-pointer`} onClick={onView}>
                 <span className={`text-sm font-medium font-kumbh ${t.subtleText}`}>{archivedAt}</span>
             </td>
-            <td className={`${cell} text-center`}>
+            <td className={`${cell} text-center cursor-pointer`} onClick={onView}>
                 {archivedBy ? (
                     <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold font-kumbh border ${
                         isDark ? 'border-rose-800/60 bg-rose-900/20 text-rose-300' : 'border-rose-200 bg-rose-50 text-rose-700'
@@ -232,8 +258,8 @@ const ArchiveRow = ({ item, onView, t, isDark }) => {
             </td>
             <td className={`${cell} text-center`}>
                 <button
-                    onClick={(e) => { e.stopPropagation(); onView(); }}
-                    title="View & restore"
+                    onClick={(e) => { e.stopPropagation(); onRestoreClick(); }}
+                    title="Restore resident"
                     className="group inline-flex items-center gap-2 rounded-[18px] border border-emerald-300 px-4 py-3 text-emerald-600 text-xs font-semibold font-kumbh transition-all shadow-sm hover:bg-emerald-600 hover:border-emerald-600 active:scale-90"
                 >
                     <RotateCcw size={14} />

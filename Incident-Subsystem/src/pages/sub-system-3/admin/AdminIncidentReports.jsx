@@ -7,6 +7,7 @@ import React, {
   useRef,
   memo,
 } from "react";
+import { useLocation } from "react-router-dom";
 import { useLanguage } from "../../../context/LanguageContext";
 import {
   MapContainer,
@@ -403,6 +404,32 @@ const COMPLAINT_TYPE_MAP = {
   other: "Other",
 };
 
+// ── Skeleton row ────────────────────────────────────────────────────────
+const TableRowSkeleton = ({ isDark }) => {
+  const pulse = isDark
+    ? "bg-slate-700/60 animate-pulse rounded"
+    : "bg-gray-200/80 animate-pulse rounded";
+  return (
+    <tr className={`border-b ${isDark ? "border-slate-700/60" : "border-gray-100"}`}>
+      <td className="text-center px-3 py-3.5">
+        <div className={`h-3 w-5 mx-auto ${pulse}`} />
+      </td>
+      <td className="px-4 py-3.5">
+        <div className={`h-3 w-4/5 ${pulse}`} />
+      </td>
+      <td className="px-4 py-3.5">
+        <div className={`h-3 w-24 ${pulse}`} />
+      </td>
+      <td className="px-4 py-3.5">
+        <div className={`h-3 w-3/4 ${pulse}`} />
+      </td>
+      <td className="px-4 py-3.5">
+        <div className={`h-3 w-20 ${pulse}`} />
+      </td>
+    </tr>
+  );
+};
+
 // ── Memoized table row ─────────────────────────────────────────────────
 const TableRow = memo(
   ({ inc, index, currentPage, ROWS_PER_PAGE, onClick, t, isDark }) => (
@@ -436,6 +463,7 @@ const TableRow = memo(
 // ════════════════════════════════════════════════════════════════════════
 const AdminIncidentReports = () => {
   const { tr } = useLanguage();
+  const location = useLocation();
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem("appTheme") || "modern",
   );
@@ -537,8 +565,29 @@ const AdminIncidentReports = () => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  // ── Deep-link from Activity Logs ──────────────────────────────────
+  useEffect(() => {
+    const { openId, openType, defaultTab } = location.state || {};
+    if (!openId || loading) return;
+
+    const list = openType === "complaint" ? complaints : incidents;
+    const record = list.find((r) => String(r.id) === String(openId));
+    if (!record) return;
+
+    if (openType === "complaint") handlePageTab("complaints");
+    else handlePageTab("incidents");
+
+    setModalInitialTab(defaultTab || "details");
+    setSelectedIncident(record);
+
+    // Clear the state so navigating back & forward doesn't re-open the modal
+    window.history.replaceState({}, "");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, incidents, complaints]);
+
   // ── Modal state ─────────────────────────────────────────────────────
   const [selectedIncident, setSelectedIncident] = useState(null);
+  const [modalInitialTab, setModalInitialTab] = useState("details");
   const [showKebab, setShowKebab] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
@@ -1160,7 +1209,11 @@ const AdminIncidentReports = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedData.length > 0 ? (
+                  {loading ? (
+                    Array.from({ length: 8 }, (_, i) => (
+                      <TableRowSkeleton key={i} isDark={isDark} />
+                    ))
+                  ) : paginatedData.length > 0 ? (
                     paginatedData.map((inc, index) => (
                       <TableRow
                         key={inc.id}
@@ -1179,9 +1232,7 @@ const AdminIncidentReports = () => {
                         colSpan={5}
                         className={`px-4 py-8 text-center ${t.subtleText}`}
                       >
-                        {loading
-                          ? tr.adminIncidents.loadingReports
-                          : tr.adminIncidents.noReportsFound}
+                        {tr.adminIncidents.noReportsFound}
                       </td>
                     </tr>
                   )}
@@ -1734,8 +1785,9 @@ const AdminIncidentReports = () => {
       {/* ── Incident Detail Modal ───────────────────────────────────── */}
       <AdminReportDetailsModal
         incident={selectedIncident}
-        onClose={() => setSelectedIncident(null)}
+        onClose={() => { setSelectedIncident(null); setModalInitialTab("details"); }}
         reportType={pageTab}
+        initialTab={modalInitialTab}
         onStatusUpdate={(id, newStatus) => {
           const updateList = (list, setList) =>
             setList(
