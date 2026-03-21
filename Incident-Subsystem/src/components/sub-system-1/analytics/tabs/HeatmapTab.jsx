@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { CircleDot, Map, Table2, X } from 'lucide-react';
+import { CircleDot, Layers3, Map, Table2, X } from 'lucide-react';
 import { EmptyState, ChartCard } from '../AnalyticsInterface';
 import {
   BARANGAY_BOUNDARY,
@@ -43,6 +43,43 @@ const LABEL_OFFSETS = {
   'Purok 6': [0.00010, -0.00012],
   'Purok 7': [0.00012, -0.00018],
 };
+
+const BASEMAP_OPTIONS = [
+  {
+    key: 'light',
+    label: 'Light',
+    description: 'Clean analytics view',
+    tileUrl: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; CARTO',
+    maxZoom: 19,
+    previewStyle: { background: 'linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%)' },
+  },
+  {
+    key: 'street',
+    label: 'Street',
+    description: 'Roads and landmarks',
+    tileUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+    previewStyle: { background: 'linear-gradient(135deg, #dcfce7 0%, #bfdbfe 100%)' },
+  },
+  {
+    key: 'satellite',
+    label: 'Satellite',
+    description: 'Aerial imagery view',
+    tileUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles &copy; Esri',
+    maxZoom: 19,
+    previewStyle: { background: 'linear-gradient(135deg, #334155 0%, #14532d 45%, #854d0e 100%)' },
+  },
+];
+
+const DEFAULT_BASEMAP_KEY = BASEMAP_OPTIONS[0].key;
+const BASEMAPS_BY_KEY = Object.fromEntries(BASEMAP_OPTIONS.map((option) => [option.key, option]));
+
+function getBasemapConfig(basemapKey) {
+  return BASEMAPS_BY_KEY[basemapKey] ?? BASEMAPS_BY_KEY[DEFAULT_BASEMAP_KEY];
+}
 
 function getMetricFriendlyLabel(metricLabel) {
   const labelMap = {
@@ -107,9 +144,10 @@ function buildPurokInsight({ metric, metricLabel, purok, metricValue, verificati
   };
 }
 
-function HeatmapMap({ purokData, metric, t, onAreaClick }) {
+function HeatmapMap({ purokData, metric, mapType, t, onAreaClick }) {
   const mapRef = useRef(null);
   const leafletRef = useRef(null);
+  const baseLayerRef = useRef(null);
   const layersRef = useRef([]);
 
   const metricStyle = HEATMAP_METRIC_COLORS[metric] ?? HEATMAP_METRIC_COLORS.total;
@@ -166,11 +204,6 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
       };
     }
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: 'OpenStreetMap and CARTO',
-      maxZoom: 19,
-    }).addTo(map);
-
     L.polygon(BARANGAY_BOUNDARY, {
       color: COLORS.primary,
       weight: 2.5,
@@ -198,6 +231,36 @@ function HeatmapMap({ purokData, metric, t, onAreaClick }) {
       leafletRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const L = window.L;
+    const map = leafletRef.current;
+    if (!L || !map) return undefined;
+
+    const config = getBasemapConfig(mapType);
+
+    if (baseLayerRef.current) {
+      map.removeLayer(baseLayerRef.current);
+      baseLayerRef.current = null;
+    }
+
+    const nextBaseLayer = L.tileLayer(config.tileUrl, {
+      attribution: config.attribution,
+      maxZoom: config.maxZoom ?? 19,
+    });
+
+    nextBaseLayer.addTo(map);
+    baseLayerRef.current = nextBaseLayer;
+
+    return () => {
+      if (baseLayerRef.current === nextBaseLayer) {
+        map.removeLayer(nextBaseLayer);
+        baseLayerRef.current = null;
+      }
+    };
+  }, [mapType]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return undefined;
@@ -469,10 +532,13 @@ export default function HeatmapTab({ raw, t }) {
   const [view, setView] = useState('map');
   const [leafletReady, setLeafletReady] = useState(typeof window !== 'undefined' && !!window.L);
   const [selectedPurok, setSelectedPurok] = useState(null);
+  const [mapType, setMapType] = useState(DEFAULT_BASEMAP_KEY);
+  const [isMapTypeMenuOpen, setIsMapTypeMenuOpen] = useState(false);
 
   const currentMetricStyle = HEATMAP_METRIC_COLORS[metric] ?? HEATMAP_METRIC_COLORS.total;
   const selectedMetric = MAP_METRICS.find((item) => item.key === metric) ?? MAP_METRICS[0];
   const friendlyMetricLabel = getMetricFriendlyLabel(selectedMetric.label);
+  const activeBasemap = getBasemapConfig(mapType);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -491,6 +557,12 @@ export default function HeatmapTab({ raw, t }) {
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
     script.onload = () => setLeafletReady(true);
     document.head.appendChild(script);
+  }, [view]);
+
+  useEffect(() => {
+    if (view !== 'map') {
+      setIsMapTypeMenuOpen(false);
+    }
   }, [view]);
 
   if (!purokData.length) return <EmptyState message="No purok data available." />;
@@ -614,7 +686,76 @@ export default function HeatmapTab({ raw, t }) {
           {view === 'map' ? (
             leafletReady ? (
               <div className="relative isolate z-0">
-                <HeatmapMap purokData={purokData} metric={metric} t={t} onAreaClick={setSelectedPurok} />
+                <div className="pointer-events-none absolute bottom-4 left-4 z-10">
+                  <div className="pointer-events-auto flex flex-col items-start gap-2">
+                    {isMapTypeMenuOpen ? (
+                      <div className={`w-[220px] rounded-[22px] border p-1.5 shadow-[0_18px_36px_rgba(15,23,42,0.14)] backdrop-blur-sm ${
+                        t ? `${t.cardBg} ${t.cardBorder}` : 'border-gray-200 bg-white/95'
+                      }`}>
+                        {BASEMAP_OPTIONS.map((option) => {
+                          const isActive = option.key === mapType;
+
+                          return (
+                            <button
+                              key={option.key}
+                              type="button"
+                              onClick={() => {
+                                setMapType(option.key);
+                                setIsMapTypeMenuOpen(false);
+                              }}
+                              className={`flex w-full items-center gap-3 rounded-[16px] px-3 py-2 text-left transition-all ${
+                                isActive
+                                  ? 'bg-slate-900 text-white shadow-[0_10px_24px_rgba(15,23,42,0.14)]'
+                                  : 'text-slate-700 hover:bg-slate-100'
+                              }`}
+                              aria-pressed={isActive}
+                            >
+                              <span
+                                className={`h-8 w-8 flex-shrink-0 rounded-[12px] border shadow-sm ${
+                                  isActive ? 'border-white/15' : 'border-slate-200'
+                                }`}
+                                style={option.previewStyle}
+                              />
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-[12px] font-semibold">
+                                  {option.label}
+                                </span>
+                                <span className={`block truncate text-[10px] ${
+                                  isActive ? 'text-slate-300' : 'text-slate-500'
+                                }`}>
+                                  {option.description}
+                                </span>
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      onClick={() => setIsMapTypeMenuOpen((open) => !open)}
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/95 px-3 py-2 text-[12px] font-semibold text-slate-700 shadow-[0_12px_30px_rgba(15,23,42,0.16)] backdrop-blur-sm transition-all hover:border-slate-300 hover:text-slate-900"
+                      aria-expanded={isMapTypeMenuOpen}
+                      aria-label="Change map type"
+                    >
+                      <span
+                        className="h-3 w-3 rounded-full border border-white/70 shadow-sm"
+                        style={activeBasemap.previewStyle}
+                      />
+                      <Layers3 className="h-3.5 w-3.5" />
+                      <span>{activeBasemap.label}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <HeatmapMap
+                  purokData={purokData}
+                  metric={metric}
+                  mapType={mapType}
+                  t={t}
+                  onAreaClick={setSelectedPurok}
+                />
 
                 {selectedPurok ? (
                   <div className="pointer-events-none absolute right-24 top-4 z-10 w-[240px] max-w-[75%] sm:w-[260px]">

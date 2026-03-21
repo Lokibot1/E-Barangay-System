@@ -357,6 +357,42 @@ const getRelativeTime = (date) => {
   return `${Math.floor(diff / 86400)} days ago`;
 };
 
+const buildRegistrationDescription = (newCount, pendingCount) =>
+  `${newCount} new registration${newCount === 1 ? "" : "s"} submitted for review. Total pending: ${pendingCount}.`;
+
+const getNotificationDescription = (notification) => {
+  const fallback =
+    notification?.description ||
+    notification?.message ||
+    "No description provided.";
+
+  const isRegistrationNotification =
+    notification?.source === "registration" ||
+    notification?.type === "registration_pending";
+
+  if (!isRegistrationNotification) return fallback;
+
+  const dataNewCount = Number.parseInt(notification?.data?.newCount, 10);
+  const dataPendingCount = Number.parseInt(notification?.data?.totalPending, 10);
+
+  if (Number.isFinite(dataNewCount) && Number.isFinite(dataPendingCount)) {
+    return buildRegistrationDescription(dataNewCount, dataPendingCount);
+  }
+
+  const shortPatternMatch = String(fallback).match(
+    /(\d+)\s+for review,\s*(\d+)\s+pending total\.?/i,
+  );
+
+  if (shortPatternMatch) {
+    return buildRegistrationDescription(
+      Number.parseInt(shortPatternMatch[1], 10),
+      Number.parseInt(shortPatternMatch[2], 10),
+    );
+  }
+
+  return fallback;
+};
+
 const BellOutlineIcon = ({ className = "", strokeWidth = 2 }) => (
   <svg
     className={className}
@@ -386,6 +422,7 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
   const isResident = notification.source === "resident";
   const isStatusChange = !!notification.oldStatus;
   const byLabel = isResident ? "Updated by" : "Reported by";
+  const descriptionText = getNotificationDescription(notification);
 
   const sourceLabel = isRegistration
     ? "Registration"
@@ -399,7 +436,7 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
   const displayType = notification.type === "appointment_scheduled"
     ? "Appointment Scheduled"
     : notification.type === "registration_pending"
-      ? "New Resident Registration"
+      ? "Resident Registration"
       : notification.type === "profile_updated"
         ? "Profile Updated"
       : notification.type === "incident_status_updated"
@@ -471,7 +508,7 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
           <p
             className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"} font-kumbh line-clamp-2`}
           >
-            {notification.description || "No description provided"}
+            {descriptionText}
           </p>
         </div>
       </div>
@@ -502,6 +539,7 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
   const isResident = notification.source === "resident";
   const isStatusChange = !!notification.oldStatus;
   const byLabel = isResident ? "Updated by" : "Reported by";
+  const descriptionText = getNotificationDescription(notification);
 
   const sourceLabel = isRegistration
     ? "Registration"
@@ -516,7 +554,7 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
   const displayType = notification.type === "appointment_scheduled"
     ? "Appointment Scheduled"
     : notification.type === "registration_pending"
-      ? "New Resident Registration"
+      ? "Resident Registration"
       : notification.type === "profile_updated"
         ? "Profile Updated"
       : notification.type === "incident_status_updated"
@@ -610,7 +648,7 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
           <p className={`mt-1 text-[11px] leading-4.5 font-kumbh ${
             isDark ? "text-slate-400" : "text-slate-600"
           }`}>
-            {notification.description || "No description provided"}
+            {descriptionText}
           </p>
 
           <div className="mt-2.5 flex items-center justify-between gap-3">
@@ -649,6 +687,216 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
             Mark read
           </button>
         )}
+      </div>
+    </div>
+  );
+});
+
+const ModernNotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onViewAppointment, onViewRegistration, onViewProfileUpdate, onCloseMenu, onNavigateToAction }) => {
+  const unread = !notification.read;
+  const timeAgo = getRelativeTime(notification.timestamp);
+  const absoluteDate = formatNotificationDate(notification.timestamp);
+  const isIncident = notification.source === "incident";
+  const isAppointment = notification.source === "appointment";
+  const isRegistration = notification.source === "registration";
+  const isResident = notification.source === "resident";
+  const isStatusChange = !!notification.oldStatus;
+  const byLabel = isResident ? "Updated by" : "Reported by";
+  const descriptionText = getNotificationDescription(notification);
+
+  const capitalize = (str) =>
+    str ? str.replace(/\b\w/g, (c) => c.toUpperCase()) : str;
+
+  const sourceLabel = isRegistration
+    ? "Registration"
+    : isAppointment
+      ? "Appointment"
+      : isResident
+        ? "Resident"
+        : isIncident
+          ? "Incident"
+          : "Complaint";
+
+  const displayType = notification.type === "appointment_scheduled"
+    ? "Appointment Scheduled"
+    : notification.type === "registration_pending"
+      ? "Resident Registration"
+      : notification.type === "profile_updated"
+        ? "Profile Updated"
+        : notification.type === "incident_status_updated"
+          ? "Incident Status Updated"
+          : notification.type === "complaint_status_updated"
+            ? "Complaint Status Updated"
+            : capitalize(String(notification.type || "Notification").replace(/_/g, " "));
+
+  const actionLabel = isRegistration
+    ? "View"
+    : isAppointment
+      ? "Open details"
+      : isIncident || notification.type === "incident_status_updated"
+        ? "View incident"
+        : notification.source === "complaint" || notification.type === "complaint_status_updated"
+          ? "View complaint"
+          : null;
+
+  const metaParts = [
+    timeAgo,
+    (isResident || notification.type === "profile_updated") && absoluteDate ? absoluteDate : "",
+    notification.reportedBy ? `${byLabel} ${notification.reportedBy}` : "",
+  ].filter(Boolean);
+
+  const sourceTone = isRegistration
+    ? isDark
+      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+      : "border-emerald-200 bg-emerald-50 text-emerald-700"
+    : isAppointment
+      ? isDark
+        ? "border-sky-500/20 bg-sky-500/10 text-sky-300"
+        : "border-sky-200 bg-sky-50 text-sky-700"
+      : isResident
+        ? isDark
+          ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+          : "border-amber-200 bg-amber-50 text-amber-700"
+        : isIncident
+          ? isDark
+            ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+            : "border-rose-200 bg-rose-50 text-rose-700"
+          : isDark
+            ? "border-slate-700 bg-slate-800 text-slate-300"
+            : "border-slate-200 bg-slate-100 text-slate-700";
+
+  const handleClick = () => {
+    onMarkAsRead(notification.id);
+    if (isAppointment && onViewAppointment) {
+      onCloseMenu?.();
+      onViewAppointment(notification);
+      return;
+    }
+    if (isRegistration && onViewRegistration) {
+      onCloseMenu?.();
+      onViewRegistration(notification);
+      return;
+    }
+    if (isResident && onViewProfileUpdate) {
+      onCloseMenu?.();
+      onViewProfileUpdate(notification);
+      return;
+    }
+    if (onNavigateToAction) {
+      onNavigateToAction(notification);
+      return;
+    }
+    onCloseMenu?.();
+  };
+
+  const handleActionClick = (e) => {
+    e.stopPropagation();
+    handleClick();
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    handleClick();
+  };
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      className={`group relative w-full overflow-hidden rounded-[0.9rem] border text-left transition-all focus:outline-none ${
+        unread
+          ? isDark
+            ? "border-slate-700 bg-slate-900 shadow-[0_10px_28px_rgba(15,23,42,0.24)] hover:border-slate-600"
+            : "border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.08)] hover:border-slate-300"
+          : isDark
+            ? "border-slate-800 bg-slate-900/70 hover:border-slate-700"
+            : "border-slate-200/80 bg-white/88 hover:border-slate-300"
+      }`}
+    >
+      {unread && (
+        <span className={`absolute bottom-2.5 left-0 top-2.5 w-1 rounded-r-full ${isDark ? "bg-emerald-400" : "bg-emerald-500"}`} />
+      )}
+      <div className="p-2.5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[7px] font-semibold font-kumbh ${sourceTone}`}>
+                  {sourceLabel}
+                </span>
+                {unread && (
+                  <span className={`inline-flex items-center gap-1 text-[8px] font-semibold font-kumbh ${isDark ? "text-emerald-300" : "text-emerald-700"}`}>
+                    <span className={`h-1 w-1 rounded-full ${isDark ? "bg-emerald-300" : "bg-emerald-500"}`} />
+                    Unread
+                  </span>
+                )}
+                {isStatusChange && (
+                  <span className={`rounded-full px-1.5 py-0.5 text-[8px] font-medium font-kumbh ${
+                    isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-600"
+                  }`}>
+                    {capitalize(notification.oldStatus)} {"->"} {capitalize(notification.newStatus)}
+                  </span>
+                )}
+              </div>
+
+              {actionLabel && (
+                <button
+                  type="button"
+                  onClick={handleActionClick}
+                  title={actionLabel}
+                  aria-label={actionLabel}
+                  className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                    isDark
+                      ? "border-slate-700 bg-slate-800 text-slate-200 hover:border-slate-600 hover:text-white"
+                      : "border-slate-200 bg-slate-100 text-slate-700 hover:border-slate-300 hover:text-slate-900"
+                  }`}
+                >
+                  <svg
+                    className="h-3 w-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7S3.732 16.057 2.458 12z"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            <p className={`mt-1.5 text-[11px] font-semibold leading-4.5 font-kumbh ${
+              isDark ? "text-slate-100" : "text-slate-900"
+            }`}>
+              {displayType}
+            </p>
+
+            <p className={`mt-1 text-[9px] leading-4 font-kumbh ${
+              isDark ? "text-slate-400" : "text-slate-600"
+            }`}>
+              {descriptionText}
+            </p>
+
+            <p className={`mt-1.5 text-[8px] leading-3.5 font-kumbh ${
+              isDark ? "text-slate-500" : "text-slate-500"
+            }`}>
+              {metaParts.join(" - ")}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -940,27 +1188,40 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                 {/* Notification Dropdown */}
                 {isNotificationOpen && (
                   <div
-                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-[22rem] ${t.cardBg} ${t.cardBorder} rounded-xl shadow-2xl border z-40 overflow-hidden animate-slideDown max-h-[80vh] sm:max-h-[540px]`}
+                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-3 w-auto sm:w-[21.75rem] rounded-[1.35rem] border z-40 overflow-hidden animate-slideDown backdrop-blur-xl ${
+                      isDark
+                        ? "border-slate-800 bg-slate-900/95 shadow-[0_30px_80px_rgba(2,8,23,0.5)]"
+                        : "border-slate-200 bg-white/95 shadow-[0_28px_70px_rgba(15,23,42,0.14)]"
+                    }`}
                   >
                     <div
-                      className={`bg-gradient-to-r ${t.primaryGrad} px-4 py-3.5`}
+                      className={`border-b border-white/15 bg-gradient-to-r px-4 py-2.5 ${t.primaryGrad}`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="text-left">
-                          <h3 className="text-white font-bold text-[15px] sm:text-base font-spartan">
-                            Notifications
-                          </h3>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className={`flex h-7 w-7 items-center justify-center rounded-lg bg-white/60 shadow-sm ring-[0.5px] ring-inset ring-white/60 backdrop-blur-sm ${
+                            isDark ? "text-slate-700" : t.modalHeaderIcon
+                          }`}>
+                            <BellOutlineIcon className="h-3 w-3" strokeWidth={1.9} />
+                          </div>
+                          <div className="min-w-0 text-left">
+                            <h3 className="text-[12px] font-semibold font-spartan text-white sm:text-[13px]">
+                              Notifications
+                            </h3>
+                          </div>
                         </div>
-                        <span className="bg-white/20 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full font-kumbh whitespace-nowrap">
+                        <span className="inline-flex shrink-0 self-start whitespace-nowrap rounded-full border border-white/20 bg-white/16 px-2 py-0.5 text-[9px] font-semibold font-kumbh text-white shadow-sm backdrop-blur-sm">
                           {unreadCount} unread
                         </span>
                       </div>
                     </div>
 
-                    <div className={`max-h-[60vh] sm:max-h-[20rem] overflow-y-auto p-3 space-y-2.5 ${isDark ? "bg-slate-900/40" : "bg-slate-50/70"}`}>
+                    <div className={`max-h-[60vh] sm:max-h-[22rem] overflow-y-auto px-4 py-3.5 space-y-2.5 ${
+                      isDark ? "bg-slate-950/40" : "bg-slate-50/75"
+                    }`}>
                       {notifications.length > 0 ? (
                         notifications.slice(0, 15).map((notification) => (
-                          <NotificationHistoryItem
+                          <ModernNotificationHistoryItem
                             key={notification.id}
                             notification={notification}
                             isDark={isDark}
@@ -974,14 +1235,20 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                         ))
                       ) : (
                         <div
-                          className={`rounded-2xl border p-8 text-center ${t.subtleText} ${isDark ? "border-slate-700 bg-slate-800/60" : "border-slate-200 bg-white"}`}
+                          className={`rounded-[1.15rem] border px-5 py-8 text-center ${
+                            isDark ? "border-slate-800 bg-slate-900" : "border-slate-200 bg-white"
+                          }`}
                         >
-                          <BellOutlineIcon className="w-12 h-12 mx-auto mb-3 opacity-30" strokeWidth={1.5} />
-                          <p className="text-sm font-kumbh font-semibold">
-                            No history yet
+                          <div className={`mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${
+                            isDark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-400"
+                          }`}>
+                            <BellOutlineIcon className="h-4 w-4" strokeWidth={1.7} />
+                          </div>
+                          <p className={`text-sm font-semibold font-kumbh ${t.cardText}`}>
+                            Notifications
                           </p>
-                          <p className="text-xs mt-1 font-kumbh opacity-60">
-                            New updates will be saved here automatically.
+                          <p className={`mt-1 text-xs font-kumbh ${t.subtleText}`}>
+                            New activity will appear here automatically.
                           </p>
                         </div>
                       )}
@@ -989,24 +1256,26 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
 
                     {notifications.length > 0 && (
                       <div
-                        className={`p-3 border-t ${isDark ? "border-slate-700 bg-slate-900/70" : "border-slate-200 bg-white"} flex items-center gap-2`}
+                        className={`flex items-center gap-2 border-t px-3.5 py-2.5 ${
+                          isDark ? "border-slate-800 bg-slate-900" : "border-slate-100 bg-white"
+                        }`}
                       >
                         <button
                           onClick={handleMarkAllAsRead}
-                          className={`flex-1 rounded-xl px-3 py-2 text-[12px] font-semibold transition-colors font-kumbh ${
+                          className={`flex-1 rounded-[0.85rem] px-3 py-2 text-[10px] font-semibold transition-colors font-kumbh ${
                             isDark
-                              ? "bg-violet-500/15 text-violet-200 hover:bg-violet-500/25"
-                              : "bg-violet-50 text-violet-700 hover:bg-violet-100"
+                              ? "bg-slate-100 text-slate-900 hover:bg-white"
+                              : "bg-slate-900 text-white hover:bg-slate-800"
                           }`}
                         >
                           Mark all as read
                         </button>
                         <button
                           onClick={handleClearHistory}
-                          className={`rounded-xl px-3 py-2 text-[12px] font-semibold transition-colors font-kumbh ${
+                          className={`rounded-[0.85rem] border px-3 py-2 text-[10px] font-semibold transition-colors font-kumbh ${
                             isDark
-                              ? "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
-                              : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800"
+                              ? "border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-600 hover:text-white"
+                              : "border-slate-200 bg-slate-100 text-slate-600 hover:border-slate-300 hover:text-slate-800"
                           }`}
                         >
                           Clear all
@@ -1047,18 +1316,18 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
 
                 {isSettingsOpen && (
                   <div
-                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-[17.5rem] ${t.cardBg} ${t.cardBorder} rounded-[22px] shadow-[0_18px_36px_rgba(15,23,42,0.12)] border z-40 overflow-hidden animate-slideDown`}
+                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-[15.25rem] ${t.cardBg} ${t.cardBorder} rounded-[20px] shadow-[0_14px_30px_rgba(15,23,42,0.1)] border z-40 overflow-hidden animate-slideDown`}
                   >
-                    <div className="p-2">
+                    <div className="p-1.5">
                       <button
                         onClick={openThemeModal}
-                        className={`w-full flex items-center gap-3 px-3 py-2 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-[18px] transition-colors group text-left`}
+                        className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-[16px] transition-colors group text-left`}
                       >
                         <span
-                          className={`w-9 h-9 rounded-[16px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-blue-50"}`}
+                          className={`w-8 h-8 rounded-[14px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-blue-50"}`}
                         >
                           <svg
-                            className="w-4 h-4 text-blue-500"
+                            className="w-3.5 h-3.5 text-blue-500"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -1072,15 +1341,15 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                           </svg>
                         </span>
                         <div className="flex-1 min-w-0">
-                          <span className={`block text-sm font-medium font-kumbh ${t.cardText}`}>
+                          <span className={`block text-[13px] font-medium font-kumbh ${t.cardText}`}>
                             {tr.header.changeTheme}
                           </span>
-                          <span className={`block text-[11px] leading-4.5 font-kumbh ${t.subtleText}`}>
+                          <span className={`block text-[10px] leading-4 font-kumbh ${t.subtleText}`}>
                             Update colors and appearance
                           </span>
                         </div>
                         <svg
-                          className={`w-3.5 h-3.5 ${t.subtleText} flex-shrink-0`}
+                          className={`w-3 h-3 ${t.subtleText} flex-shrink-0`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -1093,13 +1362,13 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                           setLanguage(language === "en" ? "tl" : "en");
                           setIsSettingsOpen(false);
                         }}
-                        className={`mt-1 w-full flex items-center gap-3 px-3 py-2 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-[18px] transition-colors group text-left`}
+                        className={`mt-0.5 w-full flex items-center gap-2.5 px-2.5 py-1.5 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-[16px] transition-colors group text-left`}
                       >
                         <span
-                          className={`w-9 h-9 rounded-[16px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-amber-50"}`}
+                          className={`w-8 h-8 rounded-[14px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-amber-50"}`}
                         >
                           <svg
-                            className="w-4 h-4 text-amber-500"
+                            className="w-3.5 h-3.5 text-amber-500"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -1114,28 +1383,28 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                         </span>
                         <div className="flex-1 flex items-center justify-between">
                           <div className="min-w-0">
-                            <span className={`block text-sm font-medium font-kumbh ${t.cardText}`}>
+                            <span className={`block text-[13px] font-medium font-kumbh ${t.cardText}`}>
                               {tr.header.language}
                             </span>
-                            <span className={`block text-[11px] leading-4.5 font-kumbh ${t.subtleText}`}>
+                            <span className={`block text-[10px] leading-4 font-kumbh ${t.subtleText}`}>
                               Switch between English and Filipino
                             </span>
                           </div>
                           <span
-                            className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${isDark ? "bg-slate-700 text-slate-200" : "bg-slate-100 text-slate-600"} font-kumbh`}
+                            className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${isDark ? "bg-slate-700 text-slate-200" : "bg-slate-100 text-slate-600"} font-kumbh`}
                           >
                             {language === "en" ? "EN" : "TL"}
                           </span>
                         </div>
                       </button>
                       <button
-                        className={`mt-1 w-full flex items-center gap-3 px-3 py-2 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-[18px] transition-colors group text-left`}
+                        className={`mt-0.5 w-full flex items-center gap-2.5 px-2.5 py-1.5 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-[16px] transition-colors group text-left`}
                       >
                         <span
-                          className={`w-9 h-9 rounded-[16px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-emerald-50"}`}
+                          className={`w-8 h-8 rounded-[14px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-emerald-50"}`}
                         >
                           <svg
-                            className="w-4 h-4 text-emerald-500"
+                            className="w-3.5 h-3.5 text-emerald-500"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -1149,15 +1418,15 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                           </svg>
                         </span>
                         <div className="flex-1 min-w-0">
-                          <span className={`block text-sm font-medium font-kumbh ${t.cardText}`}>
+                          <span className={`block text-[13px] font-medium font-kumbh ${t.cardText}`}>
                             {tr.header.privacySettings}
                           </span>
-                          <span className={`block text-[11px] leading-4.5 font-kumbh ${t.subtleText}`}>
+                          <span className={`block text-[10px] leading-4 font-kumbh ${t.subtleText}`}>
                             Manage access, privacy, and security
                           </span>
                         </div>
                         <svg
-                          className={`w-3.5 h-3.5 ${t.subtleText} flex-shrink-0`}
+                          className={`w-3 h-3 ${t.subtleText} flex-shrink-0`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -1206,20 +1475,20 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
 
                 {isProfileOpen && (
                   <div
-                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-60 ${t.cardBg} ${t.cardBorder} rounded-[22px] shadow-[0_18px_36px_rgba(15,23,42,0.12)] border z-40 overflow-hidden animate-slideDown`}
+                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-[14.5rem] ${t.cardBg} ${t.cardBorder} rounded-[20px] shadow-[0_14px_30px_rgba(15,23,42,0.1)] border z-40 overflow-hidden animate-slideDown`}
                   >
                     <div
-                      className={`px-3.5 py-3.5 border-b ${t.cardBorder} ${isDark ? "bg-slate-900/70" : "bg-slate-50/80"}`}
+                      className={`px-3 py-3 border-b ${t.cardBorder} ${isDark ? "bg-slate-900/70" : "bg-slate-50/80"}`}
                     >
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2">
                         <div
-                          className={`w-10 h-10 bg-gradient-to-br ${t.primaryGrad} rounded-[16px] flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-lg`}
+                          className={`w-9 h-9 bg-gradient-to-br ${t.primaryGrad} rounded-[14px] flex items-center justify-center text-white font-bold text-[13px] flex-shrink-0 shadow-lg`}
                         >
                           {residentPhoto ? (
                             <img
                               src={residentPhoto}
                               alt="Resident profile"
-                              className="h-full w-full rounded-[16px] object-cover"
+                              className="h-full w-full rounded-[14px] object-cover"
                             />
                           ) : (
                             userInitials
@@ -1227,12 +1496,12 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                         </div>
                         <div className="flex-1 min-w-0 text-left">
                           <p
-                            className={`font-semibold text-[15px] ${t.cardText} font-spartan truncate`}
+                            className={`font-semibold text-[14px] ${t.cardText} font-spartan truncate`}
                           >
                             {userName}
                           </p>
                           <p
-                            className={`text-xs ${t.subtleText} font-kumbh truncate`}
+                            className={`text-[11px] ${t.subtleText} font-kumbh truncate`}
                           >
                             {userEmail}
                           </p>
@@ -1243,13 +1512,13 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                     <div className="p-1.5">
                       <button
                         onClick={openProfilePage}
-                        className={`w-full flex items-center gap-3 px-3 py-2 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"} rounded-[18px] transition-colors text-left`}
+                        className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"} rounded-[16px] transition-colors text-left`}
                       >
                         <span
-                          className={`w-9 h-9 rounded-[16px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-blue-50"}`}
+                          className={`w-8 h-8 rounded-[14px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-blue-50"}`}
                         >
                           <svg
-                            className="w-4 h-4 text-blue-500"
+                            className="w-3.5 h-3.5 text-blue-500"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -1263,23 +1532,23 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                           </svg>
                         </span>
                         <div className="flex-1 min-w-0">
-                          <span className={`block text-sm font-medium font-kumbh ${t.cardText}`}>
+                          <span className={`block text-[13px] font-medium font-kumbh ${t.cardText}`}>
                             {tr.header.viewProfile}
                           </span>
-                          <span className={`block text-[11px] font-kumbh ${t.subtleText}`}>
+                          <span className={`block text-[10px] leading-4 font-kumbh ${t.subtleText}`}>
                             Account details and access
                           </span>
                         </div>
                       </button>
                       <button
                         onClick={openLogoutModal}
-                        className={`mt-1 w-full flex items-center gap-3 px-3 py-2 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"} rounded-[18px] transition-colors text-left`}
+                        className={`mt-0.5 w-full flex items-center gap-2.5 px-2.5 py-1.5 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"} rounded-[16px] transition-colors text-left`}
                       >
                         <span
-                          className={`w-9 h-9 rounded-[16px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-red-50"}`}
+                          className={`w-8 h-8 rounded-[14px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-red-50"}`}
                         >
                           <svg
-                            className="w-4 h-4 text-red-500"
+                            className="w-3.5 h-3.5 text-red-500"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -1293,7 +1562,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                           </svg>
                         </span>
                         <div className="flex-1 min-w-0">
-                          <span className={`block text-sm font-medium font-kumbh ${t.cardText}`}>
+                          <span className={`block text-[13px] font-medium font-kumbh ${t.cardText}`}>
                             {tr.header.logout}
                           </span>
                         </div>

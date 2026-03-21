@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Shield, UserPlus, Search, Eye, EyeOff, CheckCircle,
   RefreshCw, ToggleLeft, ToggleRight, X, AlertCircle,
-  Crown, Users, UserX, User, Loader2,
+  Crown, Users, UserX, User, Loader2, Mail, AtSign, LockKeyhole,
 } from 'lucide-react';
 import api        from '../../../services/sub-system-1/Api';
 import Table      from '../../../components/sub-system-1/common/table';
@@ -11,8 +11,18 @@ import themeTokens from '../../../Themetokens';
 
 // ── Role config ───────────────────────────────────────────────────────────────
 const ROLES = [
-  { value: 'admin', label: 'Admin', color: 'bg-violet-100 text-violet-700 border-violet-200' },
-  { value: 'staff', label: 'Staff', color: 'bg-sky-100 text-sky-700 border-sky-200'          },
+  {
+    value: 'admin',
+    label: 'Admin',
+    description: 'Full access to account controls and system actions.',
+    activeClass: 'border-violet-300 bg-violet-50 text-violet-700 shadow-[0_18px_40px_rgba(139,92,246,0.14)]',
+  },
+  {
+    value: 'staff',
+    label: 'Staff',
+    description: 'Operational access for day-to-day barangay processing.',
+    activeClass: 'border-emerald-300 bg-emerald-50 text-emerald-700 shadow-[0_18px_40px_rgba(16,185,129,0.14)]',
+  },
 ];
 
 const getRoleStyle = (role) => {
@@ -22,8 +32,8 @@ const getRoleStyle = (role) => {
 };
 
 const getRoleIcon = (role) => {
-  if (role === 'admin') return <Crown size={9} />;
-  return <User size={9} />;
+  if (role === 'admin') return <Crown size={10} />;
+  return <User size={10} />;
 };
 
 const normaliseActive = (val) => {
@@ -32,20 +42,58 @@ const normaliseActive = (val) => {
 };
 
 // ── Sub-components ────────────────────────────────────────────────────────────
+const getModalFieldClass = (isDark) => (
+  isDark
+    ? 'border-slate-700 bg-slate-950/40 text-slate-100 placeholder:text-slate-500 focus-within:border-emerald-500/60 focus-within:ring-4 focus-within:ring-emerald-500/10'
+    : 'border-slate-200 bg-white text-slate-700 placeholder:text-slate-400 shadow-[0_1px_0_rgba(15,23,42,0.03),inset_0_1px_0_rgba(255,255,255,0.75)] focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-500/10'
+);
+
+const TextInput = ({
+  type = 'text',
+  placeholder,
+  value,
+  onChange,
+  icon: Icon,
+  className = '',
+  disabled = false,
+  isDark = false,
+  required = false,
+}) => (
+  <div className={`group flex items-center gap-2.5 rounded-[1.1rem] border px-3.5 py-2.5 transition-all disabled:opacity-50 ${getModalFieldClass(isDark)} ${className}`}>
+    {Icon ? (
+      <Icon
+        size={14}
+        className={`${isDark ? 'text-slate-500 group-focus-within:text-emerald-400' : 'text-slate-400 group-focus-within:text-emerald-600'} transition-colors`}
+      />
+    ) : null}
+    <input
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      required={required}
+      disabled={disabled}
+      className="w-full bg-transparent outline-none text-[13px] font-kumbh font-normal disabled:cursor-not-allowed"
+    />
+  </div>
+);
+
 const PasswordInput = ({ placeholder, value, onChange, show, className = '', disabled = false, isDark = false }) => (
-  <input
-    type={show ? 'text' : 'password'}
-    placeholder={placeholder}
-    value={value}
-    onChange={onChange}
-    required
-    disabled={disabled}
-    className={`w-full px-4 py-3 rounded-2xl border outline-none font-mono text-sm transition-all disabled:opacity-50 ${
-      isDark
-        ? 'border-slate-600 bg-slate-800 text-slate-200 placeholder:text-slate-500 focus:bg-slate-700 focus:border-slate-500 focus:ring-2 focus:ring-slate-700'
-        : 'border-slate-200 bg-slate-50 focus:bg-white focus:border-slate-400 focus:ring-2 focus:ring-slate-100'
-    } ${className}`}
-  />
+  <div className={`group flex items-center gap-2.5 rounded-[1.1rem] border px-3.5 py-2.5 transition-all disabled:opacity-50 ${getModalFieldClass(isDark)} ${className}`}>
+    <LockKeyhole
+      size={14}
+      className={`${isDark ? 'text-slate-500 group-focus-within:text-emerald-400' : 'text-slate-400 group-focus-within:text-emerald-600'} transition-colors`}
+    />
+    <input
+      type={show ? 'text' : 'password'}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      required
+      disabled={disabled}
+      className="w-full bg-transparent outline-none text-[13px] font-kumbh font-normal disabled:cursor-not-allowed"
+    />
+  </div>
 );
 
 const StatCard = ({ label, value, icon: Icon, color, isDark }) => (
@@ -323,7 +371,14 @@ const CreateAccounts = () => {
             </div>
           ) : (
             <>
-              <Table headers={tableHeaders} loading={fetching} skeletonRows={6} t={t} currentTheme={currentTheme}>
+              <Table
+                headers={tableHeaders}
+                loading={fetching}
+                skeletonRows={6}
+                t={t}
+                currentTheme={currentTheme}
+                columnWidths={activeTab === 'active' ? ['44%', '18%', '18%', '20%'] : ['52%', '22%', '26%']}
+              >
                 {currentItems.length === 0 && !fetching ? (
                   <tr>
                     <td colSpan={tableHeaders.length} className={`py-16 text-center text-sm font-medium font-kumbh ${t.subtleText}`}>
@@ -336,14 +391,14 @@ const CreateAccounts = () => {
                     <tr key={u.id} className={`transition-colors ${isDark ? 'hover:bg-slate-700/40' : 'hover:bg-slate-50/70'}`}>
 
                       {/* Identity */}
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
+                      <td className="px-6 py-4 text-left">
+                        <div className="flex items-center gap-3 text-left">
                           <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-semibold shrink-0 ${
                             u.role === 'admin' ? 'bg-violet-100 text-violet-600' : 'bg-sky-100 text-sky-600'
                           }`}>
                             {(u.name || u.username || '?').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                           </div>
-                          <div>
+                          <div className="min-w-0 flex-1 text-left">
                             <p className={`font-bold text-sm leading-tight font-kumbh ${t.cardText}`}>{u.name || '—'}</p>
                             <p className={`text-[11px] font-medium mt-0.5 font-kumbh ${t.subtleText}`}>
                               @{u.username}{u.email ? ` · ${u.email}` : ''}
@@ -353,10 +408,12 @@ const CreateAccounts = () => {
                       </td>
 
                       {/* Role */}
-                      <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-semibold border ${getRoleStyle(u.role)}`}>
-                          {getRoleIcon(u.role)} {u.role === 'admin' ? 'Admin' : u.role === 'staff' ? 'Staff' : u.role}
-                        </span>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center">
+                          <span className={`inline-flex min-w-[92px] items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold border ${getRoleStyle(u.role)}`}>
+                            {getRoleIcon(u.role)} {u.role === 'admin' ? 'Admin' : u.role === 'staff' ? 'Staff' : u.role}
+                          </span>
+                        </div>
                       </td>
 
                       {/* Toggle */}
@@ -415,95 +472,206 @@ const CreateAccounts = () => {
 
       {/* ════════ ADD ACCOUNT MODAL ════════ */}
       {showAddModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-          <div className={`w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
-            <div className={`flex items-center justify-between px-8 py-5 border-b ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
-              <div>
-                <p className={`text-[10px] font-semibold font-kumbh ${t.subtleText}`}>System Access</p>
-                <h2 className={`text-lg font-semibold font-spartan ${t.cardText}`}>Provision Account</h2>
+        <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-950/50 backdrop-blur-sm">
+          <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+            <div className="relative w-full max-w-3xl">
+              <div className={`relative flex w-full max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[1.75rem] border shadow-[0_26px_56px_-24px_rgba(15,23,42,0.34)] animate-in zoom-in-95 duration-200 ${isDark ? 'border-slate-800 bg-slate-900' : 'border-white/70 bg-white'}`}>
+            <div className={`relative flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b ${isDark ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'}`}>
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${isDark ? 'bg-emerald-500/15 text-emerald-300 shadow-[0_10px_24px_rgba(16,185,129,0.10)]' : 'bg-emerald-500 text-white shadow-[0_10px_24px_rgba(34,197,94,0.18)]'}`}>
+                  <UserPlus size={16} />
+                </div>
+                <div className="min-w-0 flex-1 pt-1 text-left">
+                  <h2 className={`text-[1.2rem] leading-none font-semibold font-spartan ${t.cardText}`}>Create Account</h2>
+                  <p className={`mt-1 text-[10px] leading-[1.35] font-medium font-kumbh ${t.subtleText}`}>
+                    Enter the full name, Gmail address, username, role and password for this user.
+                  </p>
+                </div>
               </div>
-              <button type="button" onClick={closeAdd} className={`p-2 rounded-xl transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-400'}`}><X size={18} /></button>
+              <button
+                type="button"
+                onClick={closeAdd}
+                className={`p-2 rounded-xl transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-400'}`}
+              >
+                <X size={16} />
+              </button>
             </div>
-            <form onSubmit={handleCreate} className="px-8 py-6 space-y-4">
-              {apiError && (
-                <div className="flex items-center gap-2 px-4 py-3 bg-rose-50 border border-rose-200 rounded-2xl text-sm text-rose-600 font-semibold font-kumbh">
-                  <AlertCircle size={15} className="shrink-0" /> {apiError}
+            <form onSubmit={handleCreate} className="relative flex min-h-0 flex-1 flex-col px-4 sm:px-5 py-4 sm:py-5">
+              <div className="min-h-0 space-y-4 overflow-y-auto pr-1">
+                {apiError && (
+                  <div className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold font-kumbh ${isDark ? 'bg-rose-950/30 border border-rose-800 text-rose-300' : 'bg-rose-50 border border-rose-200 text-rose-600'}`}>
+                    <AlertCircle size={15} className="shrink-0" /> {apiError}
+                  </div>
+                )}
+                <div className={`overflow-hidden rounded-[1.35rem] border p-3.5 sm:p-4 lg:p-4.5 ${isDark ? 'border-slate-800 bg-slate-950/45' : 'border-slate-200 bg-slate-50/70'}`}>
+                  <div className="grid gap-3 lg:grid-cols-2">
+                    <div className="space-y-1.5 lg:col-span-2">
+                      <label className={`text-[11px] font-semibold font-kumbh ${t.subtleText}`}>Legal Full Name</label>
+                      <TextInput
+                        icon={User}
+                        placeholder="e.g. Juan Dela Cruz"
+                        value={form.name}
+                        required
+                        isDark={isDark}
+                        onChange={e => setForm({ ...form, name: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className={`text-[11px] font-semibold font-kumbh ${t.subtleText}`}>Gmail Address</label>
+                      <TextInput
+                        type="email"
+                        icon={Mail}
+                        placeholder="name@gmail.com"
+                        value={form.email}
+                        required
+                        isDark={isDark}
+                        onChange={e => setForm({ ...form, email: e.target.value })}
+                        className={
+                          form.email && (!isGmail || isEmailTaken)
+                            ? 'border-rose-400 bg-rose-50 text-rose-700'
+                            : form.email && isGmail && !isEmailTaken
+                              ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
+                              : ''
+                        }
+                      />
+                      <div className="min-h-[16px]">
+                        {form.email && !isGmail && (
+                          <p className="text-[10px] font-semibold font-kumbh text-rose-500 flex items-center gap-1">
+                            <AlertCircle size={10} /> Gmail only
+                          </p>
+                        )}
+                        {form.email && isEmailTaken && (
+                          <p className="text-[10px] font-semibold font-kumbh text-rose-500 flex items-center gap-1">
+                            <AlertCircle size={10} /> Already taken
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className={`text-[11px] font-semibold font-kumbh ${t.subtleText}`}>Username</label>
+                      <TextInput
+                        icon={AtSign}
+                        placeholder="bgn00001"
+                        value={form.username}
+                        required
+                        isDark={isDark}
+                        onChange={e => setForm({ ...form, username: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="space-y-2 lg:col-span-2">
+                      <label className={`text-[11px] font-semibold font-kumbh ${t.subtleText}`}>Role</label>
+                      <div className="grid gap-2.5 sm:grid-cols-2">
+                        {ROLES.map(r => {
+                          const RoleIcon = r.value === 'admin' ? Crown : User;
+                          const selected = form.role === r.value;
+                          return (
+                            <button
+                              key={r.value}
+                              type="button"
+                              onClick={() => setForm({ ...form, role: r.value })}
+                              className={`rounded-[1.1rem] border px-3.5 py-2.5 text-center transition-all ${
+                                selected
+                                  ? r.activeClass
+                                  : isDark
+                                    ? 'border-slate-700 bg-slate-900/70 text-slate-300 hover:border-slate-500'
+                                    : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+                              }`}
+                            >
+                              <div className="flex items-center justify-center gap-2.5">
+                                <RoleIcon
+                                  size={15}
+                                  className={
+                                    selected
+                                      ? r.value === 'admin'
+                                        ? 'text-violet-700'
+                                        : 'text-emerald-700'
+                                      : isDark
+                                        ? 'text-slate-400'
+                                        : 'text-slate-500'
+                                  }
+                                />
+                                <p className="text-[13px] font-semibold font-kumbh">{r.label}</p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 lg:col-span-2">
+                      <div className="flex items-center justify-between">
+                        <label className={`text-[11px] font-semibold font-kumbh ${t.subtleText}`}>Password</label>
+                        <button
+                          type="button"
+                          onClick={() => setShowPass(!showPass)}
+                          className="inline-flex items-center gap-1.5 text-[10px] font-semibold font-kumbh text-emerald-600 hover:text-emerald-700 transition-colors"
+                        >
+                          {showPass ? <><EyeOff size={11} /> Hide</> : <><Eye size={11} /> Show</>}
+                        </button>
+                      </div>
+                      <div className="grid gap-2.5 md:grid-cols-2">
+                        <PasswordInput
+                          isDark={isDark}
+                          placeholder="New password"
+                          value={form.password}
+                          onChange={e => setForm({ ...form, password: e.target.value })}
+                          show={showPass}
+                        />
+                        <PasswordInput
+                          isDark={isDark}
+                          placeholder="Confirm password"
+                          value={form.confirmPassword}
+                          onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
+                          show={showPass}
+                          className={
+                            form.confirmPassword && !isPassMatch
+                              ? 'border-rose-400 bg-rose-50'
+                              : form.confirmPassword && isPassMatch
+                                ? 'border-emerald-400 bg-emerald-50'
+                                : ''
+                          }
+                        />
+                      </div>
+                      <div className="min-h-[16px]">
+                        {form.confirmPassword && !isPassMatch && (
+                          <p className="text-[10px] font-semibold font-kumbh text-rose-500 flex items-center gap-1">
+                            <AlertCircle size={10} /> Passwords do not match
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              )}
-              <div className="space-y-1">
-                <label className={`text-[10px] font-semibold font-kumbh ${t.subtleText}`}>Legal Full Name</label>
-                <input type="text" placeholder="e.g. Juan Dela Cruz" value={form.name} required
-                  onChange={e => setForm({ ...form, name: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium font-kumbh outline-none transition-all ${inputBase}`} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className={`text-[10px] font-semibold font-kumbh ${t.subtleText}`}>Gmail Address</label>
-                  <input type="email" placeholder="name@gmail.com" value={form.email} required
-                    onChange={e => setForm({ ...form, email: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium font-kumbh outline-none transition-all ${
-                      form.email && (!isGmail || isEmailTaken) ? 'border-rose-400 bg-rose-50 text-rose-700' :
-                      form.email && isGmail && !isEmailTaken  ? 'border-emerald-400 bg-emerald-50 text-emerald-700' :
-                      inputBase
-                    }`} />
-                  {form.email && !isGmail     && <p className="text-[9px] font-semibold font-kumbh text-rose-500 mt-1 flex items-center gap-1"><AlertCircle size={9} /> Gmail only</p>}
-                  {form.email && isEmailTaken && <p className="text-[9px] font-semibold font-kumbh text-rose-500 mt-1 flex items-center gap-1"><AlertCircle size={9} /> Already taken</p>}
-                </div>
-                <div className="space-y-1">
-                  <label className={`text-[10px] font-semibold font-kumbh ${t.subtleText}`}>Username</label>
-                  <input type="text" placeholder="bgn00001" value={form.username} required
-                    onChange={e => setForm({ ...form, username: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium font-kumbh font-mono outline-none transition-all ${inputBase}`} />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className={`text-[10px] font-semibold font-kumbh ${t.subtleText}`}>Role</label>
-                <div className="flex gap-2">
-                  {ROLES.map(r => (
-                    <button key={r.value} type="button" onClick={() => setForm({ ...form, role: r.value })}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-xs font-semibold font-kumbh border transition-all ${
-                        form.role === r.value
-                          ? r.color + ' shadow-sm'
-                          : isDark ? 'border-slate-600 text-slate-400 hover:border-slate-500' : 'border-slate-200 text-slate-400 hover:border-slate-300'
-                      }`}>
-                      {r.value === 'admin' ? <Crown size={11} /> : <User size={11} />} {r.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className={`text-[10px] font-semibold font-kumbh ${t.subtleText}`}>Password</label>
-                  <button type="button" onClick={() => setShowPass(!showPass)}
-                    className="flex items-center gap-1 text-[9px] font-semibold font-kumbh text-sky-500 hover:text-sky-700 transition-colors">
-                    {showPass ? <><EyeOff size={10} /> Hide</> : <><Eye size={10} /> Show</>}
+              <div className={`mt-4 flex justify-end border-t pt-4 ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
+                <div className="flex flex-col-reverse gap-2.5 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={closeAdd}
+                    disabled={submitting}
+                    className={`inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-[11px] font-semibold font-kumbh border transition-colors disabled:opacity-50 ${
+                      isDark ? 'border-slate-700 text-slate-400 hover:bg-slate-800' : 'text-slate-500 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={!canSave || submitting}
+                    className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[11px] font-semibold font-kumbh text-white transition-all active:scale-[0.98] ${
+                      canSave && !submitting
+                        ? `bg-gradient-to-r ${t.primaryGrad} shadow-lg hover:opacity-90`
+                        : isDark ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                    }`}>
+                    {submitting ? <span className="flex items-center justify-center gap-2"><Loader2 size={13} className="animate-spin" /> Saving...</span> : <><UserPlus size={14} /> Save Account</>}
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <PasswordInput isDark={isDark} placeholder="New password"     value={form.password}        onChange={e => setForm({ ...form, password: e.target.value })}        show={showPass} />
-                  <PasswordInput isDark={isDark} placeholder="Confirm password" value={form.confirmPassword} onChange={e => setForm({ ...form, confirmPassword: e.target.value })} show={showPass}
-                    className={form.confirmPassword && !isPassMatch ? 'border-rose-400 bg-rose-50' : form.confirmPassword && isPassMatch ? 'border-emerald-400 bg-emerald-50' : ''} />
-                </div>
-                {form.confirmPassword && !isPassMatch && (
-                  <p className="text-[9px] font-semibold font-kumbh text-rose-500 flex items-center gap-1 mt-1"><AlertCircle size={9} /> Passwords do not match</p>
-                )}
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={closeAdd} disabled={submitting}
-                  className={`flex-1 py-3 rounded-2xl text-xs font-semibold font-kumbh border transition-colors disabled:opacity-50 ${
-                    isDark ? 'border-slate-600 text-slate-400 hover:bg-slate-800' : 'text-slate-400 border-slate-200 hover:bg-slate-50'
-                  }`}>Cancel</button>
-                <button type="submit" disabled={!canSave || submitting}
-                  className={`flex-[2] py-3 rounded-2xl text-xs font-semibold font-kumbh text-white transition-all active:scale-[0.98] ${
-                    canSave && !submitting
-                      ? `bg-gradient-to-r ${t.primaryGrad} shadow-lg hover:opacity-90`
-                      : isDark ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                  }`}>
-                  {submitting ? <span className="flex items-center justify-center gap-2"><Loader2 size={13} className="animate-spin" /> Saving…</span> : 'Save Account'}
-                </button>
               </div>
             </form>
           </div>
+          </div>
+        </div>
         </div>
       )}
 
