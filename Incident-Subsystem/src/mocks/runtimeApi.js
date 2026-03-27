@@ -1,0 +1,10 @@
+export const INCIDENT_API_BASE_URL = "http://localhost:8000/api";
+export const DOCUMENTS_API_BASE_URL = "http://localhost:8001/api";
+export const RESIDENT_API_BASE_URL = "http://localhost:8002/api";
+export const PHP_API_BASE_URL = "http://localhost/E-Barangay-System/api";
+export const BRANDING_API_URL = "http://localhost/E-Barangay-System/api/branding/logo.php";
+export const PROFILE_PHOTO_API_URL = "http://localhost/E-Barangay-System/api/profile/photo.php";
+export const API_HOST = "localhost";
+export const INCIDENT_API_PORT = "8000";
+export const DOCUMENTS_API_PORT = "8001";
+export const RESIDENT_API_PORT = "8002";
