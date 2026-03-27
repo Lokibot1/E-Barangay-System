@@ -450,6 +450,60 @@ describe("markNoShow", () => {
   });
 });
 
+// ─── Business-hours schedule enforcement ──────────────────────────────────────
+describe("business-hours schedule enforcement", () => {
+  // ── Day constraints ──
+  it("BUSINESS_DAYS excludes Sunday (0)", () => {
+    expect(BUSINESS_DAYS).not.toContain(0);
+  });
+
+  it("BUSINESS_DAYS excludes Saturday (6)", () => {
+    expect(BUSINESS_DAYS).not.toContain(6);
+  });
+
+  it("BUSINESS_DAYS covers exactly Monday through Friday", () => {
+    expect(BUSINESS_DAYS).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  // ── Hour constraints ──
+  it("no time slot starts before 7 AM", () => {
+    const slots = getTimeSlots();
+    const beforeBusiness = slots.filter((s) => {
+      const hour = parseInt(s.value.split(":")[0], 10);
+      return hour < BUSINESS_START_HOUR;
+    });
+    expect(beforeBusiness).toHaveLength(0);
+  });
+
+  it("no time slot starts at or after 5 PM (17:00)", () => {
+    const slots = getTimeSlots();
+    const afterBusiness = slots.filter((s) => {
+      const hour = parseInt(s.value.split(":")[0], 10);
+      return hour >= BUSINESS_END_HOUR;
+    });
+    expect(afterBusiness).toHaveLength(0);
+  });
+
+  it("first slot is exactly 7:00 AM", () => {
+    const first = getTimeSlots()[0];
+    expect(parseInt(first.value.split(":")[0], 10)).toBe(7);
+  });
+
+  it("last slot starts at 4:00 PM (16:00) so the session ends by 5 PM", () => {
+    const slots = getTimeSlots();
+    const last = slots[slots.length - 1];
+    expect(parseInt(last.value.split(":")[0], 10)).toBe(16);
+  });
+
+  it("every slot falls within the [7, 16] inclusive range", () => {
+    getTimeSlots().forEach((slot) => {
+      const hour = parseInt(slot.value.split(":")[0], 10);
+      expect(hour).toBeGreaterThanOrEqual(BUSINESS_START_HOUR);
+      expect(hour).toBeLessThan(BUSINESS_END_HOUR);
+    });
+  });
+});
+
 // ─── getAvailability ──────────────────────────────────────────────────────────
 describe("getAvailability", () => {
   it("throws if not authenticated", async () => {
