@@ -27,12 +27,12 @@ A web-based barangay management platform for Brngy. Bagbag, Novaliches, Quezon C
 - **React 19.2.0**, **React Router DOM 7.13.0**, **Tailwind CSS 4.1.18**, **Vite 7.2.4**, **SweetAlert2**
 
 ### Backend APIs
-| API | Path | Port | Database |
-|-----|------|------|----------|
-| Incident API | `C:/xampp/htdocs/incident-reporting-api/` | 8000 | incident_db |
-| Documents API | `C:/xampp/htdocs/DS-subsystem/` | 8001 | ds_db |
-| Resident API | `C:/xampp/htdocs/resident-information/` | 8002 | resident_db |
-| PHP Utility | `C:/Projects/3rd Year/E-Barangay-System/api/` | 80 | — |
+| Subsystem | API | Port |
+|-----------|-----|------|
+| Sub-system 3 — Incident & Complaint | Incident API | 8000 |
+| Sub-system 2 — Document Services | Documents API | 8001 |
+| Sub-system 1 — Resident System | Resident API | 8002 |
+| Shared Utility | PHP Utility | 80 |
 
 ---
 
@@ -88,7 +88,7 @@ E-Barangay-System/
 │       │                         # BrandingContext, ThemeContext, UserContext
 │       ├── utils/                # insightsEngine, avatar, branding, profilePhoto, swal
 │       │   └── sub-system-1/     # documentGenerator, householdUtils, residency
-│       ├── config/               # api.js, apiNilaRenz.js, runtimeApi.js
+│       ├── config/               # API base URL configs
 │       ├── constants/            # filter.js
 │       ├── mocks/                # fileMock, runtimeApi (for tests)
 │       ├── tests/                # Unit tests (see Testing section)
@@ -295,16 +295,3 @@ npm run dev
 npm run build
 ```
 
----
-
-## Branch Strategy
-
-| Branch | Owner | Purpose |
-|--------|-------|---------|
-| `main` | Team | Stable release branch |
-| `develop` | Team | Integration branch — all features merge here first |
-| `Subsystem3` | Brian | Sub-system 3 (Incident & Complaint) + shared components |
-| `alex` | Alex | Document Services (Sub-system 2) integration |
-| `riri` | Riri | Feature development |
-| `ven` | Ven | Feature development |
-| `SubsystemTest` | Team | Testing and experiments |
