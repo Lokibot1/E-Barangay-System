@@ -4,6 +4,7 @@ import {
     User, AlertCircle, History, Loader2, Clock, KeyRound, Eye, EyeOff, CheckCircle,
 } from 'lucide-react';
 import ModalWrapper from '../common/ModalWrapper';
+import ScreenLoader from '../../shared/ScreenLoader';
 import api from '../../../services/sub-system-1/Api';
 import { residentService } from '../../../services/sub-system-1/residents';
 import IdentityTab from './tabs/IdentityTab';
@@ -467,17 +468,42 @@ const ResidentDetailsModal = ({
             if (ok) {
                 setIsEdit(false); setSubmitErr({}); setEmailErr('');
                 setHeadConf(false); setHeadConflictMsg('');
-                setHistory([]); snapRef.current = { ...formData };
-                // Success toast fired by parent (Residents.jsx handleUpdateWithToast)
+                setHistory([]); 
+                
+                // Fetch fresh resident data from API to show updated values
+                try {
+                    const freshRes = await api.get(`/residents/${resident?.id}`);
+                    if (freshRes.data) {
+                        const freshSnap = buildSnapshot(freshRes.data);
+                        snapRef.current = freshSnap;
+                        setFormData(freshSnap);
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch fresh resident data:', err);
+                    // Fallback to current formData if fetch fails
+                    snapRef.current = { ...formData };
+                }
+                
+                // Success toast fired by parent with delay to ensure modal is visible and edit closed
+                setTimeout(() => {
+                    onToast?.({
+                        type: 'success',
+                        title: 'Resident Updated',
+                        message: 'Resident profile has been saved successfully.',
+                        duration: 4000,
+                    });
+                }, 100);
             }
         } catch (err) {
-            // Error toast fired by parent (Residents.jsx handleUpdateWithToast)
-            onToast?.({
-                type: 'error',
-                title: 'Save Failed',
-                message: err.message || 'Failed to save changes.',
-                duration: 5000,
-            });
+            // Error toast fired by parent
+            setTimeout(() => {
+                onToast?.({
+                    type: 'error',
+                    title: 'Save Failed',
+                    message: err.message || 'Failed to save changes.',
+                    duration: 5000,
+                });
+            }, 100);
         } finally {
             setLoading(false);
         }
@@ -688,6 +714,12 @@ const ResidentDetailsModal = ({
                     </div>
                 </div>
             </ModalWrapper>
+
+            <ScreenLoader 
+                show={loading} 
+                title="Saving Changes" 
+                description="Please wait while we update the resident profile..."
+            />
 
             {showResetPass && (
                 <ResetPasswordModal

@@ -496,11 +496,11 @@ const Step2Address = ({
             options={[
               {
                 value: "Old Resident",
-                label: "Old Resident â€” living here 6+ months",
+                label: "Old Resident:living here 6+ months",
               },
               {
                 value: "New Resident",
-                label: "New Resident â€” moved within 6 months",
+                label: "New Resident:moved within 6 months",
               },
             ]}
             placeholder="Select Type"

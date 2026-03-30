@@ -3,7 +3,7 @@ import themeTokens from "../../../Themetokens";
 
 const Toast = ({ toasts, onRemove, currentTheme }) => {
   return (
-    <div className="fixed top-6 right-6 z-[100] flex flex-col gap-3 w-full max-w-sm">
+    <div className="fixed top-6 right-6 z-[10000] flex flex-col gap-3 w-full max-w-sm">
       {toasts.map((toast) => (
         <ToastItem
           key={toast.id}
