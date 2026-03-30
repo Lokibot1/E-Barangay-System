@@ -22,6 +22,7 @@ import { getAllComplaints } from "../../../services/sub-system-3/complaintServic
 import ConfirmationModal from "../../../components/shared/ConfirmationModal";
 
 const ROWS_PER_PAGE = 5;
+const POLL_INTERVAL = 30_000; // 30 s background refresh
 let _toastId = 0;
 const nextToastId = () => ++_toastId;
 
@@ -1527,9 +1528,11 @@ const AdminAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [availability, setAvailability] = useState({});
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const pollingRef = useRef(false);
 
-  const fetchAppointments = useCallback(async () => {
-    setLoading(true);
+  const fetchAppointments = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
       const data = await getAllComplaints();
       const compArray = Array.isArray(data) ? data : data.data || [];
@@ -1567,14 +1570,17 @@ const AdminAppointments = () => {
       });
 
       setAppointments(allAppts);
+      setLastUpdated(Date.now());
     } catch (err) {
-      addToast({
-        type: "error",
-        title: "Error",
-        message: "Failed to load appointments.",
-      });
+      if (!silent) {
+        addToast({
+          type: "error",
+          title: "Error",
+          message: "Failed to load appointments.",
+        });
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1598,6 +1604,21 @@ const AdminAppointments = () => {
     fetchAppointments();
     fetchAvailability();
   }, [fetchAppointments, fetchAvailability]);
+
+  // ── background polling ─────────────────────────────────────────────────────
+  useEffect(() => {
+    const poll = async () => {
+      if (pollingRef.current) return;
+      pollingRef.current = true;
+      try {
+        await fetchAppointments({ silent: true });
+      } finally {
+        pollingRef.current = false;
+      }
+    };
+    const id = setInterval(poll, POLL_INTERVAL);
+    return () => clearInterval(id);
+  }, [fetchAppointments]);
 
   // ── overdue alert (show once per session after first load) ─────────────────
   useEffect(() => {
@@ -1731,7 +1752,7 @@ const AdminAppointments = () => {
         title: "Rescheduled",
         message: `Appointment rescheduled to ${formatDate(date)} at ${formatTime(time)}. Complainant notified.`,
       });
-      fetchAppointments();
+      fetchAppointments({ silent: true });
       fetchAvailability();
     } catch (err) {
       addToast({ type: "error", title: "Error", message: err.message });
@@ -1747,7 +1768,7 @@ const AdminAppointments = () => {
         title: "Created",
         message: "Appointment created successfully. Complainant notified.",
       });
-      fetchAppointments();
+      fetchAppointments({ silent: true });
       fetchAvailability();
     } catch (err) {
       addToast({ type: "error", title: "Error", message: err.message });
@@ -1768,7 +1789,7 @@ const AdminAppointments = () => {
         title: label,
         message: `Appointment #${appt.id} marked as ${label.toLowerCase()}.`,
       });
-      fetchAppointments();
+      fetchAppointments({ silent: true });
     } catch (err) {
       addToast({ type: "error", title: "Action Failed", message: err.message });
       throw err;
@@ -1911,13 +1932,29 @@ const AdminAppointments = () => {
               </svg>
             </div>
             <div>
-              <h1
-                className={`text-2xl font-bold ${t.cardText} font-spartan uppercase`}
-              >
-                {tr.adminAppointments.title}
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1
+                  className={`text-2xl font-bold ${t.cardText} font-spartan uppercase`}
+                >
+                  {tr.adminAppointments.title}
+                </h1>
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                  </span>
+                  <span className="text-[10px] font-kumbh font-semibold text-green-600 dark:text-green-400">
+                    Live
+                  </span>
+                </span>
+              </div>
               <p className={`text-xs ${t.subtleText} font-kumbh mt-0.5`}>
                 {tr.adminAppointments.subtitle}
+                {lastUpdated && (
+                  <span className="ml-1 opacity-60">
+                    · Updated {new Date(lastUpdated).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                  </span>
+                )}
               </p>
             </div>
           </div>
