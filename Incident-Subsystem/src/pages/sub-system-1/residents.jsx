@@ -129,13 +129,21 @@ const Residents = () => {
     const handleHouseholdUpdate = async (db_id, updatedData) => {
         try {
             await householdService.update(db_id, updatedData);
+            // Refetch the household data to show updated info in the view modal
+            const res = await api.get(`/households/${db_id}`);
+            // Close edit modal first
             setHhEditModal({ open: false, data: null });
-            addToast({
-                type: 'success',
-                title: 'Household Updated',
-                message: 'Household record has been saved successfully.',
-                duration: 4000,
-            });
+            // Update view modal with fresh data
+            setHhModal({ open: true, data: res.data, loading: false });
+            // Show success toast after a brief delay to ensure edit modal is closed
+            setTimeout(() => {
+                addToast({
+                    type: 'success',
+                    title: 'Household Updated',
+                    message: 'Household record has been saved successfully.',
+                    duration: 4000,
+                });
+            }, 300);
         } catch (err) {
             addToast({
                 type: 'error',

@@ -132,22 +132,25 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
     return () => clearTimeout(timer);
   }, [formData.email]);
 
-  // ── VALIDATION — birthdate state added to the gate ────────────────────────
+  // ── VALIDATION — Optional fields for walk-in registrations ─────────────────
   const { isEmailValid, isValid, missingFields } = useMemo(() => {
     const emailValue = formData.email?.trim().toLowerCase() || "";
     const emailPatternValid = !emailValue || emailValue.endsWith("@gmail.com");
     const isEmailAvailable = emailError === "";
 
+    // REQUIRED fields (always needed)
     const checks = {
       "First Name": !!formData.firstName?.trim(),
       "Last Name": !!formData.lastName?.trim(),
       Birthdate: birthdateState === "valid",
+      "Age (check birthdate)": formData.age !== "" && !isNaN(formData.age),
       Gender: !!formData.gender,
       Sector: !!formData.sector,
-      "Birth Registration": !!formData.birthRegistration,
-      "Age (check birthdate)": formData.age !== "" && !isNaN(formData.age),
-      "Contact Number": isContactValid,
     };
+
+    // OPTIONAL fields (can be filled later)
+    // Contact Number → optional, family contact can be added later
+    // Birth Registration → optional for walk-ins
 
     const missing = Object.entries(checks)
       .filter(([, ok]) => !ok)
@@ -312,21 +315,19 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
         {/* CONTACT */}
         <div className="space-y-1">
           <div className="flex justify-between items-center">
-            <label className={labelClass}>Contact Number{requiredStar}</label>
-            <span
-              className={`text-[9px] font-bold font-kumbh ${isContactValid ? "text-emerald-500" : "text-rose-500"}`}
-            >
-              {contactStr.length}/11 Digits
+            <label className={labelClass}>Contact Number</label>
+            <span className="text-[9px] font-bold text-gray-400 italic font-kumbh">
+              Optional
             </span>
           </div>
           <input
             type="text"
             name="contact"
-            value={formData.contact || "09"}
+            value={formData.contact || ""}
             onChange={handleContactChange}
             onFocus={(e) => {
               if (!e.target.value)
-                handleChange({ target: { name: "contact", value: "09" } });
+                handleChange({ target: { name: "contact", value: "" } });
             }}
             placeholder="09XXXXXXXXX"
             className={`full-input-sm ${
@@ -335,18 +336,20 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
                 : ""
             }`}
           />
-          <div className="flex items-center gap-1.5 mt-1">
-            <Phone
-              size={10}
-              className={isDarkMode ? "text-slate-500" : "text-slate-400"}
-            />
-            <p
-              className={`text-[9px] font-bold font-kumbh ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}
-            >
-              Must start with <strong>09</strong> — PH mobile format, 11 digits
-              total.
-            </p>
-          </div>
+          {formData.contact && (
+            <div className="flex items-center gap-1.5 mt-1">
+              <Phone
+                size={10}
+                className={isDarkMode ? "text-slate-500" : "text-slate-400"}
+              />
+              <p
+                className={`text-[9px] font-bold font-kumbh ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}
+              >
+                Must start with <strong>09</strong> — PH mobile format, 11 digits
+                total.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -412,8 +415,8 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
         </div>
       </div>
 
-      {/* ── Identity & Status — unchanged ────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* ── Identity & Status ─────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="space-y-1">
           <label className={labelClass}>Gender{requiredStar}</label>
           <ModernSelectField
@@ -442,9 +445,6 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
             placeholder="Filipino"
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={labelClass}>Marital Status</label>
           <ModernSelectField
@@ -491,7 +491,12 @@ const Step1PersonalInfo = ({ formData, handleChange, isDarkMode, setStep }) => {
       </div>
 
       <div className="space-y-1">
-        <label className={labelClass}>Birth Registration{requiredStar}</label>
+        <div className="flex justify-between items-center">
+          <label className={labelClass}>Birth Registration</label>
+          <span className="text-[9px] font-bold text-gray-400 italic font-kumbh">
+            Optional
+          </span>
+        </div>
         <ModernSelectField
           value={formData.birthRegistration || ""}
           onChange={(nextValue) =>

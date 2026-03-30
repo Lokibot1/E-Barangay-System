@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import ModalWrapper from '../../common/ModalWrapper';
 import Button from '../../common/Button'; 
+import ScreenLoader from '../../../shared/ScreenLoader';
 import api from '../../../../services/sub-system-1/Api';
 import { Home, Info, AlertCircle, RefreshCw } from 'lucide-react';
 
-const EditHouseholdModal = ({ isOpen, onClose, data, onUpdate, t, currentTheme = 'modern' }) => {
+const EditHouseholdModal = ({ isOpen, onClose, data, onUpdate, onToast, t, currentTheme = 'modern' }) => {
   const [formData, setFormData] = useState({
     db_id: '',
     household_id: '',
@@ -26,7 +27,9 @@ const EditHouseholdModal = ({ isOpen, onClose, data, onUpdate, t, currentTheme =
   const [loadingRefs, setLoadingRefs] = useState(false);
   const [isAddressTaken, setIsAddressTaken] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
+  const snapRef = useRef({});
   const isDark = currentTheme === 'dark';
 
   // 1. FETCH REFERENCES
@@ -50,7 +53,7 @@ const EditHouseholdModal = ({ isOpen, onClose, data, onUpdate, t, currentTheme =
   // 2. SYNC INITIAL DATA
   useEffect(() => {
     if (data && isOpen) {
-      setFormData({
+      const newFormData = {
         db_id: data.db_id || '',
         household_id: data.id || '', 
         head_resident_id: data.head_resident_id || '',
@@ -62,7 +65,9 @@ const EditHouseholdModal = ({ isOpen, onClose, data, onUpdate, t, currentTheme =
         wall_material: data.wall_material || '',
         roof_material: data.roof_material || '',
         num_families_reported: data.num_families_reported || 1,
-      });
+      };
+      setFormData(newFormData);
+      snapRef.current = newFormData;
       setIsAddressTaken(false);
     }
   }, [data, isOpen]);
@@ -110,8 +115,57 @@ const EditHouseholdModal = ({ isOpen, onClose, data, onUpdate, t, currentTheme =
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (isAddressTaken || isValidating) return;
-    await onUpdate(formData.db_id, formData);
+    if (isAddressTaken || isValidating || isSaving) return;
+    setIsSaving(true);
+    try {
+      await onUpdate(formData.db_id, formData);
+      
+      // Fetch fresh household data from API to show updated values
+      try {
+        const freshRes = await api.get(`/households/${formData.db_id}`);
+        if (freshRes.data) {
+          const freshData = {
+            db_id: freshRes.data.db_id || '',
+            household_id: freshRes.data.id || '', 
+            head_resident_id: freshRes.data.head_resident_id || '',
+            house_number: freshRes.data.house_number || '',
+            purok_id: freshRes.data.purok_id || '',
+            street_id: freshRes.data.street_id || '',
+            tenure_status: freshRes.data.tenure_status || '',
+            is_indigent: freshRes.data.is_indigent ? 1 : 0,
+            wall_material: freshRes.data.wall_material || '',
+            roof_material: freshRes.data.roof_material || '',
+            num_families_reported: freshRes.data.num_families_reported || 1,
+          };
+          setFormData(freshData);
+          snapRef.current = freshData;
+        }
+      } catch (err) {
+        console.error('Failed to fetch fresh household data:', err);
+      }
+      
+      // Success toast
+      setTimeout(() => {
+        onToast?.({
+          type: 'success',
+          title: 'Household Updated',
+          message: 'Household profile has been saved successfully.',
+          duration: 4000,
+        });
+      }, 100);
+    } catch (err) {
+      // Error toast
+      setTimeout(() => {
+        onToast?.({
+          type: 'error',
+          title: 'Save Failed',
+          message: err.message || 'Failed to save changes.',
+          duration: 5000,
+        });
+      }, 100);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const inputClass = `w-full px-4 py-3 rounded-2xl border-2 transition-all outline-none font-kumbh text-sm
@@ -241,15 +295,20 @@ const EditHouseholdModal = ({ isOpen, onClose, data, onUpdate, t, currentTheme =
             Discard Changes
           </button>
           <Button 
-            label={isValidating ? "Checking..." : loadingRefs ? "Syncing..." : "Update Household"} 
+            label={isSaving ? "Saving..." : isValidating ? "Checking..." : loadingRefs ? "Syncing..." : "Update Household"} 
             variant="primary" 
             onClick={handleSubmit} 
             t={t} 
-            disabled={loadingRefs || isAddressTaken || isValidating}
+            disabled={loadingRefs || isAddressTaken || isValidating || isSaving}
             icon={isValidating ? RefreshCw : null}
           />
         </div>
       </form>
+      <ScreenLoader 
+        show={isSaving} 
+        title="Saving Changes" 
+        description="Please wait while we update the household record..."
+      />
     </ModalWrapper>
   );
 };

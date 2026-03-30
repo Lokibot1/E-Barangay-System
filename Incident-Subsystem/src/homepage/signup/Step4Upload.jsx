@@ -537,7 +537,7 @@ const Step4Upload = ({
       {/* 1. DOCUMENT UPLOAD SECTION */}
       <section className="space-y-3">
         <header className="flex justify-between items-end px-1">
-          <h3 className={labelClass}>Identification Documents</h3>
+          <h3 className={labelClass}>Identification Documents(10MB MAXIMUM)</h3>
           <span className={`text-[10px] font-bold font-kumbh px-2 py-0.5 rounded-full transition-colors ${
             hasFront && hasBack ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"
           }`}>

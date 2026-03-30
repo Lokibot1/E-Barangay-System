@@ -19,6 +19,100 @@ const MONTH_NAMES = [
 const DAY_NAMES = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const POPOVER_WIDTH = 262;
 
+// ── YEAR/MONTH PICKER COMPONENT ───────────────────────────────────────────
+const YearMonthPicker = ({
+  currentYear,
+  currentMonth,
+  min,
+  max,
+  isDark,
+  theme,
+  onSelectYearMonth,
+  onBack,
+}) => {
+  const minYear = min ? new Date(min).getFullYear() : 1900;
+  const maxYear = max ? new Date(max).getFullYear() : new Date().getFullYear();
+  
+  const yearList = Array.from(
+    { length: maxYear - minYear + 1 },
+    (_, i) => maxYear - i
+  );
+
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={onBack}
+          className={`inline-flex h-7 w-7 items-center justify-center rounded-xl transition-colors ${
+            isDark
+              ? "bg-slate-900 text-slate-300 hover:bg-slate-800"
+              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+          }`}
+          aria-label="Back to calendar"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+        </button>
+        <select
+          value={currentYear}
+          onChange={(e) => {
+            const newYear = parseInt(e.target.value);
+            onSelectYearMonth(newYear, currentMonth);
+          }}
+          className={`flex-1 mx-2 text-center text-[12px] font-semibold rounded-lg border outline-none transition cursor-pointer ${
+            isDark
+              ? "bg-slate-900 border-slate-700 text-white"
+              : "bg-slate-100 border-slate-300 text-slate-900"
+          }`}
+        >
+          {yearList.map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid grid-cols-3 gap-1">
+        {MONTH_NAMES.map((name, idx) => {
+          const isDisabled = min || max
+            ? (() => {
+                const testDate = `${currentYear}-${String(idx + 1).padStart(2, "0")}-15`;
+                if (min && testDate < min) return true;
+                if (max && testDate > max) return true;
+                return false;
+              })()
+            : false;
+
+          return (
+            <button
+              key={idx}
+              type="button"
+              disabled={isDisabled}
+              onClick={() => {
+                if (!isDisabled) onSelectYearMonth(currentYear, idx);
+              }}
+              className={`py-2 px-1 rounded-lg text-[11px] font-semibold transition ${
+                isDisabled
+                  ? isDark
+                    ? "text-slate-600 cursor-not-allowed"
+                    : "text-slate-300 cursor-not-allowed"
+                  : idx === currentMonth
+                    ? `${theme.primarySolid} text-white`
+                    : isDark
+                      ? "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              {name.slice(0, 3)}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const safeDateFromValue = (value) => {
   if (!value) return null;
   const d = new Date(`${value}T00:00:00`);
@@ -102,6 +196,7 @@ const DatePickerField = ({
   const wrapperRef = useRef(null);
   const inputRef = useRef(null);
   const [draftText, setDraftText] = useState(null);
+  const [showYearMonth, setShowYearMonth] = useState(false);
   const [viewMonth, setViewMonth] = useState(() => {
     const d =
       safeDateFromValue(value) ||
@@ -297,88 +392,114 @@ const DatePickerField = ({
               : "bg-white/95 border-slate-200"
           } ${popoverAlign === "right" ? "right-0" : "left-0"} ${popoverClassName || ""}`}
         >
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={() => setViewMonth(new Date(year, month - 1, 1))}
-              className={`inline-flex h-7 w-7 items-center justify-center rounded-xl transition-colors ${
-                isDark
-                  ? "bg-slate-900 text-slate-300 hover:bg-slate-800"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-              aria-label="Previous month"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </button>
-            <p className={`min-w-0 flex-1 truncate text-center text-[12px] font-normal font-spartan ${theme.cardText}`}>
-              {MONTH_NAMES[month]} {year}
-            </p>
-            <button
-              type="button"
-              onClick={() => setViewMonth(new Date(year, month + 1, 1))}
-              className={`inline-flex h-7 w-7 items-center justify-center rounded-xl transition-colors ${
-                isDark
-                  ? "bg-slate-900 text-slate-300 hover:bg-slate-800"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-              aria-label="Next month"
-            >
-              <ChevronRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          <div className="mb-1 grid grid-cols-7 gap-0.5">
-            {DAY_NAMES.map((d) => (
-              <div
-                key={d}
-                className={`text-center text-[7px] font-normal tracking-[0.08em] font-kumbh ${theme.subtleText}`}
-              >
-                {d}
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-7 gap-0.5">
-            {cells.map((day, i) => {
-              if (!day) return <div key={`e${i}`} />;
-              const ds = buildDateValue(year, month, day);
-              const selected = value === ds;
-              const isToday = ds === todayValue;
-              const inRange = isWithinRange(ds, min, max);
-              const dayDisabled = disabled || !inRange;
-
-              return (
+          {!showYearMonth ? (
+            <>
+              <div className="mb-2 flex items-center justify-between gap-2">
                 <button
-                  key={day}
                   type="button"
-                  disabled={dayDisabled}
-                  onClick={() => {
-                    if (dayDisabled) return;
-                    setDraftText(null);
-                    onChange(ds);
-                    setOpen(false);
-                  }}
-                  className={`h-7 w-7 rounded-xl text-[9px] font-kumbh font-normal transition-all ${
-                    dayDisabled
-                      ? isDark
-                        ? "text-slate-700 cursor-not-allowed"
-                        : "text-slate-300 cursor-not-allowed"
-                      : selected
-                        ? `${theme.primarySolid} text-white shadow-[0_16px_30px_-18px_rgba(5,150,105,0.95)] scale-[1.03]`
-                        : isToday
-                          ? `${theme.primaryLight} ${theme.primaryText} border border-emerald-500/25`
-                          : isDark
-                            ? "text-slate-300 hover:bg-slate-800"
-                            : "text-slate-700 hover:bg-slate-100"
+                  onClick={() => setViewMonth(new Date(year, month - 1, 1))}
+                  className={`inline-flex h-7 w-7 items-center justify-center rounded-xl transition-colors ${
+                    isDark
+                      ? "bg-slate-900 text-slate-300 hover:bg-slate-800"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                  aria-label="Previous month"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowYearMonth(true)}
+                  className={`min-w-0 flex-1 truncate text-center text-[12px] font-normal font-spartan px-2 py-1 rounded-lg transition-colors cursor-pointer ${
+                    isDark
+                      ? "text-slate-100 hover:bg-slate-800"
+                      : "text-slate-700 hover:bg-slate-100"
                   }`}
                 >
-                  {day}
+                  {MONTH_NAMES[month]} {year}
                 </button>
-              );
-            })}
-          </div>
+                <button
+                  type="button"
+                  onClick={() => setViewMonth(new Date(year, month + 1, 1))}
+                  className={`inline-flex h-7 w-7 items-center justify-center rounded-xl transition-colors ${
+                    isDark
+                      ? "bg-slate-900 text-slate-300 hover:bg-slate-800"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                  aria-label="Next month"
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
 
-          {(showClear || showToday) && (
+              <div className="mb-1 grid grid-cols-7 gap-0.5">
+                {DAY_NAMES.map((d) => (
+                  <div
+                    key={d}
+                    className={`text-center text-[7px] font-normal tracking-[0.08em] font-kumbh ${theme.subtleText}`}
+                  >
+                    {d}
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-7 gap-0.5">
+                {cells.map((day, i) => {
+                  if (!day) return <div key={`e${i}`} />;
+                  const ds = buildDateValue(year, month, day);
+                  const selected = value === ds;
+                  const isToday = ds === todayValue;
+                  const inRange = isWithinRange(ds, min, max);
+                  const dayDisabled = disabled || !inRange;
+
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      disabled={dayDisabled}
+                      onClick={() => {
+                        if (dayDisabled) return;
+                        setDraftText(null);
+                        onChange(ds);
+                        setOpen(false);
+                      }}
+                      className={`h-7 w-7 rounded-xl text-[9px] font-kumbh font-normal transition-all ${
+                        dayDisabled
+                          ? isDark
+                            ? "text-slate-700 cursor-not-allowed"
+                            : "text-slate-300 cursor-not-allowed"
+                          : selected
+                            ? `${theme.primarySolid} text-white shadow-[0_16px_30px_-18px_rgba(5,150,105,0.95)] scale-[1.03]`
+                            : isToday
+                              ? `${theme.primaryLight} ${theme.primaryText} border border-emerald-500/25`
+                              : isDark
+                                ? "text-slate-300 hover:bg-slate-800"
+                                : "text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      {day}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <YearMonthPicker
+              currentYear={year}
+              currentMonth={month}
+              min={min}
+              max={max}
+              isDark={isDark}
+              theme={theme}
+              onSelectYearMonth={(newYear, newMonth) => {
+                setViewMonth(new Date(newYear, newMonth, 1));
+                setShowYearMonth(false);
+              }}
+              onBack={() => setShowYearMonth(false)}
+            />
+          )}
+
+          {!showYearMonth && (showClear || showToday) && (
             <div
               className={`mt-2.5 flex items-center justify-between border-t pt-2.5 ${
                 isDark ? "border-slate-800" : "border-slate-100"
