@@ -60,7 +60,9 @@ const mapBackendNotification = (n) => ({
         : n.type || "Notification",
   description: n.message || "No description",
   reportedBy:
+    n.data?.submitted_by ||
     n.data?.complainant_name ||
+    n.data?.reported_by ||
     (n.data?.user
       ? `${n.data.user.last_name || ""}, ${n.data.user.first_name || ""}`
       : ""),
@@ -177,9 +179,11 @@ export const RealTimeProvider = ({ children }) => {
         (isResident ? "Resident updated profile information." : "");
       const reportedBy = isResident
         ? event?.data?.editor_name || event?.data?.resident_name || "Resident"
-        : event?.data?.user
-          ? `${event.data.user.last_name || ""}, ${event.data.user.first_name || ""}`
-          : event?.data?.complainant_name || "Unknown";
+        : event?.data?.reported_by ||
+          event?.data?.complainant_name ||
+          (event?.data?.user
+            ? `${event.data.user.last_name || ""}, ${event.data.user.first_name || ""}`
+            : "Unknown");
 
       return {
         id: event.id,
