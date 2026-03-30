@@ -120,9 +120,20 @@ export const RealTimeProvider = ({ children }) => {
         const backendExternal = new Set(
           backendItems.map((n) => n.externalId).filter(Boolean),
         );
+        // Capture read state of local items that are about to be replaced so that
+        // a "mark all as read" action isn't undone by the backend hydration merge.
+        const localReadByExternalId = new Map();
+        prev.forEach((n) => {
+          if (backendExternal.has(n.id)) localReadByExternalId.set(n.id, n.read);
+        });
         const prunedPrev = prev.filter((n) => !backendExternal.has(n.id));
         const existingIds = new Set(prunedPrev.map((n) => n.id));
-        const newOnes = backendItems.filter((n) => !existingIds.has(n.id));
+        const newOnes = backendItems
+          .filter((n) => !existingIds.has(n.id))
+          .map((n) => {
+            const wasReadLocally = localReadByExternalId.get(n.externalId);
+            return wasReadLocally === true ? { ...n, read: true } : n;
+          });
         return dedupeNotifications([...newOnes, ...prunedPrev]);
       });
 

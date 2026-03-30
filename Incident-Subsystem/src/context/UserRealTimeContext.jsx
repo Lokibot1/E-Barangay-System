@@ -181,7 +181,15 @@ export const UserRealTimeProvider = ({ children }) => {
         const localOnly = prev.filter(
           (n) => !n.backendId && !backendIds.has(n.id) && !backendExternal.has(n.id),
         );
-        return dedupeNotifications([...backendItems, ...localOnly]);
+        // Preserve local read states so a "mark all as read" isn't undone by this merge.
+        const localReadById = new Map(prev.map((n) => [n.id, n.read]));
+        const localReadByExternal = new Map();
+        prev.forEach((n) => { if (n.id) localReadByExternal.set(n.id, n.read); });
+        const mergedBackend = backendItems.map((n) => {
+          const wasRead = localReadById.get(n.id) ?? localReadByExternal.get(n.externalId);
+          return wasRead === true ? { ...n, read: true } : n;
+        });
+        return dedupeNotifications([...mergedBackend, ...localOnly]);
       });
 
       // Show toasts for unread notifications that weren't cached locally at mount

@@ -144,7 +144,7 @@ const useRealTimeEvents = ({
               type:
                 item.types?.map((t) => t.name).join(", ") || "Incident",
               data: item,
-              timestamp: new Date(),
+              timestamp: item.created_at || new Date(),
             });
           }
         });
@@ -158,7 +158,7 @@ const useRealTimeEvents = ({
               source: "complaint",
               type: item.type || "Complaint",
               data: item,
-              timestamp: new Date(),
+              timestamp: item.created_at || new Date(),
             });
           }
         });

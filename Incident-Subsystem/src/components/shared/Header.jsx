@@ -364,7 +364,11 @@ const ProfileUpdateDetailsModal = ({ notification, onClose, isDark, t }) => {
 const normalizeTimestamp = (date) => {
   if (typeof date === "string" &&
     /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(date)) {
-    return date.replace(" ", "T") + "Z";
+    // Only normalize the separator — do NOT append "Z".
+    // Backend returns timestamps in server local time (PHT/UTC+8); treating them
+    // as UTC causes all timestamps to appear 8 h in the future, resulting in a
+    // negative diff that always falls into the "Just now" branch.
+    return date.replace(" ", "T");
   }
   return date;
 };
