@@ -66,7 +66,8 @@ const MiniCalendar = ({
   const apptDates = useMemo(() => {
     const s = new Set();
     appointments.forEach((a) => {
-      if (a.date) s.add(a.date);
+      const status = (a.status || "").toLowerCase().replace(/-/g, "_");
+      if (a.date && status !== "completed" && status !== "no_show") s.add(a.date);
     });
     return s;
   }, [appointments]);

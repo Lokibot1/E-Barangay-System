@@ -1749,9 +1749,12 @@ export default function AdminLanding() {
           />}
 
           {loading ? <ChartSkeleton isDark={isDark} cardClass={cardClass} height={290} /> : <article className={`${cardClass} p-4`}>
-            <h3 className={`text-lg font-bold ${t.cardText} mb-3`}>
+            <h3 className={`text-lg font-bold ${t.cardText} mb-1`}>
               {tr.adminLanding.monthlyAppointments}
             </h3>
+            <p className={`mb-3 text-[13px] leading-6 ${t.subtleText}`}>
+              Monthly breakdown of appointment statuses across scheduled, completed, and cancelled bookings.
+            </p>
             <SafeResponsiveChart className="h-[290px]">
               {({ width, height }) => (
               <ResponsiveContainer width={width} height={height} minWidth={0}>
@@ -1896,7 +1899,7 @@ export default function AdminLanding() {
           onClick={() => setShowAnnouncementsPanel(false)}
         >
           <div
-            className={`relative w-full max-w-4xl overflow-hidden rounded-[32px] border shadow-[0_30px_70px_rgba(15,23,42,0.28)] ${
+            className={`relative w-full max-w-4xl overflow-hidden rounded-[32px] border shadow-[0_30px_70px_rgba(15,23,42,0.28)] font-kumbh ${
               isDark
                 ? "border-slate-700 bg-slate-900 text-slate-100"
                 : "border-[#dbe4ef] bg-white text-slate-900"
@@ -2071,7 +2074,7 @@ export default function AdminLanding() {
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <h3 className={`text-lg font-bold ${t.cardText}`}>
+                        <h3 className={`font-spartan text-lg font-bold ${t.cardText}`}>
                           {isEditingAnnouncement
                             ? "Edit announcement"
                             : "Plan an announcement"}
@@ -2137,7 +2140,7 @@ export default function AdminLanding() {
                           }`}
                         >
                           <div className="mb-4">
-                            <h4 className={`text-sm font-bold ${t.cardText}`}>
+                            <h4 className={`font-spartan text-sm font-bold ${t.cardText}`}>
                               Event details
                             </h4>
                             <p className={`mt-1 text-xs ${t.subtleText}`}>
@@ -2482,7 +2485,7 @@ export default function AdminLanding() {
                   >
                     <div>
                       <div className="flex flex-wrap items-center justify-between gap-3">
-                        <h3 className={`text-lg font-bold ${t.cardText}`}>
+                        <h3 className={`font-spartan text-lg font-bold ${t.cardText}`}>
                           History
                         </h3>
                         <span
@@ -2636,7 +2639,7 @@ export default function AdminLanding() {
                                 </div>
 
                                 <div className="mt-4 min-w-0">
-                                  <h4 className={`text-lg font-bold leading-tight ${t.cardText}`}>
+                                  <h4 className={`font-spartan text-lg font-bold leading-tight ${t.cardText}`}>
                                     {item.title}
                                   </h4>
                                   {item.desc && (
@@ -2746,7 +2749,7 @@ export default function AdminLanding() {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <h3 className={`text-lg font-bold ${t.cardText}`}>
+                      <h3 className={`font-spartan text-lg font-bold ${t.cardText}`}>
                         Delete announcement?
                       </h3>
                       <p className={`mt-2 text-sm leading-6 ${t.subtleText}`}>

@@ -364,7 +364,11 @@ const ProfileUpdateDetailsModal = ({ notification, onClose, isDark, t }) => {
 const normalizeTimestamp = (date) => {
   if (typeof date === "string" &&
     /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(date)) {
-    return date.replace(" ", "T") + "Z";
+    // Only normalize the separator — do NOT append "Z".
+    // Backend returns timestamps in server local time (PHT/UTC+8); treating them
+    // as UTC causes all timestamps to appear 8 h in the future, resulting in a
+    // negative diff that always falls into the "Just now" branch.
+    return date.replace(" ", "T");
   }
   return date;
 };
@@ -921,20 +925,20 @@ const ModernNotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[7px] font-semibold font-kumbh ${sourceTone}`}>
+                <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold font-kumbh ${sourceTone}`}>
                   {sourceLabel}
                 </span>
-                <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[7px] font-semibold font-kumbh ${severityTone}`}>
+                <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold font-kumbh ${severityTone}`}>
                   {severityLabel}
                 </span>
                 {unread && (
-                  <span className={`inline-flex items-center gap-1 text-[8px] font-semibold font-kumbh ${isDark ? "text-emerald-300" : "text-emerald-700"}`}>
+                  <span className={`inline-flex items-center gap-1 text-[10px] font-semibold font-kumbh ${isDark ? "text-emerald-300" : "text-emerald-700"}`}>
                     <span className={`h-1 w-1 rounded-full ${isDark ? "bg-emerald-300" : "bg-emerald-500"}`} />
                     Unread
                   </span>
                 )}
                 {isStatusChange && (
-                  <span className={`rounded-full px-1.5 py-0.5 text-[8px] font-medium font-kumbh ${
+                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium font-kumbh ${
                     isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-600"
                   }`}>
                     {capitalize(notification.oldStatus)} {"->"} {capitalize(notification.newStatus)}
@@ -978,19 +982,19 @@ const ModernNotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead
               )}
             </div>
 
-            <p className={`mt-1.5 text-[11px] font-semibold leading-4.5 font-kumbh ${
+            <p className={`mt-1.5 text-[13px] font-semibold leading-4.5 font-kumbh ${
               isDark ? "text-slate-100" : "text-slate-900"
             }`}>
               {displayType}
             </p>
 
-            <p className={`mt-1 text-[9px] leading-4 font-kumbh ${
+            <p className={`mt-1 text-[11px] leading-4 font-kumbh ${
               isDark ? "text-slate-400" : "text-slate-600"
             }`}>
               {descriptionText}
             </p>
 
-            <p className={`mt-1.5 text-[8px] leading-3.5 font-kumbh ${
+            <p className={`mt-1.5 text-[10px] leading-3.5 font-kumbh ${
               isDark ? "text-slate-500" : "text-slate-500"
             }`}>
               {metaParts.join(" - ")}
