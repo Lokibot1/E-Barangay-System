@@ -8,7 +8,18 @@ import React from 'react';
 import HouseholdRow from './householdrow';
 import SkeletonLoader from '../common/SkeletonLoader';
 
-const HouseholdTable = ({ households, loading = false, onView, onEdit, onDeactivate, t, currentTheme = 'modern' }) => {
+const HouseholdTable = ({
+  households,
+  loading = false,
+  onView,
+  onEdit,
+  onDeactivate,
+  actionLoadingId = null,
+  actionLoadingMode = 'view',
+  disableActions = false,
+  t,
+  currentTheme = 'modern',
+}) => {
   const isDark = currentTheme === 'dark';
 
   const headers = [
@@ -62,6 +73,9 @@ const HouseholdTable = ({ households, loading = false, onView, onEdit, onDeactiv
                 onView={onView}
                 onEdit={onEdit}
                 onDeactivate={onDeactivate}
+                actionLoadingId={actionLoadingId}
+                actionLoadingMode={actionLoadingMode}
+                disableActions={disableActions}
                 t={t}
                 currentTheme={currentTheme}
               />

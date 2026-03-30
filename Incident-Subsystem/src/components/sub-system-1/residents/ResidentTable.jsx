@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import ResidentRow from './ResidentRow';
 import ResidentDetailsModal from './ResidentDetailsModal';
 import ModalWrapper from '../common/ModalWrapper'; 
@@ -6,10 +6,28 @@ import { residentService } from '../../../services/sub-system-1/residents';
 import SkeletonLoader from '../common/SkeletonLoader';
 import { AlertTriangle, Loader2, UserMinus } from 'lucide-react';
 
-const ResidentTable = ({ residents, loading = false, onUpdate, onDelete, onHouseholdClick, t, currentTheme = 'modern' }) => {
+const ResidentTable = ({
+    residents,
+    loading = false,
+    onUpdate,
+    onDelete,
+    onHouseholdClick,
+    canEdit = true,
+    canDelete = true,
+    externalOpenRequest = null,
+    onExternalOpenHandled,
+    t,
+    currentTheme = 'modern',
+}) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedResident, setSelectedResident] = useState(null);
     const [modalMode, setModalMode] = useState('view');
+    const [modalInitialTab, setModalInitialTab] = useState('basic');
+    const [openingResident, setOpeningResident] = useState({
+        loading: false,
+        residentId: null,
+        mode: 'view',
+    });
 
     // State for Deactivation Confirmation
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -19,22 +37,37 @@ const ResidentTable = ({ residents, loading = false, onUpdate, onDelete, onHouse
     const headers = ['Name', 'Age', 'Address', 'Purok', 'Sector', 'Actions'];
     const COLS = headers.length;
 
-    const openModal = async (r, mode) => {
+    const openModal = useCallback(async (r, mode, initialTab = 'basic') => {
+        if (openingResident.loading) return;
+
+        setOpeningResident({
+            loading: true,
+            residentId: r?.id ?? null,
+            mode,
+        });
         setModalMode(mode);
+        setModalInitialTab(initialTab);
         try {
             const fresh = await residentService.getResident(r.id);
             setSelectedResident(fresh);
         } catch {
             setSelectedResident(r);
+        } finally {
+            setOpeningResident({
+                loading: false,
+                residentId: null,
+                mode: 'view',
+            });
         }
         setIsModalOpen(true);
-    };
+    }, [openingResident.loading]);
 
     const handleView = (r) => openModal(r, 'view');
     const handleEdit = (r) => openModal(r, 'edit');
 
     // Trigger deactivation confirmation
     const handleDeleteClick = (r) => {
+        if (!canDelete) return;
         setSelectedResident(r);
         setIsConfirmOpen(true);
     };
@@ -73,6 +106,44 @@ const ResidentTable = ({ residents, loading = false, onUpdate, onDelete, onHouse
         return false;
     };
 
+    useEffect(() => {
+        if (
+            (!externalOpenRequest?.id && !externalOpenRequest?.barangayId) ||
+            loading ||
+            !Array.isArray(residents) ||
+            residents.length === 0
+        ) {
+            return;
+        }
+
+        const matchedResident = residents.find(
+            (resident) =>
+                (externalOpenRequest.id &&
+                    String(resident.id) === String(externalOpenRequest.id)) ||
+                (externalOpenRequest.barangayId &&
+                    [
+                        resident?.barangay_id,
+                        resident?.trackingNumber,
+                        resident?.barangayId,
+                    ]
+                        .filter(Boolean)
+                        .some(
+                            (value) =>
+                                String(value) ===
+                                String(externalOpenRequest.barangayId),
+                        )),
+        );
+
+        if (!matchedResident) return;
+
+        openModal(
+            matchedResident,
+            externalOpenRequest.mode || 'view',
+            externalOpenRequest.tab || 'basic',
+        );
+        onExternalOpenHandled?.();
+    }, [externalOpenRequest, loading, onExternalOpenHandled, openModal, residents]);
+
     return (
         <>
             <div className="w-full overflow-x-auto">
@@ -105,7 +176,12 @@ const ResidentTable = ({ residents, loading = false, onUpdate, onDelete, onHouse
                                     onView={handleView}
                                     onEdit={handleEdit}
                                     onDelete={() => handleDeleteClick(r)}
+                                    canEdit={canEdit}
+                                    canDelete={canDelete}
                                     onHouseholdClick={onHouseholdClick}
+                                    actionLoadingId={openingResident.residentId}
+                                    actionLoadingMode={openingResident.mode}
+                                    disableActions={openingResident.loading}
                                     t={t}
                                     currentTheme={currentTheme}
                                 />
@@ -136,11 +212,57 @@ const ResidentTable = ({ residents, loading = false, onUpdate, onDelete, onHouse
                     onClose={handleClose}
                     resident={selectedResident}
                     mode={modalMode}
+                    initialTab={modalInitialTab}
+                    canEdit={canEdit}
+                    canDelete={canDelete}
                     t={t}
                     currentTheme={currentTheme}
                     onSave={handleSave}
-                    onDelete={() => handleDeleteClick(selectedResident)}
+                    onDelete={canDelete ? () => handleDeleteClick(selectedResident) : undefined}
                 />
+            )}
+
+            {openingResident.loading && (
+                <div
+                    className={`fixed inset-0 z-[9998] flex items-center justify-center backdrop-blur-[6px] ${
+                        isDark ? 'bg-slate-900/55' : 'bg-[rgba(239,246,255,0.72)]'
+                    }`}
+                >
+                    <div className="flex flex-col items-center gap-4 px-6 py-6 text-center">
+                        <div
+                            className={`relative h-16 w-16 rounded-full border ${
+                                isDark ? 'border-slate-600/80' : 'border-slate-300/90'
+                            }`}
+                        >
+                            <div
+                                className={`absolute inset-0 animate-spin rounded-full border-2 border-transparent ${
+                                    isDark
+                                        ? 'border-t-emerald-300 border-r-emerald-300'
+                                        : 'border-t-blue-600 border-r-emerald-500'
+                                }`}
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <p
+                                className={`text-[11px] font-spartan font-bold uppercase tracking-[0.28em] ${
+                                    isDark ? 'text-slate-100' : 'text-slate-700'
+                                }`}
+                            >
+                                Please wait
+                            </p>
+                            <p
+                                className={`text-[13px] font-kumbh ${
+                                    isDark ? 'text-slate-300' : 'text-slate-500'
+                                }`}
+                            >
+                                {openingResident.mode === 'edit'
+                                    ? 'Opening edit form...'
+                                    : 'Opening resident profile...'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* ── CUSTOM DEACTIVATE CONFIRMATION MODAL ── */}

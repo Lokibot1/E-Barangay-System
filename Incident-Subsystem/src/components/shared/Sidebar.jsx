@@ -1,7 +1,17 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
-import { isAdmin } from "../../homepage/services/loginService";
+import {
+  canAccessAdminPanel,
+  canAccessVerificationQueue,
+  canManageAccounts,
+  canManageSystemSettings,
+  canViewAnalytics,
+  canViewAppointments,
+  canViewDocuments,
+  canViewIncidentCases,
+  canViewResidents,
+} from "../../homepage/services/loginService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useBranding } from "../../context/BrandingContext";
 import themeTokens from "../../Themetokens";
@@ -22,6 +32,7 @@ import {
   Search,
   Settings,
   CircleHelp,
+  Bug,
   FileWarning,
   MapPinned,
   ScanSearch,
@@ -95,6 +106,18 @@ const getUserNavItems = (s) => [
       },
     ],
   },
+  {
+    id: "report-system-issue",
+    label: s.reportSystemIssue || "Report Issue",
+    icon: "M9.75 3.104c.818-1.936 3.682-1.936 4.5 0l.227.536a1.125 1.125 0 001.33.64l.578-.154c2.084-.556 3.921 1.281 3.365 3.365l-.154.578a1.125 1.125 0 00.64 1.33l.536.227c1.936.818 1.936 3.682 0 4.5l-.536.227a1.125 1.125 0 00-.64 1.33l.154.578c.556 2.084-1.281 3.921-3.365 3.365l-.578-.154a1.125 1.125 0 00-1.33.64l-.227.536c-.818 1.936-3.682 1.936-4.5 0l-.227-.536a1.125 1.125 0 00-1.33-.64l-.578.154c-2.084.556-3.921-1.281-3.365-3.365l.154-.578a1.125 1.125 0 00-.64-1.33l-.536-.227c-1.936-.818-1.936-3.682 0-4.5l.536-.227a1.125 1.125 0 00.64-1.33l-.154-.578c-.556-2.084 1.281-3.921 3.365-3.365l.578.154a1.125 1.125 0 001.33-.64l.227-.536z",
+    path: "/report-issue",
+  },
+  {
+    id: "support",
+    label: s.support,
+    icon: "M8.228 9c.549-1.165 1.918-2 3.522-2 2.209 0 4 1.567 4 3.5 0 1.186-.675 2.234-1.713 2.868-.96.587-1.787 1.12-1.787 2.132V16M12 19h.01",
+    path: "/support",
+  },
 ];
 
 const getAdminNavItems = (s) => [
@@ -161,6 +184,12 @@ const getAdminNavItems = (s) => [
     path: "/admin/payments",
   },
   {
+    id: "support",
+    label: s.supportTickets || s.support,
+    icon: "M8.228 9c.549-1.165 1.918-2 3.522-2 2.209 0 4 1.567 4 3.5 0 1.186-.675 2.234-1.713 2.868-.96.587-1.787 1.12-1.787 2.132V16M12 19h.01",
+    path: "/admin/support",
+  },
+  {
     id: "documents-inquiry",
     label: s.documentsInquiry || "Issuance Application",
     icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
@@ -188,6 +217,53 @@ const getAdminNavItems = (s) => [
   },
 ];
 
+const canSeeAdminItem = (itemId) => {
+  switch (itemId) {
+    case "dashboard":
+    case "reports":
+      return canViewAnalytics();
+    case "resident-registry":
+    case "residents":
+    case "households":
+      return canViewResidents();
+    case "verification":
+    case "requests":
+      return canAccessVerificationQueue();
+    case "incidents":
+      return canViewIncidentCases();
+    case "appointments":
+      return canViewAppointments();
+    case "payments":
+      return canManageAccounts();
+    case "documents-inquiry":
+    case "documents-inquiry-sub":
+    case "certificates":
+      return canViewDocuments();
+    case "settings":
+      return canManageSystemSettings();
+    default:
+      return true;
+  }
+};
+
+const filterAdminNavItems = (items) =>
+  items
+    .map((item) => {
+      const children = Array.isArray(item.children)
+        ? item.children.filter((child) => canSeeAdminItem(child.id))
+        : item.children;
+
+      return {
+        ...item,
+        ...(children ? { children } : {}),
+      };
+    })
+    .filter(
+      (item) =>
+        canSeeAdminItem(item.id) ||
+        (Array.isArray(item.children) && item.children.length > 0),
+    );
+
 // ── Sidebar ─────────────────────────────────────────────────────────────────
 const Sidebar = ({ currentTheme, collapsed, onToggle, mobileOpen = false, onMobileToggle }) => {
   const t = themeTokens[currentTheme] || themeTokens.modern || themeTokens.blue;
@@ -207,13 +283,13 @@ const Sidebar = ({ currentTheme, collapsed, onToggle, mobileOpen = false, onMobi
     if (typeof window === "undefined") return true;
     return window.matchMedia("(min-width: 768px)").matches;
   });
-  const adminMode = isAdmin();
+  const adminMode = canAccessAdminPanel();
   const isSubSystem2Route = location.pathname.startsWith("/sub-system-2");
   const isIncidentRoute = location.pathname.startsWith("/incident-complaint");
   const showDocumentServices = isSubSystem2Route || isIncidentRoute;
   const userNavItems = getUserNavItems(tr.sidebar);
   const NAV_ITEMS = adminMode
-    ? getAdminNavItems(tr.sidebar)
+    ? filterAdminNavItems(getAdminNavItems(tr.sidebar))
     : showDocumentServices
       ? userNavItems.map((item) => {
           if (item.id === "subsystem-2") {
@@ -383,6 +459,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle, mobileOpen = false, onMobi
     "subsystem-1": LayoutGrid,
     "subsystem-2": FileText,
     "incident-complaint": AlertTriangle,
+    "report-system-issue": Bug,
     "file-complaint": FileWarning,
     "incident-report": AlertTriangle,
     "incident-map": MapPinned,
@@ -567,10 +644,10 @@ const Sidebar = ({ currentTheme, collapsed, onToggle, mobileOpen = false, onMobi
                       className={`inline-flex items-center justify-center flex-shrink-0 transition-colors duration-150 ${
                         isCollapsed
                           ? `h-8 w-8 ${active ? t.sidebarIconActive : isDark ? "text-slate-300" : "text-slate-500"}`
-                          : `w-8 h-8 rounded-lg ${
+                          : `w-8 h-8 ${
                               active
-                                ? `${t.primaryLight} ${t.sidebarIconActive}`
-                                : `${isDark ? "bg-slate-800/80 text-slate-400" : "bg-slate-100 text-slate-500"}`
+                                ? `${t.sidebarIconActive}`
+                                : `${isDark ? "text-slate-400" : "text-slate-500"}`
                             }`
                       } ${isCollapsed ? "mx-auto" : ""}`}
                     >

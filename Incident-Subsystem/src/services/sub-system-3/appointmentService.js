@@ -1,5 +1,8 @@
-import { getToken, isAuthenticated } from "../../homepage/services/loginService";
+import {
+  isAuthenticated,
+} from "../../homepage/services/loginService";
 import { INCIDENT_API_BASE_URL } from "../../config/runtimeApi";
+import { requestJson } from "../shared/http";
 
 const API_BASE = INCIDENT_API_BASE_URL;
 
@@ -10,12 +13,6 @@ export const BUSINESS_END_HOUR = 17;           // 5 PM — last 1-hour slot star
 
 // Valid statuses from UpdateAppointmentRequest
 export const APPOINTMENT_STATUSES = ["scheduled", "rescheduled", "completed", "cancelled", "no-show"];
-
-const authHeaders = () => ({
-  Accept: "application/json",
-  Authorization: `Bearer ${getToken()}`,
-  "Content-Type": "application/json",
-});
 
 const parseScheduledAt = (scheduledAt) => {
   if (!scheduledAt) return { date: null, time: null };
@@ -34,14 +31,12 @@ const parseScheduledAt = (scheduledAt) => {
  */
 export const getComplaintAppointments = async (complaintId) => {
   if (!isAuthenticated()) throw new Error("Not authenticated.");
-  const res = await fetch(`${API_BASE}/complaints/${complaintId}/appointments`, {
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
+  const data = await requestJson(
+    `${API_BASE}/complaints/${complaintId}/appointments`,
+    {
+      errorMessage: "Failed to fetch appointments.",
     },
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to fetch appointments.");
+  );
   return Array.isArray(data) ? data : data.data || [];
 };
 
@@ -51,17 +46,12 @@ export const getComplaintAppointments = async (complaintId) => {
  */
 export const getComplaintAppointment = async (complaintId, appointmentId) => {
   if (!isAuthenticated()) throw new Error("Not authenticated.");
-  const res = await fetch(
+  const data = await requestJson(
     `${API_BASE}/complaints/${complaintId}/appointments/${appointmentId}`,
     {
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${getToken()}`,
-      },
-    }
+      errorMessage: "Failed to fetch appointment.",
+    },
   );
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to fetch appointment.");
   return data.data ?? data;
 };
 
@@ -72,14 +62,12 @@ export const getComplaintAppointment = async (complaintId, appointmentId) => {
  */
 export const createAppointment = async (complaintId, appointmentData) => {
   if (!isAuthenticated()) throw new Error("Not authenticated.");
-  const res = await fetch(`${API_BASE}/complaints/${complaintId}/appointments`, {
+  return requestJson(`${API_BASE}/complaints/${complaintId}/appointments`, {
     method: "POST",
-    headers: authHeaders(),
+    includeJson: true,
     body: JSON.stringify(appointmentData),
+    errorMessage: "Failed to create appointment.",
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to create appointment.");
-  return data;
 };
 
 /**
@@ -89,17 +77,15 @@ export const createAppointment = async (complaintId, appointmentData) => {
  */
 export const updateAppointment = async (complaintId, appointmentId, updates) => {
   if (!isAuthenticated()) throw new Error("Not authenticated.");
-  const res = await fetch(
+  return requestJson(
     `${API_BASE}/complaints/${complaintId}/appointments/${appointmentId}`,
     {
       method: "PATCH",
-      headers: authHeaders(),
+      includeJson: true,
       body: JSON.stringify(updates),
-    }
+      errorMessage: "Failed to update appointment.",
+    },
   );
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to update appointment.");
-  return data;
 };
 
 // ── Status helpers ────────────────────────────────────────────────────────────
@@ -142,14 +128,9 @@ export const markNoShow = async (complaintId, appointmentId) =>
 export const getAvailability = async (start, end) => {
   if (!isAuthenticated()) throw new Error("Not authenticated.");
   const params = new URLSearchParams({ start, end }).toString();
-  const res = await fetch(`${API_BASE}/appointments/availability?${params}`, {
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
+  const data = await requestJson(`${API_BASE}/appointments/availability?${params}`, {
+    errorMessage: "Failed to fetch availability.",
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to fetch availability.");
   return data.days || [];
 };
 

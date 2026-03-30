@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pencil, Eye, Trash2, ExternalLink } from 'lucide-react';
+import { Pencil, Eye, Trash2, ExternalLink, Loader2 } from 'lucide-react';
 import { SECTOR_STYLES } from '../../../constants/filter';
 
 const rowAccentMap = {
@@ -44,7 +44,20 @@ const rowAccentMap = {
  *   clicked. Pass null / undefined to disable the link behaviour (renders
  *   plain text instead of a clickable element).
  */
-const ResidentRow = ({ r, onView, onEdit, onDelete, onHouseholdClick, t, currentTheme = 'modern' }) => {
+const ResidentRow = ({
+    r,
+    onView,
+    onEdit,
+    onDelete,
+    canEdit = true,
+    canDelete = true,
+    onHouseholdClick,
+    actionLoadingId = null,
+    actionLoadingMode = '',
+    disableActions = false,
+    t,
+    currentTheme = 'modern',
+}) => {
     const accent = rowAccentMap[currentTheme] || rowAccentMap.modern;
     const isDark  = currentTheme === 'dark';
     const rowDivider = isDark ? 'border-slate-800/90' : 'border-slate-200';
@@ -55,6 +68,8 @@ const ResidentRow = ({ r, onView, onEdit, onDelete, onHouseholdClick, t, current
     const sectorKey   = (rawSector || 'GENERAL POPULATION').toUpperCase();
     const sectorName  = rawSector || 'General population';
     const isHead      = r.household_position?.toLowerCase() === 'head of family';
+    const isViewLoading = disableActions && String(actionLoadingId) === String(r.id) && actionLoadingMode === 'view';
+    const isEditLoading = disableActions && String(actionLoadingId) === String(r.id) && actionLoadingMode === 'edit';
 
     // Whether clicking address/purok should open the household modal
     const canLinkHousehold = typeof onHouseholdClick === 'function' && r.household_id;
@@ -145,10 +160,35 @@ const ResidentRow = ({ r, onView, onEdit, onDelete, onHouseholdClick, t, current
 
             {/* ── Actions ── */}
             <td className={`${cellBase} text-center`}>
-                <div className={`mx-auto flex w-fit items-center justify-center overflow-hidden rounded-[18px] border ${t.cardBorder} ${t.cardBg} shadow-[0_10px_20px_rgba(15,23,42,0.06)]`}>
-                    <button onClick={() => onView(r)}  title="View"   className={`border-r px-4 py-3 text-slate-500 transition-all ${accent.buttonHover}`}><Eye    size={16} /></button>
-                    <button onClick={() => onEdit(r)}  title="Edit"   className={`border-r px-4 py-3 text-slate-500 transition-all ${accent.buttonHover}`}><Pencil size={16} /></button>
-                    <button onClick={() => onDelete(r.id, displayName)} title="Delete" className="px-4 py-3 text-slate-500 hover:bg-rose-600 hover:text-white transition-all"><Trash2 size={16} /></button>
+                <div className={`mx-auto flex w-fit items-center justify-center overflow-hidden rounded-[18px] border ${t.cardBorder} ${t.cardBg} shadow-[0_10px_20px_rgba(15,23,42,0.06)] ${disableActions ? 'opacity-90' : ''}`}>
+                    <button
+                        onClick={() => onView(r)}
+                        title="View"
+                        disabled={disableActions}
+                        className={`px-4 py-3 text-slate-500 transition-all disabled:cursor-wait disabled:opacity-70 ${accent.buttonHover} ${canEdit || canDelete ? 'border-r' : ''}`}
+                    >
+                        {isViewLoading ? <Loader2 size={16} className="animate-spin" /> : <Eye size={16} />}
+                    </button>
+                    {canEdit && (
+                        <button
+                            onClick={() => onEdit(r)}
+                            title="Edit"
+                            disabled={disableActions}
+                            className={`border-r px-4 py-3 text-slate-500 transition-all disabled:cursor-wait disabled:opacity-70 ${accent.buttonHover}`}
+                        >
+                            {isEditLoading ? <Loader2 size={16} className="animate-spin" /> : <Pencil size={16} />}
+                        </button>
+                    )}
+                    {canDelete && (
+                        <button
+                            onClick={() => onDelete(r.id, displayName)}
+                            title="Delete"
+                            disabled={disableActions}
+                            className="px-4 py-3 text-slate-500 hover:bg-rose-600 hover:text-white transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                    )}
                 </div>
             </td>
         </tr>

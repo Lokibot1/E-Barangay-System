@@ -17,17 +17,17 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, loading, currentTheme }) => {
 
       {/* Modal */}
       <div
-        className={`relative w-full max-w-[30rem] ${t.cardBg} rounded-[28px] shadow-[0_28px_70px_rgba(15,23,42,0.24)] border ${t.cardBorder} overflow-hidden animate-scaleIn`}
+        className={`relative w-full max-w-[24rem] ${t.cardBg} rounded-[24px] shadow-[0_24px_60px_rgba(15,23,42,0.22)] border ${t.cardBorder} overflow-hidden animate-scaleIn`}
       >
         {/* Header */}
-        <div className="flex flex-col items-center px-8 pt-10 pb-5 text-center">
+        <div className="flex flex-col items-center px-6 pt-8 pb-4 text-center sm:px-7">
           <div
-            className={`mb-6 flex h-[72px] w-[72px] items-center justify-center rounded-full ${
+            className={`mb-5 flex h-[60px] w-[60px] items-center justify-center rounded-full ${
               isDark ? "bg-red-950/40 ring-1 ring-red-900/40" : "bg-red-100 ring-1 ring-red-200/80"
             }`}
           >
             <svg
-              className={`h-8 w-8 ${isDark ? "text-red-400" : "text-red-500"}`}
+              className={`h-7 w-7 ${isDark ? "text-red-400" : "text-red-500"}`}
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth={1.5}
@@ -41,24 +41,23 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, loading, currentTheme }) => {
             </svg>
           </div>
           <h3
-            className={`font-spartan text-[1.4rem] font-bold leading-none ${t.cardText}`}
+            className={`font-spartan text-[1.2rem] font-bold leading-none ${t.cardText}`}
           >
             Confirm Logout
           </h3>
           <p
-            className={`mt-5 max-w-[22rem] text-[15px] leading-7 ${t.subtleText} font-kumbh`}
+            className={`mt-4 max-w-[18rem] text-[14px] leading-6 ${t.subtleText} font-kumbh`}
           >
-            Are you sure you want to sign out? You will need to log in again to
-            access the system.
+            Are you sure you want to log out?
           </p>
         </div>
 
         {/* Actions */}
-        <div className="flex gap-4 px-8 pb-8 pt-1">
+        <div className="flex gap-3 px-6 pb-6 pt-1 sm:px-7">
           <button
             onClick={onClose}
             disabled={loading}
-            className={`flex-1 rounded-[12px] border py-3 text-[15px] font-semibold font-kumbh transition-all duration-200 ${
+            className={`flex-1 rounded-[10px] border py-2.5 text-[14px] font-semibold font-kumbh transition-all duration-200 ${
               isDark
                 ? "border-slate-600 text-slate-300 hover:border-slate-500 hover:bg-slate-700"
                 : "border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-100"
@@ -69,7 +68,7 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, loading, currentTheme }) => {
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="flex-1 rounded-[12px] bg-red-600 py-3 text-[15px] font-semibold font-kumbh text-white shadow-[0_12px_24px_rgba(220,38,38,0.22)] transition-all duration-200 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex-1 rounded-[10px] bg-red-600 py-2.5 text-[14px] font-semibold font-kumbh text-white shadow-[0_10px_20px_rgba(220,38,38,0.2)] transition-all duration-200 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">

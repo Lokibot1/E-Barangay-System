@@ -5,6 +5,7 @@ import {
   BARANGAY_BOUNDARY,
   BARANGAY_CENTER,
   PUROK_CENTERS,
+  PUROK_ZONES,
   HEATMAP_METRICS,
   HEATMAP_METRIC_COLORS,
   getHeatColor,
@@ -57,11 +58,11 @@ const BASEMAP_OPTIONS = [
   {
     key: 'street',
     label: 'Street',
-    description: 'Roads and landmarks',
-    tileUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    description: 'Modern roads and landmarks',
+    tileUrl: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; CARTO',
     maxZoom: 19,
-    previewStyle: { background: 'linear-gradient(135deg, #dcfce7 0%, #bfdbfe 100%)' },
+    previewStyle: { background: 'linear-gradient(135deg, #e0f2fe 0%, #f8fafc 52%, #d1fae5 100%)' },
   },
   {
     key: 'satellite',
@@ -144,7 +145,49 @@ function buildPurokInsight({ metric, metricLabel, purok, metricValue, verificati
   };
 }
 
-function HeatmapMap({ purokData, metric, mapType, t, onAreaClick }) {
+function getZoneLayerStyle({ ratio, isSelected, mapType, metricStyle }) {
+  const fillOpacityBase = mapType === 'satellite' ? 0.2 : 0.14;
+  const fillOpacitySpread = mapType === 'satellite' ? 0.16 : 0.18;
+
+  return {
+    haloWeight: isSelected ? 7 : 5,
+    haloOpacity: mapType === 'satellite' ? 0.58 : 0.82,
+    strokeWeight: isSelected ? 3 : 2.15,
+    strokeOpacity: mapType === 'satellite' ? 0.94 : 0.82,
+    fillOpacity: Math.min((fillOpacityBase + ratio * fillOpacitySpread) * (isSelected ? 1.18 : 1), 0.42),
+    accent: metricStyle.accent,
+  };
+}
+
+function buildPurokChipHtml({ purok, value, accent, isSelected }) {
+  const countBackground = isSelected ? accent : '#0f172a';
+  const countBorder = isSelected ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0.94)';
+  const labelBorder = isSelected ? 'rgba(15,23,42,0.12)' : 'rgba(226,232,240,0.92)';
+
+  return `
+    <div class="heatmap-purok-chip${isSelected ? ' is-selected' : ''}">
+      <span
+        class="heatmap-purok-chip__count"
+        style="
+          background:${countBackground};
+          border-color:${countBorder};
+        "
+      >
+        ${value}
+      </span>
+      <span
+        class="heatmap-purok-chip__label"
+        style="
+          border-color:${labelBorder};
+        "
+      >
+        ${purok}
+      </span>
+    </div>
+  `;
+}
+
+function HeatmapMap({ purokData, metric, metricLabel, mapType, t, onAreaClick, selectedPurokKey }) {
   const mapRef = useRef(null);
   const leafletRef = useRef(null);
   const baseLayerRef = useRef(null);
@@ -152,31 +195,6 @@ function HeatmapMap({ purokData, metric, mapType, t, onAreaClick }) {
 
   const metricStyle = HEATMAP_METRIC_COLORS[metric] ?? HEATMAP_METRIC_COLORS.total;
   const maxVal = Math.max(...purokData.map((p) => Number(p[metric] ?? 0)), 1);
-
-  const isPointInPolygon = (point, polygon) => {
-    const y = point[0];
-    const x = point[1];
-    let inside = false;
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-      const yi = polygon[i][0];
-      const xi = polygon[i][1];
-      const yj = polygon[j][0];
-      const xj = polygon[j][1];
-      const intersect = ((yi > y) !== (yj > y))
-        && (x < ((xj - xi) * (y - yi)) / ((yj - yi) || 1e-12) + xi);
-      if (intersect) inside = !inside;
-    }
-    return inside;
-  };
-
-  const hexToRgb = (hex) => {
-    const normalized = hex.replace('#', '');
-    const full = normalized.length === 3
-      ? normalized.split('').map((char) => `${char}${char}`).join('')
-      : normalized;
-    const int = parseInt(full, 16);
-    return { r: (int >> 16) & 255, g: (int >> 8) & 255, b: int & 255 };
-  };
 
   useEffect(() => {
     if (!mapRef.current || leafletRef.current || typeof window === 'undefined') return;
@@ -205,10 +223,11 @@ function HeatmapMap({ purokData, metric, mapType, t, onAreaClick }) {
     }
 
     L.polygon(BARANGAY_BOUNDARY, {
-      color: COLORS.primary,
-      weight: 2.5,
-      fillOpacity: 0.04,
-      dashArray: '6 4',
+      color: '#4f46e5',
+      weight: 2.2,
+      opacity: 0.78,
+      fillOpacity: 0.03,
+      dashArray: '8 6',
     })
       .addTo(map)
       .bindTooltip('Barangay Gulod, Novaliches, Quezon City');
@@ -253,6 +272,11 @@ function HeatmapMap({ purokData, metric, mapType, t, onAreaClick }) {
 
     nextBaseLayer.addTo(map);
     baseLayerRef.current = nextBaseLayer;
+
+    const container = map.getContainer();
+    if (container) {
+      container.dataset.basemapType = mapType;
+    }
 
     return () => {
       if (baseLayerRef.current === nextBaseLayer) {
@@ -310,6 +334,71 @@ function HeatmapMap({ purokData, metric, mapType, t, onAreaClick }) {
         outline: none !important;
         box-shadow: none !important;
       }
+
+      .heatmap-map-shell[data-basemap-type="street"] .leaflet-control-zoom a {
+        background: rgba(255, 255, 255, 0.92);
+        border-color: rgba(226, 232, 240, 0.95);
+        color: #0f172a;
+        backdrop-filter: blur(10px);
+      }
+
+      .heatmap-map-shell[data-basemap-type="satellite"] .leaflet-control-zoom a {
+        background: rgba(15, 23, 42, 0.88);
+        border-color: rgba(255, 255, 255, 0.14);
+        color: #ffffff;
+        backdrop-filter: blur(12px);
+      }
+
+      .heatmap-map-shell .heatmap-zone-halo {
+        filter: drop-shadow(0 8px 18px rgba(15, 23, 42, 0.08));
+      }
+
+      .heatmap-map-shell .heatmap-zone-fill {
+        mix-blend-mode: multiply;
+      }
+
+      .heatmap-purok-chip {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        transform: translate(-50%, -50%);
+        filter: drop-shadow(0 14px 24px rgba(15, 23, 42, 0.18));
+      }
+
+      .heatmap-purok-chip__count {
+        min-width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 10px;
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        border: 3px solid rgba(255, 255, 255, 0.95);
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+      }
+
+      .heatmap-purok-chip__label {
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(12px);
+        color: #0f172a;
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 1;
+        white-space: nowrap;
+        padding: 6px 10px;
+        border: 1px solid rgba(226, 232, 240, 0.92);
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.1);
+      }
+
+      .heatmap-purok-chip.is-selected .heatmap-purok-chip__label {
+        background: rgba(255, 255, 255, 0.98);
+      }
     `;
     document.head.appendChild(style);
 
@@ -328,138 +417,86 @@ function HeatmapMap({ purokData, metric, mapType, t, onAreaClick }) {
     layersRef.current.forEach((layer) => map.removeLayer(layer));
     layersRef.current = [];
 
-    const orderedPuroks = Object.keys(PUROK_CENTERS);
-    const baseRgb = hexToRgb(metricStyle.accent);
-    const valueByPurok = purokData.reduce((acc, p) => {
-      acc[p.purok] = Number(p[metric] ?? 0);
-      return acc;
-    }, {});
-
-    const lats = BARANGAY_BOUNDARY.map((pt) => pt[0]);
-    const lngs = BARANGAY_BOUNDARY.map((pt) => pt[1]);
-    const minLat = Math.min(...lats);
-    const maxLat = Math.max(...lats);
-    const minLng = Math.min(...lngs);
-    const maxLng = Math.max(...lngs);
-
-    const width = 720;
-    const height = 720;
-    const step = 2;
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return undefined;
-
-    const cols = Math.floor(width / step);
-    const rows = Math.floor(height / step);
-    const assignments = Array.from({ length: rows }, () => Array(cols).fill(-1));
-
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        const x = col * step;
-        const y = row * step;
-        const lat = maxLat - (y / (height - 1)) * (maxLat - minLat);
-        const lng = minLng + (x / (width - 1)) * (maxLng - minLng);
-        if (!isPointInPolygon([lat, lng], BARANGAY_BOUNDARY)) continue;
-
-        let nearestIdx = -1;
-        let minDist = Infinity;
-        orderedPuroks.forEach((name, idx) => {
-          const c = PUROK_CENTERS[name].center;
-          const dLat = lat - c[0];
-          const dLng = lng - c[1];
-          const dist = dLat * dLat + dLng * dLng;
-          if (dist < minDist) {
-            minDist = dist;
-            nearestIdx = idx;
-          }
-        });
-        assignments[row][col] = nearestIdx;
-
-        const nearestPurok = orderedPuroks[nearestIdx];
-        const ratio = Math.min((valueByPurok[nearestPurok] ?? 0) / maxVal, 1);
-        const start = { r: 248, g: 250, b: 252 };
-        const r = Math.round(start.r + (baseRgb.r - start.r) * ratio);
-        const g = Math.round(start.g + (baseRgb.g - start.g) * ratio);
-        const b = Math.round(start.b + (baseRgb.b - start.b) * ratio);
-        ctx.fillStyle = `rgba(${r},${g},${b},0.9)`;
-        ctx.fillRect(x, y, step, step);
-      }
-    }
-
-    ctx.fillStyle = 'rgba(15,23,42,0.55)';
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        const current = assignments[row][col];
-        if (current < 0) continue;
-        const right = col + 1 < cols ? assignments[row][col + 1] : current;
-        const down = row + 1 < rows ? assignments[row + 1][col] : current;
-        const x = col * step;
-        const y = row * step;
-
-        if (right >= 0 && right !== current) ctx.fillRect(x + step - 1, y, 1, step);
-        if (down >= 0 && down !== current) ctx.fillRect(x, y + step - 1, step, 1);
-      }
-    }
-
-    const overlay = L.imageOverlay(
-      canvas.toDataURL('image/png'),
-      [[minLat, minLng], [maxLat, maxLng]],
-      { interactive: false, opacity: 1 }
-    );
-    overlay.addTo(map);
-    layersRef.current.push(overlay);
-
     purokData.forEach((p) => {
       const meta = PUROK_CENTERS[p.purok];
       if (!meta) return;
 
       const val = Number(p[metric] ?? 0);
-      const labelColor = metricStyle.accent;
+      const zone = PUROK_ZONES[p.purok];
+      const ratio = Math.min(val / maxVal, 1);
+      const isSelected = selectedPurokKey === p.purok;
+      const zoneStyle = getZoneLayerStyle({ ratio, isSelected, mapType, metricStyle });
+
+      if (zone?.length) {
+        const halo = L.polygon(zone, {
+          color: '#ffffff',
+          weight: zoneStyle.haloWeight,
+          opacity: zoneStyle.haloOpacity,
+          fillOpacity: 0,
+          className: 'heatmap-zone-halo',
+          lineCap: 'round',
+          lineJoin: 'round',
+        });
+
+        const polygon = L.polygon(zone, {
+          color: zoneStyle.accent,
+          weight: zoneStyle.strokeWeight,
+          opacity: zoneStyle.strokeOpacity,
+          fillColor: zoneStyle.accent,
+          fillOpacity: zoneStyle.fillOpacity,
+          className: 'heatmap-zone-fill',
+          lineCap: 'round',
+          lineJoin: 'round',
+        });
+
+        halo.addTo(map);
+
+        polygon
+          .addTo(map)
+          .bindTooltip(
+            `<strong>${p.purok}</strong><br/>${metricLabel ?? 'Metric'}: ${val}`,
+            { direction: 'top', offset: [0, -4] },
+          );
+
+        polygon.on('click', () => {
+          if (onAreaClick) onAreaClick(p);
+        });
+
+        halo.on('click', () => {
+          if (onAreaClick) onAreaClick(p);
+        });
+
+        layersRef.current.push(halo);
+        layersRef.current.push(polygon);
+      }
+
       const offset = LABEL_OFFSETS[p.purok] ?? [0, 0];
       const labelPosition = [meta.center[0] + offset[0], meta.center[1] + offset[1]];
 
       const labelIcon = L.divIcon({
-        html: `<div style="background:rgba(255,255,255,0.9);color:#0f172a;border-radius:16px;padding:3px 9px;font-size:12px;font-weight:800;white-space:nowrap;border:1px solid rgba(148,163,184,.7);box-shadow:0 2px 5px rgba(0,0,0,.2)">${p.purok} - <span style="color:${labelColor};font-weight:900">${val}</span></div>`,
+        html: buildPurokChipHtml({
+          purok: p.purok,
+          value: val,
+          accent: metricStyle.accent,
+          isSelected,
+        }),
         className: '',
-        iconAnchor: [45, 12],
+        iconSize: [112, 74],
+        iconAnchor: [56, 37],
       });
-      const label = L.marker(labelPosition, { icon: labelIcon, interactive: false });
+      const label = L.marker(labelPosition, { icon: labelIcon, interactive: true });
+      label.on('click', () => {
+        if (onAreaClick) onAreaClick(p);
+      });
       label.addTo(map);
       layersRef.current.push(label);
     });
-
-    const handleMapClick = (e) => {
-      const lat = e.latlng.lat;
-      const lng = e.latlng.lng;
-      if (!isPointInPolygon([lat, lng], BARANGAY_BOUNDARY)) return;
-
-      let nearestPurok = null;
-      let minDist = Infinity;
-      Object.entries(PUROK_CENTERS).forEach(([name, meta]) => {
-        const dLat = lat - meta.center[0];
-        const dLng = lng - meta.center[1];
-        const dist = dLat * dLat + dLng * dLng;
-        if (dist < minDist) {
-          minDist = dist;
-          nearestPurok = name;
-        }
-      });
-
-      const selected = purokData.find((p) => p.purok === nearestPurok);
-      if (selected && onAreaClick) onAreaClick(selected);
-    };
-
-    map.on('click', handleMapClick);
-    return () => {
-      map.off('click', handleMapClick);
-    };
-  }, [metric, purokData, maxVal, metricStyle, onAreaClick]);
+  }, [mapType, metric, metricLabel, purokData, maxVal, metricStyle, onAreaClick, selectedPurokKey]);
 
   return (
     <div
       ref={mapRef}
+      data-basemap-type={mapType}
       className={`heatmap-map-shell relative z-0 w-full overflow-hidden rounded-[26px] border shadow-[0_18px_36px_rgba(15,23,42,0.08)] ${t ? t.cardBorder : 'border-gray-200'}`}
       style={{ height: 420 }}
     />
@@ -752,9 +789,11 @@ export default function HeatmapTab({ raw, t }) {
                 <HeatmapMap
                   purokData={purokData}
                   metric={metric}
+                  metricLabel={selectedMetric.label}
                   mapType={mapType}
                   t={t}
                   onAreaClick={setSelectedPurok}
+                  selectedPurokKey={selectedPurok?.purok ?? null}
                 />
 
                 {selectedPurok ? (

@@ -40,6 +40,7 @@ import bgyLogo from "../../assets/images/bgylogo.png";
 const DRAFT_KEY = "signup_draft";
 // Fields that cannot be serialised to localStorage (File objects)
 const NON_SERIALISABLE = ["idFront", "idBack"];
+const DEBUG_AUTOFILL_VISIBILITY_EVENT = "DEBUG_AUTOFILL_VISIBILITY";
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -48,6 +49,9 @@ const SignupPage = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [slidingOut, setSlidingOut] = useState(false);
   const [draftBanner, setDraftBanner] = useState(false); // show resume-draft notice
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [hasDownloadedSlip, setHasDownloadedSlip] = useState(false);
+  const [showSlipReminder, setShowSlipReminder] = useState(false);
 
   // ── Toast state ───────────────────────────────────────────────────────────
   const [toasts, setToasts] = useState([]);
@@ -151,6 +155,27 @@ const SignupPage = () => {
     }
   }, [authSuccess]);
 
+  useEffect(() => {
+    setHasDownloadedSlip(false);
+    setShowSlipReminder(false);
+  }, [authSuccess]);
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent(DEBUG_AUTOFILL_VISIBILITY_EVENT, {
+        detail: Boolean(authSuccess || loading || isReviewOpen),
+      }),
+    );
+
+    return () => {
+      window.dispatchEvent(
+        new CustomEvent(DEBUG_AUTOFILL_VISIBILITY_EVENT, {
+          detail: false,
+        }),
+      );
+    };
+  }, [authSuccess, isReviewOpen, loading]);
+
   const clearDraft = useCallback(() => {
     localStorage.removeItem(DRAFT_KEY);
     setDraftBanner(false);
@@ -245,6 +270,35 @@ const SignupPage = () => {
     setTimeout(() => navigate("/login", { state: { from: "signup" } }), 280);
   };
 
+  const handleDownloadTrackingSlip = () => {
+    const fullName = [
+      formData.firstName,
+      formData.middleName,
+      formData.lastName,
+      formData.suffix,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toUpperCase();
+
+    handleDownloadSlip({
+      name: fullName,
+      trackingNumber: authSuccess?.code || authSuccess?.cardText || "N/A",
+      status: "Pending Verification",
+      submittedDate: new Date().toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      }),
+    });
+
+    setHasDownloadedSlip(true);
+  };
+
+  const handleReturnToLoginReminder = () => {
+    setShowSlipReminder(true);
+  };
+
   return (
     <div
       className={`min-h-screen w-screen relative overflow-x-hidden ${t.pageBg}`}
@@ -270,75 +324,105 @@ const SignupPage = () => {
 
       {/* ── SUCCESS MODAL ──────────────────────────────────────────────────── */}
       {authSuccess && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div
-            className={`w-full max-w-md p-5 sm:p-8 rounded-[24px] sm:rounded-[36px] border shadow-2xl ${panelClass}`}
-          >
-            <div className="w-20 h-20 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="text-emerald-500" size={42} />
-            </div>
-            <h2 className="text-2xl font-black uppercase tracking-tighter text-center mb-2 font-spartan">
-              {authSuccess.title || "Registration Sent"}
-            </h2>
-            <p
-              className={`text-[11px] font-bold uppercase tracking-wider text-center mb-6 font-kumbh ${mutedClass}`}
-            >
-              {authSuccess.msg || "Please save your tracking number below."}
-            </p>
+        <>
+          <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
             <div
-              className={`rounded-3xl p-6 mb-6 border-2 border-dashed ${
-                isDarkMode
-                  ? "bg-slate-950/70 border-emerald-500/40"
-                  : "bg-slate-50 border-emerald-500/40"
-              }`}
+              className={`w-full max-w-md p-5 sm:p-8 rounded-[24px] sm:rounded-[36px] border shadow-2xl ${panelClass}`}
             >
+              <div className="w-20 h-20 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="text-emerald-500" size={42} />
+              </div>
+              <h2 className="text-2xl font-black uppercase tracking-tighter text-center mb-2 font-spartan">
+                {authSuccess.title || "Registration Sent"}
+              </h2>
               <p
-                className={`text-[10px] font-black uppercase tracking-widest text-center mb-2 font-kumbh ${mutedClass}`}
+                className={`text-[11px] font-bold uppercase tracking-wider text-center mb-6 font-kumbh ${mutedClass}`}
               >
-                Tracking Number
+                {authSuccess.msg || "Please save your tracking number below."}
               </p>
-              <p className="text-3xl font-black text-emerald-500 tracking-tight text-center font-spartan">
-                {authSuccess.code || authSuccess.cardText || "N/A"}
-              </p>
-            </div>
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={() => {
-                  const fullName = [
-                    formData.firstName,
-                    formData.middleName,
-                    formData.lastName,
-                    formData.suffix,
-                  ]
-                    .filter(Boolean)
-                    .join(" ")
-                    .toUpperCase();
-                  handleDownloadSlip({
-                    name: fullName,
-                    trackingNumber:
-                      authSuccess.code || authSuccess.cardText || "N/A",
-                    status: "Pending Verification",
-                    submittedDate: new Date().toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    }),
-                  });
-                }}
-                className="w-full py-4 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl font-black uppercase text-[11px] tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 font-kumbh"
+              <div
+                className={`rounded-3xl p-6 mb-6 border-2 border-dashed ${
+                  isDarkMode
+                    ? "bg-slate-950/70 border-emerald-500/40"
+                    : "bg-slate-50 border-emerald-500/40"
+                }`}
               >
-                <Download size={16} /> Download Slip
-              </button>
-              <button
-                onClick={goToLogin}
-                className={`w-full py-2 font-black uppercase text-[10px] tracking-widest transition-colors font-kumbh ${mutedClass} hover:text-emerald-500`}
-              >
-                Return to Login
-              </button>
+                <p
+                  className={`text-[10px] font-black uppercase tracking-widest text-center mb-2 font-kumbh ${mutedClass}`}
+                >
+                  Tracking Number
+                </p>
+                <p className="text-3xl font-black text-emerald-500 tracking-tight text-center font-spartan">
+                  {authSuccess.code || authSuccess.cardText || "N/A"}
+                </p>
+              </div>
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={handleDownloadTrackingSlip}
+                  className="w-full py-4 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl font-black uppercase text-[11px] tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 font-kumbh"
+                >
+                  <Download size={16} /> Download Slip
+                </button>
+                <button
+                  onClick={handleReturnToLoginReminder}
+                  className={`w-full py-2 font-black uppercase text-[10px] tracking-widest transition-colors font-kumbh ${mutedClass} hover:text-emerald-500`}
+                >
+                  Return to Login
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+
+          {showSlipReminder && (
+            <div className="fixed inset-0 z-[95] flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm">
+              <div
+                className={`w-full max-w-sm rounded-[28px] border p-5 sm:p-6 shadow-2xl ${panelClass}`}
+              >
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-500/15">
+                  <Info className="text-amber-500" size={28} />
+                </div>
+                <h3 className="text-center text-xl font-black uppercase tracking-tight font-spartan">
+                  Download Reminder
+                </h3>
+                <p className={`mt-3 text-center text-sm font-kumbh ${strongMutedClass}`}>
+                  {hasDownloadedSlip
+                    ? "You have already downloaded the slip. Please make sure it is saved before returning to login."
+                    : "Have you downloaded the slip already? It is best to download it first so you have a copy of your tracking number."}
+                </p>
+                <div className="mt-6 flex flex-col gap-3">
+                  {!hasDownloadedSlip && (
+                    <button
+                      type="button"
+                      onClick={handleDownloadTrackingSlip}
+                      className="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl font-black uppercase text-[11px] tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 font-kumbh"
+                    >
+                      <Download size={15} /> Download Slip First
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={goToLogin}
+                    className={`w-full py-3 rounded-2xl font-black uppercase text-[11px] tracking-widest transition-colors font-kumbh ${
+                      isDarkMode
+                        ? "bg-white text-slate-900 hover:bg-slate-100"
+                        : "bg-slate-900 text-white hover:bg-slate-800"
+                    }`}
+                  >
+                    Continue to Login
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowSlipReminder(false)}
+                    className={`w-full py-2 font-black uppercase text-[10px] tracking-widest transition-colors font-kumbh ${mutedClass} hover:text-emerald-500`}
+                  >
+                    Stay Here
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* ── TOP BAR ────────────────────────────────────────────────────────── */}
@@ -492,6 +576,7 @@ const SignupPage = () => {
                     currentTheme={isDarkMode ? "dark" : lightTheme}
                     handleSubmit={submitAuth}
                     loading={loading}
+                    onReviewOpenChange={setIsReviewOpen}
                     purokList={purokList}
                     allStreets={allStreets}
                     addressExists={addressExists}

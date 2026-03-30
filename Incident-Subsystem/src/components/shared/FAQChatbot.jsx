@@ -73,6 +73,7 @@ const FAQChatbot = ({ currentTheme }) => {
   const [showQuickQuestions, setShowQuickQuestions] = useState(true);
   const [conversationEnded, setConversationEnded] = useState(false);
   const messagesEndRef = useRef(null);
+  const replyTimeoutRef = useRef(null);
 
   const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
@@ -550,6 +551,15 @@ const FAQChatbot = ({ currentTheme }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(
+    () => () => {
+      if (replyTimeoutRef.current) {
+        window.clearTimeout(replyTimeoutRef.current);
+      }
+    },
+    [],
+  );
+
   const findAnswer = (question) => {
     const lowerQuestion = question.toLowerCase();
 
@@ -616,6 +626,11 @@ const FAQChatbot = ({ currentTheme }) => {
   };
 
   const handleNewConversation = () => {
+    if (replyTimeoutRef.current) {
+      window.clearTimeout(replyTimeoutRef.current);
+      replyTimeoutRef.current = null;
+    }
+
     setMessages([
       {
         type: "bot",
@@ -626,52 +641,17 @@ const FAQChatbot = ({ currentTheme }) => {
     ]);
     setShowQuickQuestions(true);
     setConversationEnded(false);
+    setIsTyping(false);
   };
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
+  const queueBotReply = (question) => {
+    if (replyTimeoutRef.current) {
+      window.clearTimeout(replyTimeoutRef.current);
+    }
 
-    const outbound = inputValue;
-    const userMessage = {
-      type: "user",
-      text: outbound,
-      links: [],
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInputValue("");
     setIsTyping(true);
-    setShowQuickQuestions(false);
 
-    setTimeout(() => {
-      const { text, links } = findAnswer(outbound);
-      const botMessage = {
-        type: "bot",
-        text,
-        links,
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, botMessage]);
-      setIsTyping(false);
-      pushFollowup();
-    }, 1000);
-  };
-
-  const handleQuickQuestion = (question) => {
-    const userMessage = {
-      type: "user",
-      text: question,
-      links: [],
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setIsTyping(true);
-    setShowQuickQuestions(false);
-
-    setTimeout(() => {
+    replyTimeoutRef.current = window.setTimeout(() => {
       const { text, links } = findAnswer(question);
       const botMessage = {
         type: "bot",
@@ -682,8 +662,34 @@ const FAQChatbot = ({ currentTheme }) => {
 
       setMessages((prev) => [...prev, botMessage]);
       setIsTyping(false);
+      replyTimeoutRef.current = null;
       pushFollowup();
     }, 1000);
+  };
+
+  const submitMessage = (question) => {
+    const outbound = String(question || "").trim();
+    if (!outbound || isTyping) return;
+
+    const userMessage = {
+      type: "user",
+      text: outbound,
+      links: [],
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue("");
+    setShowQuickQuestions(false);
+    queueBotReply(outbound);
+  };
+
+  const handleSend = () => {
+    submitMessage(inputValue);
+  };
+
+  const handleQuickQuestion = (question) => {
+    submitMessage(question);
   };
 
   const handleKeyPress = (e) => {

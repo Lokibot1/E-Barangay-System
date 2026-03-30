@@ -3,6 +3,7 @@ import { incidentService } from "../../services/sub-system-3/incidentService";
 import { getAllComplaints } from "../../services/sub-system-3/complaintService";
 import { residentService } from "../../services/sub-system-1/residents";
 import {
+  AUTH_UNAUTHORIZED_EVENT,
   isAdmin,
   isAuthenticated,
 } from "../../homepage/services/loginService";
@@ -33,11 +34,24 @@ const useRealTimeEvents = ({
   const bufferRef = useRef([]);
   const flushTimerRef = useRef(null);
   const intervalRef = useRef(null);
+  const isAuthInvalidRef = useRef(false);
 
   // ── Exposed state ─────────────────────────────────────────────────────
   const [newEvents, setNewEvents] = useState([]);
   const [isPolling, setIsPolling] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
+
+  const stopPolling = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    if (flushTimerRef.current) {
+      clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = null;
+    }
+    setIsPolling(false);
+  }, []);
 
   // Debounced flush — accumulates new items then pushes them in one batch
   const scheduleFlush = useCallback(() => {
@@ -53,7 +67,10 @@ const useRealTimeEvents = ({
 
   // Single poll cycle
   const poll = useCallback(async () => {
-    if (!isAuthenticated() || !isAdmin()) return;
+    if (isAuthInvalidRef.current || !isAuthenticated() || !isAdmin()) {
+      stopPolling();
+      return;
+    }
 
     setIsPolling(true);
     try {
@@ -209,11 +226,29 @@ const useRealTimeEvents = ({
 
       setLastUpdated(new Date());
     } catch (err) {
+      const message = String(err?.message || "").toLowerCase();
+      const isUnauthorized =
+        err?.response?.status === 401 ||
+        message.includes("unauthenticated") ||
+        message.includes("you must be logged in");
+      if (isUnauthorized) {
+        isAuthInvalidRef.current = true;
+        stopPolling();
+        return;
+      }
+
+      const isTransientNetworkIssue =
+        message.includes("server is currently unavailable") ||
+        message.includes("appear to be offline");
+      if (isTransientNetworkIssue) {
+        return;
+      }
+
       console.error("Real-time polling error:", err);
     } finally {
       setIsPolling(false);
     }
-  }, [scheduleFlush]);
+  }, [scheduleFlush, stopPolling]);
 
   // Clear consumed events
   const clearEvents = useCallback(() => {
@@ -221,19 +256,36 @@ const useRealTimeEvents = ({
     bufferRef.current = [];
   }, []);
 
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      isAuthInvalidRef.current = true;
+      stopPolling();
+    };
+
+    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
+
+    return () => {
+      window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
+    };
+  }, [stopPolling]);
+
   // ── Start / stop polling ──────────────────────────────────────────────
   useEffect(() => {
-    if (!enabled || !isAuthenticated() || !isAdmin()) return;
+    if (!enabled || !isAuthenticated() || !isAdmin()) {
+      stopPolling();
+      return;
+    }
+
+    isAuthInvalidRef.current = false;
 
     // Immediate first poll
     poll();
     intervalRef.current = setInterval(poll, pollingInterval);
 
     return () => {
-      clearInterval(intervalRef.current);
-      if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
+      stopPolling();
     };
-  }, [enabled, pollingInterval, poll]);
+  }, [enabled, pollingInterval, poll, stopPolling]);
 
   return { newEvents, clearEvents, isPolling, lastUpdated };
 };

@@ -2,22 +2,22 @@ import { Award } from "lucide-react";
 
 export default function OfficialsSection({ officials, isDarkMode, fallbackImage }) {
   return (
-    <section id="officials" className="py-16 md:py-24 px-6 scroll-mt-24">
+    <section id="officials" className="px-6 py-12 scroll-mt-24 md:py-16">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-[8px] md:text-[10px] font-black text-emerald-600 uppercase tracking-[0.4em] mb-4">
+        <div className="mb-8 text-center md:mb-10">
+          <h2 className="mb-3 text-[8px] font-black uppercase tracking-[0.28em] text-emerald-600 md:text-[9px]">
             Serbisyo at Pamumuno
           </h2>
-          <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tighter">
+          <h3 className="text-3xl font-black uppercase tracking-tighter md:text-4xl">
             Barangay Officials
           </h3>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-8">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-5 lg:grid-cols-5">
           {officials.map((person) => (
             <div key={person.id} className="text-center group">
               <div
-                className={`relative aspect-[3/4] rounded-[24px] md:rounded-[32px] overflow-hidden mb-4 md:mb-6 border-2 transition-all duration-500 group-hover:border-emerald-500 ${
+                className={`relative aspect-[3/4] overflow-hidden rounded-[20px] border-2 mb-3 transition-all duration-500 group-hover:border-emerald-500 md:mb-4 md:rounded-[24px] ${
                   isDarkMode
                     ? "border-white/5 bg-slate-900"
                     : "border-black/5 bg-slate-50"
@@ -32,17 +32,17 @@ export default function OfficialsSection({ officials, isDarkMode, fallbackImage 
                     e.currentTarget.src = fallbackImage;
                   }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                  <Award className="text-white mb-2" size={16} />
+                <div className="absolute inset-0 flex items-end bg-gradient-to-t from-emerald-900/80 to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  <Award className="mb-1 text-white" size={14} />
                 </div>
               </div>
-              <h4 className="text-[10px] md:text-xs font-black uppercase tracking-tight mb-1">
+              <h4 className="mb-1 text-[9px] font-black uppercase tracking-tight md:text-[10px]">
                 {person.name}
               </h4>
-              <p className="text-[8px] md:text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">
+              <p className="mb-1 text-[7px] font-black uppercase tracking-[0.14em] text-emerald-600 md:text-[8px]">
                 {person.role}
               </p>
-              <p className="text-[7px] md:text-[8px] opacity-40 font-bold uppercase tracking-tighter">
+              <p className="text-[6px] font-bold uppercase tracking-tight opacity-40 md:text-[7px]">
                 {person.committee}
               </p>
             </div>

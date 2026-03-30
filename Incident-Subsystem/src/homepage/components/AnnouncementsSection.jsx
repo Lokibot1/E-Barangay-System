@@ -36,31 +36,31 @@ export default function AnnouncementsSection({
   }, [activeFilter, announcements, query]);
 
   return (
-    <section id="news" className="py-16 md:py-24 px-6 scroll-mt-20">
+    <section id="news" className="px-6 py-12 scroll-mt-20 md:py-16">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-12 gap-4">
+        <div className="mb-8 flex flex-col justify-between gap-4 md:mb-10 md:flex-row md:items-end">
           <div>
-            <h2 className="text-[8px] md:text-[10px] font-black text-emerald-600 uppercase tracking-[0.4em] mb-3 md:mb-4">
+            <h2 className="mb-2 text-[8px] font-black uppercase tracking-[0.32em] text-emerald-600 md:mb-3 md:text-[9px]">
               Live Updates
             </h2>
-            <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tighter">
+            <h3 className="text-3xl font-black uppercase tracking-tighter md:text-4xl">
               Announcements
             </h3>
           </div>
-          <p className="text-[10px] font-bold opacity-50 uppercase tracking-widest flex items-center gap-2">
+          <p className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.18em] opacity-50 md:text-[10px]">
             <Bell size={12} className="animate-pulse text-red-500" /> Stay updated
             with community news
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-3 lg:gap-4 mb-8">
+        <div className="mb-6 flex flex-col gap-3 lg:mb-7 lg:flex-row lg:gap-4">
           <div className="flex flex-wrap gap-2">
             {filterOptions.map((option) => (
               <button
                 key={option}
                 type="button"
                 onClick={() => setActiveFilter(option)}
-                className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${
+                className={`rounded-full border px-3.5 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] transition-all ${
                   activeFilter === option
                     ? "bg-emerald-600 text-white border-emerald-600"
                     : isDarkMode
@@ -73,25 +73,25 @@ export default function AnnouncementsSection({
             ))}
           </div>
           <div
-            className={`lg:ml-auto flex items-center gap-2 px-4 py-2 rounded-full border ${
+            className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 lg:ml-auto ${
               isDarkMode ? "bg-slate-900 border-white/10" : "bg-white border-black/10"
             }`}
           >
-            <Search size={14} className="text-emerald-600" />
+            <Search size={13} className="text-emerald-600" />
             <input
               type="text"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search announcements..."
-              className="bg-transparent outline-none text-xs w-full md:w-[230px]"
+              className="w-full bg-transparent text-[0.8rem] outline-none md:w-[210px]"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {filteredAnnouncements.length === 0 ? (
             <div
-              className={`col-span-full rounded-[28px] border p-10 text-center ${
+              className={`col-span-full rounded-[24px] border p-8 text-center ${
                 isDarkMode ? "bg-slate-900 border-white/10" : "bg-white border-black/5"
               }`}
             >
@@ -100,57 +100,100 @@ export default function AnnouncementsSection({
               </p>
             </div>
           ) : (
-            filteredAnnouncements.map((news) => (
-              <div
-                key={news.id}
-                className={`group rounded-[32px] md:rounded-[40px] border overflow-hidden transition-all hover:-translate-y-2 ${
-                  isDarkMode
-                    ? "bg-slate-900 border-white/5"
-                    : "bg-white border-black/5 shadow-sm hover:shadow-xl"
-                }`}
-              >
-                <div className="h-44 md:h-52 overflow-hidden">
-                  <img
-                    src={news.image}
-                    alt={news.title}
-                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = fallbackImage;
-                    }}
-                  />
-                </div>
-                <div className="p-6 md:p-8">
-                  <div className="flex justify-between items-center mb-6">
-                    <span
-                      className={`text-[8px] md:text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest ${
-                        news.urgent
-                          ? "bg-red-500 text-white"
-                          : "bg-emerald-500/20 text-emerald-600"
-                      }`}
-                    >
-                      {news.tag}
-                    </span>
-                    <span className="text-[9px] md:text-[10px] opacity-40 font-bold tracking-widest">
-                      {news.date}
-                    </span>
+            filteredAnnouncements.map((news) => {
+              const hasVisualMedia = Boolean(news.media?.url || news.image);
+
+              return (
+                <div
+                  key={news.id}
+                  className={`group overflow-hidden rounded-[28px] border transition-all hover:-translate-y-2 md:rounded-[32px] ${
+                    isDarkMode
+                      ? "bg-slate-900 border-white/5"
+                      : "bg-white border-black/5 shadow-sm hover:shadow-xl"
+                  }`}
+                >
+                  <div className="h-36 overflow-hidden md:h-44">
+                    {news.media?.kind === "video" && news.media?.url ? (
+                      <video
+                        src={news.media.url}
+                        poster={fallbackImage}
+                        className="w-full h-full object-cover"
+                        muted
+                        autoPlay
+                        loop
+                        playsInline
+                        preload="metadata"
+                      />
+                    ) : hasVisualMedia ? (
+                      <img
+                        src={news.media?.url || news.image}
+                        alt={news.title}
+                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = fallbackImage;
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className={`flex h-full w-full flex-col justify-end bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.16),_transparent_45%),linear-gradient(180deg,#f8fafc,#e2e8f0)] p-4 ${
+                          isDarkMode
+                            ? "bg-[radial-gradient(circle_at_top,_rgba(52,211,153,0.18),_transparent_42%),linear-gradient(180deg,#0f172a,#020617)]"
+                            : ""
+                        }`}
+                      >
+                        <span className="inline-flex w-fit rounded-full bg-white/80 px-3 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-emerald-700 shadow-sm">
+                          {news.tag || "Announcement"}
+                        </span>
+                        <p
+                          className={`mt-2.5 max-w-[220px] text-base font-black uppercase leading-tight ${
+                            isDarkMode ? "text-white" : "text-slate-900"
+                          }`}
+                        >
+                          {news.title}
+                        </p>
+                        <p
+                          className={`mt-1.5 text-[0.78rem] ${
+                            isDarkMode ? "text-slate-300" : "text-slate-600"
+                          }`}
+                        >
+                          No media attached yet
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <h4 className="text-lg md:text-xl font-black uppercase mb-4 leading-tight group-hover:text-emerald-600 transition-colors">
-                    {news.title}
-                  </h4>
-                  <p className="text-xs md:text-sm opacity-60 leading-relaxed mb-8">
-                    {news.desc}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => onReadMore(news)}
-                    className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 text-emerald-600 hover:gap-4 transition-all"
-                  >
-                    Read More <ArrowUp size={12} className="rotate-45" />
-                  </button>
+                  <div className="p-5 text-left md:p-6">
+                    <div className="mb-4 flex items-center justify-between">
+                      <span
+                        className={`rounded-full px-3 py-1 text-[8px] font-black uppercase tracking-[0.14em] md:text-[8px] ${
+                          news.urgent
+                            ? "bg-red-500 text-white"
+                            : "bg-emerald-500/20 text-emerald-600"
+                        }`}
+                      >
+                        {news.tag}
+                      </span>
+                      <span className="text-[8px] font-bold tracking-[0.14em] opacity-40 md:text-[9px]">
+                        {news.date}
+                      </span>
+                    </div>
+                    <h4 className="mb-3 text-left text-base font-black uppercase leading-tight transition-colors group-hover:text-emerald-600 md:text-[1.35rem]">
+                      {news.title}
+                    </h4>
+                    <p className="mb-6 text-left text-[0.82rem] leading-7 opacity-60 md:text-[0.9rem]">
+                      {news.desc}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => onReadMore(news)}
+                      className="flex items-center gap-2 text-[8px] font-black uppercase tracking-[0.18em] text-emerald-600 transition-all hover:gap-4 md:text-[9px]"
+                    >
+                      Read More <ArrowUp size={12} className="rotate-45" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

@@ -8,21 +8,21 @@ export default function ContactSection({
   onContactChange,
 }) {
   return (
-    <section id="contact" className="py-16 md:py-24 px-6 scroll-mt-24">
+    <section id="contact" className="px-6 py-12 scroll-mt-24 md:py-16">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-[8px] md:text-[10px] font-black text-emerald-600 uppercase tracking-[0.4em] mb-4">
+        <div className="mb-8 text-center md:mb-10">
+          <h2 className="mb-3 text-[8px] font-black uppercase tracking-[0.26em] text-emerald-600 md:text-[9px]">
             Official Contact
           </h2>
-          <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tighter">
+          <h3 className="text-3xl font-black uppercase tracking-tighter md:text-4xl">
             Barangay Hall
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
-          <div className="space-y-6 md:space-y-8 order-2 lg:order-1">
+        <div className="grid grid-cols-1 gap-6 md:gap-8 lg:grid-cols-2">
+          <div className="order-2 space-y-5 md:space-y-6 lg:order-1">
             <div
-              className={`p-6 md:p-8 rounded-[32px] md:rounded-[40px] border ${
+              className={`rounded-[24px] border p-5 md:rounded-[28px] md:p-6 ${
                 isDarkMode ? "bg-slate-900 border-white/5" : "bg-slate-50 border-black/5"
               }`}
             >
@@ -31,7 +31,7 @@ export default function ContactSection({
                   <input
                     required
                     placeholder="Your Name"
-                    className={`w-full p-4 rounded-xl text-[10px] uppercase font-black tracking-widest outline-none border transition-all ${
+                    className={`w-full rounded-xl border p-3 text-[9px] font-black uppercase tracking-[0.14em] outline-none transition-all ${
                       isDarkMode ? "bg-black/40 border-white/10" : "bg-white border-black/10"
                     }`}
                     value={contactData.name}
@@ -41,7 +41,7 @@ export default function ContactSection({
                     required
                     type="email"
                     placeholder="Email Address"
-                    className={`w-full p-4 rounded-xl text-[10px] uppercase font-black tracking-widest outline-none border transition-all ${
+                    className={`w-full rounded-xl border p-3 text-[9px] font-black uppercase tracking-[0.14em] outline-none transition-all ${
                       isDarkMode ? "bg-black/40 border-white/10" : "bg-white border-black/10"
                     }`}
                     value={contactData.email}
@@ -52,40 +52,40 @@ export default function ContactSection({
                   required
                   rows="4"
                   placeholder="Message to the Barangay Office"
-                  className={`w-full p-4 rounded-xl text-[10px] uppercase font-black tracking-widest outline-none border transition-all ${
+                  className={`w-full rounded-xl border p-3 text-[9px] font-black uppercase tracking-[0.14em] outline-none transition-all ${
                     isDarkMode ? "bg-black/40 border-white/10" : "bg-white border-black/10"
                   }`}
                   value={contactData.message}
                   onChange={(e) => onContactChange("message", e.target.value)}
                 />
-                <button className="w-full py-4 bg-emerald-700 text-white rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-emerald-800 transition-all flex items-center justify-center gap-2">
+                <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 py-3 text-[9px] font-black uppercase tracking-[0.14em] text-white transition-all hover:bg-emerald-800">
                   {formStatus === "submitting" ? (
                     "Sending..."
                   ) : formStatus === "success" ? (
                     "Message Sent!"
                   ) : (
                     <>
-                      <Send size={14} /> Submit Message
+                      <Send size={13} /> Submit Message
                     </>
                   )}
                 </button>
               </form>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className={`p-5 rounded-2xl ${isDarkMode ? "bg-slate-900" : "bg-emerald-50"}`}>
-                <Clock className="text-emerald-600 mb-2" size={16} />
-                <p className="text-[9px] font-black uppercase tracking-widest">Mon - Fri</p>
-                <p className="text-[9px] font-bold opacity-60">8 AM - 5 PM</p>
+              <div className={`rounded-2xl p-4 ${isDarkMode ? "bg-slate-900" : "bg-emerald-50"}`}>
+                <Clock className="mb-2 text-emerald-600" size={15} />
+                <p className="text-[8px] font-black uppercase tracking-[0.14em]">Mon - Fri</p>
+                <p className="text-[8px] font-bold opacity-60">8 AM - 5 PM</p>
               </div>
-              <div className={`p-5 rounded-2xl ${isDarkMode ? "bg-slate-900" : "bg-emerald-50"}`}>
-                <Phone className="text-emerald-600 mb-2" size={16} />
-                <p className="text-[9px] font-black uppercase tracking-widest">Hotline</p>
-                <p className="text-[9px] font-bold opacity-60">8-920-0000</p>
+              <div className={`rounded-2xl p-4 ${isDarkMode ? "bg-slate-900" : "bg-emerald-50"}`}>
+                <Phone className="mb-2 text-emerald-600" size={15} />
+                <p className="text-[8px] font-black uppercase tracking-[0.14em]">Hotline</p>
+                <p className="text-[8px] font-bold opacity-60">8-920-0000</p>
               </div>
             </div>
           </div>
 
-          <div className="h-[300px] md:h-[500px] rounded-[32px] md:rounded-[40px] overflow-hidden border border-emerald-500/20 relative order-1 lg:order-2">
+          <div className="relative order-1 h-[260px] overflow-hidden rounded-[24px] border border-emerald-500/20 md:h-[420px] md:rounded-[28px] lg:order-2">
             <iframe
               title="Map"
               src="https://www.google.com/maps?q=Villareal%20St.%2C%20Gulod%2C%20Quezon%20City&output=embed"
@@ -95,11 +95,11 @@ export default function ContactSection({
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
             />
-            <div className="absolute bottom-4 left-4 right-4 p-4 md:p-6 bg-emerald-800/90 backdrop-blur-md text-white rounded-[24px]">
-              <p className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] mb-1">
+            <div className="absolute bottom-3 left-3 right-3 rounded-[20px] bg-emerald-800/90 p-4 text-white backdrop-blur-md md:bottom-4 md:left-4 md:right-4 md:p-5">
+              <p className="mb-1 text-[8px] font-black uppercase tracking-[0.16em] md:text-[9px]">
                 Barangay Hall Location
               </p>
-              <p className="text-[10px] md:text-xs opacity-80 uppercase font-bold">
+              <p className="text-[9px] font-bold uppercase opacity-80 md:text-[10px]">
                 Villareal St., Gulod, Quezon City
               </p>
             </div>

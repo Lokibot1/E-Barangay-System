@@ -6,10 +6,12 @@ import React, {
   useCallback,
   useRef,
 } from "react";
+import { useLocation } from "react-router-dom";
 import { useLanguage } from "../../../context/LanguageContext";
 import themeTokens from "../../../Themetokens";
 import Toast from "../../../components/shared/modals/Toast";
 import DatePickerField from "../../../components/shared/DatePickerField";
+import RecordTimeline from "../../../components/shared/RecordTimeline";
 import {
   rescheduleAppointment,
   createAppointment,
@@ -20,6 +22,11 @@ import {
 } from "../../../services/sub-system-3/appointmentService";
 import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
 import ConfirmationModal from "../../../components/shared/ConfirmationModal";
+import {
+  canManageAppointments,
+  canViewAppointments,
+} from "../../../homepage/services/loginService";
+import { downloadRecordsAsCsv } from "../../../utils/exportRecords";
 
 const ROWS_PER_PAGE = 5;
 const POLL_INTERVAL = 30_000; // 30 s background refresh
@@ -707,11 +714,94 @@ const formatDate = (ds) => {
 };
 
 // ── Appointment Details Modal ─────────────────────────────────────────────────
+const formatTimelineDate = (value) => {
+  const parsed = value ? new Date(value) : null;
+  if (!parsed || Number.isNaN(parsed.getTime())) {
+    return value || "Unknown time";
+  }
+
+  return parsed.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
+const buildAppointmentTimeline = (appointment) => {
+  if (!appointment) return [];
+
+  const parsedSchedule = parseScheduledAt(appointment.scheduled_at);
+  const status = String(appointment.status || "scheduled")
+    .toLowerCase()
+    .replace(/-/g, "_");
+  const scheduleDate = parsedSchedule.date || appointment.date;
+  const scheduleTime = parsedSchedule.time || appointment.time;
+  const baseSchedule =
+    appointment.scheduled_at ||
+    (scheduleDate && scheduleTime
+      ? `${scheduleDate}T${scheduleTime}:00`
+      : scheduleDate || "");
+
+  const items = [
+    {
+      id: "created",
+      title: "Appointment created",
+      description:
+        appointment.complainant_name
+          ? `A hearing slot was created for ${appointment.complainant_name}.`
+          : "A hearing slot was added to the complaint record.",
+      meta: formatTimelineDate(appointment.created_at || baseSchedule),
+      tone: "info",
+    },
+    baseSchedule
+      ? {
+          id: "scheduled",
+          title: status === "rescheduled" ? "Latest schedule" : "Scheduled hearing",
+          description: `Set for ${formatDate(scheduleDate)} at ${formatTime(scheduleTime)}.`,
+          meta: formatTimelineDate(baseSchedule),
+          tone: status === "rescheduled" ? "warning" : "info",
+        }
+      : null,
+  ];
+
+  if (status === "completed") {
+    items.push({
+      id: "completed",
+      title: "Appointment completed",
+      description: "The hearing was marked as completed.",
+      meta: formatTimelineDate(appointment.updated_at || baseSchedule),
+      tone: "success",
+    });
+  } else if (status === "no_show") {
+    items.push({
+      id: "no-show",
+      title: "Marked as no show",
+      description: "The scheduled hearing ended without attendance.",
+      meta: formatTimelineDate(appointment.updated_at || baseSchedule),
+      tone: "danger",
+    });
+  } else if (status === "cancelled") {
+    items.push({
+      id: "cancelled",
+      title: "Appointment cancelled",
+      description: "The hearing was cancelled and removed from the active queue.",
+      meta: formatTimelineDate(appointment.updated_at || baseSchedule),
+      tone: "neutral",
+    });
+  }
+
+  return items.filter(Boolean);
+};
+
 const AppointmentDetailsModal = ({
   appointment,
   onClose,
   onReschedule,
   onStatusChange,
+  canManageActions,
+  currentTheme,
   isDark,
   t,
 }) => {
@@ -720,8 +810,9 @@ const AppointmentDetailsModal = ({
   const status = (appointment.status || "scheduled")
     .toLowerCase()
     .replace(/-/g, "_");
-  const canReschedule = status === "scheduled";
-  const canAct = status === "scheduled" || status === "rescheduled";
+  const canReschedule = canManageActions && status === "scheduled";
+  const canAct =
+    canManageActions && (status === "scheduled" || status === "rescheduled");
 
   const [confirm, setConfirm] = useState({
     open: false,
@@ -755,9 +846,9 @@ const AppointmentDetailsModal = ({
     : "—";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 backdrop-blur-sm p-4 sm:items-center sm:p-6">
       <div
-        className={`${t.cardBg} rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden`}
+        className={`${t.cardBg} my-4 flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl shadow-2xl sm:max-h-[calc(100vh-3rem)]`}
       >
         {/* Header */}
         <div
@@ -812,7 +903,8 @@ const AppointmentDetailsModal = ({
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 space-y-4">
+        <div className="overflow-y-auto px-5 py-4 sm:px-6 sm:py-5">
+          <div className="space-y-4">
           {/* Status badge */}
           <div className="flex items-center gap-2">
             <span
@@ -904,6 +996,14 @@ const AppointmentDetailsModal = ({
                 </span>
               </div>
             )}
+          </div>
+
+          <RecordTimeline
+            items={buildAppointmentTimeline(appointment)}
+            currentTheme={currentTheme}
+            title="Appointment Timeline"
+            emptyMessage="No appointment activity is available yet."
+          />
           </div>
         </div>
 
@@ -1510,6 +1610,7 @@ const OverdueAlertModal = ({ appointments, onAction, onClose, isDark, t }) => {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const AdminAppointments = () => {
+  const location = useLocation();
   const { tr } = useLanguage();
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem("appTheme") || "modern",
@@ -1523,6 +1624,8 @@ const AdminAppointments = () => {
 
   const t = themeTokens[currentTheme] || themeTokens.blue;
   const isDark = currentTheme === "dark";
+  const userCanViewAppointments = canViewAppointments();
+  const userCanManageActions = canManageAppointments();
 
   // ── data ───────────────────────────────────────────────────────────────────
   const [appointments, setAppointments] = useState([]);
@@ -1601,9 +1704,15 @@ const AdminAppointments = () => {
   }, []);
 
   useEffect(() => {
+    if (!userCanViewAppointments) {
+      setLoading(false);
+      return undefined;
+    }
+
     fetchAppointments();
     fetchAvailability();
-  }, [fetchAppointments, fetchAvailability]);
+    return undefined;
+  }, [fetchAppointments, fetchAvailability, userCanViewAppointments]);
 
   // ── background polling ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -1741,6 +1850,44 @@ const AdminAppointments = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [activeTab, selectedDate, searchQuery, startDate, endDate]);
+
+  useEffect(() => {
+    const { openAppointmentId, searchQuery: incomingSearchQuery } = location.state || {};
+    if (!openAppointmentId || loading) return;
+
+    const matchedAppointment = appointments.find(
+      (appointment) => String(appointment.id) === String(openAppointmentId),
+    );
+
+    if (!matchedAppointment) return;
+
+    setActiveTab("all");
+    setSelectedDate(matchedAppointment.date || null);
+    setCurrentPage(1);
+    setSearchQuery(
+      incomingSearchQuery ||
+        matchedAppointment.complainant_name ||
+        String(matchedAppointment.id),
+    );
+    setDetailsTarget(matchedAppointment);
+
+    window.history.replaceState({}, "");
+  }, [appointments, loading, location.state]);
+
+  const handleExportCsv = useCallback(() => {
+    downloadRecordsAsCsv({
+      filename: "appointment-schedule.csv",
+      columns: [
+        { header: "Appointment ID", value: (row) => `#${row.id}` },
+        { header: "Complaint ID", value: (row) => `#${row.complaint_id || "—"}` },
+        { header: "Complainant", key: "complainant_name" },
+        { header: "Date", key: "date" },
+        { header: "Time", key: "time" },
+        { header: "Status", key: "status" },
+      ],
+      rows: filteredData,
+    });
+  }, [filteredData]);
 
   // ── actions ────────────────────────────────────────────────────────────────
   const handleReschedule = async (appt, date, time) => {
@@ -2089,26 +2236,53 @@ const AdminAppointments = () => {
                 })}
               </div>
 
-              {/* Create New Appointment button */}
-              <button
-                onClick={() => setCreateOpen(true)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold font-kumbh ${t.primarySolid} text-white ${t.primaryHover} transition-colors shadow-sm whitespace-nowrap flex-shrink-0`}
-              >
-                <svg
-                  className="w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={handleExportCsv}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold font-kumbh shadow-sm whitespace-nowrap flex-shrink-0 transition-colors ${
+                    isDark
+                      ? "bg-slate-700 text-slate-100 hover:bg-slate-600"
+                      : "bg-slate-900 text-white hover:bg-slate-800"
+                  }`}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                {tr.adminAppointments.createNewAppointment}
-              </button>
+                  <svg
+                    className="w-3.5 h-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 16V4m0 12-3-3m3 3 3-3M4 20h16"
+                    />
+                  </svg>
+                  Export CSV
+                </button>
+
+                {userCanManageActions && (
+                  <button
+                    onClick={() => setCreateOpen(true)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold font-kumbh ${t.primarySolid} text-white ${t.primaryHover} transition-colors shadow-sm whitespace-nowrap flex-shrink-0`}
+                  >
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                    {tr.adminAppointments.createNewAppointment}
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Filters */}
@@ -2329,7 +2503,7 @@ const AdminAppointments = () => {
                             onClick={(e) => e.stopPropagation()}
                           >
                             <div className="flex items-center gap-1 flex-wrap">
-                              {status === "scheduled" && (
+                              {userCanManageActions && status === "scheduled" && (
                                 <button
                                   onClick={() => setRescheduleTarget(appt)}
                                   className={`px-2 py-1 text-[10px] font-kumbh font-bold rounded-lg transition-colors ${
@@ -2341,7 +2515,7 @@ const AdminAppointments = () => {
                                   {tr.adminAppointments.reschedule}
                                 </button>
                               )}
-                              {status !== "scheduled" && (
+                              {(!userCanManageActions || status !== "scheduled") && (
                                 <span
                                   className={`text-[10px] font-kumbh ${isDark ? "text-slate-500" : "text-gray-400"}`}
                                 >
@@ -2462,7 +2636,7 @@ const AdminAppointments = () => {
       </div>
 
       {/* Create appointment modal */}
-      {createOpen && (
+      {createOpen && userCanManageActions && (
         <CreateAppointmentModal
           appointments={appointments}
           onSave={handleCreate}
@@ -2480,13 +2654,15 @@ const AdminAppointments = () => {
           onClose={() => setDetailsTarget(null)}
           onReschedule={(appt) => setRescheduleTarget(appt)}
           onStatusChange={handleStatusChange}
+          canManageActions={userCanManageActions}
+          currentTheme={currentTheme}
           isDark={isDark}
           t={t}
         />
       )}
 
       {/* Reschedule modal */}
-      {rescheduleTarget && (
+      {rescheduleTarget && userCanManageActions && (
         <RescheduleModal
           appointment={rescheduleTarget}
           appointments={appointments}

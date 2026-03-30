@@ -1,5 +1,9 @@
-import { getToken, isAuthenticated, getUser } from "../../homepage/services/loginService";
+import {
+  getUser,
+  isAuthenticated,
+} from "../../homepage/services/loginService";
 import { INCIDENT_API_BASE_URL } from "../../config/runtimeApi";
+import { requestJson } from "../shared/http";
 
 const API_BASE = INCIDENT_API_BASE_URL;
 
@@ -11,21 +15,9 @@ const getIncidentTypes = async () => {
     throw new Error("You must be logged in to fetch incident types.");
   }
 
-  const response = await fetch(`${API_BASE}/incident-types`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
+  return requestJson(`${API_BASE}/incident-types`, {
+    errorMessage: "Failed to fetch incident types.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch incident types.");
-  }
-
-  return data;
 };
 
 /**
@@ -85,22 +77,11 @@ const submitReport = async (formData) => {
     });
   }
 
-  const response = await fetch(`${API_BASE}/incidents`, {
+  return requestJson(`${API_BASE}/incidents`, {
     method: "POST",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
     body,
+    errorMessage: "Failed to submit incident report.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to submit incident report.");
-  }
-
-  return data;
 };
 
 const getMyIncidents = async () => {
@@ -108,21 +89,9 @@ const getMyIncidents = async () => {
     throw new Error("You must be logged in to view incidents.");
   }
 
-  const response = await fetch(`${API_BASE}/incidents`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
+  return requestJson(`${API_BASE}/incidents`, {
+    errorMessage: "Failed to fetch incidents.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch incidents.");
-  }
-
-  return data;
 };
 
 const getAllIncidents = async () => {
@@ -130,21 +99,9 @@ const getAllIncidents = async () => {
     throw new Error("You must be logged in to view incidents.");
   }
 
-  const response = await fetch(`${API_BASE}/incidents`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
+  return requestJson(`${API_BASE}/incidents`, {
+    errorMessage: "Failed to fetch all incidents.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch all incidents.");
-  }
-
-  return data;
 };
 
 const updateIncident = async (id, updates) => {
@@ -152,23 +109,12 @@ const updateIncident = async (id, updates) => {
     throw new Error("You must be logged in to update an incident.");
   }
 
-  const response = await fetch(`${API_BASE}/incidents/${id}`, {
+  return requestJson(`${API_BASE}/incidents/${id}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
+    includeJson: true,
     body: JSON.stringify(updates),
+    errorMessage: "Failed to update incident.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to update incident.");
-  }
-
-  return data;
 };
 
 const getIncidentUpdates = async (id) => {
@@ -176,21 +122,9 @@ const getIncidentUpdates = async (id) => {
     throw new Error("You must be logged in to view updates.");
   }
 
-  const response = await fetch(`${API_BASE}/incidents/${id}/updates`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
+  return requestJson(`${API_BASE}/incidents/${id}/updates`, {
+    errorMessage: "Failed to fetch incident updates.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch incident updates.");
-  }
-
-  return data;
 };
 
 const addIncidentUpdate = async (id, updateData) => {
@@ -202,22 +136,11 @@ const addIncidentUpdate = async (id, updateData) => {
   if (updateData.message) body.append("message", updateData.message);
   if (updateData.attachment) body.append("attachment", updateData.attachment);
 
-  const response = await fetch(`${API_BASE}/incidents/${id}/updates`, {
+  return requestJson(`${API_BASE}/incidents/${id}/updates`, {
     method: "POST",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
     body,
+    errorMessage: "Failed to add incident update.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to add incident update.");
-  }
-
-  return data;
 };
 
 export const incidentService = {

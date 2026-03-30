@@ -6,7 +6,7 @@ header("Access-Control-Allow-Origin: *"); // allow React app to fetch
 $servername = "localhost";
 $username = "root"; // your MySQL username
 $password = "";     // your MySQL password
-$dbname = "barangay_db";
+$dbname = "bgd";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 

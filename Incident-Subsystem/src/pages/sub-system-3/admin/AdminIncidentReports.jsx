@@ -26,6 +26,7 @@ import Toast from "../../../components/shared/modals/Toast";
 import DatePickerField from "../../../components/shared/DatePickerField";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
 import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
+import { canManageIncidentCases } from "../../../homepage/services/loginService";
 import { useRealTime } from "../../../context/RealTimeContext";
 import jsPDF from "jspdf";
 import barangayLogoUrl from "../../../assets/images/logo.jpg";
@@ -476,6 +477,7 @@ const AdminIncidentReports = () => {
 
   const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
+  const userCanManageIncidents = canManageIncidentCases();
 
   // ── Page tab state (Incidents vs Complaints) ───────────────────────
   const [pageTab, setPageTab] = useState("incidents");
@@ -1096,7 +1098,7 @@ const AdminIncidentReports = () => {
                   </button>
                 ))}
               </div>
-              {pageTab === "complaints" && (
+              {pageTab === "complaints" && userCanManageIncidents && (
                 <button
                   onClick={() => setShowComplaintModal(true)}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold font-kumbh uppercase tracking-wide transition-colors flex-shrink-0"
@@ -1812,23 +1814,27 @@ const AdminIncidentReports = () => {
       />
 
       {/* Update Form Modal */}
-      <UpdateFormModal
-        isOpen={showUpdateForm}
-        onClose={() => setShowUpdateForm(false)}
-        formType={updateFormType}
-        currentTheme={currentTheme}
-        addToast={addToast}
-      />
+      {userCanManageIncidents && (
+        <UpdateFormModal
+          isOpen={showUpdateForm}
+          onClose={() => setShowUpdateForm(false)}
+          formType={updateFormType}
+          currentTheme={currentTheme}
+          addToast={addToast}
+        />
+      )}
 
       {/* Create Complaint Modal (admin filing on behalf) */}
-      <ComplaintModal
-        isOpen={showComplaintModal}
-        onClose={() => {
-          setShowComplaintModal(false);
-          fetchData();
-        }}
-        currentTheme={currentTheme}
-      />
+      {userCanManageIncidents && (
+        <ComplaintModal
+          isOpen={showComplaintModal}
+          onClose={() => {
+            setShowComplaintModal(false);
+            fetchData();
+          }}
+          currentTheme={currentTheme}
+        />
+      )}
 
       <style>{`
         @keyframes slideInFromRight {

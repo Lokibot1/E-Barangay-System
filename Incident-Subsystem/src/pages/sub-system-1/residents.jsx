@@ -10,7 +10,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { Printer as PrinterIcon, UserPlus, Users, Archive, ScrollText, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import ResidentTable        from '../../components/sub-system-1/residents/ResidentTable';
 import ResidentFilters      from '../../components/sub-system-1/residents/ResidentFilters';
@@ -28,6 +28,10 @@ import { getResidencyLabel } from '../../utils/sub-system-1/residency';
 import { householdService }  from '../../services/sub-system-1/household';
 import api                   from '../../services/sub-system-1/Api';
 import themeTokens           from '../../Themetokens';
+import {
+    canDeleteRecords,
+    canManageResidents,
+} from '../../homepage/services/loginService';
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 const TABS = [
@@ -53,6 +57,7 @@ const Residents = () => {
     );
     const [activeTab, setActiveTab] = useState('registry');
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         const handler = (e) => setCurrentTheme(e.detail);
@@ -87,7 +92,10 @@ const Residents = () => {
     const [currentPage,     setCurrentPage]     = useState(1);
     const [purokFilter,     setPurokFilter]     = useState('All');
     const [residencyFilter, setResidencyFilter] = useState('All');
+    const [openResidentRequest, setOpenResidentRequest] = useState(null);
     const itemsPerPage = 10;
+    const canEditResidentRecords = canManageResidents();
+    const canArchiveResidentRecords = canDeleteRecords();
 
     // ── Household view modal state ────────────────────────────────────────────
     const [hhModal, setHhModal] = useState({
@@ -233,6 +241,33 @@ const Residents = () => {
 
     useEffect(() => { setCurrentPage(1); }, [searchTerm, categoryFilter, purokFilter, residencyFilter]);
 
+    useEffect(() => {
+        const {
+            openResidentId,
+            openResidentBarangayId,
+            openResidentMode,
+            openResidentTab,
+            searchQuery: incomingSearchQuery,
+        } = location.state || {};
+
+        if (!openResidentId && !openResidentBarangayId) return;
+
+        setActiveTab('registry');
+        setCurrentPage(1);
+        if (incomingSearchQuery) {
+            setSearchTerm(incomingSearchQuery);
+        }
+
+        setOpenResidentRequest({
+            id: openResidentId ? String(openResidentId) : '',
+            barangayId: openResidentBarangayId ? String(openResidentBarangayId) : '',
+            mode: openResidentMode || 'view',
+            tab: openResidentTab || 'basic',
+        });
+
+        window.history.replaceState({}, '');
+    }, [location.state, setSearchTerm]);
+
     return (
         <div className={`font-sans min-h-screen py-4 pb-24 px-3 sm:px-4 lg:px-5 relative ${t.pageBg}`}>
 
@@ -255,12 +290,14 @@ const Residents = () => {
 
                         {activeTab === 'registry' && (
                             <div className="flex flex-wrap items-center gap-3">
-                                <button
-                                    onClick={() => navigate('/admin/residents/add')}
-                                    className={`inline-flex items-center gap-2 rounded-[20px] px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition-all active:scale-[0.98] ${t.primarySolid} ${t.primaryHover}`}
-                                >
-                                    <UserPlus size={16} /> {tr.sub1.addResident}
-                                </button>
+                                {canEditResidentRecords && (
+                                    <button
+                                        onClick={() => navigate('/admin/residents/add')}
+                                        className={`inline-flex items-center gap-2 rounded-[20px] px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition-all active:scale-[0.98] ${t.primarySolid} ${t.primaryHover}`}
+                                    >
+                                        <UserPlus size={16} /> {tr.sub1.addResident}
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => printTable(
                                         'Resident Masterlist',
@@ -335,6 +372,10 @@ const Residents = () => {
                                         onUpdate={handleUpdateWithToast}
                                         onDelete={handleDeleteWithToast}
                                         onHouseholdClick={openHouseholdModal}
+                                        canEdit={canEditResidentRecords}
+                                        canDelete={canArchiveResidentRecords}
+                                        externalOpenRequest={openResidentRequest}
+                                        onExternalOpenHandled={() => setOpenResidentRequest(null)}
                                         t={t}
                                         currentTheme={currentTheme}
                                     />

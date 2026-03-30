@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { useLanguage } from "../../context/LanguageContext";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
 import TabsComponent from "../../components/sub-system-3/TabsComponent";
@@ -38,6 +39,7 @@ const apptStatusCfg = {
 
 const CaseManagementPage = () => {
   const { tr } = useLanguage();
+  const location = useLocation();
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("complaints");
@@ -273,6 +275,25 @@ const CaseManagementPage = () => {
     prevEventVersionRef.current = eventVersion;
     fetchData();
   }, [eventVersion, fetchData]);
+
+  useEffect(() => {
+    const { openId, openType } = location.state || {};
+    if (!openId || loading) return;
+
+    const targetTab = openType === "incident" ? "incidents" : "complaints";
+    const sourceList = openType === "incident" ? incidents : complaints;
+    const matchedReport = sourceList.find(
+      (report) => String(report.id) === String(openId),
+    );
+
+    if (!matchedReport) return;
+
+    setActiveTab(targetTab);
+    setSelectedReport(matchedReport);
+    setIsModalOpen(true);
+
+    window.history.replaceState({}, "");
+  }, [complaints, incidents, loading, location.state]);
 
   const currentReports = activeTab === "complaints" ? complaints : incidents;
 

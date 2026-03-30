@@ -5,10 +5,41 @@ import React, { useEffect, useState } from 'react';
  */
 const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
+const formatDateToInputValue = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const calculateAgeFromBirthdate = (birthdate) => {
+  const bd = new Date(birthdate);
+  const today = new Date();
+  let age = today.getFullYear() - bd.getFullYear();
+  const monthDelta = today.getMonth() - bd.getMonth();
+
+  if (
+    monthDelta < 0 ||
+    (monthDelta === 0 && today.getDate() < bd.getDate())
+  ) {
+    age -= 1;
+  }
+
+  return age;
+};
+
 export const getRandomTestData = () => {
   const randomNum = Math.floor(Math.random() * 9000) + 1000;
   const randomText = Math.random().toString(36).substring(2, 7);
   const randomPhone = "09" + Math.floor(100000000 + Math.random() * 900000000).toString();
+  const birthdateDate = new Date(
+    1970 + Math.floor(Math.random() * 30),
+    Math.floor(Math.random() * 12),
+    Math.floor(Math.random() * 20) + 10,
+  );
+  const birthdate = formatDateToInputValue(birthdateDate);
+  const age = calculateAgeFromBirthdate(birthdate);
 
   const firstNames = ["Juan", "Maria", "Pedro", "Elena", "Ricardo", "Liza", "Antonio", "Sonia", "Carlos", "Ana"];
   const lastNames = ["Dela Cruz", "Santos", "Reyes", "Bautista", "Garcia", "Mendoza", "Pascual", "Lopez", "Torres", "Rivera"];
@@ -31,7 +62,8 @@ export const getRandomTestData = () => {
     lastName: pickRandom(lastNames),
     middleName: pickRandom(middleNames),
     suffix: Math.random() > 0.8 ? "Jr." : "",
-    birthdate: `19${Math.floor(Math.random() * 30) + 70}-0${Math.floor(Math.random() * 8) + 1}-${Math.floor(Math.random() * 20) + 10}`,
+    birthdate,
+    age,
     birthRegistration: "Registered",
     gender: Math.random() > 0.5 ? "Male" : "Female",
     contact: randomPhone,
@@ -43,7 +75,7 @@ export const getRandomTestData = () => {
 
     householdPosition: "Son",
     maritalStatus: "1", 
-    sector: "7", 
+    sector: age >= 60 ? "3" : "7", 
     residencyStatus: "Old Resident",
     residencyStartDate: "2015-01-01",
     nationality: "Filipino",

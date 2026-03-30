@@ -304,7 +304,18 @@ const ResetPasswordModal = ({ residentId, residentName, onClose, onSuccess, onEr
  *   onSave     - async (formData) => bool  — should throw on error
  *   onToast    - (toast) => void           — parent provides addToast callback
  */
-const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, onToast, mode, t, currentTheme = 'modern' }) => {
+const ResidentDetailsModal = ({
+    isOpen,
+    onClose,
+    resident,
+    onSave,
+    onToast,
+    mode,
+    initialTab = 'basic',
+    canEdit = true,
+    currentTheme = 'modern',
+    t,
+}) => {
     const [formData,  setFormData]  = useState({});
     const [isEdit,    setIsEdit]    = useState(false);
     const [loading,   setLoading]   = useState(false);
@@ -346,7 +357,7 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, onToast, mode
         ],
     });
 
-    const initModal = useCallback(async (r, m) => {
+    const initModal = useCallback(async (r, m, nextInitialTab = 'basic') => {
         try {
             const res = await api.get('/reference-data');
             if (res.data) setRefs(prev => ({ ...prev, ...res.data }));
@@ -363,16 +374,16 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, onToast, mode
         setHeadConflictMsg('');
         setHistory([]);
         setHistErr(null);
-        setIsEdit(m === 'edit');
-        setActiveTab('basic');
+        setIsEdit(canEdit && m === 'edit');
+        setActiveTab(nextInitialTab || 'basic');
         setShowResetPass(false);
-    }, []);
+    }, [canEdit]);
 
     useEffect(() => {
         const justOpened = isOpen && !prevOpenRef.current;
         prevOpenRef.current = isOpen;
-        if (justOpened && resident) initModal(resident, mode);
-    }, [isOpen, resident, mode, initModal]);
+        if (justOpened && resident) initModal(resident, mode, initialTab);
+    }, [isOpen, resident, mode, initialTab, initModal]);
 
     useEffect(() => {
         if (!isEdit) { setHeadConf(false); setHeadConflictMsg(''); return; }
@@ -630,7 +641,7 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, onToast, mode
 
                         <div className="flex items-center gap-3">
                             {activeTab !== 'history' && (<>
-                                {!isEdit && (
+                                {!isEdit && canEdit && (
                                     <button type="button"
                                         onClick={() => setShowResetPass(true)}
                                         className={`flex items-center gap-2 px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border ${
@@ -642,14 +653,16 @@ const ResidentDetailsModal = ({ isOpen, onClose, resident, onSave, onToast, mode
                                     </button>
                                 )}
 
-                                <button type="button" onClick={isEdit ? handleCancel : () => setIsEdit(true)}
-                                    className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border ${
-                                        isEdit
-                                            ? 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50'
-                                            : `${t?.cardBg || 'bg-white dark:bg-slate-800'} ${accent.text} ${accent.border} ${accent.hover}`
-                                    }`}>
-                                    {isEdit ? <><XCircle size={14} /> Cancel Edit</> : <><Edit3 size={14} /> Edit Record</>}
-                                </button>
+                                {canEdit && (
+                                    <button type="button" onClick={isEdit ? handleCancel : () => setIsEdit(true)}
+                                        className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border ${
+                                            isEdit
+                                                ? 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50'
+                                                : `${t?.cardBg || 'bg-white dark:bg-slate-800'} ${accent.text} ${accent.border} ${accent.hover}`
+                                        }`}>
+                                        {isEdit ? <><XCircle size={14} /> Cancel Edit</> : <><Edit3 size={14} /> Edit Record</>}
+                                    </button>
+                                )}
 
                                 {isEdit && (
                                     <div className="relative group">

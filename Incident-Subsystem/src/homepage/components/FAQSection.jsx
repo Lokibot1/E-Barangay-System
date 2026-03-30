@@ -24,42 +24,42 @@ export default function FAQSection({ isDarkMode, faqItems }) {
   return (
     <section
       id="faq"
-      className={`py-16 md:py-24 px-6 scroll-mt-24 ${
+      className={`px-6 py-12 scroll-mt-24 md:py-16 ${
         isDarkMode ? "bg-slate-900/40" : "bg-emerald-50/40"
       }`}
     >
-      <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-8 md:mb-10">
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-emerald-600 mb-3">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-6 text-center md:mb-8">
+          <p className="mb-2 text-[8px] font-black uppercase tracking-[0.24em] text-emerald-600 md:text-[9px]">
             Help Center
           </p>
-          <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-4">
+          <h3 className="mb-3 text-2xl font-black uppercase tracking-tighter md:text-4xl">
             FAQ and Smart Search
           </h3>
-          <p className="text-sm md:text-base opacity-70">
+          <p className="text-[0.9rem] opacity-70 md:text-[0.95rem]">
             Type a keyword like ID, clearance, requirements, or office hours.
           </p>
         </div>
 
         <div
-          className={`rounded-[24px] border px-4 md:px-5 py-3 md:py-4 mb-6 md:mb-8 flex items-center gap-3 ${
+          className={`mb-5 flex items-center gap-3 rounded-[20px] border px-4 py-2.5 md:mb-6 md:px-4.5 md:py-3 ${
             isDarkMode ? "bg-slate-900 border-white/10" : "bg-white border-black/5"
           }`}
         >
-          <Search size={18} className="text-emerald-600 shrink-0" />
+          <Search size={16} className="shrink-0 text-emerald-600" />
           <input
             type="text"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search FAQs..."
-            className="w-full bg-transparent outline-none text-sm md:text-base"
+            className="w-full bg-transparent text-[0.9rem] outline-none md:text-[0.95rem]"
           />
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {filteredItems.length === 0 ? (
             <div
-              className={`rounded-[24px] border p-8 text-center ${
+              className={`rounded-[20px] border p-7 text-center ${
                 isDarkMode ? "bg-slate-900 border-white/10" : "bg-white border-black/5"
               }`}
             >
@@ -72,26 +72,26 @@ export default function FAQSection({ isDarkMode, faqItems }) {
               return (
                 <article
                   key={item.id}
-                  className={`rounded-[24px] border overflow-hidden ${
+                  className={`overflow-hidden rounded-[20px] border ${
                     isDarkMode ? "bg-slate-900 border-white/10" : "bg-white border-black/5 shadow-sm"
                   }`}
                 >
                   <button
                     type="button"
                     onClick={() => setOpenId((prev) => (prev === item.id ? null : item.id))}
-                    className="w-full p-5 md:p-6 flex items-center justify-between gap-4 text-left"
+                    className="flex w-full items-center justify-between gap-4 p-4 text-left md:p-5"
                   >
-                    <span className="font-black uppercase tracking-wide text-sm md:text-base">
+                    <span className="text-[0.95rem] font-black uppercase tracking-[0.02em] md:text-[1rem]">
                       {item.question}
                     </span>
                     <ChevronDown
-                      size={18}
+                      size={16}
                       className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
                     />
                   </button>
                   {isOpen && (
                     <div
-                      className={`px-5 md:px-6 pb-6 text-sm md:text-base leading-relaxed ${
+                      className={`px-4 pb-5 text-[0.9rem] leading-7 md:px-5 md:text-[0.95rem] ${
                         isDarkMode ? "text-slate-300" : "text-slate-700"
                       }`}
                     >

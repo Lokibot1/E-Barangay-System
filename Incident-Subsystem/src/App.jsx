@@ -4,13 +4,14 @@
  * Location: src/App.js
  */
 
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { Suspense, lazy, useEffect, useLayoutEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 import { LanguageProvider } from "./context/LanguageContext";
 import { RealTimeProvider } from "./context/RealTimeContext";
@@ -18,61 +19,79 @@ import { UserRealTimeProvider } from "./context/UserRealTimeContext";
 import { UserProvider } from "./context/UserContext";
 import { BrandingProvider } from "./context/BrandingContext";
 import Layout from "./components/shared/Layout";
+import RouteErrorBoundary from "./components/shared/RouteErrorBoundary";
+import RouteLoadingFallback from "./components/shared/RouteLoadingFallback";
 
 // ── Route guards ─────────────────────────────────────────────────────────────
-import ProtectedRoute, {
-  AdminRoute,
-  UserRoute,
-} from "./homepage/ProtectedRoute";
+import { AdminRoute, UserRoute, PermissionRoute } from "./homepage/ProtectedRoute";
 
 // ── Sub-System 2 pages ───────────────────────────────────────────────────────
-import SubSystem2MainPage from "./pages/sub-system-2/MainPage";
-import Req_BIDPage from "./pages/sub-system-2/Req_BIDPage";
-import Req_COIPage from "./pages/sub-system-2/Req_COIPage";
-import Req_CORPage from "./pages/sub-system-2/Req_CORPage";
-import Req_Sub_BID from "./pages/sub-system-2/Req_Sub_BID";
-import Req_Sub_COI from "./pages/sub-system-2/Req_Sub_COI";
-import Req_Sub_COR from "./pages/sub-system-2/Req_Sub_COR";
-import Track_BID from "./pages/sub-system-2/Track_BID";
-import Track_COI from "./pages/sub-system-2/Track_COI";
-import Track_COR from "./pages/sub-system-2/Track_COR";
-import DocumentsInquiryPage from "./pages/sub-system-2/DocumentsInquiryPage";
-import AccountsSection from "./components/sub-system-2/accounts/AccountsSection";
 
 // ── Sub-System 3 pages ───────────────────────────────────────────────────────
-import MainPage from "./pages/sub-system-3/MainPage";
-import FileComplaintPage from "./pages/sub-system-3/FileComplaintPage";
-import IncidentReportPage from "./pages/sub-system-3/IncidentReportPage";
-import IncidentMapPage from "./pages/sub-system-3/IncidentMapPage";
-import CaseManagementPage from "./pages/sub-system-3/CaseManagementPage";
-import AdminLanding from "./pages/sub-system-3/admin/AdminLanding";
-import AdminIncidentReports from "./pages/sub-system-3/admin/AdminIncidentReports";
-import AdminAppointments from "./pages/sub-system-3/admin/AdminAppointments";
-import ResetPasswordPage from "./pages/sub-system-3/ResetPasswordPage";
-import CreateAccounts from "./pages/sub-system-3/admin/CreateAccounts";
 
 // ── Sub-System 1 (RS) pages ──────────────────────────────────────────────────
-import Dashboard from "./pages/sub-system-1/dashboard";
-import Residents from "./pages/sub-system-1/residents";
-import AddResident from "./components/sub-system-1/residents/add/AddResident"; 
-import Verification from "./pages/sub-system-1/verification";
-import Households from "./pages/sub-system-1/household";
-import Certificates from "./pages/sub-system-1/certificates";
-import Support from "./pages/sub-system-1/support";
-import Settings from "./pages/sub-system-1/settings";
-import ProfilePage from "./pages/shared/ProfilePage";
-import Logout from "./homepage/logout";
 import VerificationNotificationListener from "./components/sub-system-1/common/VerificationNotificationListener";
 
 // ── Homepage / public pages ───────────────────────────────────────────────────
-import HomePage from "./homepage/HomePage";
-import LoginPage from "./homepage/login/LoginPage";
-import SignupPage from "./homepage/signup/SignUpPage";
 
 import { DebugAutofill } from "./homepage/utils/DevAutoFill";
 
 import "./App.css";
 import "leaflet/dist/leaflet.css";
+import {
+  AUTH_UNAUTHORIZED_EVENT,
+  canAccessVerificationQueue,
+  canEditRecords,
+  canManageAccounts,
+  canManageSystemSettings,
+  canViewAnalytics,
+  canViewAppointments,
+  canViewDocuments,
+  canViewIncidentCases,
+  canViewResidents,
+  DEFAULT_SESSION_EXPIRED_MESSAGE,
+} from "./homepage/services/loginService";
+
+const DEBUG_AUTOFILL_VISIBILITY_EVENT = "DEBUG_AUTOFILL_VISIBILITY";
+
+const HomePage = lazy(() => import("./homepage/HomePage"));
+const LoginPage = lazy(() => import("./homepage/login/LoginPage"));
+const SignupPage = lazy(() => import("./homepage/signup/SignUpPage"));
+const ResetPasswordPage = lazy(() => import("./pages/sub-system-3/ResetPasswordPage"));
+const Logout = lazy(() => import("./homepage/logout"));
+
+const SubSystem2MainPage = lazy(() => import("./pages/sub-system-2/MainPage"));
+const Req_BIDPage = lazy(() => import("./pages/sub-system-2/Req_BIDPage"));
+const Req_COIPage = lazy(() => import("./pages/sub-system-2/Req_COIPage"));
+const Req_CORPage = lazy(() => import("./pages/sub-system-2/Req_CORPage"));
+const Req_Sub_BID = lazy(() => import("./pages/sub-system-2/Req_Sub_BID"));
+const Req_Sub_COI = lazy(() => import("./pages/sub-system-2/Req_Sub_COI"));
+const Req_Sub_COR = lazy(() => import("./pages/sub-system-2/Req_Sub_COR"));
+const Track_BID = lazy(() => import("./pages/sub-system-2/Track_BID"));
+const Track_COI = lazy(() => import("./pages/sub-system-2/Track_COI"));
+const Track_COR = lazy(() => import("./pages/sub-system-2/Track_COR"));
+const DocumentsInquiryPage = lazy(() => import("./pages/sub-system-2/DocumentsInquiryPage"));
+const AccountsSection = lazy(() => import("./components/sub-system-2/accounts/AccountsSection"));
+
+const MainPage = lazy(() => import("./pages/sub-system-3/MainPage"));
+const FileComplaintPage = lazy(() => import("./pages/sub-system-3/FileComplaintPage"));
+const IncidentReportPage = lazy(() => import("./pages/sub-system-3/IncidentReportPage"));
+const IncidentMapPage = lazy(() => import("./pages/sub-system-3/IncidentMapPage"));
+const CaseManagementPage = lazy(() => import("./pages/sub-system-3/CaseManagementPage"));
+const AdminLanding = lazy(() => import("./pages/sub-system-3/admin/AdminLanding"));
+const AdminIncidentReports = lazy(() => import("./pages/sub-system-3/admin/AdminIncidentReports"));
+const AdminAppointments = lazy(() => import("./pages/sub-system-3/admin/AdminAppointments"));
+const CreateAccounts = lazy(() => import("./pages/sub-system-3/admin/CreateAccounts"));
+
+const Dashboard = lazy(() => import("./pages/sub-system-1/dashboard"));
+const Residents = lazy(() => import("./pages/sub-system-1/residents"));
+const AddResident = lazy(() => import("./components/sub-system-1/residents/add/AddResident"));
+const Verification = lazy(() => import("./pages/sub-system-1/verification"));
+const Households = lazy(() => import("./pages/sub-system-1/household"));
+const Certificates = lazy(() => import("./pages/sub-system-1/certificates"));
+const Support = lazy(() => import("./pages/sub-system-1/support"));
+const Settings = lazy(() => import("./pages/sub-system-1/settings"));
+const ProfilePage = lazy(() => import("./pages/shared/ProfilePage"));
 
 // ── Scroll-to-top on every route change ──────────────────────────────────────
 function ScrollToTop() {
@@ -101,12 +120,64 @@ function ScrollToTop() {
   return null;
 }
 
+function AuthSessionWatcher() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const handleUnauthorized = (event) => {
+      const message =
+        event?.detail?.message || DEFAULT_SESSION_EXPIRED_MESSAGE;
+
+      if (location.pathname === "/login") {
+        return;
+      }
+
+      navigate("/login", {
+        replace: true,
+        state: {
+          sessionExpired: true,
+          message,
+          from: location.pathname,
+        },
+      });
+    };
+
+    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
+
+    return () => {
+      window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
+    };
+  }, [location.pathname, navigate]);
+
+  return null;
+}
+
 function DebugAutofillGate({ setFormData }) {
   const { pathname } = useLocation();
+  const [isHidden, setIsHidden] = useState(false);
   const allowedPaths = ["/signup", "/admin/residents/add", "/residents/add"];
   const shouldShow = allowedPaths.some((path) => pathname.startsWith(path));
 
-  if (!shouldShow) return null;
+  useEffect(() => {
+    const handleVisibilityChange = (event) => {
+      setIsHidden(Boolean(event.detail));
+    };
+
+    window.addEventListener(
+      DEBUG_AUTOFILL_VISIBILITY_EVENT,
+      handleVisibilityChange,
+    );
+
+    return () => {
+      window.removeEventListener(
+        DEBUG_AUTOFILL_VISIBILITY_EVENT,
+        handleVisibilityChange,
+      );
+    };
+  }, []);
+
+  if (!shouldShow || isHidden) return null;
   return <DebugAutofill setFormData={setFormData} />;
 }
 
@@ -136,8 +207,11 @@ function App() {
         <BrandingProvider>
           <Router>
             <ScrollToTop />
+            <AuthSessionWatcher />
             <div className="App">
-              <Routes>
+              <RouteErrorBoundary>
+                <Suspense fallback={<RouteLoadingFallback />}>
+                  <Routes>
 
               {/* ── PUBLIC ROUTES ───────────────────────────────────── */}
               <Route path="/" element={<HomePage />} />
@@ -177,6 +251,7 @@ function App() {
                   <Route path="/verification" element={<Verification />} />
                   <Route path="/households" element={<Households />} />
                   <Route path="/certificates" element={<Certificates />} />
+                  <Route path="/report-issue" element={<Support />} />
                   <Route path="/support" element={<Support />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/profile" element={<ProfilePage />} />
@@ -195,28 +270,57 @@ function App() {
                     </RealTimeProvider>
                   }
                 >
-                  <Route path="/admin" element={<AdminLanding />} />
-                  <Route path="/admin/residents" element={<Residents />} />
-                  <Route path="/admin/residents/add" element={<AddResident />} />
-                  <Route path="/admin/households" element={<Households />} />
-                  <Route path="/admin/user-management" element={<Verification />} />
-                  <Route path="/admin/requests" element={<AdminPlaceholder title="Requests" />} />
-                  <Route path="/admin/incidents" element={<AdminIncidentReports />} />
-                  <Route path="/admin/appointments" element={<AdminAppointments />} />
-                  <Route path="/admin/payments" element={<AccountsSection />} />
-                  <Route path="/admin/reports" element={<Dashboard />} />
-                  <Route path="/admin/documents-inquiry" element={<DocumentsInquiryPage />} />
-                  <Route path="/admin/certificates" element={<Certificates />} />
-                  <Route path="/admin/settings" element={<Settings />} />
+                  <Route element={<PermissionRoute allowed={canViewAnalytics} />}>
+                    <Route path="/admin" element={<AdminLanding />} />
+                    <Route path="/admin/reports" element={<Dashboard />} />
+                  </Route>
+
+                  <Route element={<PermissionRoute allowed={canViewResidents} />}>
+                    <Route path="/admin/residents" element={<Residents />} />
+                    <Route path="/admin/households" element={<Households />} />
+                  </Route>
+
+                  <Route element={<PermissionRoute allowed={canEditRecords} />}>
+                    <Route path="/admin/residents/add" element={<AddResident />} />
+                  </Route>
+
+                  <Route element={<PermissionRoute allowed={canAccessVerificationQueue} />}>
+                    <Route path="/admin/user-management" element={<Verification />} />
+                    <Route path="/admin/requests" element={<AdminPlaceholder title="Requests" />} />
+                  </Route>
+
+                  <Route element={<PermissionRoute allowed={canViewIncidentCases} />}>
+                    <Route path="/admin/incidents" element={<AdminIncidentReports />} />
+                  </Route>
+
+                  <Route element={<PermissionRoute allowed={canViewAppointments} />}>
+                    <Route path="/admin/appointments" element={<AdminAppointments />} />
+                  </Route>
+
+                  <Route element={<PermissionRoute allowed={canViewDocuments} />}>
+                    <Route path="/admin/documents-inquiry" element={<DocumentsInquiryPage />} />
+                    <Route path="/admin/certificates" element={<Certificates />} />
+                  </Route>
+
+                  <Route element={<PermissionRoute allowed={canManageAccounts} />}>
+                    <Route path="/admin/payments" element={<AccountsSection />} />
+                    <Route path="/admin/accounts" element={<CreateAccounts />} />
+                  </Route>
+
+                  <Route element={<PermissionRoute allowed={canManageSystemSettings} />}>
+                    <Route path="/admin/settings" element={<Settings />} />
+                  </Route>
+
                   <Route path="/admin/profile" element={<ProfilePage />} />
                   <Route path="/admin/support" element={<Support />} />
-                  <Route path="/admin/accounts" element={<CreateAccounts />} />
                 </Route>
               </Route>
 
               <Route path="*" element={<Navigate to="/" replace />} />
 
-              </Routes>
+                  </Routes>
+                </Suspense>
+              </RouteErrorBoundary>
               
               <DebugAutofillGate setFormData={activeSetFormData} />
               

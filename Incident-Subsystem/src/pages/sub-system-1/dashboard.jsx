@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { TABS } from '../../components/sub-system-1/analytics/analyticsConfig';
 import HeatmapTab from '../../components/sub-system-1/analytics/tabs/HeatmapTab';
@@ -92,8 +93,9 @@ export default function Dashboard() {
           <button
             onClick={fetchData}
             disabled={loading}
-            className="text-xs font-kumbh font-normal bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-xl hover:opacity-90 disabled:opacity-50 transition-all"
+            className="inline-flex items-center gap-2 text-xs font-kumbh font-normal bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-xl hover:opacity-90 disabled:opacity-50 transition-all"
           >
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             {loading ? tr.sub1.loading : tr.sub1.refresh || 'Refresh'}
           </button>
         </div>

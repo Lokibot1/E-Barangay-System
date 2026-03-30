@@ -1,5 +1,8 @@
-import { getToken, isAuthenticated } from "../../homepage/services/loginService";
+import {
+  isAuthenticated,
+} from "../../homepage/services/loginService";
 import { INCIDENT_API_BASE_URL } from "../../config/runtimeApi";
+import { requestJson } from "../shared/http";
 
 const API_BASE = INCIDENT_API_BASE_URL;
 
@@ -57,22 +60,11 @@ export const fileComplaint = async (formData) => {
     });
   }
 
-  const response = await fetch(`${API_BASE}/complaints`, {
+  return requestJson(`${API_BASE}/complaints`, {
     method: "POST",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
     body,
+    errorMessage: "Failed to submit complaint.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to submit complaint.");
-  }
-
-  return data;
 };
 
 export const getMyComplaints = async () => {
@@ -80,21 +72,9 @@ export const getMyComplaints = async () => {
     throw new Error("You must be logged in to view complaints.");
   }
 
-  const response = await fetch(`${API_BASE}/complaints`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
+  return requestJson(`${API_BASE}/complaints`, {
+    errorMessage: "Failed to fetch complaints.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch complaints.");
-  }
-
-  return data;
 };
 
 export const updateComplaint = async (id, updates) => {
@@ -106,21 +86,10 @@ export const updateComplaint = async (id, updates) => {
   const params = new URLSearchParams(updates).toString();
   const url = `${API_BASE}/complaints/${id}${params ? `?${params}` : ""}`;
 
-  const response = await fetch(url, {
+  return requestJson(url, {
     method: "PUT",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
+    errorMessage: "Failed to update complaint.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to update complaint.");
-  }
-
-  return data;
 };
 
 export const getAllComplaints = async () => {
@@ -128,21 +97,9 @@ export const getAllComplaints = async () => {
     throw new Error("You must be logged in to view complaints.");
   }
 
-  const response = await fetch(`${API_BASE}/complaints`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
+  return requestJson(`${API_BASE}/complaints`, {
+    errorMessage: "Failed to fetch all complaints.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch all complaints.");
-  }
-
-  return data;
 };
 
 export const getComplaintUpdates = async (id) => {
@@ -150,21 +107,9 @@ export const getComplaintUpdates = async (id) => {
     throw new Error("You must be logged in to view updates.");
   }
 
-  const response = await fetch(`${API_BASE}/complaints/${id}/updates`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
+  return requestJson(`${API_BASE}/complaints/${id}/updates`, {
+    errorMessage: "Failed to fetch complaint updates.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch complaint updates.");
-  }
-
-  return data;
 };
 
 export const addComplaintUpdate = async (id, updateData) => {
@@ -176,20 +121,9 @@ export const addComplaintUpdate = async (id, updateData) => {
   if (updateData.message) body.append("message", updateData.message);
   if (updateData.attachment) body.append("attachment", updateData.attachment);
 
-  const response = await fetch(`${API_BASE}/complaints/${id}/updates`, {
+  return requestJson(`${API_BASE}/complaints/${id}/updates`, {
     method: "POST",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
     body,
+    errorMessage: "Failed to add complaint update.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to add complaint update.");
-  }
-
-  return data;
 };

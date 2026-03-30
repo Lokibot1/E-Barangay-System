@@ -1,4 +1,11 @@
 import { BRANDING_API_URL } from "../config/runtimeApi";
+import {
+  createServerUnavailableError,
+  rememberRemoteRequestFailure,
+  rememberRemoteRequestSuccess,
+  runDedupedRemoteRequest,
+  shouldAttemptRemoteRequest,
+} from "./remoteRequestControl";
 
 const STORAGE_KEY = "barangay_logo_data_url";
 
@@ -35,14 +42,24 @@ export const readImageFileAsDataUrl = (file) =>
   });
 
 export const fetchBarangayLogoDataUrlRemote = async () => {
+  if (!shouldAttemptRemoteRequest(BRANDING_API_URL)) {
+    return null;
+  }
+
   try {
-    const res = await fetch(BRANDING_API_URL, {
-      headers: { Accept: "application/json" },
-    });
+    const res = await runDedupedRemoteRequest(
+      `GET:${BRANDING_API_URL}`,
+      () =>
+        fetch(BRANDING_API_URL, {
+          headers: { Accept: "application/json" },
+        }),
+    );
     if (!res.ok) return null;
     const data = await res.json().catch(() => ({}));
+    rememberRemoteRequestSuccess(BRANDING_API_URL);
     return data?.dataUrl || data?.imageUrl || "";
-  } catch {
+  } catch (error) {
+    rememberRemoteRequestFailure(BRANDING_API_URL, error);
     return null;
   }
 };
@@ -58,35 +75,53 @@ const buildBrandingHeaders = (includeJson = false) => {
 };
 
 export const saveBarangayLogoDataUrlRemote = async (dataUrl) => {
-  const res = await fetch(BRANDING_API_URL, {
-    method: "POST",
-    headers: buildBrandingHeaders(true),
-    body: JSON.stringify({ dataUrl }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(
-      data?.message ||
-      (res.status === 401 || res.status === 403
-        ? "Only an authenticated admin can update the barangay logo."
-        : "Failed to save logo."),
-    );
+  try {
+    const res = await fetch(BRANDING_API_URL, {
+      method: "POST",
+      headers: buildBrandingHeaders(true),
+      body: JSON.stringify({ dataUrl }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(
+        data?.message ||
+          (res.status === 401 || res.status === 403
+            ? "Only an authenticated admin can update the barangay logo."
+            : "Failed to save logo."),
+      );
+    }
+    rememberRemoteRequestSuccess(BRANDING_API_URL);
+    return data?.dataUrl || data?.imageUrl || dataUrl || "";
+  } catch (error) {
+    if (error instanceof TypeError) {
+      rememberRemoteRequestFailure(BRANDING_API_URL, error);
+      throw createServerUnavailableError();
+    }
+    throw error;
   }
-  return data?.dataUrl || data?.imageUrl || dataUrl || "";
 };
 
 export const clearBarangayLogoDataUrlRemote = async () => {
-  const res = await fetch(BRANDING_API_URL, {
-    method: "DELETE",
-    headers: buildBrandingHeaders(),
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(
-      data?.message ||
-      (res.status === 401 || res.status === 403
-        ? "Only an authenticated admin can update the barangay logo."
-        : "Failed to remove logo."),
-    );
+  try {
+    const res = await fetch(BRANDING_API_URL, {
+      method: "DELETE",
+      headers: buildBrandingHeaders(),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(
+        data?.message ||
+          (res.status === 401 || res.status === 403
+            ? "Only an authenticated admin can update the barangay logo."
+            : "Failed to remove logo."),
+      );
+    }
+    rememberRemoteRequestSuccess(BRANDING_API_URL);
+  } catch (error) {
+    if (error instanceof TypeError) {
+      rememberRemoteRequestFailure(BRANDING_API_URL, error);
+      throw createServerUnavailableError();
+    }
+    throw error;
   }
 };

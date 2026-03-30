@@ -175,6 +175,41 @@ export const services = [
   },
 ];
 
+export const feedbackCategories = [
+  "Document Requests",
+  "Resident Verification",
+  "Complaint Handling",
+  "Incident Response",
+  "General Assistance",
+];
+
+export const initialFeedbackEntries = [
+  {
+    id: "feedback-1",
+    name: "Maria Santos",
+    category: "Document Requests",
+    rating: 5,
+    comment: "Clear ang process at mabilis akong na-update noong ready for pickup na ang request ko.",
+    submittedAt: "Mar 18, 2026",
+  },
+  {
+    id: "feedback-2",
+    name: "Joel Ramirez",
+    category: "Resident Verification",
+    rating: 4,
+    comment: "Maayos ang verification flow. Mas helpful pa kung may mas malinaw na note sa expected waiting time.",
+    submittedAt: "Mar 16, 2026",
+  },
+  {
+    id: "feedback-3",
+    name: "Anonymous Resident",
+    category: "Complaint Handling",
+    rating: 5,
+    comment: "Madaling sundan ang complaint status at may appointment notice agad pagkatapos ma-review.",
+    submittedAt: "Mar 14, 2026",
+  },
+];
+
 export const officials = [
   {
     id: "reynaldo-rivera",

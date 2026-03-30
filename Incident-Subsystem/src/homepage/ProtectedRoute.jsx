@@ -7,7 +7,10 @@
 
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { isAuthenticated, isAdmin } from "./services/loginService";
+import {
+  canAccessAdminPanel,
+  isAuthenticated,
+} from "./services/loginService";
 
 /**
  * General auth guard — redirects to /login if not logged in.
@@ -29,7 +32,7 @@ export const AdminRoute = () => {
     return <Navigate to="/login" replace />;
   }
   
-  if (!isAdmin()) {
+  if (!canAccessAdminPanel()) {
     // If authenticated but NOT an admin, kick them back to the user area
     return <Navigate to="/dashboard" replace />;
   }
@@ -46,11 +49,26 @@ export const UserRoute = () => {
     return <Navigate to="/login" replace />;
   }
   
-  if (isAdmin()) {
+  if (canAccessAdminPanel()) {
     // If authenticated and IS an admin, redirect to admin home
     return <Navigate to="/admin" replace />;
   }
   
+  return <Outlet />;
+};
+
+export const PermissionRoute = ({ allowed, redirectTo = "/admin" }) => {
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const isAllowed =
+    typeof allowed === "function" ? allowed() : Boolean(allowed);
+
+  if (!isAllowed) {
+    return <Navigate to={redirectTo} replace />;
+  }
+
   return <Outlet />;
 };
 

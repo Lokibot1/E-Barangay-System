@@ -408,7 +408,7 @@ const IdentityTab = ({
 
             {/* ── QR MODAL ── */}
             {isQrOpen && (
-                <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
+                <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-[20px] backdrop-saturate-150">
                     <div className={`w-full max-w-sm rounded-[28px] border shadow-2xl overflow-hidden ${currentTheme === 'dark' ? 'bg-slate-900 text-white border-white/10' : 'bg-white text-slate-900 border-slate-200'}`}>
                         <div className="flex items-center justify-between px-6 pt-5 pb-4">
                             <div className="flex items-center gap-2">

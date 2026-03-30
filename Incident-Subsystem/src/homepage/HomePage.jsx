@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBranding } from "../context/BrandingContext";
 
@@ -9,6 +9,7 @@ import AnnouncementsSection from "./components/AnnouncementsSection";
 import ContactSection from "./components/ContactSection";
 import EventsCalendarSection from "./components/EventsCalendarSection";
 import FAQSection from "./components/FAQSection";
+import FeedbackSection from "./components/FeedbackSection";
 import HeroSection from "./components/HeroSection";
 import HomeFooter from "./components/HomeFooter";
 import HomeNavbar from "./components/HomeNavbar";
@@ -16,8 +17,16 @@ import NewsModal from "./components/NewsModal";
 import OfficialsSection from "./components/OfficialsSection";
 import ServiceCard from "./components/ServiceCard";
 import {
-  announcements,
+  ANNOUNCEMENTS_UPDATED_EVENT,
+  loadPublishedAnnouncements,
+  revokeAnnouncementMediaUrls,
+  subscribeToAnnouncementAutoPublish,
+} from "../services/shared/announcementBoardService";
+import {
+  announcements as homepageAnnouncements,
+  feedbackCategories,
   faqItems,
+  initialFeedbackEntries,
   officials,
   upcomingEvents,
   services,
@@ -30,6 +39,7 @@ export default function HomePage() {
     () => localStorage.getItem("appTheme") || "blue",
   );
   const isDarkMode = currentTheme === "dark";
+  const announcementMediaUrlsRef = useRef(new Set());
 
   useEffect(() => {
     const handler = (e) => setCurrentTheme(e.detail);
@@ -37,12 +47,130 @@ export default function HomePage() {
     return () => window.removeEventListener("themeChange", handler);
   }, []);
 
+  useEffect(() => {
+    let isDisposed = false;
+    const mediaUrlsRegistry = announcementMediaUrlsRef.current;
+
+    const rememberAnnouncementMediaUrls = (items) => {
+      (Array.isArray(items) ? items : []).forEach((item) => {
+        const url = item?.media?.url;
+        if (typeof url === "string" && url.startsWith("blob:")) {
+          mediaUrlsRegistry.add(url);
+        }
+      });
+    };
+
+    const syncAnnouncements = async () => {
+      try {
+        const nextAnnouncements =
+          await loadPublishedAnnouncements(homepageAnnouncements);
+
+        if (isDisposed) {
+          revokeAnnouncementMediaUrls(nextAnnouncements);
+          return;
+        }
+
+        rememberAnnouncementMediaUrls(nextAnnouncements);
+        setAnnouncementBoard(nextAnnouncements);
+      } catch {
+        if (!isDisposed) {
+          setAnnouncementBoard(homepageAnnouncements);
+        }
+      }
+    };
+    const unsubscribeAutoPublish = subscribeToAnnouncementAutoPublish();
+
+    void syncAnnouncements();
+    window.addEventListener(ANNOUNCEMENTS_UPDATED_EVENT, syncAnnouncements);
+
+    return () => {
+      isDisposed = true;
+      unsubscribeAutoPublish();
+      window.removeEventListener(ANNOUNCEMENTS_UPDATED_EVENT, syncAnnouncements);
+      mediaUrlsRegistry.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+      mediaUrlsRegistry.clear();
+    };
+  }, []);
+
   // ── UI state ─────────────────────────────────────────────────────────
   const [selectedNews, setSelectedNews] = useState(null);
   const [contactData, setContactData] = useState({ name: "", email: "", message: "" });
   const [formStatus, setFormStatus] = useState("idle");
+  const [announcementBoard, setAnnouncementBoard] = useState(() =>
+    homepageAnnouncements,
+  );
   const { logoDataUrl } = useBranding();
   const logoSrc = logoDataUrl || logoPic;
+
+  const homepageEvents = useMemo(() => {
+    const formatDateKey = (value) => {
+      if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return value;
+      }
+
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
+    const formatTimeLabel = (value) => {
+      if (!value) return "Time to be announced";
+
+      if (typeof value === "string" && /^\d{2}:\d{2}/.test(value)) {
+        const [hours = "00", minutes = "00"] = value.split(":");
+        const date = new Date();
+        date.setHours(Number(hours), Number(minutes), 0, 0);
+        return date.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        });
+      }
+
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "Time to be announced";
+
+      return date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+    };
+
+    const announcementEvents = (announcementBoard || [])
+      .filter((item) => String(item?.tag || "").toLowerCase() === "event")
+      .map((item) => {
+        const eventDate = item?.event_date || item?.publish_at || item?.created_at || "";
+
+        return {
+          id: `announcement-event-${item.id}`,
+          date: formatDateKey(eventDate),
+          startTime: formatTimeLabel(item?.event_start_time || item?.publish_at),
+          endTime: item?.event_end_time
+            ? formatTimeLabel(item.event_end_time)
+            : "",
+          title: item.title || "Barangay Event",
+          category: item.tag || "Event",
+          location: item?.event_location || "See announcement details",
+          details:
+            item.desc ||
+            item.fullContent ||
+            "Check the announcement card for the full event details.",
+          source: "announcement",
+        };
+      })
+      .filter((item) => item.date);
+
+    return [...announcementEvents, ...upcomingEvents].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+    );
+  }, [announcementBoard]);
 
   const navigate = useNavigate();
 
@@ -72,7 +200,9 @@ export default function HomePage() {
     <div
       id="main-content"
       className={`font-kumbh transition-colors duration-500 overflow-x-hidden ${
-        isDarkMode ? "bg-slate-950 text-white" : "bg-white text-slate-900"
+        isDarkMode
+          ? "bg-slate-950 text-white"
+          : "bg-[linear-gradient(180deg,#f5faf7_0%,#eef6f1_100%)] text-slate-900"
       }`}
     >
       <HomeNavbar isDarkMode={isDarkMode} onScrollTo={scrollToSection} />
@@ -81,16 +211,17 @@ export default function HomePage() {
         isDarkMode={isDarkMode}
         backgroundImage={bsbPic}
         onLatestNews={() => scrollToSection("news")}
+        onExploreServices={() => scrollToSection("services")}
       />
 
       <AnnouncementsSection
         isDarkMode={isDarkMode}
-        announcements={announcements}
+        announcements={announcementBoard}
         fallbackImage={bsbPic}
         onReadMore={setSelectedNews}
       />
 
-      <EventsCalendarSection isDarkMode={isDarkMode} events={upcomingEvents} />
+      <EventsCalendarSection isDarkMode={isDarkMode} events={homepageEvents} />
 
       <NewsModal
         selectedNews={selectedNews}
@@ -116,6 +247,12 @@ export default function HomePage() {
 
       <FAQSection isDarkMode={isDarkMode} faqItems={faqItems} />
 
+      <FeedbackSection
+        isDarkMode={isDarkMode}
+        feedbackCategories={feedbackCategories}
+        initialFeedbackEntries={initialFeedbackEntries}
+      />
+
       <OfficialsSection
         officials={officials}
         isDarkMode={isDarkMode}
@@ -134,9 +271,13 @@ export default function HomePage() {
         isDarkMode={isDarkMode}
         logoSrc={logoSrc}
         socialLinks={socialLinks}
+        onAboutClick={() => scrollToSection("about")}
         onNewsClick={() => scrollToSection("news")}
         onCitizenPortalClick={() => navigate("/sub-system-2")}
+        onServicesClick={() => scrollToSection("services")}
         onOfficialsClick={() => scrollToSection("officials")}
+        onFeedbackClick={() => scrollToSection("feedback")}
+        onContactClick={() => scrollToSection("contact")}
       />
 
       <style
@@ -149,7 +290,15 @@ export default function HomePage() {
           from { opacity: 0; transform: translateY(10px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        @keyframes fade-up {
+          from { opacity: 0; transform: translateY(24px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
         .animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
+        .animate-fade-up {
+          opacity: 0;
+          animation: fade-up 0.82s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
       `,
         }}
       />

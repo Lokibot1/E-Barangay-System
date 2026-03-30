@@ -47,17 +47,17 @@ export default function EventsCalendarSection({ isDarkMode, events }) {
   return (
     <section
       id="events"
-      className={`py-16 md:py-24 px-6 scroll-mt-24 ${
+      className={`py-10 scroll-mt-24 md:py-14 ${
         isDarkMode ? "bg-slate-900/50" : "bg-white"
       }`}
     >
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-8 md:mb-10">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end md:mb-8">
           <div>
             <p className="text-[9px] font-black uppercase tracking-[0.3em] text-emerald-600 mb-3">
               Community Calendar
             </p>
-            <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter">
+            <h3 className="text-2xl md:text-4xl font-black uppercase tracking-tighter">
               Upcoming Events
             </h3>
           </div>
@@ -70,13 +70,13 @@ export default function EventsCalendarSection({ isDarkMode, events }) {
                   (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
                 )
               }
-              className={`p-2 rounded-xl border ${
+              className={`rounded-xl border p-2 ${
                 isDarkMode ? "border-white/10 hover:bg-white/10" : "border-black/10 hover:bg-black/5"
               }`}
             >
               <ChevronLeft size={16} />
             </button>
-            <p className="text-sm md:text-base font-black uppercase tracking-widest min-w-[180px] text-center">
+            <p className="min-w-[150px] text-center text-[0.85rem] font-black uppercase tracking-[0.16em] md:text-[0.95rem]">
               {monthLabel}
             </p>
             <button
@@ -87,7 +87,7 @@ export default function EventsCalendarSection({ isDarkMode, events }) {
                   (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
                 )
               }
-              className={`p-2 rounded-xl border ${
+              className={`rounded-xl border p-2 ${
                 isDarkMode ? "border-white/10 hover:bg-white/10" : "border-black/10 hover:bg-black/5"
               }`}
             >
@@ -96,13 +96,13 @@ export default function EventsCalendarSection({ isDarkMode, events }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_1fr] gap-8">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.78fr]">
           <div
-            className={`rounded-[28px] border p-5 md:p-7 ${
+            className={`rounded-[24px] border p-4 md:p-5 ${
               isDarkMode ? "bg-slate-900 border-white/10" : "bg-emerald-50/60 border-black/5"
             }`}
           >
-            <div className="grid grid-cols-7 gap-2 mb-3">
+            <div className="mb-3 grid grid-cols-7 gap-2">
               {WEEK_HEADERS.map((label) => (
                 <p
                   key={label}
@@ -118,7 +118,7 @@ export default function EventsCalendarSection({ isDarkMode, events }) {
                 return (
                   <div
                     key={`${day ?? "empty"}-${index}`}
-                    className={`aspect-square rounded-xl border flex items-center justify-center text-xs font-black ${
+                    className={`flex aspect-square items-center justify-center rounded-xl border text-xs font-black ${
                       !day
                         ? "border-transparent"
                         : hasEvent
@@ -135,10 +135,10 @@ export default function EventsCalendarSection({ isDarkMode, events }) {
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 self-start xl:max-w-[640px]">
             {monthData.monthEvents.length === 0 ? (
               <div
-                className={`rounded-[28px] border p-8 text-center ${
+                className={`rounded-[24px] border p-7 text-center ${
                   isDarkMode ? "bg-slate-900 border-white/10" : "bg-white border-black/5"
                 }`}
               >
@@ -155,30 +155,40 @@ export default function EventsCalendarSection({ isDarkMode, events }) {
                   day: "numeric",
                   weekday: "short",
                 }).format(eventDate);
+                const timeLabel =
+                  event.startTime && event.endTime
+                    ? `${event.startTime} - ${event.endTime}`
+                    : event.startTime || "Time to be announced";
+                const locationLabel =
+                  event.location || "Location to be announced";
 
                 return (
                   <article
                     key={event.id}
-                    className={`rounded-[24px] border p-5 ${
+                    className={`rounded-[18px] border px-4 py-3.5 text-left ${
                       isDarkMode ? "bg-slate-900 border-white/10" : "bg-white border-black/5 shadow-sm"
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">
+                    <div className="mb-2 flex items-start justify-between gap-3">
+                      <span className="text-[8px] font-black uppercase tracking-[0.18em] text-emerald-600">
                         {event.category}
                       </span>
-                      <span className="text-[11px] font-bold opacity-60">{dateLabel}</span>
+                      <span className="text-[9px] font-bold opacity-60">{dateLabel}</span>
                     </div>
-                    <h4 className="text-lg font-black uppercase leading-tight mb-2">{event.title}</h4>
-                    <p className="text-sm opacity-70 mb-4">{event.details}</p>
-                    <div className="space-y-2 text-xs">
-                      <p className="inline-flex items-center gap-2 opacity-70">
-                        <Clock3 size={14} className="text-emerald-600" />
-                        {event.startTime} - {event.endTime}
+                    <h4 className="mb-1.5 text-left text-[0.88rem] font-black uppercase leading-snug md:text-[0.95rem]">
+                      {event.title}
+                    </h4>
+                    <p className="mb-2.5 line-clamp-2 text-left text-[0.78rem] leading-6 opacity-70">
+                      {event.details}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-left text-[0.74rem]">
+                      <p className="flex items-center gap-2 opacity-70">
+                        <Clock3 size={11} className="text-emerald-600" />
+                        <span>{timeLabel}</span>
                       </p>
-                      <p className="inline-flex items-center gap-2 opacity-70">
-                        <MapPin size={14} className="text-emerald-600" />
-                        {event.location}
+                      <p className="flex items-center gap-2 opacity-70">
+                        <MapPin size={11} className="shrink-0 text-emerald-600" />
+                        <span>{locationLabel}</span>
                       </p>
                     </div>
                   </article>

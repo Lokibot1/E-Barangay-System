@@ -41,10 +41,23 @@ const SignupForm = ({
   selectAddress,
   compactMode = false,
   currentTheme = 'modern',
+  onReviewOpenChange,
 }) => {
   const [step,         setStep]         = useState(1);
   const [previews,     setPreviews]     = useState({ front: null, back: null });
   const [isReviewOpen, setIsReviewOpen] = useState(false);
+
+  useEffect(() => {
+    if (!onReviewOpenChange) return;
+
+    onReviewOpenChange(isReviewOpen);
+  }, [isReviewOpen, onReviewOpenChange]);
+
+  useEffect(() => {
+    if (!onReviewOpenChange) return undefined;
+
+    return () => onReviewOpenChange(false);
+  }, [onReviewOpenChange]);
 
   // ── Indigency (staff + Head only) ─────────────────────────────────────────
   const isHead = formData.householdPosition === 'Head' || formData.householdPosition === 'Head of Family';

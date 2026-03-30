@@ -270,13 +270,13 @@ export function DonutSummaryCard({
   const chartHeight = 236;
   const centerX = chartWidth / 2;
   const centerY = chartHeight / 2;
-  const centerDiskRadius = Math.max(innerRadius - 1, 0);
+  const centerDiskRadius = Math.max(innerRadius + 1, 0);
   const centerDiskDiameter = centerDiskRadius * 2;
-  const centerValueFontSize = String(formattedTotal).length > 6 ? 17 : 25;
-  const centerLabelFontSize = 9;
-  const centerTextGap = 5;
-  const centerContentOffsetX = 5;
-  const centerContentOffsetY = 4;
+  const centerValueFontSize = String(formattedTotal).length > 6 ? 15 : 21;
+  const centerLabelFontSize = 7;
+  const centerTextGap = 4;
+  const centerOffsetX = 6;
+  const centerOffsetY = 5;
 
   return (
     <ChartCard
@@ -290,93 +290,98 @@ export function DonutSummaryCard({
       <div className="space-y-5">
         <div className="mx-auto flex h-[236px] w-full min-w-0 justify-center overflow-visible">
           <div className="relative h-[236px] shrink-0" style={{ width: `${chartWidth}px` }}>
-            <PieChart width={chartWidth} height={chartHeight}>
-              <Pie
-                data={data}
-                cx={centerX}
-                cy={centerY}
-                innerRadius={innerRadius}
-                outerRadius={outerRadius}
-                paddingAngle={3}
-                cornerRadius={8}
-                dataKey="value"
-                labelLine={false}
-                label={({ percent, cx, cy, midAngle, innerRadius: ir, outerRadius: or }) => {
-                  if (!percent || percent < 0.08) return null;
-                  const angle = (-midAngle * Math.PI) / 180;
-                  const label = `${Math.round(percent * 100)}%`;
-                  const pillWidth = Math.max(30, label.length * 7 + 10);
-                  const pillHeight = 20;
-                  const halfW = pillWidth / 2;
-                  const halfH = pillHeight / 2;
-                  const radialHalfExtent = Math.abs(Math.cos(angle)) * halfW + Math.abs(Math.sin(angle)) * halfH;
-                  const labelPadding = 4;
-                  const minRadius = ir + radialHalfExtent + labelPadding;
-                  const maxRadius = or - radialHalfExtent - labelPadding;
-                  if (minRadius >= maxRadius) return null;
-                  const radius = Math.min(maxRadius, Math.max(ir + (or - ir) * 0.5, minRadius));
-                  const x = cx + radius * Math.cos(angle);
-                  const y = cy + radius * Math.sin(angle);
-                  return (
-                    <g>
-                      <rect
-                        x={x - pillWidth / 2}
-                        y={y - pillHeight / 2}
-                        width={pillWidth}
-                        height={pillHeight}
-                        rx={pillHeight / 2}
-                        fill="rgba(255,255,255,0.82)"
-                        stroke="rgba(148,163,184,0.28)"
-                      />
-                      <text
-                        x={x}
-                        y={y}
-                        fill="#1f2937"
-                        textAnchor="middle"
-                        dominantBaseline="central"
-                        fontSize="11"
-                        fontWeight="700"
-                      >
-                        {label}
-                      </text>
-                    </g>
-                  );
-                }}
-              >
-                {data.map((item) => (
-                  <Cell key={item.name} fill={item.color} />
-                ))}
-              </Pie>
-              <Tooltip
-                content={(
-                  <AnalyticsTooltip
-                    labelFormatter={(_, payload) => payload?.[0]?.name}
-                    valueFormatter={(value) => valueFormatter(value)}
-                  />
-                )}
-                allowEscapeViewBox={{ x: true, y: true }}
-                offset={20}
-                wrapperStyle={{ outline: 'none', zIndex: 40 }}
-              />
-
-              <g pointerEvents="none">
-                <circle
-                  cx={centerX}
-                  cy={centerY}
-                  r={centerDiskRadius}
-                  fill="rgba(255,255,255,0.98)"
-                />
-              </g>
-            </PieChart>
-
             <div
-              className="pointer-events-none absolute z-10 flex items-center justify-center text-center"
+              className="pointer-events-none absolute z-0 rounded-full"
               style={{
-                left: '50%',
-                top: '50%',
+                left: `${centerX}px`,
+                top: `${centerY}px`,
                 width: `${centerDiskDiameter}px`,
                 height: `${centerDiskDiameter}px`,
-                transform: `translate(-50%, -50%) translate(${centerContentOffsetX}px, ${centerContentOffsetY}px)`,
+                transform: `translate(-50%, -50%) translate(${centerOffsetX}px, ${centerOffsetY}px)`,
+                backgroundColor: 'rgba(255,255,255,0.98)',
+              }}
+            />
+
+            <div className="relative z-10">
+              <PieChart width={chartWidth} height={chartHeight}>
+                <Pie
+                  data={data}
+                  cx={centerX}
+                  cy={centerY}
+                  innerRadius={innerRadius}
+                  outerRadius={outerRadius}
+                  paddingAngle={3}
+                  cornerRadius={8}
+                  dataKey="value"
+                  labelLine={false}
+                  label={({ percent, cx, cy, midAngle, innerRadius: ir, outerRadius: or }) => {
+                    if (!percent || percent < 0.08) return null;
+                    const angle = (-midAngle * Math.PI) / 180;
+                    const label = `${Math.round(percent * 100)}%`;
+                    const pillWidth = Math.max(30, label.length * 7 + 10);
+                    const pillHeight = 20;
+                    const halfW = pillWidth / 2;
+                    const halfH = pillHeight / 2;
+                    const radialHalfExtent = Math.abs(Math.cos(angle)) * halfW + Math.abs(Math.sin(angle)) * halfH;
+                    const labelPadding = 4;
+                    const minRadius = ir + radialHalfExtent + labelPadding;
+                    const maxRadius = or - radialHalfExtent - labelPadding;
+                    if (minRadius >= maxRadius) return null;
+                    const radius = Math.min(maxRadius, Math.max(ir + (or - ir) * 0.5, minRadius));
+                    const x = cx + radius * Math.cos(angle);
+                    const y = cy + radius * Math.sin(angle);
+                    return (
+                      <g>
+                        <rect
+                          x={x - pillWidth / 2}
+                          y={y - pillHeight / 2}
+                          width={pillWidth}
+                          height={pillHeight}
+                          rx={pillHeight / 2}
+                          fill="rgba(255,255,255,0.82)"
+                          stroke="rgba(148,163,184,0.28)"
+                        />
+                        <text
+                          x={x}
+                          y={y}
+                          fill="#1f2937"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          fontSize="11"
+                          fontWeight="700"
+                        >
+                          {label}
+                        </text>
+                      </g>
+                    );
+                  }}
+                >
+                  {data.map((item) => (
+                    <Cell key={item.name} fill={item.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  content={(
+                    <AnalyticsTooltip
+                      labelFormatter={(_, payload) => payload?.[0]?.name}
+                      valueFormatter={(value) => valueFormatter(value)}
+                    />
+                  )}
+                  allowEscapeViewBox={{ x: true, y: true }}
+                  offset={20}
+                  wrapperStyle={{ outline: 'none', zIndex: 40 }}
+                />
+              </PieChart>
+            </div>
+
+            <div
+              className="pointer-events-none absolute z-20 flex items-center justify-center text-center"
+              style={{
+                left: `${centerX}px`,
+                top: `${centerY}px`,
+                width: `${centerDiskDiameter}px`,
+                height: `${centerDiskDiameter}px`,
+                transform: `translate(-50%, -50%) translate(${centerOffsetX}px, ${centerOffsetY}px)`,
               }}
             >
               <div

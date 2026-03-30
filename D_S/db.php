@@ -7,7 +7,7 @@ header('Content-Type: application/json');
 $servername = "localhost";
 $username = "root";
 $password = "";
-$dbname = "barangay_db";
+$dbname = "bdg";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 

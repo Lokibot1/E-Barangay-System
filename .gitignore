@@ -3,3 +3,6 @@
 public/storage
 storage/app/public/branding/*
 !storage/app/public/.gitkeep
+Incident-Subsystem/dist/
+Incident-Subsystem/.vite/
+Incident-Subsystem/temp-build/

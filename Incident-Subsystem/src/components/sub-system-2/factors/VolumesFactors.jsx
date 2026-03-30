@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import {
@@ -57,6 +57,58 @@ const fetchFactorData = async (endpoint) => {
     return null;
   }
 };
+
+function SizedChartContainer({ className = "", children }) {
+  const containerRef = useRef(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node) return undefined;
+
+    const updateSize = () => {
+      const rect = node.getBoundingClientRect();
+      const nextWidth = Math.round(rect.width);
+      const nextHeight = Math.round(rect.height);
+      setSize((current) => {
+        if (
+          current.width === nextWidth &&
+          current.height === nextHeight
+        ) {
+          return current;
+        }
+        return { width: nextWidth, height: nextHeight };
+      });
+    };
+
+    updateSize();
+
+    if (typeof ResizeObserver === "undefined") {
+      return undefined;
+    }
+
+    const observer = new ResizeObserver(() => {
+      updateSize();
+    });
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  const hasSize = size.width > 0 && size.height > 0;
+
+  return (
+    <div ref={containerRef} className={`w-full min-w-0 ${className}`}>
+      {hasSize
+        ? typeof children === "function"
+          ? children(size)
+          : children
+        : <div className="h-full w-full" aria-hidden="true" />}
+    </div>
+  );
+}
 
 const VolumesFactors = ({ t, isDark, currentTheme = "modern" }) => {
   const factorTheme = getFactorTheme(currentTheme);
@@ -336,8 +388,9 @@ const VolumesFactors = ({ t, isDark, currentTheme = "modern" }) => {
           t={t}
           currentTheme={currentTheme}
         >
-          <div className="h-[260px] w-full min-w-0">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+          <SizedChartContainer className="h-[260px]">
+            {({ width, height }) => (
+            <ResponsiveContainer width={width} height={height} minWidth={0}>
               <PieChart>
                 <Pie
                   data={reportShare}
@@ -364,7 +417,8 @@ const VolumesFactors = ({ t, isDark, currentTheme = "modern" }) => {
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
-          </div>
+            )}
+          </SizedChartContainer>
         </ChartCard>
 
         <ChartCard
@@ -374,8 +428,9 @@ const VolumesFactors = ({ t, isDark, currentTheme = "modern" }) => {
           t={t}
           currentTheme={currentTheme}
         >
-          <div className="h-[300px] w-full min-w-0">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+          <SizedChartContainer className="h-[300px]">
+            {({ width, height }) => (
+            <ResponsiveContainer width={width} height={height} minWidth={0}>
               <BarChart data={genderDistribution}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
@@ -391,7 +446,8 @@ const VolumesFactors = ({ t, isDark, currentTheme = "modern" }) => {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          </div>
+            )}
+          </SizedChartContainer>
         </ChartCard>
 
         <ChartCard
@@ -401,8 +457,9 @@ const VolumesFactors = ({ t, isDark, currentTheme = "modern" }) => {
           t={t}
           currentTheme={currentTheme}
         >
-          <div className="h-[300px] w-full min-w-0">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+          <SizedChartContainer className="h-[300px]">
+            {({ width, height }) => (
+            <ResponsiveContainer width={width} height={height} minWidth={0}>
               <BarChart data={ageDistribution}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="ageGroup" />
@@ -411,7 +468,8 @@ const VolumesFactors = ({ t, isDark, currentTheme = "modern" }) => {
                 <Bar dataKey="value" radius={[8, 8, 0, 0]} fill="#6366F1" />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+            )}
+          </SizedChartContainer>
         </ChartCard>
       </div>
     </div>

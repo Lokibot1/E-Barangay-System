@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, X, LogIn, LayoutDashboard, Sun, Moon, UserPlus } from "lucide-react";
-import { isAuthenticated, isAdmin } from "../services/loginService";
+import { canAccessAdminPanel, isAuthenticated } from "../services/loginService";
 import { useBranding } from "../../context/BrandingContext";
 import logoPic from "../../assets/images/bgylogo.png";
 
@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { label: "About", id: "about" },
   { label: "Announcements", id: "news" },
   { label: "Services", id: "services" },
+  { label: "Feedback", id: "feedback" },
   { label: "Officials", id: "officials" },
   { label: "FAQ", id: "faq" },
   { label: "Contact", id: "contact" },
@@ -36,7 +37,7 @@ export default function HomeNavbar({ isDarkMode, onScrollTo }) {
   }, []);
 
   const handlePortalClick = () => {
-    if (isAdmin()) navigate("/admin");
+    if (canAccessAdminPanel()) navigate("/admin");
     else navigate("/sub-system-2");
   };
 
@@ -57,7 +58,7 @@ export default function HomeNavbar({ isDarkMode, onScrollTo }) {
         scrolled
           ? isDarkMode
             ? "bg-slate-950/95 backdrop-blur-xl border-b border-white/10 shadow-xl"
-            : "bg-white/95 backdrop-blur-xl border-b border-black/5 shadow-xl"
+            : "bg-[#f6faf7]/92 backdrop-blur-xl border-b border-emerald-100 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.22)]"
           : "bg-transparent"
       }`}
     >
@@ -67,7 +68,19 @@ export default function HomeNavbar({ isDarkMode, onScrollTo }) {
           onClick={() => onScrollTo("about")}
           className="flex items-center gap-3 hover:opacity-80 transition-opacity"
         >
-          <img src={logoSrc} alt="Barangay Gulod Logo" className="w-8 h-8" />
+          <span
+            className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border shadow-sm ${
+              isDarkMode
+                ? "border-white/15 bg-white/10"
+                : "border-emerald-100 bg-white/80"
+            }`}
+          >
+            <img
+              src={logoSrc}
+              alt="Barangay Gulod Logo"
+              className="h-full w-full rounded-full object-cover"
+            />
+          </span>
           <span
             className={`font-black text-sm uppercase italic tracking-tight ${
               isDarkMode ? "text-white" : "text-slate-900"
@@ -160,7 +173,7 @@ export default function HomeNavbar({ isDarkMode, onScrollTo }) {
           className={`lg:hidden px-6 py-4 border-t space-y-1 ${
             isDarkMode
               ? "bg-slate-950/98 border-white/10"
-              : "bg-white/98 border-black/5"
+              : "bg-[#f6faf7]/98 border-emerald-100"
           }`}
         >
           {NAV_LINKS.map((link) => (
