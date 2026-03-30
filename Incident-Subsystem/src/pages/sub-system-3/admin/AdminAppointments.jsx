@@ -22,6 +22,8 @@ import { getAllComplaints } from "../../../services/sub-system-3/complaintServic
 import ConfirmationModal from "../../../components/shared/ConfirmationModal";
 
 const ROWS_PER_PAGE = 5;
+let _toastId = 0;
+const nextToastId = () => ++_toastId;
 
 const STATUS_CFG = {
   all:         { label: "ALL",         color: "#16a34a", tabBg: "bg-gray-700" },
@@ -1566,7 +1568,6 @@ const AdminAppointments = () => {
 
       setAppointments(allAppts);
     } catch (err) {
-      console.error("Failed to fetch appointments:", err);
       addToast({
         type: "error",
         title: "Error",
@@ -1589,7 +1590,7 @@ const AdminAppointments = () => {
       days.forEach((d) => { map[d.date] = d; });
       setAvailability(map);
     } catch (err) {
-      console.error("Failed to fetch availability:", err);
+      addToast({ type: "error", title: "Availability Error", message: "Could not load available time slots." });
     }
   }, []);
 
@@ -1619,7 +1620,7 @@ const AdminAppointments = () => {
   const addToast = useCallback((toast) => {
     setToasts((prev) => [
       ...prev,
-      { id: Date.now(), duration: 4000, ...toast },
+      { id: nextToastId(), duration: 4000, ...toast },
     ]);
   }, []);
   const removeToast = useCallback((id) => {

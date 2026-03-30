@@ -180,6 +180,26 @@ describe("CaseManagementPage", () => {
     });
   });
 
+  describe("error handling", () => {
+    it("shows an error toast when fetching complaints fails", async () => {
+      getMyComplaints.mockRejectedValue(new Error("Network error"));
+      render(<CaseManagementPage />);
+      await waitFor(() =>
+        expect(screen.getByText("Load Failed")).toBeInTheDocument()
+      );
+    });
+
+    it("shows an error toast when fetching incidents fails", async () => {
+      incidentService.getMyIncidents.mockRejectedValue(new Error("Server error"));
+      render(<CaseManagementPage />);
+      await waitFor(() => screen.getByText("My Incidents"));
+      fireEvent.click(screen.getByText("My Incidents"));
+      await waitFor(() =>
+        expect(screen.getByText("Load Failed")).toBeInTheDocument()
+      );
+    });
+  });
+
   describe("with data", () => {
     const makeComplaint = (id) => ({
       id,

@@ -20,6 +20,7 @@ import {
   CHART_COLORS,
   STATUS_COLORS,
 } from "../../../components/sub-system-2/factors/data";
+import Toast from "../../../components/shared/modals/Toast";
 import {
   ResponsiveContainer,
   BarChart,
@@ -330,6 +331,13 @@ export default function AdminLanding() {
   const [analyticsError, setAnalyticsError] = useState(null);
   const [showKebab, setShowKebab] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const addToast = useCallback((toast) => {
+    setToasts((prev) => [...prev, { id: Date.now(), ...toast }]);
+  }, []);
+  const removeToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   // Per-chart legend toggle state
   const [hiddenMonthly, toggleMonthly] = useToggleSet();
@@ -387,11 +395,11 @@ export default function AdminLanding() {
       setComplaints(complaintsArray);
       setAppointments(appointmentArray);
     } catch (err) {
-      console.error("Failed to fetch admin dashboard data:", err);
+      addToast({ type: "error", title: "Load Failed", message: "Could not load dashboard data. Please refresh." });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [addToast]);
 
   useEffect(() => {
     let active = true;
@@ -1266,6 +1274,7 @@ export default function AdminLanding() {
         complaints={complaints}
         appointments={appointments}
       />
+      <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
     </div>
   );
 }

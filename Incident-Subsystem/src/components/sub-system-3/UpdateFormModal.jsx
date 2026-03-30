@@ -74,7 +74,7 @@ const EMPTY_NEW_FIELD = {
   is_active: true,
 };
 
-const UpdateFormModal = ({ isOpen, onClose, formType, currentTheme }) => {
+const UpdateFormModal = ({ isOpen, onClose, formType, currentTheme, addToast }) => {
   const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
 
@@ -103,10 +103,11 @@ const UpdateFormModal = ({ isOpen, onClose, formType, currentTheme }) => {
       setCustomFields(all.filter((f) => f.field_for === formType));
     } catch (err) {
       setError(err.message);
+      addToast?.({ type: "error", title: "Load Failed", message: err.message || "Could not load form fields." });
     } finally {
       setLoading(false);
     }
-  }, [formType]);
+  }, [formType, addToast]);
 
   useEffect(() => {
     if (isOpen) {
@@ -143,6 +144,7 @@ const UpdateFormModal = ({ isOpen, onClose, formType, currentTheme }) => {
       );
     } catch (err) {
       setError(err.message);
+      addToast?.({ type: "error", title: "Toggle Failed", message: err.message || "Could not update field status." });
     } finally {
       setTogglingId(null);
     }
@@ -178,6 +180,7 @@ const UpdateFormModal = ({ isOpen, onClose, formType, currentTheme }) => {
       setNewField(EMPTY_NEW_FIELD);
     } catch (err) {
       setSaveError(err.message);
+      addToast?.({ type: "error", title: "Save Failed", message: err.message || "Could not create the field." });
     } finally {
       setSaving(false);
     }

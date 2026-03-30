@@ -5,6 +5,7 @@ import TabsComponent from "../../components/sub-system-3/TabsComponent";
 import ReportCard from "../../components/sub-system-3/ReportCard";
 import ReportDetailModal from "../../components/sub-system-3/Reportdetailmodal";
 import MapComponent from "../../components/shared/MapComponent";
+import Toast from "../../components/shared/modals/Toast";
 import themeTokens from "../../Themetokens";
 import { incidentService } from "../../services/sub-system-3/incidentService";
 import { getMyComplaints } from "../../services/sub-system-3/complaintService";
@@ -56,6 +57,13 @@ const CaseManagementPage = () => {
   const apptListRef    = useRef(null);
   const apptSentinelRef = useRef(null);
   const [loading, setLoading] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const addToast = useCallback((toast) => {
+    setToasts((prev) => [...prev, { id: Date.now(), ...toast }]);
+  }, []);
+  const removeToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   const APPT_PAGE_SIZE = 8;
   const TABLE_PAGE_SIZE = 8;
@@ -198,11 +206,11 @@ const CaseManagementPage = () => {
         setAppointments(allAppts);
       }
     } catch (error) {
-      console.error(`Failed to fetch ${activeTab}:`, error);
+      addToast({ type: "error", title: "Load Failed", message: `Could not load your ${activeTab}. Please try again.` });
     } finally {
       setLoading(false);
     }
-  }, [activeTab]);
+  }, [activeTab, addToast]);
 
   useEffect(() => {
     fetchData();
@@ -1058,6 +1066,7 @@ const CaseManagementPage = () => {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
       `}</style>
+      <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
     </>
   );
 };

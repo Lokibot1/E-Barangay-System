@@ -169,6 +169,16 @@ describe("AdminLanding", () => {
     });
   });
 
+  describe("error handling", () => {
+    it("shows an error toast when dashboard data fails to load", async () => {
+      incidentService.getAllIncidents.mockRejectedValue(new Error("Server error"));
+      render(<AdminLanding />);
+      await waitFor(() =>
+        expect(screen.getByText("Load Failed")).toBeInTheDocument()
+      );
+    });
+  });
+
   describe("stat cards with data", () => {
     it("shows correct count of pending incidents", async () => {
       incidentService.getAllIncidents.mockResolvedValue([

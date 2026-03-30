@@ -140,7 +140,20 @@ jest.mock("../../../../components/sub-system-3/ComplaintModal", () =>
   }
 );
 
-jest.mock("../../../../components/shared/modals/Toast", () => () => null);
+jest.mock("../../../../components/shared/modals/Toast", () =>
+  function MockToast({ toasts = [] }) {
+    return (
+      <div data-testid="toast-container">
+        {toasts.map((t) => (
+          <div key={t.id} data-testid="toast" role="alert">
+            <span>{t.title}</span>
+            {t.message && <span>{t.message}</span>}
+          </div>
+        ))}
+      </div>
+    );
+  }
+);
 
 jest.mock("../../../../components/shared/DatePickerField", () => {
   const React = require("react");
@@ -224,6 +237,16 @@ describe("AdminIncidentReports", () => {
       wrap();
       await waitFor(() =>
         expect(screen.getByText("No records found.")).toBeInTheDocument()
+      );
+    });
+  });
+
+  describe("error handling", () => {
+    it("shows an error toast when reports fail to load", async () => {
+      incidentService.getAllIncidents.mockRejectedValue(new Error("Network error"));
+      wrap();
+      await waitFor(() =>
+        expect(screen.getByText("Load Failed")).toBeInTheDocument()
       );
     });
   });

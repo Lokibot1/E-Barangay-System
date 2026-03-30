@@ -270,6 +270,7 @@ const AdminReportDetailsModal = ({
   reportType,
   onStatusUpdate,
   initialTab = "details",
+  addToast,
 }) => {
   const [modalTab, setModalTab] = useState(initialTab);
   const [slideDir, setSlideDir] = useState("right");
@@ -426,7 +427,7 @@ const AdminReportDetailsModal = ({
       });
     } catch (err) {
       console.error("Failed to update status:", err);
-      alert(err.message || "Failed to update status.");
+      addToast?.({ type: "error", title: "Update Failed", message: err.message || "Failed to update status." });
     } finally {
       setIsUpdating(false);
     }
@@ -457,7 +458,7 @@ const AdminReportDetailsModal = ({
       });
     } catch (err) {
       console.error("Failed to dispatch:", err);
-      alert(err.message || "Failed to save dispatch.");
+      addToast?.({ type: "error", title: "Dispatch Failed", message: err.message || "Failed to save dispatch." });
     } finally {
       setIsUpdating(false);
     }
@@ -478,7 +479,7 @@ const AdminReportDetailsModal = ({
       setNoteText("");
     } catch (err) {
       console.error("Failed to save notes:", err);
-      alert(err.message || "Failed to save notes.");
+      addToast?.({ type: "error", title: "Save Failed", message: err.message || "Failed to save notes." });
     } finally {
       setIsUpdating(false);
     }
@@ -501,7 +502,7 @@ const AdminReportDetailsModal = ({
       setUpdateAttachment(null);
     } catch (err) {
       console.error("Failed to save update:", err);
-      alert(err.message || "Failed to save update.");
+      addToast?.({ type: "error", title: "Save Failed", message: err.message || "Failed to save update." });
     } finally {
       setIsUpdating(false);
     }

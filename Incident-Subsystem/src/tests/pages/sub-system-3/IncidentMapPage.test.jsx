@@ -144,6 +144,16 @@ describe("IncidentMapPage", () => {
     });
   });
 
+  describe("error handling", () => {
+    it("shows an error toast when map markers fail to load", async () => {
+      incidentService.getMyIncidents.mockRejectedValue(new Error("Network error"));
+      render(<IncidentMapPage />);
+      await waitFor(() =>
+        expect(screen.getByText("Map Load Failed")).toBeInTheDocument()
+      );
+    });
+  });
+
   describe("explore section", () => {
     it("renders the 'INCIDENT MAPPING' sub-heading", async () => {
       render(<IncidentMapPage />);

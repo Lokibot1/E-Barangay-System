@@ -504,26 +504,11 @@ const AdminIncidentReports = () => {
       const compArray = Array.isArray(compData)
         ? compData
         : compData.data || [];
-      console.log("[DEBUG] Raw complaint data sample:", compArray[0]);
-      console.log(
-        "[DEBUG] Raw complaint fields:",
-        compArray[0] ? Object.keys(compArray[0]) : "no data",
-      );
-      console.log("[DEBUG] Raw incident data sample:", incArray[0]);
       setIncidents(incArray.map(normalizeIncident));
       const normalizedComplaints = compArray.map(normalizeComplaint);
-      console.log(
-        "[DEBUG] Normalized complaint sample:",
-        normalizedComplaints[0],
-      );
-      console.log("[DEBUG] Complaint count:", normalizedComplaints.length);
-      console.log(
-        "[DEBUG] Complaints with valid coords:",
-        normalizedComplaints.filter((c) => c.lat && c.lng).length,
-      );
       setComplaints(normalizedComplaints);
     } catch (err) {
-      console.error("Failed to fetch reports:", err);
+      setToasts((prev) => [...prev, { id: Date.now(), type: "error", title: "Load Failed", message: "Could not load reports. Please try again." }]);
     } finally {
       setLoading(false);
     }
@@ -563,6 +548,10 @@ const AdminIncidentReports = () => {
 
   const removeToast = useCallback((id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const addToast = useCallback((toast) => {
+    setToasts((prev) => [...prev, { id: Date.now(), ...toast }]);
   }, []);
 
   // ── Deep-link from Activity Logs ──────────────────────────────────
@@ -1803,6 +1792,7 @@ const AdminIncidentReports = () => {
               : prev,
           );
         }}
+        addToast={addToast}
       />
 
       {/* Real-time toasts */}
@@ -1827,6 +1817,7 @@ const AdminIncidentReports = () => {
         onClose={() => setShowUpdateForm(false)}
         formType={updateFormType}
         currentTheme={currentTheme}
+        addToast={addToast}
       />
 
       {/* Create Complaint Modal (admin filing on behalf) */}

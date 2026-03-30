@@ -109,7 +109,20 @@ jest.mock("../../../../services/sub-system-3/complaintService", () => ({
   getAllComplaints: jest.fn(),
 }));
 
-jest.mock("../../../../components/shared/modals/Toast", () => () => null);
+jest.mock("../../../../components/shared/modals/Toast", () =>
+  function MockToast({ toasts = [] }) {
+    return (
+      <div data-testid="toast-container">
+        {toasts.map((t) => (
+          <div key={t.id} data-testid="toast" role="alert">
+            <span>{t.title}</span>
+            {t.message && <span>{t.message}</span>}
+          </div>
+        ))}
+      </div>
+    );
+  }
+);
 
 jest.mock("../../../../components/shared/DatePickerField", () => {
   const React = require("react");
@@ -138,7 +151,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   localStorage.clear();
   getAllComplaints.mockResolvedValue([]);
-  getAvailability.mockResolvedValue({});
+  getAvailability.mockResolvedValue([]);
 });
 
 describe("AdminAppointments", () => {
@@ -203,6 +216,16 @@ describe("AdminAppointments", () => {
     it("fetches complaints on mount", async () => {
       render(<AdminAppointments />);
       await waitFor(() => expect(getAllComplaints).toHaveBeenCalled());
+    });
+  });
+
+  describe("error handling", () => {
+    it("shows an error toast when appointments fail to load", async () => {
+      getAllComplaints.mockRejectedValue(new Error("Network error"));
+      render(<AdminAppointments />);
+      await waitFor(() =>
+        expect(screen.getByText("Error")).toBeInTheDocument()
+      );
     });
   });
 
