@@ -3,8 +3,15 @@ import {
 } from "../../homepage/services/loginService";
 import { INCIDENT_API_BASE_URL } from "../../config/runtimeApi";
 import { requestJson } from "../shared/http";
+import { memCache } from "../shared/cache";
 
 const API_BASE = INCIDENT_API_BASE_URL;
+
+const APPT_LIST_CACHE_PREFIX = "appointments:complaint:";
+const APPT_LIST_TTL = 2 * 60 * 1000; // 2 minutes
+
+const AVAILABILITY_CACHE_PREFIX = "appointments:availability:";
+const AVAILABILITY_TTL = 2 * 60 * 1000; // 2 minutes
 
 // ── Business hours config ─────────────────────────────────────────────────────
 export const BUSINESS_DAYS = [1, 2, 3, 4, 5]; // Mon–Fri (0=Sun, 6=Sat)
@@ -31,13 +38,17 @@ const parseScheduledAt = (scheduledAt) => {
  */
 export const getComplaintAppointments = async (complaintId) => {
   if (!isAuthenticated()) throw new Error("Not authenticated.");
-  const data = await requestJson(
-    `${API_BASE}/complaints/${complaintId}/appointments`,
-    {
-      errorMessage: "Failed to fetch appointments.",
-    },
+  return memCache.remember(
+    `${APPT_LIST_CACHE_PREFIX}${complaintId}`,
+    APPT_LIST_TTL,
+    async () => {
+      const data = await requestJson(
+        `${API_BASE}/complaints/${complaintId}/appointments`,
+        { errorMessage: "Failed to fetch appointments." },
+      );
+      return Array.isArray(data) ? data : data.data || [];
+    }
   );
-  return Array.isArray(data) ? data : data.data || [];
 };
 
 /**
@@ -62,12 +73,15 @@ export const getComplaintAppointment = async (complaintId, appointmentId) => {
  */
 export const createAppointment = async (complaintId, appointmentData) => {
   if (!isAuthenticated()) throw new Error("Not authenticated.");
-  return requestJson(`${API_BASE}/complaints/${complaintId}/appointments`, {
+  const result = await requestJson(`${API_BASE}/complaints/${complaintId}/appointments`, {
     method: "POST",
     includeJson: true,
     body: JSON.stringify(appointmentData),
     errorMessage: "Failed to create appointment.",
   });
+  memCache.invalidate(`${APPT_LIST_CACHE_PREFIX}${complaintId}`);
+  memCache.invalidate(AVAILABILITY_CACHE_PREFIX);
+  return result;
 };
 
 /**
@@ -77,7 +91,7 @@ export const createAppointment = async (complaintId, appointmentData) => {
  */
 export const updateAppointment = async (complaintId, appointmentId, updates) => {
   if (!isAuthenticated()) throw new Error("Not authenticated.");
-  return requestJson(
+  const result = await requestJson(
     `${API_BASE}/complaints/${complaintId}/appointments/${appointmentId}`,
     {
       method: "PATCH",
@@ -86,6 +100,9 @@ export const updateAppointment = async (complaintId, appointmentId, updates) => 
       errorMessage: "Failed to update appointment.",
     },
   );
+  memCache.invalidate(`${APPT_LIST_CACHE_PREFIX}${complaintId}`);
+  memCache.invalidate(AVAILABILITY_CACHE_PREFIX);
+  return result;
 };
 
 // ── Status helpers ────────────────────────────────────────────────────────────
@@ -127,11 +144,17 @@ export const markNoShow = async (complaintId, appointmentId) =>
  */
 export const getAvailability = async (start, end) => {
   if (!isAuthenticated()) throw new Error("Not authenticated.");
-  const params = new URLSearchParams({ start, end }).toString();
-  const data = await requestJson(`${API_BASE}/appointments/availability?${params}`, {
-    errorMessage: "Failed to fetch availability.",
-  });
-  return data.days || [];
+  return memCache.remember(
+    `${AVAILABILITY_CACHE_PREFIX}${start}:${end}`,
+    AVAILABILITY_TTL,
+    async () => {
+      const params = new URLSearchParams({ start, end }).toString();
+      const data = await requestJson(`${API_BASE}/appointments/availability?${params}`, {
+        errorMessage: "Failed to fetch availability.",
+      });
+      return data.days || [];
+    }
+  );
 };
 
 // ── Time-slot options for pickers ─────────────────────────────────────────────
