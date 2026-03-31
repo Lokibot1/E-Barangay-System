@@ -4,20 +4,27 @@ import {
 } from "../../homepage/services/loginService";
 import { INCIDENT_API_BASE_URL } from "../../config/runtimeApi";
 import { requestJson } from "../shared/http";
+import { memCache } from "../shared/cache";
+
+const INCIDENT_TYPES_CACHE_KEY = "incident:types";
+const INCIDENT_TYPES_TTL = 60 * 60 * 1000; // 60 minutes — rarely changes
 
 const API_BASE = INCIDENT_API_BASE_URL;
 
 /**
  * Fetch available incident types from the backend.
+ * Cached for 60 minutes — these change only when an admin edits them.
  */
 const getIncidentTypes = async () => {
   if (!isAuthenticated()) {
     throw new Error("You must be logged in to fetch incident types.");
   }
 
-  return requestJson(`${API_BASE}/incident-types`, {
-    errorMessage: "Failed to fetch incident types.",
-  });
+  return memCache.remember(INCIDENT_TYPES_CACHE_KEY, INCIDENT_TYPES_TTL, () =>
+    requestJson(`${API_BASE}/incident-types`, {
+      errorMessage: "Failed to fetch incident types.",
+    })
+  );
 };
 
 /**
