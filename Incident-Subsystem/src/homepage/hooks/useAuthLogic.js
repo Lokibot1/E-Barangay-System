@@ -23,6 +23,9 @@
 import { useState, useEffect } from "react";
 import { authService } from "../services/authService";
 
+const TRACKING_PREFIX = "BGN";
+const TRACKING_DIGITS_LENGTH = 5;
+
 export const useAuthLogic = (navigate) => {
   const [loading,       setLoading]       = useState(false);
   const [authSuccess,   setAuthSuccess]   = useState(null);
@@ -228,11 +231,14 @@ export const useAuthLogic = (navigate) => {
 
   // ── Tracking search ───────────────────────────────────────────────────────
   const handleTrackSearch = async (val) => {
-    const input = val.toUpperCase().trim();
-    setTrackingNum(input);
-    if (input.length >= 8) {
+    const normalizedInput = String(val || "").toUpperCase().replace(TRACKING_PREFIX, "");
+    const digitsOnly = normalizedInput.replace(/\D/g, "").slice(0, TRACKING_DIGITS_LENGTH);
+    setTrackingNum(digitsOnly);
+
+    if (digitsOnly.length === TRACKING_DIGITS_LENGTH) {
+      const fullTrackingNumber = `${TRACKING_PREFIX}${digitsOnly}`;
       try {
-        const res = await authService.track(input);
+        const res = await authService.track(fullTrackingNumber);
         if (res.success) setSearchResult(res.data);
       } catch {
         setSearchResult({ status: "NOT_FOUND", message: "Tracking number not found." });

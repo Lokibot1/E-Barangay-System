@@ -243,36 +243,36 @@ describe("submitAdminEntry", () => {
 
 // ─── handleTrackSearch ────────────────────────────────────────────────────────
 describe("handleTrackSearch", () => {
-  it("uppercases the input and sets trackingNum", async () => {
+  it("keeps only the numeric portion in trackingNum", async () => {
     const { result } = renderHook(() => useAuthLogic(mockNavigate));
     await act(async () => {
-      await result.current.handleTrackSearch("trk-001");
+      await result.current.handleTrackSearch("bgn12a34!5");
     });
-    expect(result.current.trackingNum).toBe("TRK-001");
+    expect(result.current.trackingNum).toBe("12345");
   });
 
-  it("does not call authService.track when input is shorter than 8 chars", async () => {
+  it("does not call authService.track when input is shorter than 5 digits", async () => {
     const { result } = renderHook(() => useAuthLogic(mockNavigate));
     await act(async () => {
-      await result.current.handleTrackSearch("short");
+      await result.current.handleTrackSearch("1234");
     });
     expect(authService.track).not.toHaveBeenCalled();
   });
 
-  it("calls authService.track when input is 8+ chars", async () => {
+  it("calls authService.track with the BGN prefix when input reaches 5 digits", async () => {
     authService.track.mockResolvedValue({ success: true, data: { status: "pending" } });
     const { result } = renderHook(() => useAuthLogic(mockNavigate));
     await act(async () => {
-      await result.current.handleTrackSearch("TRK12345");
+      await result.current.handleTrackSearch("12345");
     });
-    expect(authService.track).toHaveBeenCalledWith("TRK12345");
+    expect(authService.track).toHaveBeenCalledWith("BGN12345");
   });
 
   it("sets searchResult to NOT_FOUND when track throws", async () => {
     authService.track.mockRejectedValue(new Error("Not found"));
     const { result } = renderHook(() => useAuthLogic(mockNavigate));
     await act(async () => {
-      await result.current.handleTrackSearch("TRK12345");
+      await result.current.handleTrackSearch("12345");
     });
     expect(result.current.searchResult?.status).toBe("NOT_FOUND");
   });

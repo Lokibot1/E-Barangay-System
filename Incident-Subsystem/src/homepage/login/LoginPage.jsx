@@ -265,12 +265,19 @@ const LoginPage = () => {
                   </label>
                   <div className="relative">
                     <Search size={12} className={`absolute left-4 top-1/2 -translate-y-1/2 ${mutedClass}`} />
+                    <span className={`absolute left-10 top-1/2 -translate-y-1/2 text-[11px] font-black uppercase tracking-widest font-kumbh pointer-events-none ${
+                      isDarkMode ? "text-slate-300" : "text-slate-500"
+                    }`}>
+                      BGN
+                    </span>
                     <input 
                       type="text" 
                       value={trackingNum} 
                       onChange={(e) => handleTrackSearch(e.target.value)}
-                      placeholder="BGNXXXXX"
-                      className={`w-full pl-10 pr-4 py-2.5 rounded-2xl border text-[11px] font-black uppercase tracking-widest outline-none transition-colors bg-transparent font-kumbh ${
+                      placeholder="12345"
+                      inputMode="numeric"
+                      maxLength={5}
+                      className={`w-full pl-[4.5rem] pr-4 py-2.5 rounded-2xl border text-[11px] font-black uppercase tracking-widest outline-none transition-colors bg-transparent font-kumbh ${
                         isDarkMode ? "border-slate-300/30 text-white" : `border-slate-300 ${t.cardText}`
                       }`} 
                     />
