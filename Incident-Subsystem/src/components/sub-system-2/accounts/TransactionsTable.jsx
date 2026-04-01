@@ -1,7 +1,8 @@
 import React, { useMemo, useState, useEffect } from "react";
-import Swal from "sweetalert2";
+import Swal from "../../../utils/swal";
 import themeTokens from "../../../Themetokens";
 import DatePickerField from "../../shared/DatePickerField";
+import { DOCUMENTS_API_BASE_URL } from "../../../config/runtimeApi";
 
 // Constants
 const ROWS_PER_PAGE = 10;
@@ -72,7 +73,7 @@ const TransactionsTable = () => {
   useEffect(() => {
   const fetchTransactions = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8001/api/transactions");
+      const res = await fetch(`${DOCUMENTS_API_BASE_URL}/transactions`);
       const data = await res.json();
 
       // Exclude rejected transactions
@@ -251,7 +252,7 @@ const TransactionsTable = () => {
                                       return;
                                     }
 
-                                    const res = await fetch(`http://127.0.0.1:8001/api/transactions/${row.paymentId}/mark-paid`, {
+                                    const res = await fetch(`${DOCUMENTS_API_BASE_URL}/transactions/${row.paymentId}/mark-paid`, {
                                       method: "POST",
                                       headers: { "Content-Type": "application/json" },
                                     });

@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { useLanguage } from "../../context/LanguageContext";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
 import TabsComponent from "../../components/sub-system-3/TabsComponent";
 import ReportCard from "../../components/sub-system-3/ReportCard";
 import ReportDetailModal from "../../components/sub-system-3/Reportdetailmodal";
 import MapComponent from "../../components/shared/MapComponent";
+import Toast from "../../components/shared/modals/Toast";
 import themeTokens from "../../Themetokens";
 import { incidentService } from "../../services/sub-system-3/incidentService";
 import { getMyComplaints } from "../../services/sub-system-3/complaintService";
@@ -37,6 +39,7 @@ const apptStatusCfg = {
 
 const CaseManagementPage = () => {
   const { tr } = useLanguage();
+  const location = useLocation();
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("complaints");
@@ -49,11 +52,23 @@ const CaseManagementPage = () => {
   const [apptOpen, setApptOpen] = useState(true);
   const [expandedAppt, setExpandedAppt] = useState(null);
   const [apptPage, setApptPage] = useState(1);
+  const [viewMode, setViewMode] = useState("cards");
+  const [tablePage, setTablePage] = useState(1);
+  const [tableSearch, setTableSearch] = useState("");
+  const [tableSort, setTableSort] = useState("desc");
   const apptListRef    = useRef(null);
   const apptSentinelRef = useRef(null);
   const [loading, setLoading] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const addToast = useCallback((toast) => {
+    setToasts((prev) => [...prev, { id: Date.now(), ...toast }]);
+  }, []);
+  const removeToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   const APPT_PAGE_SIZE = 8;
+  const TABLE_PAGE_SIZE = 8;
   const [currentTheme, setCurrentTheme] = useState(() => {
     return localStorage.getItem("appTheme") || "modern";
   });
@@ -193,11 +208,11 @@ const CaseManagementPage = () => {
         setAppointments(allAppts);
       }
     } catch (error) {
-      console.error(`Failed to fetch ${activeTab}:`, error);
+      addToast({ type: "error", title: "Load Failed", message: `Could not load your ${activeTab}. Please try again.` });
     } finally {
       setLoading(false);
     }
-  }, [activeTab]);
+  }, [activeTab, addToast]);
 
   useEffect(() => {
     fetchData();
@@ -260,6 +275,25 @@ const CaseManagementPage = () => {
     prevEventVersionRef.current = eventVersion;
     fetchData();
   }, [eventVersion, fetchData]);
+
+  useEffect(() => {
+    const { openId, openType } = location.state || {};
+    if (!openId || loading) return;
+
+    const targetTab = openType === "incident" ? "incidents" : "complaints";
+    const sourceList = openType === "incident" ? incidents : complaints;
+    const matchedReport = sourceList.find(
+      (report) => String(report.id) === String(openId),
+    );
+
+    if (!matchedReport) return;
+
+    setActiveTab(targetTab);
+    setSelectedReport(matchedReport);
+    setIsModalOpen(true);
+
+    window.history.replaceState({}, "");
+  }, [complaints, incidents, loading, location.state]);
 
   const currentReports = activeTab === "complaints" ? complaints : incidents;
 
@@ -340,6 +374,8 @@ const CaseManagementPage = () => {
               setActiveFilter("ongoing");
               setApptFilter("all");
               setApptPage(1);
+              setTablePage(1);
+              setTableSearch("");
               setExpandedAppt(null);
             }}
             currentTheme={currentTheme}
@@ -399,8 +435,12 @@ const CaseManagementPage = () => {
                       </svg>
                     </button>
 
+                    {/* Collapsible body — filter pills + list */}
+                    <div
+                      className="overflow-hidden transition-all duration-300 ease-in-out"
+                      style={{ maxHeight: apptOpen ? "660px" : "0px" }}
+                    >
                     {/* Status filter pills */}
-                    {apptOpen && (
                       <div className={`px-5 pb-3 flex flex-wrap gap-2 border-b ${isDark ? "border-slate-700" : "border-gray-100"}`}>
                         {[
                           { key: "all",         label: "All" },
@@ -430,10 +470,9 @@ const CaseManagementPage = () => {
                           </button>
                         ))}
                       </div>
-                    )}
 
                     {/* Appointments list — scrollable, infinite */}
-                    {apptOpen && (() => {
+                    {(() => {
                       const pagedAppts = visibleAppts.slice(0, apptPage * APPT_PAGE_SIZE);
                       const hasMore    = pagedAppts.length < visibleAppts.length;
 
@@ -461,9 +500,31 @@ const CaseManagementPage = () => {
 
                           {/* Body */}
                           {loading ? (
-                            <div className="py-10 text-center">
-                              <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-3" />
-                              <p className={`text-sm ${t.subtleText} font-kumbh`}>{tr.caseManagement.loading}</p>
+                            <div className="divide-y divide-transparent">
+                              {Array.from({ length: 6 }, (_, i) => {
+                                const pulse = isDark
+                                  ? "animate-pulse bg-slate-700/60 rounded"
+                                  : "animate-pulse bg-gray-200/80 rounded";
+                                return (
+                                  <div key={i} className={`flex items-center gap-4 px-4 py-3.5 border-b ${isDark ? "border-slate-700" : "border-gray-100"}`}>
+                                    {/* Date block skeleton */}
+                                    <div className={`flex-shrink-0 w-12 h-[52px] rounded-lg ${pulse}`} />
+                                    {/* Info skeleton */}
+                                    <div className="flex-1 min-w-0 space-y-2">
+                                      <div className={`h-3.5 w-3/4 ${pulse}`} />
+                                      <div className={`h-2.5 w-1/3 ${pulse}`} />
+                                    </div>
+                                    {/* Time skeleton */}
+                                    <div className={`flex-shrink-0 w-16 hidden sm:block`}>
+                                      <div className={`h-3 w-12 mx-auto ${pulse}`} />
+                                    </div>
+                                    {/* Status pill skeleton */}
+                                    <div className={`flex-shrink-0 w-24 flex justify-end`}>
+                                      <div className={`h-5 w-20 rounded-full ${pulse}`} />
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           ) : visibleAppts.length === 0 ? (
                             <div className="py-10 text-center">
@@ -539,7 +600,7 @@ const CaseManagementPage = () => {
                                     </button>
 
                                     {/* Expanded details */}
-                                    {isExp && (
+                                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExp ? "max-h-[400px]" : "max-h-0"}`}>
                                       <div className={`px-5 pb-5 pt-1 space-y-3 ${isDark ? "bg-slate-800/60" : "bg-gray-50/80"}`}>
                                         {/* Date & time row */}
                                         <div className={`flex gap-3 p-3 rounded-xl ${isDark ? "bg-slate-700" : "bg-blue-50"} border ${isDark ? "border-slate-600" : "border-blue-100"}`}>
@@ -590,7 +651,7 @@ const CaseManagementPage = () => {
                                           )}
                                         </div>
                                       </div>
-                                    )}
+                                    </div>{/* end expanded details */}
                                   </div>
                                 );
                               })}
@@ -613,159 +674,372 @@ const CaseManagementPage = () => {
                         </div>
                       );
                     })()}
+                    </div>{/* end collapsible body */}
                   </div>
                 </>
               );
             })()
           ) : (
             /* ── Complaints / Incidents Tabs ───────────────────────────────── */
-            <>
-              {/* Header */}
-              <div className="mb-6 sm:mb-8">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}>
-                    {activeTab === "complaints" ? tr.caseManagement.myComplaints : tr.caseManagement.myIncidents}
-                  </h2>
-                  <button
-                    onClick={() => setShowMap(!showMap)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg ${t.cardBg} border ${t.cardBorder} hover:shadow-md transition-all font-kumbh`}
-                  >
-                    {showMap ? (
-                      <>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                        </svg>
-                        <span className="hidden sm:inline">{tr.caseManagement.gridView}</span>
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                        </svg>
-                        <span className="hidden sm:inline">{tr.caseManagement.mapView}</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-                <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh text-left`}>
-                  {activeTab === "complaints"
-                    ? tr.caseManagement.myComplaints
-                    : tr.caseManagement.myIncidents}
-                </p>
-              </div>
+            (() => {
+              const statusBadgeCls = {
+                ongoing:  "bg-blue-100 text-blue-700 border border-blue-200",
+                resolved: "bg-green-100 text-green-700 border border-green-200",
+                rejected: "bg-red-100 text-red-700 border border-red-200",
+              };
+              // Search + sort applied only in table view
+              const searchedReports = tableSearch.trim()
+                ? filteredReports.filter((r) =>
+                    r.title.toLowerCase().includes(tableSearch.toLowerCase()) ||
+                    r.location.toLowerCase().includes(tableSearch.toLowerCase())
+                  )
+                : filteredReports;
+              const sortedReports = [...searchedReports].sort((a, b) => {
+                const da = new Date(a.date || 0);
+                const db = new Date(b.date || 0);
+                return tableSort === "asc" ? da - db : db - da;
+              });
+              const tablePaged = sortedReports.slice((tablePage - 1) * TABLE_PAGE_SIZE, tablePage * TABLE_PAGE_SIZE);
+              const tableTotalPages = Math.ceil(sortedReports.length / TABLE_PAGE_SIZE);
+              const pulse = isDark ? "animate-pulse bg-slate-700/60 rounded" : "animate-pulse bg-gray-200/80 rounded";
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                <div className={`sr-elem ${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}>{tr.caseManagement.onGoing}</p>
-                      <p className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}>{statusCounts.ongoing}</p>
-                    </div>
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={`sr-elem ${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all`} style={{ transitionDelay: "0.1s" }}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}>{tr.caseManagement.resolved}</p>
-                      <p className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}>{statusCounts.resolved}</p>
-                    </div>
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 sm:w-7 sm:h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={`sr-elem ${t.cardBg} rounded-xl p-4 sm:p-6 border ${t.cardBorder} shadow-md hover:shadow-lg transition-all sm:col-span-2 lg:col-span-1`} style={{ transitionDelay: "0.2s" }}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className={`text-xs sm:text-sm ${t.subtleText} mb-1 font-kumbh`}>{tr.caseManagement.rejected}</p>
-                      <p className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}>{statusCounts.rejected}</p>
-                    </div>
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 sm:w-7 sm:h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Filter Tabs */}
-              <div className="sr-elem overflow-x-auto mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
-                <div className={`inline-flex ${t.cardBg} rounded-lg p-1.5 shadow-md border ${t.cardBorder} min-w-full sm:min-w-0`}>
-                  {["ongoing", "resolved", "rejected"].map((filter) => (
-                    <button
-                      key={filter}
-                      onClick={() => setActiveFilter(filter)}
-                      className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-2.5 rounded-md font-semibold text-xs sm:text-sm transition-all font-kumbh capitalize whitespace-nowrap ${
-                        activeFilter === filter
-                          ? `bg-gradient-to-r ${t.primaryGrad} text-white shadow-md`
-                          : `${t.subtleText} ${isDark ? "hover:bg-slate-200 hover:text-slate-800" : "hover:bg-slate-100 hover:text-slate-800"}`
-                      }`}
-                    >
-                      <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-                        <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          {filter === "ongoing" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />}
-                          {filter === "resolved" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />}
-                          {filter === "rejected" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />}
-                        </svg>
-                        <span className="hidden sm:inline">{filter}</span>
-                        <span className={`ml-0.5 sm:ml-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ${
-                          activeFilter === filter ? "bg-white/20" : isDark ? "bg-slate-600 text-slate-300" : "bg-slate-200 text-slate-700"
-                        }`}>
-                          {statusCounts[filter]}
-                        </span>
+              return (
+                <>
+                  {/* Header */}
+                  <div className="mb-6 sm:mb-8">
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className={`text-3xl sm:text-4xl font-bold ${t.cardText} font-spartan`}>
+                        {activeTab === "complaints" ? tr.caseManagement.myComplaints : tr.caseManagement.myIncidents}
+                      </h2>
+                      <div className="flex items-center gap-2">
+                        {/* Cards / Table toggle — hidden when map is showing */}
+                        {!showMap && (
+                          <div className={`flex items-center rounded-lg border ${t.cardBorder} ${t.cardBg} overflow-hidden shadow-sm`}>
+                            <button
+                              onClick={() => { setViewMode("cards"); setTablePage(1); }}
+                              title="Card view"
+                              className={`p-2 transition-colors ${viewMode === "cards" ? `bg-gradient-to-r ${t.primaryGrad} text-white` : `${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:bg-gray-100"}`}`}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => { setViewMode("table"); setTablePage(1); }}
+                              title="Table view"
+                              className={`p-2 transition-colors ${viewMode === "table" ? `bg-gradient-to-r ${t.primaryGrad} text-white` : `${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:bg-gray-100"}`}`}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18M10 6h4M10 18h4M3 6h4M17 6h4M3 18h4M17 18h4" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                        {/* Map toggle */}
+                        <button
+                          onClick={() => setShowMap(!showMap)}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg ${t.cardBg} border ${t.cardBorder} hover:shadow-md transition-all font-kumbh`}
+                        >
+                          {showMap ? (
+                            <>
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                              </svg>
+                              <span className="hidden sm:inline">{tr.caseManagement.gridView}</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                              </svg>
+                              <span className="hidden sm:inline">{tr.caseManagement.mapView}</span>
+                            </>
+                          )}
+                        </button>
                       </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
+                    </div>
+                    <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh text-left`}>
+                      {activeTab === "complaints"
+                        ? tr.caseManagement.myComplaints
+                        : tr.caseManagement.myIncidents}
+                    </p>
+                  </div>
 
-              {/* Loading / Map / Grid */}
-              {loading ? (
-                <div className={`${t.cardBg} rounded-xl p-8 sm:p-12 text-center border ${t.cardBorder}`}>
-                  <div className="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-                  <p className={`text-sm ${t.subtleText} font-kumbh`}>{tr.caseManagement.loading}</p>
-                </div>
-              ) : showMap ? (
-                <div className="mb-6">
-                  <MapComponent mode="view" markers={getMapMarkers()} currentTheme={currentTheme} height="600px" />
-                </div>
-              ) : filteredReports.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                  {filteredReports.map((report) => (
-                    <ReportCard
-                      key={report.id}
-                      report={report}
-                      currentTheme={currentTheme}
-                      onClick={() => handleReportClick(report)}
-                      showSeverity={activeTab !== "incidents"}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className={`${t.cardBg} rounded-xl p-8 sm:p-12 text-center border ${t.cardBorder}`}>
-                  <svg className={`w-12 h-12 sm:w-16 sm:h-16 ${t.subtleText} mx-auto mb-4`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                  </svg>
-                  <h3 className={`text-lg sm:text-xl font-bold ${t.cardText} mb-2 font-spartan`}>
-                    {activeTab === "complaints" ? tr.caseManagement.noComplaints : tr.caseManagement.noIncidents}
-                  </h3>
-                  <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh`}>
-                    {activeTab === "complaints" ? tr.caseManagement.noComplaints : tr.caseManagement.noIncidents}
-                  </p>
-                </div>
-              )}
-            </>
+                  {/* Filter Tabs */}
+                  <div className="sr-elem overflow-x-auto mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
+                    <div className={`inline-flex ${t.cardBg} rounded-lg p-1.5 shadow-md border ${t.cardBorder} min-w-full sm:min-w-0`}>
+                      {["ongoing", "resolved", "rejected"].map((filter) => (
+                        <button
+                          key={filter}
+                          onClick={() => { setActiveFilter(filter); setTablePage(1); }}
+                          className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-2.5 rounded-md font-semibold text-xs sm:text-sm transition-all font-kumbh capitalize whitespace-nowrap ${
+                            activeFilter === filter
+                              ? `bg-gradient-to-r ${t.primaryGrad} text-white shadow-md`
+                              : `${t.subtleText} ${isDark ? "hover:bg-slate-200 hover:text-slate-800" : "hover:bg-slate-100 hover:text-slate-800"}`
+                          }`}
+                        >
+                          <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              {filter === "ongoing"  && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />}
+                              {filter === "resolved" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />}
+                              {filter === "rejected" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />}
+                            </svg>
+                            <span className="hidden sm:inline">{filter}</span>
+                            <span className={`ml-0.5 sm:ml-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ${
+                              activeFilter === filter ? "bg-white/20" : isDark ? "bg-slate-600 text-slate-300" : "bg-slate-200 text-slate-700"
+                            }`}>
+                              {statusCounts[filter]}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Loading / Map / Cards / Table */}
+                  {showMap ? (
+                    <div className="mb-6">
+                      <MapComponent mode="view" markers={getMapMarkers()} currentTheme={currentTheme} height="600px" />
+                    </div>
+                  ) : loading ? (
+                    viewMode === "table" ? (
+                      /* Table skeleton */
+                      <div className={`${t.cardBg} rounded-2xl border ${t.cardBorder} shadow-sm overflow-hidden`}>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm font-kumbh table-fixed">
+                            <thead>
+                              <tr className={`${isDark ? "bg-slate-700 border-y border-slate-600" : "bg-gray-100 border-y border-gray-200"}`}>
+                                {["w-[6%]","w-[28%]","w-[18%]","w-[28%]","w-[20%]"].map((w, i) => (
+                                  <th key={i} className={`px-4 py-3 ${w}`}>
+                                    <div className={`h-3 w-3/4 mx-auto rounded ${pulse}`} />
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {Array.from({ length: 8 }, (_, i) => (
+                                <tr key={i} className={`border-b ${isDark ? "border-slate-700/60" : "border-gray-100"}`}>
+                                  <td className="text-center px-3 py-3.5"><div className={`h-3 w-5 mx-auto ${pulse}`} /></td>
+                                  <td className="px-4 py-3.5"><div className={`h-3 w-4/5 ${pulse}`} /></td>
+                                  <td className="px-4 py-3.5"><div className={`h-3 w-24 ${pulse}`} /></td>
+                                  <td className="px-4 py-3.5"><div className={`h-3 w-3/4 ${pulse}`} /></td>
+                                  <td className="px-4 py-3.5"><div className={`h-5 w-20 rounded-full ${pulse}`} /></td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Cards skeleton */
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                        {Array.from({ length: 6 }, (_, i) => {
+                          const cardPulse = isDark ? "animate-pulse bg-slate-700/60 rounded-lg" : "animate-pulse bg-gray-200/80 rounded-lg";
+                          return (
+                            <div key={i} className={`${t.cardBg} rounded-xl border ${t.cardBorder} p-4 sm:p-5 space-y-3`}>
+                              <div className={`h-36 w-full rounded-lg ${cardPulse}`} />
+                              <div className="flex items-center gap-2">
+                                <div className={`h-5 w-16 rounded-full ${cardPulse}`} />
+                                <div className={`h-5 w-12 rounded-full ${cardPulse}`} />
+                              </div>
+                              <div className={`h-4 w-3/4 ${cardPulse}`} />
+                              <div className="space-y-1.5">
+                                <div className={`h-3 w-full ${cardPulse}`} />
+                                <div className={`h-3 w-5/6 ${cardPulse}`} />
+                              </div>
+                              <div className="flex justify-between pt-1">
+                                <div className={`h-3 w-1/3 ${cardPulse}`} />
+                                <div className={`h-3 w-1/4 ${cardPulse}`} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )
+                  ) : viewMode === "table" ? (
+                    /* ── Table view ── */
+                    <>
+                      {/* Search + Sort controls */}
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-4">
+                        {/* Search */}
+                        <div className={`relative flex-1 flex items-center rounded-xl border ${t.cardBorder} ${t.cardBg} overflow-hidden shadow-sm`}>
+                          <svg className={`absolute left-3 w-4 h-4 ${t.subtleText} flex-shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                          <input
+                            type="text"
+                            value={tableSearch}
+                            onChange={(e) => { setTableSearch(e.target.value); setTablePage(1); }}
+                            placeholder={`Search by type or location…`}
+                            className={`w-full pl-9 pr-4 py-2.5 text-sm font-kumbh bg-transparent outline-none ${t.cardText} placeholder:${t.subtleText}`}
+                          />
+                          {tableSearch && (
+                            <button onClick={() => { setTableSearch(""); setTablePage(1); }} className={`pr-3 ${t.subtleText} hover:opacity-70`}>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                        {/* Sort */}
+                        <div className={`flex items-center rounded-xl border ${t.cardBorder} ${t.cardBg} shadow-sm overflow-hidden`}>
+                          <span className={`pl-3 pr-2 text-xs font-semibold font-kumbh ${t.subtleText} whitespace-nowrap`}>Sort:</span>
+                          <button
+                            onClick={() => { setTableSort("desc"); setTablePage(1); }}
+                            className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold font-kumbh transition-colors ${
+                              tableSort === "desc"
+                                ? `bg-gradient-to-r ${t.primaryGrad} text-white`
+                                : `${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:bg-gray-100"}`
+                            }`}
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                            </svg>
+                            Newest
+                          </button>
+                          <button
+                            onClick={() => { setTableSort("asc"); setTablePage(1); }}
+                            className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold font-kumbh transition-colors ${
+                              tableSort === "asc"
+                                ? `bg-gradient-to-r ${t.primaryGrad} text-white`
+                                : `${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:bg-gray-100"}`
+                            }`}
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                            </svg>
+                            Oldest
+                          </button>
+                        </div>
+                      </div>
+
+                      {sortedReports.length === 0 ? (
+                        <div className={`${t.cardBg} rounded-xl p-8 sm:p-12 text-center border ${t.cardBorder}`}>
+                          <svg className={`w-12 h-12 sm:w-16 sm:h-16 ${t.subtleText} mx-auto mb-4`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                          </svg>
+                          <h3 className={`text-lg sm:text-xl font-bold ${t.cardText} mb-2 font-spartan`}>
+                            {tableSearch ? "No results found" : activeTab === "complaints" ? tr.caseManagement.noComplaints : tr.caseManagement.noIncidents}
+                          </h3>
+                        </div>
+                      ) : (
+                      <div className={`${t.cardBg} rounded-2xl border ${t.cardBorder} shadow-sm overflow-hidden`}>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm font-kumbh">
+                            <thead>
+                              <tr className={`${isDark ? "bg-slate-700 border-y border-slate-600" : "bg-gray-100 border-y border-gray-200"}`}>
+                                <th className={`text-center px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-12`}>#</th>
+                                <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase`}>
+                                  {activeTab === "complaints" ? "Type of Complaint" : "Type of Incident"}
+                                </th>
+                                <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-44`}>Date</th>
+                                <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-64`}>Location</th>
+                                <th className={`text-left px-4 py-3 text-xs font-bold ${isDark ? "text-slate-300" : "text-gray-600"} uppercase w-28`}>Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {tablePaged.map((report, index) => (
+                                <tr
+                                  key={report.id}
+                                  onClick={() => handleReportClick(report)}
+                                  className={`border-b ${t.cardBorder} ${isDark ? "hover:bg-slate-700" : "hover:bg-gray-50"} transition-colors cursor-pointer`}
+                                >
+                                  <td className={`text-center px-4 py-3.5 text-sm ${t.cardText}`}>
+                                    {(tablePage - 1) * TABLE_PAGE_SIZE + index + 1}
+                                  </td>
+                                  <td className={`text-left px-4 py-3.5 ${t.cardText} truncate capitalize`}>{report.title}</td>
+                                  <td className={`text-left px-4 py-3.5 ${t.cardText} whitespace-nowrap`}>{report.date}</td>
+                                  <td className={`text-left px-4 py-3.5 ${t.cardText} truncate`}>{report.location}</td>
+                                  <td className="text-left px-4 py-3.5">
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold font-kumbh capitalize ${statusBadgeCls[report.status] || statusBadgeCls.ongoing}`}>
+                                      {report.status}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Pagination */}
+                        {tableTotalPages > 1 && (
+                          <div className={`flex items-center justify-between px-5 py-3.5 border-t ${isDark ? "border-slate-700" : "border-gray-100"}`}>
+                            <p className={`text-xs ${t.subtleText} font-kumbh`}>
+                              Showing {(tablePage - 1) * TABLE_PAGE_SIZE + 1}–{Math.min(tablePage * TABLE_PAGE_SIZE, sortedReports.length)} of {sortedReports.length}
+                            </p>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => setTablePage((p) => Math.max(1, p - 1))}
+                                disabled={tablePage === 1}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-kumbh font-semibold transition-colors ${
+                                  tablePage === 1
+                                    ? isDark ? "text-slate-600 cursor-not-allowed" : "text-gray-300 cursor-not-allowed"
+                                    : isDark ? "text-slate-300 hover:bg-slate-700" : "text-gray-600 hover:bg-gray-100"
+                                }`}
+                              >
+                                Prev
+                              </button>
+                              {Array.from({ length: tableTotalPages }, (_, i) => i + 1).map((page) => (
+                                <button
+                                  key={page}
+                                  onClick={() => setTablePage(page)}
+                                  className={`w-8 h-8 rounded-lg text-xs font-kumbh font-bold transition-colors ${
+                                    page === tablePage
+                                      ? `${isDark ? "bg-slate-500" : t.primarySolid} text-white`
+                                      : isDark
+                                        ? "text-slate-300 hover:bg-slate-700"
+                                        : `${t.primaryText} hover:bg-gray-100`
+                                  }`}
+                                >
+                                  {page}
+                                </button>
+                              ))}
+                              <button
+                                onClick={() => setTablePage((p) => Math.min(tableTotalPages, p + 1))}
+                                disabled={tablePage === tableTotalPages}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-kumbh font-semibold transition-colors ${
+                                  tablePage === tableTotalPages
+                                    ? isDark ? "text-slate-600 cursor-not-allowed" : "text-gray-300 cursor-not-allowed"
+                                    : isDark ? "text-slate-300 hover:bg-slate-700" : "text-gray-600 hover:bg-gray-100"
+                                }`}
+                              >
+                                Next
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      )}
+                    </>
+                  ) : filteredReports.length > 0 ? (
+                    /* ── Cards view ── */
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                      {filteredReports.map((report) => (
+                        <ReportCard
+                          key={report.id}
+                          report={report}
+                          currentTheme={currentTheme}
+                          onClick={() => handleReportClick(report)}
+                          showSeverity={activeTab !== "incidents"}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={`${t.cardBg} rounded-xl p-8 sm:p-12 text-center border ${t.cardBorder}`}>
+                      <svg className={`w-12 h-12 sm:w-16 sm:h-16 ${t.subtleText} mx-auto mb-4`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                      </svg>
+                      <h3 className={`text-lg sm:text-xl font-bold ${t.cardText} mb-2 font-spartan`}>
+                        {activeTab === "complaints" ? tr.caseManagement.noComplaints : tr.caseManagement.noIncidents}
+                      </h3>
+                      <p className={`text-sm sm:text-base ${t.subtleText} font-kumbh`}>
+                        {activeTab === "complaints" ? tr.caseManagement.noComplaints : tr.caseManagement.noIncidents}
+                      </p>
+                    </div>
+                  )}
+                </>
+              );
+            })()
           )}
 
           {/* Bottom Bar */}
@@ -813,6 +1087,7 @@ const CaseManagementPage = () => {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
       `}</style>
+      <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
     </>
   );
 };

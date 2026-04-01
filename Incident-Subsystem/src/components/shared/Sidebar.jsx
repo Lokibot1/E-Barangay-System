@@ -1,7 +1,17 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
-import { isAdmin } from "../../homepage/services/loginService";
+import {
+  canAccessAdminPanel,
+  canAccessVerificationQueue,
+  canManageAccounts,
+  canManageSystemSettings,
+  canViewAnalytics,
+  canViewAppointments,
+  canViewDocuments,
+  canViewIncidentCases,
+  canViewResidents,
+} from "../../homepage/services/loginService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useBranding } from "../../context/BrandingContext";
 import themeTokens from "../../Themetokens";
@@ -22,6 +32,7 @@ import {
   Search,
   Settings,
   CircleHelp,
+  Bug,
   FileWarning,
   MapPinned,
   ScanSearch,
@@ -95,6 +106,18 @@ const getUserNavItems = (s) => [
       },
     ],
   },
+  {
+    id: "report-system-issue",
+    label: s.reportSystemIssue || "Report Issue",
+    icon: "M9.75 3.104c.818-1.936 3.682-1.936 4.5 0l.227.536a1.125 1.125 0 001.33.64l.578-.154c2.084-.556 3.921 1.281 3.365 3.365l-.154.578a1.125 1.125 0 00.64 1.33l.536.227c1.936.818 1.936 3.682 0 4.5l-.536.227a1.125 1.125 0 00-.64 1.33l.154.578c.556 2.084-1.281 3.921-3.365 3.365l-.578-.154a1.125 1.125 0 00-1.33.64l-.227.536c-.818 1.936-3.682 1.936-4.5 0l-.227-.536a1.125 1.125 0 00-1.33-.64l-.578.154c-2.084.556-3.921-1.281-3.365-3.365l.154-.578a1.125 1.125 0 00-.64-1.33l-.536-.227c-1.936-.818-1.936-3.682 0-4.5l.536-.227a1.125 1.125 0 00.64-1.33l-.154-.578c-.556-2.084 1.281-3.921 3.365-3.365l.578.154a1.125 1.125 0 001.33-.64l.227-.536z",
+    path: "/report-issue",
+  },
+  {
+    id: "support",
+    label: s.support,
+    icon: "M8.228 9c.549-1.165 1.918-2 3.522-2 2.209 0 4 1.567 4 3.5 0 1.186-.675 2.234-1.713 2.868-.96.587-1.787 1.12-1.787 2.132V16M12 19h.01",
+    path: "/support",
+  },
 ];
 
 const getAdminNavItems = (s) => [
@@ -106,7 +129,7 @@ const getAdminNavItems = (s) => [
   },
   {
     id: "resident-registry",
-    label: s.userManagement,
+    label: s.residentsName || "Resident Records",
     icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
     path: "/admin/user-management",  
     children: [
@@ -161,6 +184,12 @@ const getAdminNavItems = (s) => [
     path: "/admin/payments",
   },
   {
+    id: "support",
+    label: s.supportTickets || s.support,
+    icon: "M8.228 9c.549-1.165 1.918-2 3.522-2 2.209 0 4 1.567 4 3.5 0 1.186-.675 2.234-1.713 2.868-.96.587-1.787 1.12-1.787 2.132V16M12 19h.01",
+    path: "/admin/support",
+  },
+  {
     id: "documents-inquiry",
     label: s.documentsInquiry || "Issuance Application",
     icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
@@ -182,31 +211,58 @@ const getAdminNavItems = (s) => [
   },
   {
     id: "settings",
-     label: "Settings (CMS)",
+    label: "Settings (CMS)",
     icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z",
     path: "/admin/settings",
-    children: [
-      {
-        id: "settings-sub",
-        label: "Settings (Upload Logo)",
-        icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z",
-        path: "/admin/settings",
-      },
-      // {
-      //   id: "support",
-      //   label: s.support,
-      //   icon: "M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z",
-      //   path: "/admin/support",
-      // },
-      {
-         id: "accounts",
-  label: s.accounts || "Add Users",
-  icon: "M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z",
-  path: "/admin/accounts",
-      }
-    ],
   },
 ];
+
+const canSeeAdminItem = (itemId) => {
+  switch (itemId) {
+    case "dashboard":
+    case "reports":
+      return canViewAnalytics();
+    case "resident-registry":
+    case "residents":
+    case "households":
+      return canViewResidents();
+    case "verification":
+    case "requests":
+      return canAccessVerificationQueue();
+    case "incidents":
+      return canViewIncidentCases();
+    case "appointments":
+      return canViewAppointments();
+    case "payments":
+      return canManageAccounts();
+    case "documents-inquiry":
+    case "documents-inquiry-sub":
+    case "certificates":
+      return canViewDocuments();
+    case "settings":
+      return canManageSystemSettings();
+    default:
+      return true;
+  }
+};
+
+const filterAdminNavItems = (items) =>
+  items
+    .map((item) => {
+      const children = Array.isArray(item.children)
+        ? item.children.filter((child) => canSeeAdminItem(child.id))
+        : item.children;
+
+      return {
+        ...item,
+        ...(children ? { children } : {}),
+      };
+    })
+    .filter(
+      (item) =>
+        canSeeAdminItem(item.id) ||
+        (Array.isArray(item.children) && item.children.length > 0),
+    );
 
 // ── Sidebar ─────────────────────────────────────────────────────────────────
 const Sidebar = ({ currentTheme, collapsed, onToggle, mobileOpen = false, onMobileToggle }) => {
@@ -227,13 +283,13 @@ const Sidebar = ({ currentTheme, collapsed, onToggle, mobileOpen = false, onMobi
     if (typeof window === "undefined") return true;
     return window.matchMedia("(min-width: 768px)").matches;
   });
-  const adminMode = isAdmin();
+  const adminMode = canAccessAdminPanel();
   const isSubSystem2Route = location.pathname.startsWith("/sub-system-2");
   const isIncidentRoute = location.pathname.startsWith("/incident-complaint");
   const showDocumentServices = isSubSystem2Route || isIncidentRoute;
   const userNavItems = getUserNavItems(tr.sidebar);
   const NAV_ITEMS = adminMode
-    ? getAdminNavItems(tr.sidebar)
+    ? filterAdminNavItems(getAdminNavItems(tr.sidebar))
     : showDocumentServices
       ? userNavItems.map((item) => {
           if (item.id === "subsystem-2") {
@@ -403,6 +459,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle, mobileOpen = false, onMobi
     "subsystem-1": LayoutGrid,
     "subsystem-2": FileText,
     "incident-complaint": AlertTriangle,
+    "report-system-issue": Bug,
     "file-complaint": FileWarning,
     "incident-report": AlertTriangle,
     "incident-map": MapPinned,
@@ -587,10 +644,10 @@ const Sidebar = ({ currentTheme, collapsed, onToggle, mobileOpen = false, onMobi
                       className={`inline-flex items-center justify-center flex-shrink-0 transition-colors duration-150 ${
                         isCollapsed
                           ? `h-8 w-8 ${active ? t.sidebarIconActive : isDark ? "text-slate-300" : "text-slate-500"}`
-                          : `w-8 h-8 rounded-lg ${
+                          : `w-8 h-8 ${
                               active
-                                ? `${t.primaryLight} ${t.sidebarIconActive}`
-                                : `${isDark ? "bg-slate-800/80 text-slate-400" : "bg-slate-100 text-slate-500"}`
+                                ? `${t.sidebarIconActive}`
+                                : `${isDark ? "text-slate-400" : "text-slate-500"}`
                             }`
                       } ${isCollapsed ? "mx-auto" : ""}`}
                     >

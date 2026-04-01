@@ -1,8 +1,16 @@
-import React, { useState, useEffect, useRef, useCallback, memo } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ThemeModal from "../../components/sub-system-3/ThemeModal";
 import LogoutModal from "./LogoutModal";
-import { logout, getUser, isAdmin } from "../../homepage/services/loginService";
+import {
+  canAccessAdminPanel,
+  canViewAppointments,
+  canViewDocuments,
+  canViewIncidentCases,
+  canViewResidents,
+  logout,
+  getUser,
+} from "../../homepage/services/loginService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useRealTime } from "../../context/RealTimeContext";
 import { useUserRealTime } from "../../context/UserRealTimeContext";
@@ -10,6 +18,11 @@ import { useBranding } from "../../context/BrandingContext";
 import themeTokens from "../../Themetokens";
 import logo from "../../assets/images/logo.jpg";
 import { getResidentProfilePhoto, syncResidentProfilePhoto } from "../../utils/profilePhoto";
+import { residentService } from "../../services/sub-system-1/residents";
+import { incidentService } from "../../services/sub-system-3/incidentService";
+import { getAllComplaints } from "../../services/sub-system-3/complaintService";
+import { DOCUMENTS_API_BASE_URL } from "../../config/runtimeApi";
+import { requestJson } from "../../services/shared/http";
 
 // ── Notification sound using Web Audio API (no mp3 file needed) ─────────
 const playNotificationSound = () => {
@@ -46,6 +59,37 @@ const playNotificationSound = () => {
   } catch {
     // Ignore — no audio support or blocked by autoplay policy
   }
+};
+
+const SEARCH_RESULT_TYPE_STYLES = {
+  resident: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  incident: "border-rose-200 bg-rose-50 text-rose-700",
+  complaint: "border-amber-200 bg-amber-50 text-amber-700",
+  document: "border-sky-200 bg-sky-50 text-sky-700",
+  appointment: "border-violet-200 bg-violet-50 text-violet-700",
+};
+
+const normalizeSearchText = (value) => String(value || "").toLowerCase().trim();
+
+const normalizeSearchCollection = (payload) =>
+  Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : [];
+
+const getSearchIncidentTypeLabel = (incident) => {
+  if (typeof incident?.type === "string" && incident.type.trim()) {
+    try {
+      const parsed = JSON.parse(incident.type);
+      if (Array.isArray(parsed)) return parsed.join(", ");
+      return String(parsed);
+    } catch {
+      return incident.type;
+    }
+  }
+
+  if (Array.isArray(incident?.types) && incident.types.length > 0) {
+    return incident.types.map((type) => type?.name).filter(Boolean).join(", ");
+  }
+
+  return "Incident";
 };
 
 // ── Appointment detail helpers ──────────────────────────────────────────
@@ -320,7 +364,11 @@ const ProfileUpdateDetailsModal = ({ notification, onClose, isDark, t }) => {
 const normalizeTimestamp = (date) => {
   if (typeof date === "string" &&
     /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(date)) {
-    return date.replace(" ", "T") + "Z";
+    // Only normalize the separator — do NOT append "Z".
+    // Backend returns timestamps in server local time (PHT/UTC+8); treating them
+    // as UTC causes all timestamps to appear 8 h in the future, resulting in a
+    // negative diff that always falls into the "Just now" branch.
+    return date.replace(" ", "T");
   }
   return date;
 };
@@ -357,6 +405,74 @@ const getRelativeTime = (date) => {
   return `${Math.floor(diff / 86400)} days ago`;
 };
 
+const buildRegistrationDescription = (newCount, pendingCount) =>
+  `${newCount} new registration${newCount === 1 ? "" : "s"} submitted for review. Total pending: ${pendingCount}.`;
+
+const getNotificationDescription = (notification) => {
+  const fallback =
+    notification?.description ||
+    notification?.message ||
+    "No description provided.";
+
+  const isRegistrationNotification =
+    notification?.source === "registration" ||
+    notification?.type === "registration_pending";
+
+  if (!isRegistrationNotification) return fallback;
+
+  const dataNewCount = Number.parseInt(notification?.data?.newCount, 10);
+  const dataPendingCount = Number.parseInt(notification?.data?.totalPending, 10);
+
+  if (Number.isFinite(dataNewCount) && Number.isFinite(dataPendingCount)) {
+    return buildRegistrationDescription(dataNewCount, dataPendingCount);
+  }
+
+  const shortPatternMatch = String(fallback).match(
+    /(\d+)\s+for review,\s*(\d+)\s+pending total\.?/i,
+  );
+
+  if (shortPatternMatch) {
+    return buildRegistrationDescription(
+      Number.parseInt(shortPatternMatch[1], 10),
+      Number.parseInt(shortPatternMatch[2], 10),
+    );
+  }
+
+  return fallback;
+};
+
+const getNotificationSeverity = (notification) => {
+  const source = String(notification?.source || "").toLowerCase();
+  const type = String(notification?.type || "").toLowerCase();
+  const nextStatus = String(
+    notification?.newStatus ||
+      notification?.data?.new_status ||
+      "",
+  ).toLowerCase();
+
+  if (
+    source === "incident" ||
+    type === "incident_status_updated" ||
+    nextStatus === "active" ||
+    nextStatus === "dispatched"
+  ) {
+    return "critical";
+  }
+
+  if (
+    source === "complaint" ||
+    source === "registration" ||
+    type === "complaint_status_updated" ||
+    type === "registration_pending" ||
+    nextStatus === "pending" ||
+    nextStatus === "rejected"
+  ) {
+    return "warning";
+  }
+
+  return "info";
+};
+
 const BellOutlineIcon = ({ className = "", strokeWidth = 2 }) => (
   <svg
     className={className}
@@ -386,6 +502,7 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
   const isResident = notification.source === "resident";
   const isStatusChange = !!notification.oldStatus;
   const byLabel = isResident ? "Updated by" : "Reported by";
+  const descriptionText = getNotificationDescription(notification);
 
   const sourceLabel = isRegistration
     ? "Registration"
@@ -399,7 +516,7 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
   const displayType = notification.type === "appointment_scheduled"
     ? "Appointment Scheduled"
     : notification.type === "registration_pending"
-      ? "New Resident Registration"
+      ? "Resident Registration"
       : notification.type === "profile_updated"
         ? "Profile Updated"
       : notification.type === "incident_status_updated"
@@ -471,7 +588,7 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
           <p
             className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"} font-kumbh line-clamp-2`}
           >
-            {notification.description || "No description provided"}
+            {descriptionText}
           </p>
         </div>
       </div>
@@ -502,6 +619,7 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
   const isResident = notification.source === "resident";
   const isStatusChange = !!notification.oldStatus;
   const byLabel = isResident ? "Updated by" : "Reported by";
+  const descriptionText = getNotificationDescription(notification);
 
   const sourceLabel = isRegistration
     ? "Registration"
@@ -516,7 +634,7 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
   const displayType = notification.type === "appointment_scheduled"
     ? "Appointment Scheduled"
     : notification.type === "registration_pending"
-      ? "New Resident Registration"
+      ? "Resident Registration"
       : notification.type === "profile_updated"
         ? "Profile Updated"
       : notification.type === "incident_status_updated"
@@ -567,10 +685,18 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
     onMarkAsRead(notification.id);
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    handleClick();
+  };
+
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
       className={`w-full rounded-xl border p-3 text-left transition-all ${
         unread
           ? isDark
@@ -602,7 +728,7 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
           <p className={`mt-1 text-[11px] leading-4.5 font-kumbh ${
             isDark ? "text-slate-400" : "text-slate-600"
           }`}>
-            {notification.description || "No description provided"}
+            {descriptionText}
           </p>
 
           <div className="mt-2.5 flex items-center justify-between gap-3">
@@ -642,7 +768,241 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
           </button>
         )}
       </div>
-    </button>
+    </div>
+  );
+});
+
+const ModernNotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onViewAppointment, onViewRegistration, onViewProfileUpdate, onCloseMenu, onNavigateToAction }) => {
+  const unread = !notification.read;
+  const timeAgo = getRelativeTime(notification.timestamp);
+  const absoluteDate = formatNotificationDate(notification.timestamp);
+  const isIncident = notification.source === "incident";
+  const isAppointment = notification.source === "appointment";
+  const isRegistration = notification.source === "registration";
+  const isResident = notification.source === "resident";
+  const isStatusChange = !!notification.oldStatus;
+  const severity = getNotificationSeverity(notification);
+  const byLabel = isResident ? "Updated by" : "Reported by";
+  const descriptionText = getNotificationDescription(notification);
+
+  const capitalize = (str) =>
+    str ? str.replace(/\b\w/g, (c) => c.toUpperCase()) : str;
+
+  const sourceLabel = isRegistration
+    ? "Registration"
+    : isAppointment
+      ? "Appointment"
+      : isResident
+        ? "Resident"
+        : isIncident
+          ? "Incident"
+          : "Complaint";
+
+  const displayType = notification.type === "appointment_scheduled"
+    ? "Appointment Scheduled"
+    : notification.type === "registration_pending"
+      ? "Resident Registration"
+      : notification.type === "profile_updated"
+        ? "Profile Updated"
+        : notification.type === "incident_status_updated"
+          ? "Incident Status Updated"
+          : notification.type === "complaint_status_updated"
+            ? "Complaint Status Updated"
+            : capitalize(String(notification.type || "Notification").replace(/_/g, " "));
+
+  const actionLabel = isRegistration
+    ? "View"
+    : isAppointment
+      ? "Open details"
+      : isIncident || notification.type === "incident_status_updated"
+        ? "View incident"
+        : notification.source === "complaint" || notification.type === "complaint_status_updated"
+          ? "View complaint"
+          : null;
+
+  const severityLabel =
+    severity === "critical"
+      ? "Critical"
+      : severity === "warning"
+        ? "Warning"
+        : "Info";
+
+  const severityTone =
+    severity === "critical"
+      ? isDark
+        ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+        : "border-rose-200 bg-rose-50 text-rose-700"
+      : severity === "warning"
+        ? isDark
+          ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+          : "border-amber-200 bg-amber-50 text-amber-700"
+        : isDark
+          ? "border-sky-500/20 bg-sky-500/10 text-sky-300"
+          : "border-sky-200 bg-sky-50 text-sky-700";
+
+  const metaParts = [
+    timeAgo,
+    (isResident || notification.type === "profile_updated") && absoluteDate ? absoluteDate : "",
+    notification.reportedBy ? `${byLabel} ${notification.reportedBy}` : "",
+  ].filter(Boolean);
+
+  const sourceTone = isRegistration
+    ? isDark
+      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+      : "border-emerald-200 bg-emerald-50 text-emerald-700"
+    : isAppointment
+      ? isDark
+        ? "border-sky-500/20 bg-sky-500/10 text-sky-300"
+        : "border-sky-200 bg-sky-50 text-sky-700"
+      : isResident
+        ? isDark
+          ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+          : "border-amber-200 bg-amber-50 text-amber-700"
+        : isIncident
+          ? isDark
+            ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+            : "border-rose-200 bg-rose-50 text-rose-700"
+          : isDark
+            ? "border-slate-700 bg-slate-800 text-slate-300"
+            : "border-slate-200 bg-slate-100 text-slate-700";
+
+  const handleClick = () => {
+    onMarkAsRead(notification.id);
+    if (isAppointment && onViewAppointment) {
+      onCloseMenu?.();
+      onViewAppointment(notification);
+      return;
+    }
+    if (isRegistration && onViewRegistration) {
+      onCloseMenu?.();
+      onViewRegistration(notification);
+      return;
+    }
+    if (isResident && onViewProfileUpdate) {
+      onCloseMenu?.();
+      onViewProfileUpdate(notification);
+      return;
+    }
+    if (onNavigateToAction) {
+      onNavigateToAction(notification);
+      return;
+    }
+    onCloseMenu?.();
+  };
+
+  const handleActionClick = (e) => {
+    e.stopPropagation();
+    handleClick();
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    handleClick();
+  };
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      className={`group relative w-full overflow-hidden rounded-[0.9rem] border text-left transition-all focus:outline-none ${
+        unread
+          ? isDark
+            ? "border-slate-700 bg-slate-900 shadow-[0_10px_28px_rgba(15,23,42,0.24)] hover:border-slate-600"
+            : "border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.08)] hover:border-slate-300"
+          : isDark
+            ? "border-slate-800 bg-slate-900/70 hover:border-slate-700"
+            : "border-slate-200/80 bg-white/88 hover:border-slate-300"
+      }`}
+    >
+      {unread && (
+        <span className={`absolute bottom-2.5 left-0 top-2.5 w-1 rounded-r-full ${isDark ? "bg-emerald-400" : "bg-emerald-500"}`} />
+      )}
+      <div className="p-2.5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold font-kumbh ${sourceTone}`}>
+                  {sourceLabel}
+                </span>
+                <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold font-kumbh ${severityTone}`}>
+                  {severityLabel}
+                </span>
+                {unread && (
+                  <span className={`inline-flex items-center gap-1 text-[10px] font-semibold font-kumbh ${isDark ? "text-emerald-300" : "text-emerald-700"}`}>
+                    <span className={`h-1 w-1 rounded-full ${isDark ? "bg-emerald-300" : "bg-emerald-500"}`} />
+                    Unread
+                  </span>
+                )}
+                {isStatusChange && (
+                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium font-kumbh ${
+                    isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-600"
+                  }`}>
+                    {capitalize(notification.oldStatus)} {"->"} {capitalize(notification.newStatus)}
+                  </span>
+                )}
+              </div>
+
+              {actionLabel && (
+                <button
+                  type="button"
+                  onClick={handleActionClick}
+                  title={actionLabel}
+                  aria-label={actionLabel}
+                  className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                    isDark
+                      ? "border-slate-700 bg-slate-800 text-slate-200 hover:border-slate-600 hover:text-white"
+                      : "border-slate-200 bg-slate-100 text-slate-700 hover:border-slate-300 hover:text-slate-900"
+                  }`}
+                >
+                  <svg
+                    className="h-3 w-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7S3.732 16.057 2.458 12z"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            <p className={`mt-1.5 text-[13px] font-semibold leading-4.5 font-kumbh ${
+              isDark ? "text-slate-100" : "text-slate-900"
+            }`}>
+              {displayType}
+            </p>
+
+            <p className={`mt-1 text-[11px] leading-4 font-kumbh ${
+              isDark ? "text-slate-400" : "text-slate-600"
+            }`}>
+              {descriptionText}
+            </p>
+
+            <p className={`mt-1.5 text-[10px] leading-3.5 font-kumbh ${
+              isDark ? "text-slate-500" : "text-slate-500"
+            }`}>
+              {metaParts.join(" - ")}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 });
 
@@ -652,12 +1012,27 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isHeaderSearchOpen, setIsHeaderSearchOpen] = useState(false);
+  const [headerSearchQuery, setHeaderSearchQuery] = useState("");
+  const [headerSearchLoading, setHeaderSearchLoading] = useState(false);
+  const [headerSearchError, setHeaderSearchError] = useState("");
+  const [hasHeaderSearchLoaded, setHasHeaderSearchLoaded] = useState(false);
+  const [headerSearchDatasets, setHeaderSearchDatasets] = useState({
+    residents: [],
+    incidents: [],
+    complaints: [],
+    documents: [],
+    appointments: [],
+  });
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [appointmentDetail, setAppointmentDetail] = useState(null);
   const [profileUpdateDetail, setProfileUpdateDetail] = useState(null);
+  const [notificationFilter, setNotificationFilter] = useState("all");
   const notificationRef = useRef(null);
   const settingsRef = useRef(null);
   const profileRef = useRef(null);
+  const headerSearchRef = useRef(null);
+  const headerSearchInputRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { language, setLanguage, tr } = useLanguage();
@@ -668,7 +1043,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
   // Real-time notifications — merge admin and user contexts
   const adminRT = useRealTime();
   const userRT = useUserRealTime();
-  const isAdminUser = isAdmin();
+  const isAdminUser = canAccessAdminPanel();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications } =
     isAdminUser ? adminRT : userRT;
 
@@ -708,6 +1083,268 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
   const t = themeTokens[currentTheme];
   const isDark = currentTheme === "dark";
 
+  const loadHeaderSearchData = useCallback(async () => {
+    setHeaderSearchLoading(true);
+    setHeaderSearchError("");
+
+    try {
+      const [residentResult, incidentResult, complaintResult, documentResult] =
+        await Promise.allSettled([
+          residentService.getResidents(),
+          incidentService.getAllIncidents(),
+          getAllComplaints(),
+          requestJson(`${DOCUMENTS_API_BASE_URL}/documents`, {
+            errorMessage: "Failed to load document records.",
+          }),
+        ]);
+
+      const residents =
+        residentResult.status === "fulfilled" ? residentResult.value : [];
+      const incidents =
+        incidentResult.status === "fulfilled"
+          ? normalizeSearchCollection(incidentResult.value)
+          : [];
+      const complaints =
+        complaintResult.status === "fulfilled"
+          ? normalizeSearchCollection(complaintResult.value)
+          : [];
+      const documents =
+        documentResult.status === "fulfilled"
+          ? normalizeSearchCollection(documentResult.value)
+          : [];
+      const appointments = complaints.flatMap((complaint) =>
+        (complaint?.appointments || []).map((appointment) => ({
+          ...appointment,
+          complaint_id: appointment?.complaint_id ?? complaint?.id,
+          complaint_type: complaint?.type || "",
+          complainant_name: complaint?.complainant_name || "",
+        })),
+      );
+
+      setHeaderSearchDatasets({
+        residents,
+        incidents,
+        complaints,
+        documents,
+        appointments,
+      });
+      setHasHeaderSearchLoaded(true);
+
+      if (
+        residentResult.status === "rejected" &&
+        incidentResult.status === "rejected" &&
+        complaintResult.status === "rejected" &&
+        documentResult.status === "rejected"
+      ) {
+        setHeaderSearchError("Unable to load searchable records right now.");
+      }
+    } catch (loadError) {
+      setHeaderSearchError(
+        loadError.message || "Unable to load searchable records.",
+      );
+    } finally {
+      setHeaderSearchLoading(false);
+    }
+  }, []);
+
+  const headerSearchResults = useMemo(() => {
+    const normalizedQuery = normalizeSearchText(headerSearchQuery);
+    if (!normalizedQuery) return [];
+
+    const matches = (values) =>
+      values.some((value) =>
+        normalizeSearchText(value).includes(normalizedQuery),
+      );
+
+    const residentResults = canViewResidents()
+      ? headerSearchDatasets.residents
+          .filter((resident) =>
+            matches([
+              resident?.name,
+              resident?.barangay_id,
+              resident?.trackingNumber,
+              resident?.resolved_purok,
+              resident?.resolved_street,
+              resident?.status,
+            ]),
+          )
+          .slice(0, 6)
+          .map((resident) => ({
+            id: `resident-${resident.id}`,
+            type: "resident",
+            title: resident?.name || resident?.barangay_id || "Resident",
+            subtitle: [
+              resident?.barangay_id,
+              resident?.status,
+              resident?.resolved_purok,
+            ]
+              .filter(Boolean)
+              .join(" - "),
+            route: "/admin/residents",
+            state: {
+              openResidentId: String(resident.id),
+              openResidentBarangayId: String(
+                resident?.barangay_id || resident?.trackingNumber || "",
+              ),
+              openResidentMode: "view",
+              openResidentTab: "basic",
+              searchQuery:
+                resident?.barangay_id ||
+                resident?.name ||
+                resident?.trackingNumber ||
+                "",
+            },
+          }))
+      : [];
+
+    const incidentResults = canViewIncidentCases()
+      ? headerSearchDatasets.incidents
+          .filter((incident) =>
+            matches([
+              incident?.description,
+              incident?.location,
+              incident?.status,
+              getSearchIncidentTypeLabel(incident),
+              incident?.reported_by,
+            ]),
+          )
+          .slice(0, 6)
+          .map((incident) => ({
+            id: `incident-${incident.id}`,
+            type: "incident",
+            title: getSearchIncidentTypeLabel(incident),
+            subtitle: [
+              incident?.location,
+              incident?.status,
+              incident?.reported_by,
+            ]
+              .filter(Boolean)
+              .join(" - "),
+            route: "/admin/incidents",
+            state: {
+              openId: String(incident.id),
+              openType: "incident",
+              defaultTab: "details",
+            },
+          }))
+      : [];
+
+    const complaintResults = canViewIncidentCases()
+      ? headerSearchDatasets.complaints
+          .filter((complaint) =>
+            matches([
+              complaint?.type,
+              complaint?.description,
+              complaint?.location,
+              complaint?.status,
+              complaint?.complainant_name,
+            ]),
+          )
+          .slice(0, 6)
+          .map((complaint) => ({
+            id: `complaint-${complaint.id}`,
+            type: "complaint",
+            title: complaint?.type || "Complaint",
+            subtitle: [
+              complaint?.complainant_name,
+              complaint?.status,
+              complaint?.location,
+            ]
+              .filter(Boolean)
+              .join(" - "),
+            route: "/admin/incidents",
+            state: {
+              openId: String(complaint.id),
+              openType: "complaint",
+              defaultTab: "details",
+            },
+          }))
+      : [];
+
+    const documentResults = canViewDocuments()
+      ? headerSearchDatasets.documents
+          .filter((documentRecord) =>
+            matches([
+              documentRecord?.full_name,
+              documentRecord?.documentType,
+              documentRecord?.reference_number,
+              documentRecord?.status,
+            ]),
+          )
+          .slice(0, 6)
+          .map((documentRecord) => ({
+            id: `document-${documentRecord.reference_number}`,
+            type: "document",
+            title:
+              documentRecord?.full_name || documentRecord?.reference_number,
+            subtitle: [
+              documentRecord?.documentType,
+              documentRecord?.reference_number,
+              documentRecord?.status,
+            ]
+              .filter(Boolean)
+              .join(" - "),
+            route: "/admin/documents-inquiry",
+            state: {
+              openReferenceNumber: String(
+                documentRecord.reference_number || "",
+              ),
+              searchQuery:
+                documentRecord?.reference_number ||
+                documentRecord?.full_name ||
+                "",
+            },
+          }))
+      : [];
+
+    const appointmentResults = canViewAppointments()
+      ? headerSearchDatasets.appointments
+          .filter((appointment) =>
+            matches([
+              appointment?.title,
+              appointment?.description,
+              appointment?.status,
+              appointment?.complainant_name,
+              appointment?.scheduled_at,
+            ]),
+          )
+          .slice(0, 6)
+          .map((appointment) => ({
+            id: `appointment-${appointment.id}`,
+            type: "appointment",
+            title: appointment?.title || "Appointment",
+            subtitle: [
+              appointment?.complainant_name,
+              appointment?.status,
+              appointment?.scheduled_at,
+            ]
+              .filter(Boolean)
+              .join(" - "),
+            route: "/admin/appointments",
+            state: {
+              openAppointmentId: String(appointment.id),
+              searchQuery:
+                appointment?.complainant_name ||
+                appointment?.title ||
+                String(appointment.id),
+            },
+          }))
+      : [];
+
+    return [
+      ...residentResults,
+      ...incidentResults,
+      ...complaintResults,
+      ...documentResults,
+      ...appointmentResults,
+    ].slice(0, 12);
+  }, [headerSearchDatasets, headerSearchQuery]);
+
+  const headerSuggestionResults = useMemo(
+    () => headerSearchResults.slice(0, 6),
+    [headerSearchResults],
+  );
+
   // ── Notification sound on new unread items ────────────────────────────
   const prevUnreadRef = useRef(unreadCount);
 
@@ -725,9 +1362,41 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
   }, [unreadCount]);
 
   useEffect(() => {
+    if (!isAdminUser) return undefined;
+
+    const handleKeyDown = (event) => {
+      const key = String(event.key || "").toLowerCase();
+      if ((event.ctrlKey || event.metaKey) && key === "k") {
+        event.preventDefault();
+        closeAllMenus();
+        setIsHeaderSearchOpen(true);
+        window.requestAnimationFrame(() => {
+          headerSearchInputRef.current?.focus();
+        });
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [closeAllMenus, isAdminUser]);
+
+  useEffect(() => {
+    if (!isAdminUser || !isHeaderSearchOpen || hasHeaderSearchLoaded) {
+      return;
+    }
+    loadHeaderSearchData();
+  }, [
+    hasHeaderSearchLoaded,
+    isAdminUser,
+    isHeaderSearchOpen,
+    loadHeaderSearchData,
+  ]);
+
+  useEffect(() => {
     const handlePointerDown = (event) => {
       const target = event.target;
       if (
+        headerSearchRef.current?.contains(target) ||
         notificationRef.current?.contains(target) ||
         settingsRef.current?.contains(target) ||
         profileRef.current?.contains(target)
@@ -735,6 +1404,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
         return;
       }
       closeAllMenus();
+      setIsHeaderSearchOpen(false);
     };
 
     document.addEventListener("mousedown", handlePointerDown);
@@ -748,24 +1418,56 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
 
   useEffect(() => {
     closeAllMenus();
+    setIsHeaderSearchOpen(false);
   }, [location.pathname, closeAllMenus]);
+
+  const openHeaderSearchResult = useCallback(
+    (result) => {
+      setIsHeaderSearchOpen(false);
+      setHeaderSearchQuery("");
+      navigate(result.route, {
+        state: {
+          ...(result.state || {}),
+          globalSearchQuery: headerSearchQuery,
+        },
+      });
+    },
+    [headerSearchQuery, navigate],
+  );
+
+  const handleHeaderSearchKeyDown = useCallback(
+    (event) => {
+      if (event.key === "Enter" && headerSuggestionResults.length > 0) {
+        event.preventDefault();
+        openHeaderSearchResult(headerSuggestionResults[0]);
+      }
+
+      if (event.key === "Escape") {
+        setIsHeaderSearchOpen(false);
+      }
+    },
+    [headerSuggestionResults, openHeaderSearchResult],
+  );
 
   const toggleNotifications = () => {
     setIsNotificationOpen(!isNotificationOpen);
     setIsSettingsOpen(false);
     setIsProfileOpen(false);
+    setIsHeaderSearchOpen(false);
   };
 
   const toggleSettings = () => {
     setIsSettingsOpen(!isSettingsOpen);
     setIsNotificationOpen(false);
     setIsProfileOpen(false);
+    setIsHeaderSearchOpen(false);
   };
 
   const toggleProfile = () => {
     setIsProfileOpen(!isProfileOpen);
     setIsNotificationOpen(false);
     setIsSettingsOpen(false);
+    setIsHeaderSearchOpen(false);
   };
 
   const openThemeModal = () => {
@@ -812,6 +1514,38 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
     setIsNotificationOpen(false);
   }, [clearNotifications]);
 
+  const filteredNotifications = useMemo(() => {
+    const seenIds = new Set();
+
+    return notifications.filter((notification) => {
+      const notificationId = notification?.id;
+      if (notificationId) {
+        if (seenIds.has(notificationId)) {
+          return false;
+        }
+        seenIds.add(notificationId);
+      }
+
+      if (notificationFilter === "unread") {
+        return !notification.read;
+      }
+
+      if (notificationFilter === "critical") {
+        return getNotificationSeverity(notification) === "critical";
+      }
+
+      if (notificationFilter === "warning") {
+        return getNotificationSeverity(notification) === "warning";
+      }
+
+      if (notificationFilter === "info") {
+        return getNotificationSeverity(notification) === "info";
+      }
+
+      return true;
+    });
+  }, [notificationFilter, notifications]);
+
   const handleViewRegistration = useCallback(
     (notification) => {
       const targetPath = notification?.data?.route || "/admin/user-management";
@@ -842,24 +1576,55 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
 
   const handleViewProfileUpdate = useCallback(
     (notification) => {
-      if (isAdminUser) return;
+      if (isAdminUser) {
+        const data = notification?.data || {};
+        navigate("/admin/residents", {
+          state: {
+            openResidentId: data?.resident_id ? String(data.resident_id) : "",
+            openResidentBarangayId: data?.barangay_id
+              ? String(data.barangay_id)
+              : "",
+            openResidentMode: "view",
+            openResidentTab: "history",
+            searchQuery:
+              data?.barangay_id || data?.resident_name || notification?.description || "",
+          },
+        });
+        return;
+      }
+
       setProfileUpdateDetail(notification);
     },
-    [isAdminUser],
+    [isAdminUser, navigate],
   );
 
   const handleNotificationNavigate = useCallback(
     (notification) => {
-      const source = notification.source;
-      const type = notification.type;
+      const source = notification?.source;
+      const type = notification?.type;
+      const data = notification?.data || {};
       const isIncidentType = source === "incident" || type === "incident_status_updated";
       const isComplaintType = source === "complaint" || type === "complaint_status_updated";
-      const isResidentType = source === "resident" || type === "profile_updated";
 
       if (isIncidentType || isComplaintType) {
-        navigate(isAdminUser ? "/admin/incidents" : "/incident-complaint/case-management");
-      } else if (isResidentType && isAdminUser) {
-        navigate("/admin/residents");
+        const openId =
+          data?.id ||
+          data?.incident_id ||
+          data?.complaint_id ||
+          data?.report_id;
+
+        navigate(
+          isAdminUser ? "/admin/incidents" : "/incident-complaint/case-management",
+          openId
+            ? {
+                state: {
+                  openId: String(openId),
+                  openType: isComplaintType ? "complaint" : "incident",
+                  defaultTab: "details",
+                },
+              }
+            : undefined,
+        );
       }
       closeAllMenus();
     },
@@ -869,10 +1634,10 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
   return (
     <>
       <header className={`${t.cardBg} border-b ${t.cardBorder} shadow-sm relative z-20`}>
-        <div className="w-full px-4 sm:px-5 py-2 sm:py-4">
-          <div className="flex items-center justify-between">
+        <div className="w-full px-4 sm:px-5 py-3 sm:py-4.5">
+          <div className="relative flex items-center justify-between">
             {/* Logo */}
-            <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-2.5">
               {/* Mobile sidebar burger */}
               {onMobileSidebarToggle && (
                 <button
@@ -894,15 +1659,15 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
               <img
                 src={logoSrc}
                 alt="Barangay Gulod Logo"
-                className="w-9 h-9 sm:w-11 sm:h-11 rounded-full shadow-lg object-cover"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full shadow-lg object-cover"
               />
               <div className="hidden sm:block text-left">
                 <h1
-                  className={`font-spartan text-lg sm:text-xl font-bold text-left ${t.cardText}`}
+                  className={`font-spartan text-base sm:text-lg font-bold text-left ${t.cardText}`}
                 >
                   {isAdminUser ? "Dashboard" : "Barangay Gulod"}
                 </h1>
-                <p className={`text-xs text-left ${t.subtleText} font-kumbh`}>
+                <p className={`text-[11px] text-left ${t.subtleText} font-kumbh`}>
                   {isAdminUser
                     ? "Operations and analytics workspace"
                     : isSubSystem2Route
@@ -914,14 +1679,197 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
 
             {/* Action Buttons */}
             <div className="flex items-center space-x-2 sm:space-x-3 relative md:mr-4 lg:mr-5">
+              {isAdminUser && (
+                <div ref={headerSearchRef} className="relative hidden sm:block">
+                  <div
+                    className={`flex w-[15.5rem] items-center gap-2.5 rounded-xl border px-3.5 py-2 transition-all ${
+                      isDark
+                        ? "border-slate-700 bg-slate-900 text-slate-300"
+                        : "border-slate-200 bg-white text-slate-600"
+                    }`}
+                  >
+                    <svg
+                      className="h-3.5 w-3.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.9}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m21 21-4.35-4.35m1.6-5.15a6.75 6.75 0 1 1-13.5 0 6.75 6.75 0 0 1 13.5 0Z"
+                      />
+                    </svg>
+                    <input
+                      ref={headerSearchInputRef}
+                      type="text"
+                      value={headerSearchQuery}
+                      onFocus={() => {
+                        closeAllMenus();
+                        setIsHeaderSearchOpen(true);
+                      }}
+                      onChange={(event) => {
+                        setHeaderSearchQuery(event.target.value);
+                        setIsHeaderSearchOpen(true);
+                      }}
+                      onKeyDown={handleHeaderSearchKeyDown}
+                      placeholder="Search"
+                      title="Smart Search"
+                      className={`w-full bg-transparent text-left text-[13px] font-normal font-kumbh outline-none ${
+                        isDark
+                          ? "placeholder:text-slate-500"
+                          : "placeholder:text-slate-400"
+                      }`}
+                    />
+                    {headerSearchQuery.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setHeaderSearchQuery("");
+                          setIsHeaderSearchOpen(false);
+                          headerSearchInputRef.current?.focus();
+                        }}
+                        className={`inline-flex h-5.5 w-5.5 items-center justify-center rounded-full transition-colors ${
+                          isDark
+                            ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                            : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                        }`}
+                        aria-label="Clear search"
+                      >
+                        <svg
+                          className="h-3 w-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          strokeWidth="2"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M6 6l12 12M6 18 18 6"
+                          />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+
+                  {isHeaderSearchOpen && headerSearchQuery.trim() && (
+                    <div
+                      className={`absolute right-0 top-full z-50 mt-2.5 w-[20.5rem] overflow-hidden rounded-[20px] border shadow-[0_18px_42px_rgba(15,23,42,0.14)] ${
+                        isDark
+                          ? "border-slate-700 bg-slate-900"
+                          : "border-slate-200 bg-white"
+                      }`}
+                    >
+                      {headerSearchLoading ? (
+                        <div className="px-3.5 py-4 text-left">
+                          <p className={`text-[13px] font-semibold ${t.cardText}`}>
+                            Loading matches...
+                          </p>
+                          <p className={`mt-1 text-[11px] ${t.subtleText}`}>
+                            Preparing searchable records for this workspace.
+                          </p>
+                        </div>
+                      ) : headerSearchError ? (
+                        <div className="px-3.5 py-4 text-left">
+                          <p
+                            className={`text-[13px] font-semibold ${
+                              isDark ? "text-rose-300" : "text-rose-700"
+                            }`}
+                          >
+                            {headerSearchError}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={loadHeaderSearchData}
+                            className={`mt-3 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                              isDark
+                                ? "bg-rose-300 text-slate-950 hover:bg-rose-200"
+                                : "bg-rose-600 text-white hover:bg-rose-700"
+                            }`}
+                          >
+                            Retry
+                          </button>
+                        </div>
+                      ) : headerSuggestionResults.length > 0 ? (
+                        headerSuggestionResults.map((result) => (
+                          <button
+                            key={`header-search-${result.id}`}
+                            type="button"
+                            onClick={() => openHeaderSearchResult(result)}
+                            className={`flex w-full items-start gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
+                              isDark
+                                ? "border-b border-slate-800 last:border-b-0 hover:bg-slate-800"
+                                : "border-b border-slate-100 last:border-b-0 hover:bg-slate-50"
+                            }`}
+                          >
+                            <div
+                              className={`mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full ${
+                                isDark
+                                  ? "bg-slate-800 text-slate-300"
+                                  : "bg-slate-100 text-slate-500"
+                              }`}
+                            >
+                              <svg
+                                className="h-3.5 w-3.5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                strokeWidth="1.9"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="m21 21-4.35-4.35m1.6-5.15a6.75 6.75 0 1 1-13.5 0 6.75 6.75 0 0 1 13.5 0Z"
+                                />
+                              </svg>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p
+                                className={`truncate text-[13px] font-semibold ${t.cardText}`}
+                              >
+                                {result.title}
+                              </p>
+                              <p
+                                className={`mt-0.5 truncate text-[11px] ${t.subtleText}`}
+                              >
+                                {result.subtitle || "Open module"}
+                              </p>
+                            </div>
+                            <span
+                              className={`mt-0.5 shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold ${
+                                SEARCH_RESULT_TYPE_STYLES[result.type] ||
+                                "border-slate-200 bg-slate-100 text-slate-700"
+                              }`}
+                            >
+                              {result.type}
+                            </span>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-3.5 py-4 text-left">
+                          <p className={`text-[13px] font-semibold ${t.cardText}`}>
+                            No matching results
+                          </p>
+                          <p className={`mt-1 text-[11px] ${t.subtleText}`}>
+                            Try a different resident name, reference number, or status.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Notification */}
               <div ref={notificationRef} className="relative">
                 <button
                   onClick={toggleNotifications}
-                  className={`p-2 sm:p-2.5 ${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} ${isAdminUser ? `rounded-xl border ${t.cardBorder}` : "rounded-full"} transition-all relative`}
+                  className={`relative flex h-10 w-10 items-center justify-center ${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} ${isAdminUser ? `rounded-xl border ${t.cardBorder}` : "rounded-full"} transition-all`}
                   title="Notifications"
                 >
-                  <BellOutlineIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <BellOutlineIcon className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
                   {unreadCount > 0 && (
                     <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-red-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
                       {unreadCount > 99 ? "99+" : unreadCount}
@@ -932,27 +1880,74 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                 {/* Notification Dropdown */}
                 {isNotificationOpen && (
                   <div
-                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-[22rem] ${t.cardBg} ${t.cardBorder} rounded-xl shadow-2xl border z-40 overflow-hidden animate-slideDown max-h-[80vh] sm:max-h-[540px]`}
+                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-3 w-auto sm:w-[21.75rem] rounded-[1.35rem] border z-40 overflow-hidden animate-slideDown backdrop-blur-xl ${
+                      isDark
+                        ? "border-slate-800 bg-slate-900/95 shadow-[0_30px_80px_rgba(2,8,23,0.5)]"
+                        : "border-slate-200 bg-white/95 shadow-[0_28px_70px_rgba(15,23,42,0.14)]"
+                    }`}
                   >
                     <div
-                      className={`bg-gradient-to-r ${t.primaryGrad} px-4 py-3.5`}
+                      className={`border-b border-white/15 bg-gradient-to-r px-4 py-2.5 ${t.primaryGrad}`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="text-left">
-                          <h3 className="text-white font-bold text-[15px] sm:text-base font-spartan">
-                            Notifications
-                          </h3>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className={`flex h-7 w-7 items-center justify-center rounded-lg bg-white/60 shadow-sm ring-[0.5px] ring-inset ring-white/60 backdrop-blur-sm ${
+                            isDark ? "text-slate-700" : t.modalHeaderIcon
+                          }`}>
+                            <BellOutlineIcon className="h-3 w-3" strokeWidth={1.9} />
+                          </div>
+                          <div className="min-w-0 text-left">
+                            <h3 className="text-[12px] font-semibold font-spartan text-white sm:text-[13px]">
+                              Notifications
+                            </h3>
+                          </div>
                         </div>
-                        <span className="bg-white/20 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full font-kumbh whitespace-nowrap">
+                        <span className="inline-flex shrink-0 self-start whitespace-nowrap rounded-full border border-white/20 bg-white/16 px-2 py-0.5 text-[9px] font-semibold font-kumbh text-white shadow-sm backdrop-blur-sm">
                           {unreadCount} unread
                         </span>
                       </div>
                     </div>
 
-                    <div className={`max-h-[60vh] sm:max-h-[20rem] overflow-y-auto p-3 space-y-2.5 ${isDark ? "bg-slate-900/40" : "bg-slate-50/70"}`}>
-                      {notifications.length > 0 ? (
-                        notifications.slice(0, 15).map((notification) => (
-                          <NotificationHistoryItem
+                    <div
+                      className={`flex flex-wrap items-center gap-2 border-b px-4 py-2 ${
+                        isDark ? "border-slate-800 bg-slate-900" : "border-slate-100 bg-white"
+                      }`}
+                    >
+                      {[
+                        { key: "all", label: "All" },
+                        { key: "unread", label: "Unread" },
+                        { key: "critical", label: "Critical" },
+                        { key: "warning", label: "Warning" },
+                        { key: "info", label: "Info" },
+                      ].map((filterOption) => {
+                        const active = notificationFilter === filterOption.key;
+                        return (
+                          <button
+                            key={filterOption.key}
+                            type="button"
+                            onClick={() => setNotificationFilter(filterOption.key)}
+                            className={`rounded-full px-2.5 py-1 text-[10px] font-semibold font-kumbh transition-colors ${
+                              active
+                                ? isDark
+                                  ? "bg-slate-100 text-slate-900"
+                                  : "bg-slate-900 text-white"
+                                : isDark
+                                  ? "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                            }`}
+                          >
+                            {filterOption.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className={`max-h-[60vh] sm:max-h-[22rem] overflow-y-auto px-4 py-3.5 space-y-2.5 ${
+                      isDark ? "bg-slate-950/40" : "bg-slate-50/75"
+                    }`}>
+                      {filteredNotifications.length > 0 ? (
+                        filteredNotifications.slice(0, 15).map((notification) => (
+                          <ModernNotificationHistoryItem
                             key={notification.id}
                             notification={notification}
                             isDark={isDark}
@@ -966,14 +1961,20 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                         ))
                       ) : (
                         <div
-                          className={`rounded-2xl border p-8 text-center ${t.subtleText} ${isDark ? "border-slate-700 bg-slate-800/60" : "border-slate-200 bg-white"}`}
+                          className={`rounded-[1.15rem] border px-5 py-8 text-center ${
+                            isDark ? "border-slate-800 bg-slate-900" : "border-slate-200 bg-white"
+                          }`}
                         >
-                          <BellOutlineIcon className="w-12 h-12 mx-auto mb-3 opacity-30" strokeWidth={1.5} />
-                          <p className="text-sm font-kumbh font-semibold">
-                            No history yet
+                          <div className={`mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${
+                            isDark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-400"
+                          }`}>
+                            <BellOutlineIcon className="h-4 w-4" strokeWidth={1.7} />
+                          </div>
+                          <p className={`text-sm font-semibold font-kumbh ${t.cardText}`}>
+                            No matching notifications
                           </p>
-                          <p className="text-xs mt-1 font-kumbh opacity-60">
-                            New updates will be saved here automatically.
+                          <p className={`mt-1 text-xs font-kumbh ${t.subtleText}`}>
+                            Try switching the filter or wait for new activity.
                           </p>
                         </div>
                       )}
@@ -981,24 +1982,26 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
 
                     {notifications.length > 0 && (
                       <div
-                        className={`p-3 border-t ${isDark ? "border-slate-700 bg-slate-900/70" : "border-slate-200 bg-white"} flex items-center gap-2`}
+                        className={`flex items-center gap-2 border-t px-3.5 py-2.5 ${
+                          isDark ? "border-slate-800 bg-slate-900" : "border-slate-100 bg-white"
+                        }`}
                       >
                         <button
                           onClick={handleMarkAllAsRead}
-                          className={`flex-1 rounded-xl px-3 py-2 text-[12px] font-semibold transition-colors font-kumbh ${
+                          className={`flex-1 rounded-[0.85rem] px-3 py-2 text-[10px] font-semibold transition-colors font-kumbh ${
                             isDark
-                              ? "bg-violet-500/15 text-violet-200 hover:bg-violet-500/25"
-                              : "bg-violet-50 text-violet-700 hover:bg-violet-100"
+                              ? "bg-slate-100 text-slate-900 hover:bg-white"
+                              : "bg-slate-900 text-white hover:bg-slate-800"
                           }`}
                         >
                           Mark all as read
                         </button>
                         <button
                           onClick={handleClearHistory}
-                          className={`rounded-xl px-3 py-2 text-[12px] font-semibold transition-colors font-kumbh ${
+                          className={`rounded-[0.85rem] border px-3 py-2 text-[10px] font-semibold transition-colors font-kumbh ${
                             isDark
-                              ? "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
-                              : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800"
+                              ? "border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-600 hover:text-white"
+                              : "border-slate-200 bg-slate-100 text-slate-600 hover:border-slate-300 hover:text-slate-800"
                           }`}
                         >
                           Clear all
@@ -1013,11 +2016,11 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
               <div ref={settingsRef} className="relative">
                 <button
                   onClick={toggleSettings}
-                  className={`p-2 sm:p-2.5 ${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} ${isAdminUser ? `rounded-xl border ${t.cardBorder}` : "rounded-full"} transition-all`}
+                  className={`flex h-10 w-10 items-center justify-center ${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} ${isAdminUser ? `rounded-xl border ${t.cardBorder}` : "rounded-full"} transition-all`}
                   title="Settings"
                 >
                   <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5"
+                    className="w-4 h-4 sm:w-[18px] sm:h-[18px]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1039,18 +2042,18 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
 
                 {isSettingsOpen && (
                   <div
-                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-[17.5rem] ${t.cardBg} ${t.cardBorder} rounded-[22px] shadow-[0_18px_36px_rgba(15,23,42,0.12)] border z-40 overflow-hidden animate-slideDown`}
+                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-[15.25rem] ${t.cardBg} ${t.cardBorder} rounded-[20px] shadow-[0_14px_30px_rgba(15,23,42,0.1)] border z-40 overflow-hidden animate-slideDown`}
                   >
-                    <div className="p-2">
+                    <div className="p-1.5">
                       <button
                         onClick={openThemeModal}
-                        className={`w-full flex items-center gap-3 px-3 py-2 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-[18px] transition-colors group text-left`}
+                        className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-[16px] transition-colors group text-left`}
                       >
                         <span
-                          className={`w-9 h-9 rounded-[16px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-blue-50"}`}
+                          className={`w-8 h-8 rounded-[14px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-blue-50"}`}
                         >
                           <svg
-                            className="w-4 h-4 text-blue-500"
+                            className="w-3.5 h-3.5 text-blue-500"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -1064,15 +2067,15 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                           </svg>
                         </span>
                         <div className="flex-1 min-w-0">
-                          <span className={`block text-sm font-medium font-kumbh ${t.cardText}`}>
+                          <span className={`block text-[13px] font-medium font-kumbh ${t.cardText}`}>
                             {tr.header.changeTheme}
                           </span>
-                          <span className={`block text-[11px] leading-4.5 font-kumbh ${t.subtleText}`}>
+                          <span className={`block text-[10px] leading-4 font-kumbh ${t.subtleText}`}>
                             Update colors and appearance
                           </span>
                         </div>
                         <svg
-                          className={`w-3.5 h-3.5 ${t.subtleText} flex-shrink-0`}
+                          className={`w-3 h-3 ${t.subtleText} flex-shrink-0`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -1085,13 +2088,13 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                           setLanguage(language === "en" ? "tl" : "en");
                           setIsSettingsOpen(false);
                         }}
-                        className={`mt-1 w-full flex items-center gap-3 px-3 py-2 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-[18px] transition-colors group text-left`}
+                        className={`mt-0.5 w-full flex items-center gap-2.5 px-2.5 py-1.5 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-[16px] transition-colors group text-left`}
                       >
                         <span
-                          className={`w-9 h-9 rounded-[16px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-amber-50"}`}
+                          className={`w-8 h-8 rounded-[14px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-amber-50"}`}
                         >
                           <svg
-                            className="w-4 h-4 text-amber-500"
+                            className="w-3.5 h-3.5 text-amber-500"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -1106,28 +2109,28 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                         </span>
                         <div className="flex-1 flex items-center justify-between">
                           <div className="min-w-0">
-                            <span className={`block text-sm font-medium font-kumbh ${t.cardText}`}>
+                            <span className={`block text-[13px] font-medium font-kumbh ${t.cardText}`}>
                               {tr.header.language}
                             </span>
-                            <span className={`block text-[11px] leading-4.5 font-kumbh ${t.subtleText}`}>
+                            <span className={`block text-[10px] leading-4 font-kumbh ${t.subtleText}`}>
                               Switch between English and Filipino
                             </span>
                           </div>
                           <span
-                            className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${isDark ? "bg-slate-700 text-slate-200" : "bg-slate-100 text-slate-600"} font-kumbh`}
+                            className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${isDark ? "bg-slate-700 text-slate-200" : "bg-slate-100 text-slate-600"} font-kumbh`}
                           >
                             {language === "en" ? "EN" : "TL"}
                           </span>
                         </div>
                       </button>
                       <button
-                        className={`mt-1 w-full flex items-center gap-3 px-3 py-2 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-[18px] transition-colors group text-left`}
+                        className={`mt-0.5 w-full flex items-center gap-2.5 px-2.5 py-1.5 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-50 text-slate-700"} rounded-[16px] transition-colors group text-left`}
                       >
                         <span
-                          className={`w-9 h-9 rounded-[16px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-emerald-50"}`}
+                          className={`w-8 h-8 rounded-[14px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-emerald-50"}`}
                         >
                           <svg
-                            className="w-4 h-4 text-emerald-500"
+                            className="w-3.5 h-3.5 text-emerald-500"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -1141,15 +2144,15 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                           </svg>
                         </span>
                         <div className="flex-1 min-w-0">
-                          <span className={`block text-sm font-medium font-kumbh ${t.cardText}`}>
+                          <span className={`block text-[13px] font-medium font-kumbh ${t.cardText}`}>
                             {tr.header.privacySettings}
                           </span>
-                          <span className={`block text-[11px] leading-4.5 font-kumbh ${t.subtleText}`}>
+                          <span className={`block text-[10px] leading-4 font-kumbh ${t.subtleText}`}>
                             Manage access, privacy, and security
                           </span>
                         </div>
                         <svg
-                          className={`w-3.5 h-3.5 ${t.subtleText} flex-shrink-0`}
+                          className={`w-3 h-3 ${t.subtleText} flex-shrink-0`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -1166,10 +2169,10 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
               <div ref={profileRef} className="relative">
                 <button
                   onClick={toggleProfile}
-                  className={`flex items-center space-x-1 sm:space-x-2 px-1 sm:px-1.5 py-1 ${isAdminUser ? "rounded-lg border border-transparent bg-transparent" : "rounded-full"} ${isDark ? "hover:bg-slate-700" : "hover:bg-slate-100"} transition-all`}
+                  className={`flex h-10 items-center space-x-1 sm:space-x-1.5 px-1 sm:px-1.5 ${isAdminUser ? "rounded-lg border border-transparent bg-transparent" : "rounded-full"} ${isDark ? "hover:bg-slate-700" : "hover:bg-slate-100"} transition-all`}
                 >
                   <div
-                    className={`w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br ${t.primaryGrad} rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm`}
+                    className={`w-7 h-7 bg-gradient-to-br ${t.primaryGrad} rounded-full flex items-center justify-center text-white font-bold text-xs`}
                   >
                     {residentPhoto ? (
                       <img
@@ -1182,7 +2185,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                     )}
                   </div>
                   <svg
-                    className={`w-3 h-3 sm:w-4 sm:h-4 ${t.subtleText} hidden sm:block`}
+                    className={`w-3 h-3 ${t.subtleText} hidden sm:block`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1198,20 +2201,20 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
 
                 {isProfileOpen && (
                   <div
-                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-60 ${t.cardBg} ${t.cardBorder} rounded-[22px] shadow-[0_18px_36px_rgba(15,23,42,0.12)] border z-40 overflow-hidden animate-slideDown`}
+                    className={`fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-[4.5rem] sm:top-full mt-0 sm:mt-2 w-auto sm:w-[14.5rem] ${t.cardBg} ${t.cardBorder} rounded-[20px] shadow-[0_14px_30px_rgba(15,23,42,0.1)] border z-40 overflow-hidden animate-slideDown`}
                   >
                     <div
-                      className={`px-3.5 py-3.5 border-b ${t.cardBorder} ${isDark ? "bg-slate-900/70" : "bg-slate-50/80"}`}
+                      className={`px-3 py-3 border-b ${t.cardBorder} ${isDark ? "bg-slate-900/70" : "bg-slate-50/80"}`}
                     >
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2">
                         <div
-                          className={`w-10 h-10 bg-gradient-to-br ${t.primaryGrad} rounded-[16px] flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-lg`}
+                          className={`w-9 h-9 bg-gradient-to-br ${t.primaryGrad} rounded-[14px] flex items-center justify-center text-white font-bold text-[13px] flex-shrink-0 shadow-lg`}
                         >
                           {residentPhoto ? (
                             <img
                               src={residentPhoto}
                               alt="Resident profile"
-                              className="h-full w-full rounded-[16px] object-cover"
+                              className="h-full w-full rounded-[14px] object-cover"
                             />
                           ) : (
                             userInitials
@@ -1219,12 +2222,12 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                         </div>
                         <div className="flex-1 min-w-0 text-left">
                           <p
-                            className={`font-semibold text-[15px] ${t.cardText} font-spartan truncate`}
+                            className={`font-semibold text-[14px] ${t.cardText} font-spartan truncate`}
                           >
                             {userName}
                           </p>
                           <p
-                            className={`text-xs ${t.subtleText} font-kumbh truncate`}
+                            className={`text-[11px] ${t.subtleText} font-kumbh truncate`}
                           >
                             {userEmail}
                           </p>
@@ -1235,13 +2238,13 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                     <div className="p-1.5">
                       <button
                         onClick={openProfilePage}
-                        className={`w-full flex items-center gap-3 px-3 py-2 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"} rounded-[18px] transition-colors text-left`}
+                        className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"} rounded-[16px] transition-colors text-left`}
                       >
                         <span
-                          className={`w-9 h-9 rounded-[16px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-blue-50"}`}
+                          className={`w-8 h-8 rounded-[14px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-blue-50"}`}
                         >
                           <svg
-                            className="w-4 h-4 text-blue-500"
+                            className="w-3.5 h-3.5 text-blue-500"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -1255,23 +2258,23 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                           </svg>
                         </span>
                         <div className="flex-1 min-w-0">
-                          <span className={`block text-sm font-medium font-kumbh ${t.cardText}`}>
+                          <span className={`block text-[13px] font-medium font-kumbh ${t.cardText}`}>
                             {tr.header.viewProfile}
                           </span>
-                          <span className={`block text-[11px] font-kumbh ${t.subtleText}`}>
+                          <span className={`block text-[10px] leading-4 font-kumbh ${t.subtleText}`}>
                             Account details and access
                           </span>
                         </div>
                       </button>
                       <button
                         onClick={openLogoutModal}
-                        className={`mt-1 w-full flex items-center gap-3 px-3 py-2 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"} rounded-[18px] transition-colors text-left`}
+                        className={`mt-0.5 w-full flex items-center gap-2.5 px-2.5 py-1.5 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"} rounded-[16px] transition-colors text-left`}
                       >
                         <span
-                          className={`w-9 h-9 rounded-[16px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-red-50"}`}
+                          className={`w-8 h-8 rounded-[14px] flex items-center justify-center flex-shrink-0 ${isDark ? "bg-slate-700/80" : "bg-red-50"}`}
                         >
                           <svg
-                            className="w-4 h-4 text-red-500"
+                            className="w-3.5 h-3.5 text-red-500"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -1285,7 +2288,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                           </svg>
                         </span>
                         <div className="flex-1 min-w-0">
-                          <span className={`block text-sm font-medium font-kumbh ${t.cardText}`}>
+                          <span className={`block text-[13px] font-medium font-kumbh ${t.cardText}`}>
                             {tr.header.logout}
                           </span>
                         </div>

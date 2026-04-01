@@ -1,30 +1,36 @@
-import { getToken, isAuthenticated, getUser } from "../../homepage/services/loginService";
+import {
+  getUser,
+  isAuthenticated,
+} from "../../homepage/services/loginService";
+import { INCIDENT_API_BASE_URL } from "../../config/runtimeApi";
+import { requestJson } from "../shared/http";
+import { memCache } from "../shared/cache";
 
-const API_BASE = "http://localhost:8000/api";
+const INCIDENT_TYPES_CACHE_KEY = "incident:types";
+const INCIDENT_TYPES_TTL = 60 * 60 * 1000; // 60 minutes — rarely changes
+
+const INCIDENTS_LIST_CACHE_KEY = "incidents:list";
+const INCIDENTS_LIST_TTL = 2 * 60 * 1000; // 2 minutes
+
+const INCIDENT_UPDATES_CACHE_PREFIX = "incident:updates:";
+const INCIDENT_UPDATES_TTL = 60 * 1000; // 1 minute
+
+const API_BASE = INCIDENT_API_BASE_URL;
 
 /**
  * Fetch available incident types from the backend.
+ * Cached for 60 minutes — these change only when an admin edits them.
  */
 const getIncidentTypes = async () => {
   if (!isAuthenticated()) {
     throw new Error("You must be logged in to fetch incident types.");
   }
 
-  const response = await fetch(`${API_BASE}/incident-types`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch incident types.");
-  }
-
-  return data;
+  return memCache.remember(INCIDENT_TYPES_CACHE_KEY, INCIDENT_TYPES_TTL, () =>
+    requestJson(`${API_BASE}/incident-types`, {
+      errorMessage: "Failed to fetch incident types.",
+    })
+  );
 };
 
 /**
@@ -84,22 +90,13 @@ const submitReport = async (formData) => {
     });
   }
 
-  const response = await fetch(`${API_BASE}/incidents`, {
+  const result = await requestJson(`${API_BASE}/incidents`, {
     method: "POST",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
     body,
+    errorMessage: "Failed to submit incident report.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to submit incident report.");
-  }
-
-  return data;
+  memCache.invalidate(INCIDENTS_LIST_CACHE_KEY);
+  return result;
 };
 
 const getMyIncidents = async () => {
@@ -107,21 +104,11 @@ const getMyIncidents = async () => {
     throw new Error("You must be logged in to view incidents.");
   }
 
-  const response = await fetch(`${API_BASE}/incidents`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch incidents.");
-  }
-
-  return data;
+  return memCache.remember(INCIDENTS_LIST_CACHE_KEY, INCIDENTS_LIST_TTL, () =>
+    requestJson(`${API_BASE}/incidents`, {
+      errorMessage: "Failed to fetch incidents.",
+    })
+  );
 };
 
 const getAllIncidents = async () => {
@@ -129,21 +116,11 @@ const getAllIncidents = async () => {
     throw new Error("You must be logged in to view incidents.");
   }
 
-  const response = await fetch(`${API_BASE}/incidents`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch all incidents.");
-  }
-
-  return data;
+  return memCache.remember(INCIDENTS_LIST_CACHE_KEY, INCIDENTS_LIST_TTL, () =>
+    requestJson(`${API_BASE}/incidents`, {
+      errorMessage: "Failed to fetch all incidents.",
+    })
+  );
 };
 
 const updateIncident = async (id, updates) => {
@@ -151,23 +128,14 @@ const updateIncident = async (id, updates) => {
     throw new Error("You must be logged in to update an incident.");
   }
 
-  const response = await fetch(`${API_BASE}/incidents/${id}`, {
+  const result = await requestJson(`${API_BASE}/incidents/${id}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
+    includeJson: true,
     body: JSON.stringify(updates),
+    errorMessage: "Failed to update incident.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to update incident.");
-  }
-
-  return data;
+  memCache.invalidate(INCIDENTS_LIST_CACHE_KEY);
+  return result;
 };
 
 const getIncidentUpdates = async (id) => {
@@ -175,21 +143,13 @@ const getIncidentUpdates = async (id) => {
     throw new Error("You must be logged in to view updates.");
   }
 
-  const response = await fetch(`${API_BASE}/incidents/${id}/updates`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch incident updates.");
-  }
-
-  return data;
+  return memCache.remember(
+    `${INCIDENT_UPDATES_CACHE_PREFIX}${id}`,
+    INCIDENT_UPDATES_TTL,
+    () => requestJson(`${API_BASE}/incidents/${id}/updates`, {
+      errorMessage: "Failed to fetch incident updates.",
+    })
+  );
 };
 
 const addIncidentUpdate = async (id, updateData) => {
@@ -201,22 +161,13 @@ const addIncidentUpdate = async (id, updateData) => {
   if (updateData.message) body.append("message", updateData.message);
   if (updateData.attachment) body.append("attachment", updateData.attachment);
 
-  const response = await fetch(`${API_BASE}/incidents/${id}/updates`, {
+  const result = await requestJson(`${API_BASE}/incidents/${id}/updates`, {
     method: "POST",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
     body,
+    errorMessage: "Failed to add incident update.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to add incident update.");
-  }
-
-  return data;
+  memCache.invalidate(`${INCIDENT_UPDATES_CACHE_PREFIX}${id}`);
+  return result;
 };
 
 export const incidentService = {

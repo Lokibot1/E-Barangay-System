@@ -8,6 +8,8 @@ export default function NewsModal({
 }) {
   if (!selectedNews) return null;
 
+  const hasVisualMedia = Boolean(selectedNews.media?.url || selectedNews.image);
+
   return (
     <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
       <div
@@ -16,15 +18,54 @@ export default function NewsModal({
         }`}
       >
         <div className="relative h-56 md:h-80 w-full overflow-hidden">
-          <img
-            src={selectedNews.image}
-            alt={selectedNews.title}
-            className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = fallbackImage;
-            }}
-          />
+          {selectedNews.media?.kind === "video" && selectedNews.media?.url ? (
+            <video
+              src={selectedNews.media.url}
+              poster={fallbackImage}
+              className="w-full h-full object-cover"
+              controls
+              playsInline
+              preload="metadata"
+            />
+          ) : hasVisualMedia ? (
+            <img
+              src={selectedNews.media?.url || selectedNews.image}
+              alt={selectedNews.title}
+              className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = fallbackImage;
+              }}
+            />
+          ) : (
+            <div
+              className={`flex h-full w-full items-end bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_42%),linear-gradient(180deg,#f8fafc,#e2e8f0)] p-6 ${
+                isDarkMode
+                  ? "bg-[radial-gradient(circle_at_top,_rgba(52,211,153,0.18),_transparent_42%),linear-gradient(180deg,#0f172a,#020617)]"
+                  : ""
+              }`}
+            >
+              <div>
+                <span className="inline-flex rounded-full bg-white/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-700 shadow-sm">
+                  {selectedNews.tag || "Announcement"}
+                </span>
+                <p
+                  className={`mt-3 max-w-sm text-xl font-black uppercase leading-tight ${
+                    isDarkMode ? "text-white" : "text-slate-900"
+                  }`}
+                >
+                  {selectedNews.title}
+                </p>
+                <p
+                  className={`mt-2 text-sm ${
+                    isDarkMode ? "text-slate-300" : "text-slate-600"
+                  }`}
+                >
+                  No media attached to this announcement yet.
+                </p>
+              </div>
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
           <button
@@ -36,7 +77,7 @@ export default function NewsModal({
             <X size={20} />
           </button>
 
-          <div className="absolute bottom-6 left-6 right-6">
+          <div className="absolute bottom-6 left-6 right-6 flex flex-col items-start text-left">
             <span
               className={`text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 inline-block shadow-lg ${
                 selectedNews.urgent

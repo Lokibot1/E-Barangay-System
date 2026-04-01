@@ -7,6 +7,7 @@ import React, {
   useRef,
   memo,
 } from "react";
+import { useLocation } from "react-router-dom";
 import { useLanguage } from "../../../context/LanguageContext";
 import {
   MapContainer,
@@ -25,6 +26,7 @@ import Toast from "../../../components/shared/modals/Toast";
 import DatePickerField from "../../../components/shared/DatePickerField";
 import { incidentService } from "../../../services/sub-system-3/incidentService";
 import { getAllComplaints } from "../../../services/sub-system-3/complaintService";
+import { canManageIncidentCases } from "../../../homepage/services/loginService";
 import { useRealTime } from "../../../context/RealTimeContext";
 import jsPDF from "jspdf";
 import barangayLogoUrl from "../../../assets/images/logo.jpg";
@@ -403,6 +405,32 @@ const COMPLAINT_TYPE_MAP = {
   other: "Other",
 };
 
+// ── Skeleton row ────────────────────────────────────────────────────────
+const TableRowSkeleton = ({ isDark }) => {
+  const pulse = isDark
+    ? "bg-slate-700/60 animate-pulse rounded"
+    : "bg-gray-200/80 animate-pulse rounded";
+  return (
+    <tr className={`border-b ${isDark ? "border-slate-700/60" : "border-gray-100"}`}>
+      <td className="text-center px-3 py-3.5">
+        <div className={`h-3 w-5 mx-auto ${pulse}`} />
+      </td>
+      <td className="px-4 py-3.5">
+        <div className={`h-3 w-4/5 ${pulse}`} />
+      </td>
+      <td className="px-4 py-3.5">
+        <div className={`h-3 w-24 ${pulse}`} />
+      </td>
+      <td className="px-4 py-3.5">
+        <div className={`h-3 w-3/4 ${pulse}`} />
+      </td>
+      <td className="px-4 py-3.5">
+        <div className={`h-3 w-20 ${pulse}`} />
+      </td>
+    </tr>
+  );
+};
+
 // ── Memoized table row ─────────────────────────────────────────────────
 const TableRow = memo(
   ({ inc, index, currentPage, ROWS_PER_PAGE, onClick, t, isDark }) => (
@@ -436,6 +464,7 @@ const TableRow = memo(
 // ════════════════════════════════════════════════════════════════════════
 const AdminIncidentReports = () => {
   const { tr } = useLanguage();
+  const location = useLocation();
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem("appTheme") || "modern",
   );
@@ -448,6 +477,7 @@ const AdminIncidentReports = () => {
 
   const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
+  const userCanManageIncidents = canManageIncidentCases();
 
   // ── Page tab state (Incidents vs Complaints) ───────────────────────
   const [pageTab, setPageTab] = useState("incidents");
@@ -476,26 +506,11 @@ const AdminIncidentReports = () => {
       const compArray = Array.isArray(compData)
         ? compData
         : compData.data || [];
-      console.log("[DEBUG] Raw complaint data sample:", compArray[0]);
-      console.log(
-        "[DEBUG] Raw complaint fields:",
-        compArray[0] ? Object.keys(compArray[0]) : "no data",
-      );
-      console.log("[DEBUG] Raw incident data sample:", incArray[0]);
       setIncidents(incArray.map(normalizeIncident));
       const normalizedComplaints = compArray.map(normalizeComplaint);
-      console.log(
-        "[DEBUG] Normalized complaint sample:",
-        normalizedComplaints[0],
-      );
-      console.log("[DEBUG] Complaint count:", normalizedComplaints.length);
-      console.log(
-        "[DEBUG] Complaints with valid coords:",
-        normalizedComplaints.filter((c) => c.lat && c.lng).length,
-      );
       setComplaints(normalizedComplaints);
     } catch (err) {
-      console.error("Failed to fetch reports:", err);
+      setToasts((prev) => [...prev, { id: Date.now(), type: "error", title: "Load Failed", message: "Could not load reports. Please try again." }]);
     } finally {
       setLoading(false);
     }
@@ -537,8 +552,33 @@ const AdminIncidentReports = () => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  const addToast = useCallback((toast) => {
+    setToasts((prev) => [...prev, { id: Date.now(), ...toast }]);
+  }, []);
+
+  // ── Deep-link from Activity Logs ──────────────────────────────────
+  useEffect(() => {
+    const { openId, openType, defaultTab } = location.state || {};
+    if (!openId || loading) return;
+
+    const list = openType === "complaint" ? complaints : incidents;
+    const record = list.find((r) => String(r.id) === String(openId));
+    if (!record) return;
+
+    if (openType === "complaint") handlePageTab("complaints");
+    else handlePageTab("incidents");
+
+    setModalInitialTab(defaultTab || "details");
+    setSelectedIncident(record);
+
+    // Clear the state so navigating back & forward doesn't re-open the modal
+    window.history.replaceState({}, "");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, incidents, complaints]);
+
   // ── Modal state ─────────────────────────────────────────────────────
   const [selectedIncident, setSelectedIncident] = useState(null);
+  const [modalInitialTab, setModalInitialTab] = useState("details");
   const [showKebab, setShowKebab] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
@@ -1058,7 +1098,7 @@ const AdminIncidentReports = () => {
                   </button>
                 ))}
               </div>
-              {pageTab === "complaints" && (
+              {pageTab === "complaints" && userCanManageIncidents && (
                 <button
                   onClick={() => setShowComplaintModal(true)}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold font-kumbh uppercase tracking-wide transition-colors flex-shrink-0"
@@ -1160,7 +1200,11 @@ const AdminIncidentReports = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedData.length > 0 ? (
+                  {loading ? (
+                    Array.from({ length: 8 }, (_, i) => (
+                      <TableRowSkeleton key={i} isDark={isDark} />
+                    ))
+                  ) : paginatedData.length > 0 ? (
                     paginatedData.map((inc, index) => (
                       <TableRow
                         key={inc.id}
@@ -1179,9 +1223,7 @@ const AdminIncidentReports = () => {
                         colSpan={5}
                         className={`px-4 py-8 text-center ${t.subtleText}`}
                       >
-                        {loading
-                          ? tr.adminIncidents.loadingReports
-                          : tr.adminIncidents.noReportsFound}
+                        {tr.adminIncidents.noReportsFound}
                       </td>
                     </tr>
                   )}
@@ -1734,8 +1776,9 @@ const AdminIncidentReports = () => {
       {/* ── Incident Detail Modal ───────────────────────────────────── */}
       <AdminReportDetailsModal
         incident={selectedIncident}
-        onClose={() => setSelectedIncident(null)}
+        onClose={() => { setSelectedIncident(null); setModalInitialTab("details"); }}
         reportType={pageTab}
+        initialTab={modalInitialTab}
         onStatusUpdate={(id, newStatus) => {
           const updateList = (list, setList) =>
             setList(
@@ -1751,6 +1794,7 @@ const AdminIncidentReports = () => {
               : prev,
           );
         }}
+        addToast={addToast}
       />
 
       {/* Real-time toasts */}
@@ -1770,22 +1814,27 @@ const AdminIncidentReports = () => {
       />
 
       {/* Update Form Modal */}
-      <UpdateFormModal
-        isOpen={showUpdateForm}
-        onClose={() => setShowUpdateForm(false)}
-        formType={updateFormType}
-        currentTheme={currentTheme}
-      />
+      {userCanManageIncidents && (
+        <UpdateFormModal
+          isOpen={showUpdateForm}
+          onClose={() => setShowUpdateForm(false)}
+          formType={updateFormType}
+          currentTheme={currentTheme}
+          addToast={addToast}
+        />
+      )}
 
       {/* Create Complaint Modal (admin filing on behalf) */}
-      <ComplaintModal
-        isOpen={showComplaintModal}
-        onClose={() => {
-          setShowComplaintModal(false);
-          fetchData();
-        }}
-        currentTheme={currentTheme}
-      />
+      {userCanManageIncidents && (
+        <ComplaintModal
+          isOpen={showComplaintModal}
+          onClose={() => {
+            setShowComplaintModal(false);
+            fetchData();
+          }}
+          currentTheme={currentTheme}
+        />
+      )}
 
       <style>{`
         @keyframes slideInFromRight {

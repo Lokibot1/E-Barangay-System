@@ -8,7 +8,7 @@ header("Access-Control-Allow-Headers: Content-Type");
 $servername = "localhost";
 $username = "root"; // your MySQL username
 $password = "";     // your MySQL password
-$dbname = "barangay_db";
+$dbname = "bgd";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 

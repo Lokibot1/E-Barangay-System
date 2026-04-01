@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Toast from "../shared/modals/Toast";
 import themeTokens from "../../Themetokens";
+import { DOCUMENTS_API_BASE_URL } from "../../config/runtimeApi";
 
 const BIDRequestModal = ({ isOpen, onClose, currentTheme }) => {
 	const navigate = useNavigate();
@@ -111,7 +112,7 @@ const BIDRequestModal = ({ isOpen, onClose, currentTheme }) => {
 			[name]: value.replace(/[^0-9]/g, "").slice(0, 11),
 		}));
 	} else if (name === "dateOfBirth") {
-
+ 
 		const birthDate = new Date(value);
 		const today = new Date();
 
@@ -205,7 +206,7 @@ const BIDRequestModal = ({ isOpen, onClose, currentTheme }) => {
         }
 
         try {
-            const response = await fetch('http://127.0.0.1:8001/api/barangay-id-request', {
+            const response = await fetch(`${DOCUMENTS_API_BASE_URL}/barangay-id-request`, {
                 method: 'POST',
                 body: data,
                 headers: {

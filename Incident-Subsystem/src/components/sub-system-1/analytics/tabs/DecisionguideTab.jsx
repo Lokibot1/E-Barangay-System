@@ -1,9 +1,22 @@
 import { AlertTriangle, Eye, Siren } from 'lucide-react';
-import { StatCard, ChartCard, SectionHeader, EmptyState } from '../AnalyticsInterface';
+import { StatCard, ChartCard, EmptyState } from '../AnalyticsInterface';
+
+const LOW_INCOME_BRACKETS = new Set(['No Income', 'Below 5,000', '0']);
 
 function detectPurok(text = '') {
   const m = String(text).match(/purok\s*\d+/i);
   return m ? m[0] : 'the affected purok';
+}
+
+function num(value) {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function pct(part, whole) {
+  const p = num(part);
+  const w = num(whole);
+  return w > 0 ? Math.round((p / w) * 100) : 0;
 }
 
 function toNumber(value) {
@@ -87,6 +100,154 @@ function buildRecommendedAction(insight) {
   return 'Keep this item under monitoring and review trend movement during the next reporting cycle.';
 }
 
+function insightPriorityFromScore(score) {
+  if (score >= 80) return 'HIGH';
+  if (score >= 50) return 'MEDIUM';
+  return 'LOW';
+}
+
+function buildAutoInsights(raw) {
+  const hm = Array.isArray(raw?.heatmap?.puroks) ? raw.heatmap.puroks : [];
+  const livelihood = raw?.livelihood ?? {};
+  const overview = raw?.overview ?? {};
+  const insights = [];
+
+  if (hm.length > 0) {
+    const topUnregistered = [...hm].sort((a, b) => num(b.unregistered) - num(a.unregistered))[0];
+    const topSeniors = [...hm].sort((a, b) => num(b.seniors) - num(a.seniors))[0];
+    const topPwd = [...hm].sort((a, b) => num(b.pwd) - num(a.pwd))[0];
+    const topMinors = [...hm].sort((a, b) => num(b.minors) - num(a.minors))[0];
+    const lowestVoterCoverage = [...hm]
+      .map((p) => ({
+        ...p,
+        voterCoverage: pct(num(p.voters), num(p.total)),
+      }))
+      .sort((a, b) => num(a.voterCoverage) - num(b.voterCoverage))[0];
+
+    const totalUnregistered = hm.reduce((sum, p) => sum + num(p.unregistered), 0);
+    const totalSeniors = hm.reduce((sum, p) => sum + num(p.seniors), 0);
+    const totalPwd = hm.reduce((sum, p) => sum + num(p.pwd), 0);
+    const totalMinors = hm.reduce((sum, p) => sum + num(p.minors), 0);
+
+    if (num(topUnregistered?.unregistered) > 0) {
+      const count = num(topUnregistered.unregistered);
+      const purokShare = pct(count, num(topUnregistered.total));
+      const shareOfBarangayUnregistered = pct(count, totalUnregistered);
+      const score = Math.min(100, count + purokShare + shareOfBarangayUnregistered);
+      insights.push({
+        title: `${topUnregistered.purok} - Registration Drive Needed`,
+        metric: count,
+        metric_label: 'Unregistered',
+        metric_percentage: purokShare,
+        priority: insightPriorityFromScore(score),
+        description: `${topUnregistered.purok} has ${count} unregistered residents (${purokShare}% of purok residents and ${shareOfBarangayUnregistered}% of total unregistered).`,
+      });
+    }
+
+    if (num(topSeniors?.seniors) > 0) {
+      const count = num(topSeniors.seniors);
+      const share = pct(count, totalSeniors);
+      const score = Math.min(100, count + share);
+      insights.push({
+        title: `${topSeniors.purok} - Senior Services Focus`,
+        metric: count,
+        metric_label: 'Seniors',
+        metric_percentage: share,
+        priority: insightPriorityFromScore(score),
+        description: `${topSeniors.purok} has the highest senior count (${count}), accounting for ${share}% of all senior residents.`,
+      });
+    }
+
+    if (num(topPwd?.pwd) > 0) {
+      const count = num(topPwd.pwd);
+      const share = pct(count, totalPwd);
+      const score = Math.min(100, count + share);
+      insights.push({
+        title: `${topPwd.purok} - PWD Accessibility Priority`,
+        metric: count,
+        metric_label: 'PWD',
+        metric_percentage: share,
+        priority: insightPriorityFromScore(score),
+        description: `${topPwd.purok} has the highest PWD concentration (${count}), representing ${share}% of all PWD residents.`,
+      });
+    }
+
+    if (num(topMinors?.minors) > 0) {
+      const count = num(topMinors.minors);
+      const share = pct(count, totalMinors);
+      const score = Math.min(100, count + share);
+      insights.push({
+        title: `${topMinors.purok} - Youth Program Focus`,
+        metric: count,
+        metric_label: 'Minors',
+        metric_percentage: share,
+        priority: insightPriorityFromScore(score),
+        description: `${topMinors.purok} has the highest minors count (${count}), equivalent to ${share}% of minors across all puroks.`,
+      });
+    }
+
+    if (lowestVoterCoverage && num(lowestVoterCoverage.total) > 0) {
+      const nonVoters = Math.max(0, num(lowestVoterCoverage.total) - num(lowestVoterCoverage.voters));
+      const voterCoverage = num(lowestVoterCoverage.voterCoverage);
+      const nonVoterShare = 100 - voterCoverage;
+      const score = Math.min(100, nonVoters * 0.35 + nonVoterShare);
+      insights.push({
+        title: `${lowestVoterCoverage.purok} - Voter Participation Gap`,
+        metric: nonVoters,
+        metric_label: 'Estimated non-voters',
+        metric_percentage: nonVoterShare,
+        priority: insightPriorityFromScore(score),
+        description: `${lowestVoterCoverage.purok} has the lowest voter coverage at ${voterCoverage}% (${nonVoters} estimated non-voters).`,
+      });
+    }
+  }
+
+  const incomeRows = Array.isArray(livelihood?.income_distribution) ? livelihood.income_distribution : [];
+  if (incomeRows.length > 0) {
+    const total = incomeRows.reduce((sum, row) => sum + num(row.count), 0);
+    const low = incomeRows.reduce((sum, row) => {
+      return sum + (LOW_INCOME_BRACKETS.has(String(row.bracket)) ? num(row.count) : 0);
+    }, 0);
+    if (low > 0) {
+      const share = pct(low, total);
+      const score = Math.min(100, low * 0.35 + share * 1.8);
+      insights.push({
+        title: 'Livelihood - Low Income Coverage',
+        metric: low,
+        metric_label: 'Low-income residents',
+        metric_percentage: share,
+        priority: insightPriorityFromScore(score),
+        description: `${low} residents are in low-income brackets (${share}% of records with income data).`,
+      });
+    }
+  }
+
+  const households = num(overview.total_households);
+  const indigentHouseholds = num(overview.indigent_households);
+  if (households > 0 && indigentHouseholds > 0) {
+    const indigentRate = pct(indigentHouseholds, households);
+    const score = Math.min(100, indigentHouseholds * 0.8 + indigentRate);
+    insights.push({
+      title: 'Household Support - Indigent Coverage',
+      metric: indigentHouseholds,
+      metric_label: 'Indigent households',
+      metric_percentage: indigentRate,
+      priority: insightPriorityFromScore(score),
+      description: `${indigentHouseholds} households are tagged indigent (${indigentRate}% of total households).`,
+    });
+  }
+
+  return insights
+    .map((insight) => ({ ...insight, __priority: resolvePriority(insight) }))
+    .sort((a, b) => {
+      const order = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+      const byPriority = (order[b.__priority] || 0) - (order[a.__priority] || 0);
+      if (byPriority !== 0) return byPriority;
+      return num(b.metric) - num(a.metric);
+    })
+    .slice(0, 10);
+}
+
 function PriorityInsightCard({ insight, t }) {
   const autoAction = buildRecommendedAction(insight);
   const priority = resolvePriority(insight);
@@ -155,11 +316,16 @@ function PriorityInsightCard({ insight, t }) {
 
 export default function DecisionGuideTab({ raw, t }) {
   const ins = raw?.insights ?? {};
-  const insights = ins.insights ?? [];
   const summary = ins.summary ?? {};
-  const computedInsights = insights.map((insight) => ({
+  const generatedInsights = buildAutoInsights(raw);
+  const fallbackInsights = Array.isArray(ins.insights) ? ins.insights : [];
+  const sourceInsights = generatedInsights.length ? generatedInsights : fallbackInsights.map((insight) => ({
     ...insight,
     __priority: resolvePriority(insight),
+  }));
+  const computedInsights = sourceInsights.map((insight) => ({
+    ...insight,
+    __priority: insight.__priority ?? resolvePriority(insight),
   }));
 
   const priorityGroups = [
@@ -169,13 +335,7 @@ export default function DecisionGuideTab({ raw, t }) {
   ];
 
   return (
-    <div className="space-y-6">
-      <SectionHeader
-        title="Decision Guide & Actionable Insights"
-        subtitle="Data-driven analysis and recommended actions for barangay officials"
-        t={t}
-      />
-
+    <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {priorityGroups.map((pg) => {
           const computedCount = computedInsights.filter((i) => i.__priority === pg.key).length;
@@ -216,13 +376,13 @@ export default function DecisionGuideTab({ raw, t }) {
         );
       })}
 
-      {insights.length === 0 && (
+      {computedInsights.length === 0 && (
         <EmptyState icon="*" message="No insights generated yet. Check that the backend is returning data." />
       )}
 
-      {summary.computed_at && (
+      {(generatedInsights.length > 0 || summary.computed_at) && (
         <p className={`text-xs text-right mt-4 ${t ? t.subtleText : 'text-gray-400'}`}>
-          Computed: {new Date(summary.computed_at).toLocaleString('en-PH')}
+          Computed: {generatedInsights.length > 0 ? 'Live from current dashboard data' : new Date(summary.computed_at).toLocaleString('en-PH')}
         </p>
       )}
     </div>

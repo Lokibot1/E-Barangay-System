@@ -6,8 +6,9 @@ import DateTimeBar from "./DateTimeBar";
 import FAQChatbot from "../../components/shared/FAQChatbot";
 import AdminNotificationToast from "./AdminNotificationToast";
 import UserNotificationToast from "./UserNotificationToast";
+import NetworkStatusBanner from "./NetworkStatusBanner";
 import themeTokens from "../../Themetokens";
-import { isAdmin } from "../../homepage/services/loginService";
+import { canAccessAdminPanel } from "../../homepage/services/loginService";
 
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
@@ -68,6 +69,10 @@ const Layout = () => {
       />
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden transition-all duration-300 ease-in-out">
         <DateTimeBar currentTheme={currentTheme} />
+        <NetworkStatusBanner
+          currentTheme={currentTheme}
+          subtleTextClass={t.subtleText}
+        />
         <Header
           currentTheme={currentTheme}
           onThemeChange={handleThemeChange}
@@ -83,8 +88,8 @@ const Layout = () => {
       <FAQChatbot currentTheme={currentTheme} />
 
       {/* Real-time notification toasts */}
-      {isAdmin() && <AdminNotificationToast currentTheme={currentTheme} />}
-      {!isAdmin() && <UserNotificationToast currentTheme={currentTheme} />}
+      {canAccessAdminPanel() && <AdminNotificationToast currentTheme={currentTheme} />}
+      {!canAccessAdminPanel() && <UserNotificationToast currentTheme={currentTheme} />}
     </div>
   );
 };

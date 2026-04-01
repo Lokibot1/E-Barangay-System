@@ -1,0 +1,256 @@
+[
+    {
+        "id": "verification-1774786218794-7b0476fa",
+        "action": "approved",
+        "auditable_type": "resident",
+        "auditable_id": "BGN07822",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Pending"
+        },
+        "new_values": {
+            "status": "Verified",
+            "verification_action": "Approved",
+            "rejection_reason": "Incomplete documents."
+        },
+        "created_at": "2026-03-29T12:10:18+00:00",
+        "subject_name": "Elena Dela Cruz Bautista",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN07822",
+            "resident_id": 203
+        }
+    },
+    {
+        "id": "verification-1774691256972-44e6173d",
+        "action": "approved",
+        "auditable_type": "resident",
+        "auditable_id": "BGN900192",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Rejected"
+        },
+        "new_values": {
+            "status": "Verified",
+            "verification_action": "Approved",
+            "rejection_reason": "Unreadable ID image",
+            "rejection_remarks": "Demo queue record seeded to populate the review list."
+        },
+        "created_at": "2026-03-28T09:47:36+00:00",
+        "subject_name": "Aaron Cruz Navarro Sr.",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN900192",
+            "resident_id": 192
+        }
+    },
+    {
+        "id": "verification-1774319973232-c8c70419",
+        "action": "approved",
+        "auditable_type": "resident",
+        "auditable_id": "BGN05134",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Pending"
+        },
+        "new_values": {
+            "status": "Verified",
+            "verification_action": "Approved",
+            "rejection_reason": "Incomplete documents."
+        },
+        "created_at": "2026-03-24T02:39:33+00:00",
+        "subject_name": "Dexter Mark Beren Binongcal",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN05134",
+            "resident_id": 201
+        }
+    },
+    {
+        "id": "verification-1774161386179-153548d5",
+        "action": "visit_set",
+        "auditable_type": "resident",
+        "auditable_id": "BGN03940",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Pending"
+        },
+        "new_values": {
+            "status": "For Verification",
+            "verification_action": "Set for Visit",
+            "visit_set_at": "2026-03-22T06:36:26.166Z"
+        },
+        "created_at": "2026-03-22T06:36:26+00:00",
+        "subject_name": "Antonio Luna Rivera",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN03940",
+            "resident_id": 56
+        }
+    },
+    {
+        "id": "verification-1774077083330-305762d7",
+        "action": "approved",
+        "auditable_type": "resident",
+        "auditable_id": "BGN80039",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Pending"
+        },
+        "new_values": {
+            "status": "Verified",
+            "verification_action": "Approved",
+            "rejection_reason": "Incomplete documents."
+        },
+        "created_at": "2026-03-21T07:11:23+00:00",
+        "subject_name": "Adrian Fernandez Castro",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN80039",
+            "resident_id": 39
+        }
+    },
+    {
+        "id": "verification-1774075827755-811f44bb",
+        "action": "visit_set",
+        "auditable_type": "resident",
+        "auditable_id": "BGN80043",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Pending"
+        },
+        "new_values": {
+            "status": "For Verification",
+            "verification_action": "Set for Visit",
+            "visit_set_at": "2026-03-21T06:50:27.662Z"
+        },
+        "created_at": "2026-03-21T06:50:27+00:00",
+        "subject_name": "Camille Garcia Villanueva",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN80043",
+            "resident_id": 43
+        }
+    },
+    {
+        "id": "verification-1773931827234-7836a63e",
+        "action": "approved",
+        "auditable_type": "resident",
+        "auditable_id": "BGN07785",
+        "user": {
+            "id": 107,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Rejected"
+        },
+        "new_values": {
+            "status": "Verified",
+            "verification_action": "Approved",
+            "rejection_reason": "Incomplete Documents",
+            "rejection_remarks": "wrong spelling and invalid birthday"
+        },
+        "created_at": "2026-03-19T14:50:27+00:00",
+        "subject_name": "Liza Aquino Mendoza",
+        "ip_address": "::1",
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN07785",
+            "resident_id": 432
+        }
+    },
+    {
+        "id": "verification-1773931778099-0638632c",
+        "action": "rejected",
+        "auditable_type": "resident",
+        "auditable_id": "BGN04838",
+        "user": {
+            "id": 107,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "For Verification"
+        },
+        "new_values": {
+            "status": "Rejected",
+            "verification_action": "Rejected",
+            "rejection_reason": "Incomplete Documents"
+        },
+        "created_at": "2026-03-19T14:49:38+00:00",
+        "subject_name": "Liza Garcia Torres",
+        "ip_address": "::1",
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN04838",
+            "resident_id": 428
+        }
+    },
+    {
+        "id": "verification-1773931691559-178fa397",
+        "action": "visit_set",
+        "auditable_type": "resident",
+        "auditable_id": "BGN-1819",
+        "user": {
+            "id": 107,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Pending"
+        },
+        "new_values": {
+            "status": "For Verification",
+            "verification_action": "Set for Visit",
+            "visit_set_at": "2026-03-19T14:48:11.533Z"
+        },
+        "created_at": "2026-03-19T14:48:11+00:00",
+        "subject_name": "A A A Jr.",
+        "ip_address": "::1",
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN-1819",
+            "resident_id": 291
+        }
+    }
+]

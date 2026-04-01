@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Toast from "../shared/modals/Toast";
 import themeTokens from "../../Themetokens";
+import { DOCUMENTS_API_BASE_URL } from "../../config/runtimeApi";
 
 const CORRequestModal = ({ isOpen, onClose, currentTheme }) => {
   const navigate = useNavigate();
@@ -194,7 +195,7 @@ const handleConfirmSubmit = async () => {
   }
 
   try {
-    const response = await fetch("http://127.0.0.1:8001/api/cor-requests", {
+    const response = await fetch(`${DOCUMENTS_API_BASE_URL}/cor-requests`, {
       method: "POST",
       body: data,
       headers: {

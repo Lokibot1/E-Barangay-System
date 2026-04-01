@@ -1,7 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 const ConfirmActionModal = ({ pendingAction, onClose, onConfirm, isSubmitting = false, t }) => {
+  useEffect(() => {
+    if (!pendingAction || typeof document === 'undefined') return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [pendingAction]);
+
   if (!pendingAction) return null;
 
   const getActionConfig = (status) => {
@@ -18,7 +28,7 @@ const ConfirmActionModal = ({ pendingAction, onClose, onConfirm, isSubmitting = 
   const isRejecting = pendingAction.status === 'Rejected';
   const actionVerb = (config.buttonText || pendingAction.actionText || '').toLowerCase();
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
       <div className={`${t?.cardBg || 'bg-white'} w-full max-w-md rounded-2xl border ${t?.cardBorder || 'border-slate-200'} shadow-2xl p-6`}>
         <div className="flex justify-between items-center mb-4">
@@ -62,7 +72,8 @@ const ConfirmActionModal = ({ pendingAction, onClose, onConfirm, isSubmitting = 
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 

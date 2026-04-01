@@ -10,6 +10,7 @@ import {
   KeyRound,
   MapPinned,
   MoreVertical,
+  Pencil,
   QrCode,
   ShieldCheck,
   UserRound,
@@ -459,6 +460,116 @@ const ProfilePanel = ({
           fullClassName={fullClassName}
           t={t}
           isDark={isDark}
+        />
+      ))}
+    </div>
+  </section>
+);
+
+const ResidentProfileItem = ({
+  label,
+  value,
+  badge = false,
+  full = false,
+  isDark,
+  t,
+}) => {
+  const isMissing = value === "Not provided" || value === "No email on file";
+  const normalized = String(value || "").toLowerCase();
+  const positiveBadge =
+    normalized.includes("active") ||
+    normalized.includes("enabled") ||
+    normalized.includes("uploaded") ||
+    normalized.includes("verified") ||
+    normalized === "yes";
+  const mutedBadge =
+    normalized.includes("unavailable") ||
+    normalized.includes("not added") ||
+    normalized === "no";
+
+  const badgeClassName = positiveBadge
+    ? isDark
+      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+      : "border-emerald-200 bg-emerald-50 text-emerald-600"
+    : mutedBadge
+      ? isDark
+        ? "border-slate-700 bg-slate-900/70 text-slate-300"
+        : "border-slate-200 bg-slate-100 text-slate-600"
+      : isDark
+        ? "border-slate-700 bg-slate-900/60 text-slate-200"
+        : "border-slate-200 bg-slate-100 text-slate-700";
+
+  return (
+    <div className={`${full ? "sm:col-span-2" : ""} min-w-0 text-left`}>
+      <p
+        className={`text-left text-[11px] font-medium font-kumbh ${
+          isDark ? "text-slate-400" : t.subtleText
+        }`}
+      >
+        {label}
+      </p>
+      <div className="mt-1 text-left">
+        {badge ? (
+          <span
+            className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold font-kumbh ${badgeClassName}`}
+          >
+            {value}
+          </span>
+        ) : (
+          <p
+            className={`break-words text-[13px] font-semibold font-kumbh ${
+              isMissing ? t.subtleText : t.cardText
+            }`}
+          >
+            {value}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const ResidentProfileCard = ({
+  title,
+  rows,
+  actionLabel,
+  onAction,
+  isDark,
+  t,
+}) => (
+  <section
+    className={`${t.cardBg} rounded-[24px] border ${t.cardBorder} px-5 py-5 text-left shadow-[0_18px_45px_-32px_rgba(15,23,42,0.24)] sm:px-6 sm:py-6`}
+  >
+    <div className="flex items-start justify-between gap-3">
+      <h2 className={`text-[15px] font-bold font-spartan leading-tight ${t.cardText}`}>
+        {title}
+      </h2>
+      {onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-semibold font-kumbh transition ${
+            isDark
+              ? "border-slate-700 bg-slate-900/70 text-slate-200 hover:bg-slate-800"
+              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+          }`}
+        >
+          <span>{actionLabel || "Edit"}</span>
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+      ) : null}
+    </div>
+
+    <div className="mt-5 grid gap-x-10 gap-y-5 sm:grid-cols-2">
+      {rows.map((row) => (
+        <ResidentProfileItem
+          key={`${title}-${row.label}`}
+          label={row.label}
+          value={row.value}
+          badge={row.badge}
+          full={row.full}
+          isDark={isDark}
+          t={t}
         />
       ))}
     </div>
@@ -1113,6 +1224,54 @@ export default function ProfilePage() {
     },
   ];
 
+  const themePreferenceLabel =
+    currentTheme === "dark"
+      ? "Dark Mode"
+      : currentTheme === "blue"
+        ? "Blue Mode"
+        : "Modern Theme";
+  const photoStatus = residentPhoto ? "Uploaded" : "Not added";
+  const qrAccess = canShowQr ? "Enabled" : "Unavailable";
+
+  const residentPersonalRows = [
+    { label: "Full name", value: userName },
+    { label: tr.profilePage.birthdate, value: birthDate },
+    { label: tr.profilePage.gender, value: gender },
+    { label: tr.profilePage.nationality, value: nationality },
+    { label: tr.profilePage.contactNumberField, value: userPhone },
+    { label: tr.profilePage.emailField, value: userEmail },
+    { label: tr.profilePage.fullAddress, value: registeredAddress, full: true },
+  ];
+
+  const residentAccountRows = [
+    { label: idLabel, value: idValue },
+    { label: tr.profilePage.username, value: accountUsername },
+    { label: tr.profilePage.role, value: roleLabel },
+    { label: tr.profilePage.status, value: accountStatus, badge: true },
+    { label: tr.profilePage.memberSince, value: memberSince },
+    { label: tr.profilePage.workspace, value: workspaceLabel, full: true },
+  ];
+
+  const residentResidencyRows = [
+    { label: tr.profilePage.houseNo, value: houseNumber },
+    { label: tr.profilePage.purok, value: purok },
+    { label: tr.profilePage.street, value: street },
+    { label: tr.profilePage.householdPosition, value: householdPosition },
+    { label: tr.profilePage.residencyType, value: residencyType },
+    { label: tr.profilePage.dateStarted, value: residencyStartDate },
+  ];
+
+  const residentAccessRows = [
+    { label: tr.profilePage.accountProtection, value: protectionLabel },
+    { label: tr.profilePage.registeredVoter, value: registeredVoter, badge: true },
+    { label: tr.profilePage.birthRegistration, value: birthRegistration },
+    { label: tr.profilePage.maritalStatus, value: civilStatus },
+    { label: tr.profilePage.sector, value: sector },
+    { label: "Profile photo", value: photoStatus, badge: true },
+    { label: "Resident QR", value: qrAccess, badge: true },
+    { label: "Theme", value: themePreferenceLabel },
+  ];
+
   return (
     <div className={`min-h-full ${t.pageBg} p-4 sm:p-5 lg:p-6`}>
       <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
@@ -1282,7 +1441,7 @@ export default function ProfilePage() {
         </div>
       )}
       {qrOpen && (
-        <div className="fixed inset-0 z-[97] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[97] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-[20px] backdrop-saturate-150">
           <div
             className={`w-full max-w-sm rounded-[24px] border shadow-2xl ${
               isDark
@@ -1862,6 +2021,217 @@ export default function ProfilePage() {
         </div>
       )}
       <div className="mx-auto max-w-7xl space-y-4">
+        {isResident ? (
+          <>
+            <div className="space-y-1 text-left">
+              <h1 className={`text-base font-bold font-spartan sm:text-lg ${t.cardText}`}>
+                My Profile
+              </h1>
+              <p className={`text-[11px] font-kumbh sm:text-xs ${t.subtleText}`}>
+                Review your personal details and account information.
+              </p>
+            </div>
+
+            <section
+              className={`${t.cardBg} relative overflow-hidden rounded-[24px] border ${t.cardBorder} shadow-[0_18px_44px_-34px_rgba(15,23,42,0.35)]`}
+            >
+              <div
+                className={`absolute inset-x-0 top-0 h-32 bg-gradient-to-br ${t.primaryGrad} opacity-10`}
+              />
+              <div ref={menuRef} className="absolute right-4 top-4 z-20 sm:right-5 sm:top-5">
+                <button
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full border transition ${
+                    isDark
+                      ? "border-slate-700 bg-slate-900/90 text-slate-200 hover:bg-slate-800"
+                      : "border-slate-200 bg-white/95 text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  <MoreVertical className="h-3.5 w-3.5" />
+                </button>
+
+                {menuOpen && (
+                  <div
+                    className={`absolute right-0 top-11 z-50 min-w-[190px] overflow-hidden rounded-xl border shadow-lg ${
+                      isDark
+                        ? "border-slate-700 bg-slate-900"
+                        : "border-slate-200 bg-white"
+                    }`}
+                  >
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false);
+                        openContactModal();
+                      }}
+                      className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[13px] font-semibold font-kumbh transition ${
+                        isDark
+                          ? "text-slate-200 hover:bg-slate-800"
+                          : "text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      <UserRound className="h-4 w-4 shrink-0" />
+                      {tr.profilePage.editContactInfoBtn}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setChangePasswordOpen(true);
+                      }}
+                      className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[13px] font-semibold font-kumbh transition ${
+                        isDark
+                          ? "text-slate-200 hover:bg-slate-800"
+                          : "text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      <KeyRound className="h-4 w-4 shrink-0" />
+                      {tr.profilePage.changePassword}
+                    </button>
+                    {canShowQr && (
+                      <button
+                        onClick={() => {
+                          setMenuOpen(false);
+                          openQrModal();
+                        }}
+                        className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[13px] font-semibold font-kumbh transition ${
+                          isDark
+                            ? "text-slate-200 hover:bg-slate-800"
+                            : "text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        <QrCode className="h-4 w-4 shrink-0" />
+                        View QR
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="relative px-5 py-6 sm:px-7 sm:py-7">
+                <div className="flex flex-col items-center text-center">
+                  <div
+                    className={`group relative -translate-y-2 sm:-translate-y-3 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 ${
+                      isDark ? "border-slate-700" : "border-white"
+                    } bg-gradient-to-br ${t.primaryGrad} text-white shadow-[0_18px_36px_-24px_rgba(15,23,42,0.5)]`}
+                  >
+                    {residentPhoto ? (
+                      <img
+                        src={residentPhoto}
+                        alt="Resident profile"
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    ) : (
+                      <>
+                        <div className="absolute inset-2 rounded-full bg-white/10" />
+                        <span className="relative text-[28px] font-black font-spartan">
+                          {getInitials(userName)}
+                        </span>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      onClick={openPhotoModal}
+                      className="absolute inset-0 cursor-pointer"
+                    >
+                      <span
+                        className={`absolute inset-0 flex items-center justify-center text-white opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100 ${
+                          isDark ? "bg-slate-950/50" : "bg-black/40"
+                        }`}
+                      >
+                        <Camera className="h-5 w-5" />
+                      </span>
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={openPhotoModal}
+                    className={`inline-flex items-center justify-center gap-2 self-center rounded-full border px-3.5 py-1.5 text-[10px] font-semibold leading-none font-kumbh transition sm:text-[11px] ${
+                      isDark
+                        ? "border-slate-700 bg-slate-900/70 text-slate-200 hover:bg-slate-800"
+                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    <Camera className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />
+                    {tr.profilePage.changeProfilePhoto}
+                  </button>
+
+                  <h1 className={`mt-3 text-[20px] font-bold leading-tight font-spartan sm:text-[24px] ${t.cardText}`}>
+                    {userName}
+                  </h1>
+
+                  <p className={`mt-1 max-w-lg break-words text-[11px] font-medium font-kumbh sm:text-[12px] ${t.subtleText}`}>
+                    {headerIdentity}
+                  </p>
+
+                  <div className="mt-2.5 flex flex-wrap justify-center gap-1.5">
+                    <div
+                      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[9px] font-semibold font-kumbh sm:text-[10px] ${
+                        isDark
+                          ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+                          : "border-emerald-200 bg-emerald-50 text-emerald-600"
+                      }`}
+                    >
+                      <BadgeCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      {accountStatus}
+                    </div>
+                    <div
+                      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[9px] font-semibold font-kumbh sm:text-[10px] ${
+                        isDark
+                          ? "border-slate-700 bg-slate-900/60 text-slate-200"
+                          : "border-slate-200 bg-white text-slate-700"
+                      }`}
+                    >
+                      {roleLabel}
+                    </div>
+                  </div>
+
+                  {profileLoading && (
+                    <p className={`mt-2.5 text-[11px] font-kumbh ${t.subtleText}`}>
+                      {tr.profilePage.refreshingProfile}
+                    </p>
+                  )}
+                  {profileError && !profileLoading && (
+                    <p className="mt-2.5 text-[11px] font-kumbh text-rose-500">
+                      {profileError}
+                    </p>
+                  )}
+
+                </div>
+              </div>
+            </section>
+
+            <div className="grid gap-4 xl:grid-cols-2">
+              <ResidentProfileCard
+                title="Personal information"
+                rows={residentPersonalRows}
+                actionLabel="Edit"
+                onAction={openContactModal}
+                isDark={isDark}
+                t={t}
+              />
+              <ResidentProfileCard
+                title="Account details"
+                rows={residentAccountRows}
+                isDark={isDark}
+                t={t}
+              />
+              <ResidentProfileCard
+                title="Address"
+                rows={residentResidencyRows}
+                actionLabel="Edit"
+                onAction={openContactModal}
+                isDark={isDark}
+                t={t}
+              />
+              <ResidentProfileCard
+                title="Access & settings"
+                rows={residentAccessRows}
+                isDark={isDark}
+                t={t}
+              />
+            </div>
+          </>
+        ) : (
+          <>
         <div className="space-y-4 text-left">
           <div>
             <h1 className={`text-lg font-bold font-spartan ${t.cardText}`}>
@@ -1870,26 +2240,6 @@ export default function ProfilePage() {
             <p className={`text-xs font-kumbh ${t.subtleText}`}>
               {tr.profilePage.reviewDesc}
             </p>
-          </div>
-          <div className={`flex items-center gap-5 border-b ${t.cardBorder} pt-3`}>
-            <button
-              type="button"
-              className={`relative pb-2 text-[13px] font-semibold font-kumbh transition inline-flex items-center gap-2 ${t.primaryText}`}
-            >
-              <UserRound size={14} />
-              {tr.profilePage.viewProfile}
-              <span className={`absolute left-0 right-0 -bottom-px h-0.5 ${t.primarySolid}`} />
-            </button>
-            {adminAccount && (
-              <button
-                type="button"
-                onClick={goToBranding}
-                className={`relative pb-2 text-[13px] font-semibold font-kumbh transition inline-flex items-center gap-2 ${t.subtleText} hover:opacity-80`}
-              >
-                <Image size={14} />
-                {tr.profilePage.barangayLogo}
-              </button>
-            )}
           </div>
         </div>
         {/* Compact header */}
@@ -2217,6 +2567,8 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+          </>
+        )}
       </div>
     </div>
   );

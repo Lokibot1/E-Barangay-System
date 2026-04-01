@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Toast from "../shared/modals/Toast";
 import themeTokens from "../../Themetokens";
+import { DOCUMENTS_API_BASE_URL } from "../../config/runtimeApi";
 
 const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
   const navigate = useNavigate();
@@ -154,7 +155,7 @@ const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
     if (uploadedFile) data.append("uploaded_file", uploadedFile);
 
     try {
-      const res = await fetch("http://127.0.0.1:8001/api/coi-requests", {
+      const res = await fetch(`${DOCUMENTS_API_BASE_URL}/coi-requests`, {
         method: "POST",
         body: data,
         headers: { Accept: "application/json" },

@@ -147,7 +147,7 @@ const SingleToast = memo(({ event, onDismiss, currentTheme }) => {
 
 // ── Toast container ─────────────────────────────────────────────────────
 const AdminNotificationToast = ({ currentTheme }) => {
-  const { latestBatch, eventVersion } = useRealTime();
+  const { latestBatch, eventVersion, markAsRead } = useRealTime();
   const { playFeedback } = useSound();
   const [visibleToasts, setVisibleToasts] = useState([]);
   const prevEventVersionRef = useRef(0);
@@ -173,7 +173,8 @@ const AdminNotificationToast = ({ currentTheme }) => {
 
   const handleDismiss = useCallback((id) => {
     setVisibleToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
+    markAsRead(id);
+  }, [markAsRead]);
 
   if (visibleToasts.length === 0) return null;
 

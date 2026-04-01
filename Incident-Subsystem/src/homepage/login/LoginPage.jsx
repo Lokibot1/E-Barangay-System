@@ -5,7 +5,7 @@
  * Location: src/homepage/login/LoginPage.jsx
  */
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate, Navigate, useLocation } from "react-router-dom";
 import {
   Sun, Moon, Loader2, CheckCircle2, Download,
@@ -19,7 +19,13 @@ import { useBranding } from "../../context/BrandingContext";
 
 import LoginForm from "./LogInForm";
 import { useAuthLogic } from "../hooks/useAuthLogic";
-import { login, saveAuth, isAuthenticated, isAdmin } from "../services/loginService";
+import {
+  canAccessAdminPanel,
+  DEFAULT_SESSION_EXPIRED_MESSAGE,
+  login,
+  saveAuth,
+  isAuthenticated,
+} from "../services/loginService";
 import { handleDownloadSlip } from "../../utils/sub-system-1/documentGenerator";
 
 import bsbPic from "../../assets/images/bgygulod.png";
@@ -65,8 +71,16 @@ const LoginPage = () => {
   } = useAuthLogic(navigate);
 
   if (isAuthenticated()) {
-    return <Navigate to={isAdmin() ? "/admin" : "/sub-system-2"} replace />;
+    return <Navigate to={canAccessAdminPanel() ? "/admin" : "/sub-system-2"} replace />;
   }
+
+  const authBannerMessage = useMemo(() => {
+    if (apiError) return apiError;
+    if (location.state?.sessionExpired) {
+      return location.state.message || DEFAULT_SESSION_EXPIRED_MESSAGE;
+    }
+    return "";
+  }, [apiError, location.state]);
 
   const lightTheme = currentTheme === "dark" ? "modern" : currentTheme;
   const t = isDarkMode ? themeTokens.dark : (themeTokens[lightTheme] || themeTokens.modern);
@@ -99,8 +113,15 @@ const LoginPage = () => {
     setLoginLoading(true);
     try {
       const data = await login(email, password);
-      saveAuth(data);
-      navigate(isAdmin() ? "/admin" : "/sub-system-2");
+      const session = saveAuth(data);
+
+      if (!session.token) {
+        throw new Error(
+          "Login succeeded but no usable API token was returned. Please sign in again.",
+        );
+      }
+
+      navigate(canAccessAdminPanel() ? "/admin" : "/sub-system-2");
     } catch (err) {
       setApiError(err.message || "Login failed. Please try again.");
     } finally {
@@ -244,12 +265,19 @@ const LoginPage = () => {
                   </label>
                   <div className="relative">
                     <Search size={12} className={`absolute left-4 top-1/2 -translate-y-1/2 ${mutedClass}`} />
+                    <span className={`absolute left-10 top-1/2 -translate-y-1/2 text-[11px] font-black uppercase tracking-widest font-kumbh pointer-events-none ${
+                      isDarkMode ? "text-slate-300" : "text-slate-500"
+                    }`}>
+                      BGN
+                    </span>
                     <input 
                       type="text" 
                       value={trackingNum} 
                       onChange={(e) => handleTrackSearch(e.target.value)}
-                      placeholder="BGNXXXXX"
-                      className={`w-full pl-10 pr-4 py-2.5 rounded-2xl border text-[11px] font-black uppercase tracking-widest outline-none transition-colors bg-transparent font-kumbh ${
+                      placeholder="12345"
+                      inputMode="numeric"
+                      maxLength={5}
+                      className={`w-full pl-[4.5rem] pr-4 py-2.5 rounded-2xl border text-[11px] font-black uppercase tracking-widest outline-none transition-colors bg-transparent font-kumbh ${
                         isDarkMode ? "border-slate-300/30 text-white" : `border-slate-300 ${t.cardText}`
                       }`} 
                     />
@@ -307,10 +335,10 @@ const LoginPage = () => {
                     Use your registered email and password to access your account.
                   </p>
 
-                  {apiError && (
+                  {authBannerMessage && (
                     <div className="mb-5 flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 font-kumbh">
                       <div className="w-5 h-5 flex-shrink-0 text-red-500">!</div>
-                      {apiError}
+                      {authBannerMessage}
                     </div>
                   )}
 

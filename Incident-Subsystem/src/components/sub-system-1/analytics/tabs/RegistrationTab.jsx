@@ -13,7 +13,6 @@ import {
   StatCard,
   Card,
   ChartCard,
-  SectionHeader,
   analyticsChartTheme,
   AnalyticsTooltip,
 } from '../AnalyticsInterface';
@@ -50,13 +49,7 @@ export default function RegistrationTab({ raw, t }) {
   const { gridStroke, axisTick, barRadius, horizontalBarRadius, legendStyle } = analyticsChartTheme;
 
   return (
-    <div className="space-y-6">
-      <SectionHeader
-        title="Registration and Verification"
-        subtitle="Submissions, verification progress, and unregistered residents"
-        t={t}
-      />
-
+    <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard icon={FileText} label="Total Submitted" value={totalSubmitted} sub="With barangay ID application" color="primary" t={t} />
         <StatCard icon={CheckCircle} label="Verified" value={ov.verified ?? 0} sub={`${pct(ov.verified, totalSubmitted)}% of submitted`} color="success" t={t} />

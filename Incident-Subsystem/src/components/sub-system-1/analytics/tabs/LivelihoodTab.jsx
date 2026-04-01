@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts';
-import { ChartCard, DonutSummaryCard, SectionHeader, analyticsChartTheme, AnalyticsTooltip } from '../AnalyticsInterface';
+import { ChartCard, DonutSummaryCard, analyticsChartTheme, AnalyticsTooltip } from '../AnalyticsInterface';
 import { COLORS, INCOME_ORDER, pct } from '../analyticsConfig';
 
 const LOW_INCOME = ['No Income', 'Below 5,000', '0'];
@@ -45,9 +45,7 @@ export default function LivelihoodTab({ raw, t }) {
   const { gridStroke, axisTick, barRadius, horizontalBarRadius } = analyticsChartTheme;
 
   return (
-    <div className="space-y-6">
-      <SectionHeader title="Livelihood and Socioeconomic Profile" subtitle="Income, employment, education, occupations" t={t} />
-
+    <div className="space-y-4">
       <ChartCard
         title="Monthly Income Distribution"
         subtitle="Resident counts across reported monthly income brackets."

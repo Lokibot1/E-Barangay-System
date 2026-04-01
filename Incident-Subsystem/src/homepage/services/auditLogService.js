@@ -1,7 +1,8 @@
-const PORTS = [8000, 8001, 8002];
+import { INCIDENT_API_BASE_URL, PHP_API_BASE_URL } from "../../config/runtimeApi";
+import { requestJson } from "../../services/shared/http";
 
-const buildUrl = (port, params) => {
-  const url = new URL(`http://localhost:${port}/api/audit-logs`);
+const buildUrl = (params) => {
+  const url = new URL(`${INCIDENT_API_BASE_URL}/audit-logs`);
   Object.entries(params).forEach(([key, val]) => {
     if (val !== undefined && val !== null && val !== "") {
       url.searchParams.set(key, String(val));
@@ -10,52 +11,48 @@ const buildUrl = (port, params) => {
   return url.toString();
 };
 
-const fetchFromPort = async (port, params) => {
-  const token = localStorage.getItem("authToken");
-  const response = await fetch(buildUrl(port, params), {
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+const buildVerificationLogUrl = (params = {}) => {
+  const url = new URL(`${PHP_API_BASE_URL}/shared/verification-admin-logs.php`);
+  Object.entries(params).forEach(([key, val]) => {
+    if (val !== undefined && val !== null && val !== "") {
+      url.searchParams.set(key, String(val));
+    }
   });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || `Port ${port}: request failed.`);
-  return data;
+  return url.toString();
 };
 
 export const fetchAuditLogs = async (params = {}) => {
-  const results = await Promise.allSettled(PORTS.map((port) => fetchFromPort(port, params)));
-
-  const allItems = [];
-  let maxLastPage = 1;
-  let allFailed = true;
-  let firstError = null;
-
-  results.forEach((result) => {
-    if (result.status === "fulfilled") {
-      allFailed = false;
-      allItems.push(...(result.value.data || []));
-      const lp = result.value.meta?.last_page ?? 1;
-      if (lp > maxLastPage) maxLastPage = lp;
-    } else if (!firstError) {
-      firstError = result.reason;
+  return requestJson(buildUrl(params), {
+    errorMessage: "Failed to fetch audit logs.",
+  }).catch((error) => {
+    if (error.message === "The server is currently unavailable.") {
+      throw new Error("Audit log backend is unavailable.");
     }
+    throw error;
   });
+};
 
-  if (allFailed) {
-    throw new Error(firstError?.message || "Failed to fetch audit logs.");
-  }
-
-  // Deduplicate by id
-  const seen = new Set();
-  const unique = allItems.filter((item) => {
-    if (seen.has(item.id)) return false;
-    seen.add(item.id);
-    return true;
+export const fetchVerificationAdminLogs = async (params = {}) => {
+  return requestJson(buildVerificationLogUrl(params), {
+    errorMessage: "Failed to fetch verification logs.",
+  }).catch((error) => {
+    if (error.message === "The server is currently unavailable.") {
+      throw new Error("Verification log backend is unavailable.");
+    }
+    throw error;
   });
+};
 
-  // Sort by created_at descending (most recent first, LIFO)
-  unique.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-  return { data: unique, meta: { last_page: maxLastPage } };
+export const createVerificationAdminLog = async (payload) => {
+  return requestJson(buildVerificationLogUrl(), {
+    method: "POST",
+    includeJson: true,
+    body: JSON.stringify(payload),
+    errorMessage: "Failed to save verification log.",
+  }).catch((error) => {
+    if (error.message === "The server is currently unavailable.") {
+      throw new Error("Verification log backend is unavailable.");
+    }
+    throw error;
+  });
 };

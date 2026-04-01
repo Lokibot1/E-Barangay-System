@@ -5,6 +5,7 @@
 // ============================================================
 
 import { useState, useEffect } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { Spinner }        from '../components/analytics/AnalyticsInterface';
 import { TABS }           from '../components/analytics/analyticsConfig';
 import OverviewTab        from '../components/analytics/tabs/OverviewTab';
@@ -79,9 +80,10 @@ export default function Dashboard() {
         <button
           onClick={fetchData}
           disabled={loading}
-          className="text-xs font-bold bg-[#1a5276] text-white px-3 py-1.5 rounded-lg
+          className="inline-flex items-center gap-2 text-xs font-bold bg-[#1a5276] text-white px-3 py-1.5 rounded-lg
             hover:bg-[#154360] disabled:opacity-50 transition-colors"
         >
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           {loading ? '⟳ Loading…' : '⟳ Refresh'}
         </button>
       </header>

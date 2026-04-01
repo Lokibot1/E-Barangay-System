@@ -9,6 +9,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import MainMenuCards from "../../components/sub-system-3/MainMenuCards";
+import Toast from "../../components/shared/modals/Toast";
 import themeTokens from "../../Themetokens";
 import { incidentService } from "../../services/sub-system-3/incidentService";
 import { getMyComplaints } from "../../services/sub-system-3/complaintService";
@@ -332,6 +333,13 @@ const IncidentMapPage = () => {
   });
   const [markers, setMarkers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [toasts, setToasts] = useState([]);
+  const addToast = useCallback((toast) => {
+    setToasts((prev) => [...prev, { id: Date.now(), ...toast }]);
+  }, []);
+  const removeToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -391,7 +399,7 @@ const IncidentMapPage = () => {
 
       setMarkers([...incMarkers, ...compMarkers]);
     } catch (err) {
-      console.error("Failed to load map markers:", err);
+      addToast({ type: "error", title: "Map Load Failed", message: "Could not load incident markers. Please refresh." });
     } finally {
       setLoading(false);
     }
@@ -1050,6 +1058,7 @@ const IncidentMapPage = () => {
           transform: translateX(0);
         }
       `}</style>
+      <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
     </>
   );
 };

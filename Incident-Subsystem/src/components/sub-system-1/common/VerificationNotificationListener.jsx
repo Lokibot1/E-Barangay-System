@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSound } from '../../../hooks/shared/useSound';
 import { verificationService } from '../../../services/sub-system-1/verification';
 import { useRealTime } from '../../../context/RealTimeContext';
+import { getToken } from '../../../homepage/services/loginService';
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -17,11 +18,13 @@ const VerificationNotificationListener = () => {
   const lastCountKey    = 'admin_last_pending_count';
   const bannerTimerRef  = useRef(null);
   const isFetchingRef   = useRef(false);
+  const isUnauthorizedRef = useRef(false);
 
   useEffect(() => {
     const loadPendingCount = async () => {
-      const token = localStorage.getItem('authToken');
+      const token = getToken();
       if (!token) return;
+      if (isUnauthorizedRef.current) return;
       if (isFetchingRef.current) return;
 
       isFetchingRef.current = true;
@@ -80,6 +83,7 @@ const VerificationNotificationListener = () => {
 
       } catch (error) {
         if (error?.response?.status === 401) {
+          isUnauthorizedRef.current = true;
           console.warn('[NotifListener] Unauthorized — stopping poll.');
           return;
         }

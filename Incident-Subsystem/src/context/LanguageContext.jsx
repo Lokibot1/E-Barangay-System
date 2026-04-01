@@ -43,7 +43,14 @@ export const LanguageProvider = ({ children }) => {
  */
 export const useLanguage = () => {
   const ctx = useContext(LanguageContext);
-  if (!ctx) throw new Error("useLanguage must be used within a LanguageProvider");
+  if (!ctx) {
+    const fallbackLanguage = getLanguage();
+    return {
+      language: fallbackLanguage,
+      setLanguage: setLang,
+      tr: getTranslations(fallbackLanguage),
+    };
+  }
   return ctx;
 };
 

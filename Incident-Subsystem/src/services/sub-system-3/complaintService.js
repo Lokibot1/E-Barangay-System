@@ -1,6 +1,17 @@
-import { getToken, isAuthenticated } from "../../homepage/services/loginService";
+import {
+  isAuthenticated,
+} from "../../homepage/services/loginService";
+import { INCIDENT_API_BASE_URL } from "../../config/runtimeApi";
+import { requestJson } from "../shared/http";
+import { memCache } from "../shared/cache";
 
-const API_BASE = "http://localhost:8000/api";
+const API_BASE = INCIDENT_API_BASE_URL;
+
+const COMPLAINTS_LIST_CACHE_KEY = "complaints:list";
+const COMPLAINTS_LIST_TTL = 2 * 60 * 1000; // 2 minutes
+
+const COMPLAINT_UPDATES_CACHE_PREFIX = "complaint:updates:";
+const COMPLAINT_UPDATES_TTL = 60 * 1000; // 1 minute
 
 /**
  * File a new complaint.
@@ -56,22 +67,13 @@ export const fileComplaint = async (formData) => {
     });
   }
 
-  const response = await fetch(`${API_BASE}/complaints`, {
+  const result = await requestJson(`${API_BASE}/complaints`, {
     method: "POST",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
     body,
+    errorMessage: "Failed to submit complaint.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to submit complaint.");
-  }
-
-  return data;
+  memCache.invalidate(COMPLAINTS_LIST_CACHE_KEY);
+  return result;
 };
 
 export const getMyComplaints = async () => {
@@ -79,21 +81,11 @@ export const getMyComplaints = async () => {
     throw new Error("You must be logged in to view complaints.");
   }
 
-  const response = await fetch(`${API_BASE}/complaints`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch complaints.");
-  }
-
-  return data;
+  return memCache.remember(COMPLAINTS_LIST_CACHE_KEY, COMPLAINTS_LIST_TTL, () =>
+    requestJson(`${API_BASE}/complaints`, {
+      errorMessage: "Failed to fetch complaints.",
+    })
+  );
 };
 
 export const updateComplaint = async (id, updates) => {
@@ -101,25 +93,15 @@ export const updateComplaint = async (id, updates) => {
     throw new Error("You must be logged in to update a complaint.");
   }
 
-  // Build query string from updates (e.g. ?status=resolved)
   const params = new URLSearchParams(updates).toString();
   const url = `${API_BASE}/complaints/${id}${params ? `?${params}` : ""}`;
 
-  const response = await fetch(url, {
+  const result = await requestJson(url, {
     method: "PUT",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
+    errorMessage: "Failed to update complaint.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to update complaint.");
-  }
-
-  return data;
+  memCache.invalidate(COMPLAINTS_LIST_CACHE_KEY);
+  return result;
 };
 
 export const getAllComplaints = async () => {
@@ -127,21 +109,11 @@ export const getAllComplaints = async () => {
     throw new Error("You must be logged in to view complaints.");
   }
 
-  const response = await fetch(`${API_BASE}/complaints`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch all complaints.");
-  }
-
-  return data;
+  return memCache.remember(COMPLAINTS_LIST_CACHE_KEY, COMPLAINTS_LIST_TTL, () =>
+    requestJson(`${API_BASE}/complaints`, {
+      errorMessage: "Failed to fetch all complaints.",
+    })
+  );
 };
 
 export const getComplaintUpdates = async (id) => {
@@ -149,21 +121,13 @@ export const getComplaintUpdates = async (id) => {
     throw new Error("You must be logged in to view updates.");
   }
 
-  const response = await fetch(`${API_BASE}/complaints/${id}/updates`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch complaint updates.");
-  }
-
-  return data;
+  return memCache.remember(
+    `${COMPLAINT_UPDATES_CACHE_PREFIX}${id}`,
+    COMPLAINT_UPDATES_TTL,
+    () => requestJson(`${API_BASE}/complaints/${id}/updates`, {
+      errorMessage: "Failed to fetch complaint updates.",
+    })
+  );
 };
 
 export const addComplaintUpdate = async (id, updateData) => {
@@ -175,20 +139,11 @@ export const addComplaintUpdate = async (id, updateData) => {
   if (updateData.message) body.append("message", updateData.message);
   if (updateData.attachment) body.append("attachment", updateData.attachment);
 
-  const response = await fetch(`${API_BASE}/complaints/${id}/updates`, {
+  const result = await requestJson(`${API_BASE}/complaints/${id}/updates`, {
     method: "POST",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
     body,
+    errorMessage: "Failed to add complaint update.",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to add complaint update.");
-  }
-
-  return data;
+  memCache.invalidate(`${COMPLAINT_UPDATES_CACHE_PREFIX}${id}`);
+  return result;
 };

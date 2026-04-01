@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 $servername = "localhost";
 $username = "root";
 $password = "";
-$dbname = "barangay_db";
+$dbname = "bgd";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 

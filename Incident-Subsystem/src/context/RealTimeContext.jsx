@@ -32,6 +32,17 @@ const SAFE_DEFAULTS = {
   clearNotifications: () => {},
 };
 
+const dedupeNotifications = (items = []) => {
+  const seen = new Set();
+  return (Array.isArray(items) ? items : []).filter((item) => {
+    const key = item?.id ?? item?.backendId ?? item?.externalId;
+    if (!key) return true;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 /**
  * Convert a backend notification (from /api/notifications) into the
  * local notification shape used by this context.
@@ -49,7 +60,9 @@ const mapBackendNotification = (n) => ({
         : n.type || "Notification",
   description: n.message || "No description",
   reportedBy:
+    n.data?.submitted_by ||
     n.data?.complainant_name ||
+    n.data?.reported_by ||
     (n.data?.user
       ? `${n.data.user.last_name || ""}, ${n.data.user.first_name || ""}`
       : ""),
@@ -74,8 +87,9 @@ export const RealTimeProvider = ({ children }) => {
     try {
       const saved = localStorage.getItem(LS_ADMIN_NOTIFICATIONS_KEY);
       const parsed = saved ? JSON.parse(saved) : [];
-      initialNotifIdsRef.current = new Set(parsed.map((n) => n.id));
-      return parsed;
+      const unique = dedupeNotifications(parsed);
+      initialNotifIdsRef.current = new Set(unique.map((n) => n.id));
+      return unique;
     } catch {
       initialNotifIdsRef.current = new Set();
       return [];
@@ -100,23 +114,37 @@ export const RealTimeProvider = ({ children }) => {
     fetchNotifications({ perPage: 50, scope: "admin" }).then((response) => {
       if (!response?.data) return;
 
-      const backendItems = response.data.map(mapBackendNotification);
+      const backendItems = dedupeNotifications(
+        response.data.map(mapBackendNotification),
+      );
 
       setNotifications((prev) => {
         const backendExternal = new Set(
           backendItems.map((n) => n.externalId).filter(Boolean),
         );
+        // Capture read state of local items that are about to be replaced so that
+        // a "mark all as read" action isn't undone by the backend hydration merge.
+        const localReadByExternalId = new Map();
+        prev.forEach((n) => {
+          if (backendExternal.has(n.id)) localReadByExternalId.set(n.id, n.read);
+        });
         const prunedPrev = prev.filter((n) => !backendExternal.has(n.id));
         const existingIds = new Set(prunedPrev.map((n) => n.id));
-        const newOnes = backendItems.filter((n) => !existingIds.has(n.id));
-        if (newOnes.length === 0 && prunedPrev.length === prev.length) return prev;
-        return [...newOnes, ...prunedPrev];
+        const newOnes = backendItems
+          .filter((n) => !existingIds.has(n.id))
+          .map((n) => {
+            const wasReadLocally = localReadByExternalId.get(n.externalId);
+            return wasReadLocally === true ? { ...n, read: true } : n;
+          });
+        return dedupeNotifications([...newOnes, ...prunedPrev]);
       });
 
       // Show toasts for unread notifications that weren't cached locally at mount
       if (initialNotifIdsRef.current) {
-        const unseen = backendItems.filter(
-          (n) => !initialNotifIdsRef.current.has(n.id) && !n.read,
+        const unseen = dedupeNotifications(
+          backendItems.filter(
+            (n) => !initialNotifIdsRef.current.has(n.id) && !n.read,
+          ),
         );
         if (unseen.length > 0) {
           setLatestBatch(unseen.slice(0, 3));
@@ -124,8 +152,6 @@ export const RealTimeProvider = ({ children }) => {
         }
       }
     });
-    // Run once on mount only
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Convert flushed events into notification objects — fires ONCE per batch
@@ -145,7 +171,7 @@ export const RealTimeProvider = ({ children }) => {
 
     if (newItems.length === 0) return;
 
-    const fresh = newItems.map((event) => {
+    const fresh = dedupeNotifications(newItems.map((event) => {
       const isResident = event.source === "resident";
       const description =
         event?.data?.description ||
@@ -153,9 +179,11 @@ export const RealTimeProvider = ({ children }) => {
         (isResident ? "Resident updated profile information." : "");
       const reportedBy = isResident
         ? event?.data?.editor_name || event?.data?.resident_name || "Resident"
-        : event?.data?.user
-          ? `${event.data.user.last_name || ""}, ${event.data.user.first_name || ""}`
-          : event?.data?.complainant_name || "Unknown";
+        : event?.data?.reported_by ||
+          event?.data?.complainant_name ||
+          (event?.data?.user
+            ? `${event.data.user.last_name || ""}, ${event.data.user.first_name || ""}`
+            : "Unknown");
 
       return {
         id: event.id,
@@ -167,14 +195,10 @@ export const RealTimeProvider = ({ children }) => {
         read: false,
         data: event.data,
       };
-    });
+    }));
 
     // Update persistent notification list (for bell dropdown)
-    setNotifications((prev) => {
-      const existingIds = new Set(prev.map((n) => n.id));
-      const unique = fresh.filter((n) => !existingIds.has(n.id));
-      return [...unique, ...prev];
-    });
+    setNotifications((prev) => dedupeNotifications([...fresh, ...prev]));
 
     createNotifications(fresh, { scope: "admin" });
 
@@ -220,12 +244,7 @@ export const RealTimeProvider = ({ children }) => {
   const pushNotification = useCallback((notification) => {
     if (!notification?.id) return;
 
-    setNotifications((prev) => {
-      if (prev.some((item) => item.id === notification.id)) {
-        return prev;
-      }
-      return [notification, ...prev];
-    });
+    setNotifications((prev) => dedupeNotifications([notification, ...prev]));
   }, []);
 
   const clearNotifications = useCallback(() => {
@@ -272,6 +291,7 @@ export const RealTimeProvider = ({ children }) => {
 };
 
 // ── Consumer hook — returns safe defaults outside the provider ──────────
+// eslint-disable-next-line react-refresh/only-export-components
 export const useRealTime = () => {
   const ctx = useContext(RealTimeContext);
   if (!ctx) return SAFE_DEFAULTS;

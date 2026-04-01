@@ -40,6 +40,17 @@ const SAFE_DEFAULTS = {
   clearNotifications: () => {},
 };
 
+const dedupeNotifications = (items = []) => {
+  const seen = new Set();
+  return (Array.isArray(items) ? items : []).filter((item) => {
+    const key = item?.id ?? item?.backendId ?? item?.externalId;
+    if (!key) return true;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 const capitalize = (str) =>
   str ? str.replace(/\b\w/g, (c) => c.toUpperCase()) : str;
 
@@ -132,8 +143,9 @@ export const UserRealTimeProvider = ({ children }) => {
     try {
       const saved = localStorage.getItem(notifKeyRef.current);
       const parsed = saved ? JSON.parse(saved) : [];
-      initialNotifIdsRef.current = new Set(parsed.map((n) => n.id));
-      return parsed;
+      const unique = dedupeNotifications(parsed);
+      initialNotifIdsRef.current = new Set(unique.map((n) => n.id));
+      return unique;
     } catch {
       initialNotifIdsRef.current = new Set();
       return [];
@@ -155,7 +167,9 @@ export const UserRealTimeProvider = ({ children }) => {
     fetchNotifications({ perPage: 50, scope: "user" }).then((response) => {
       if (!response?.data) return;
 
-      const backendItems = response.data.map(mapUserBackendNotification);
+      const backendItems = dedupeNotifications(
+        response.data.map(mapUserBackendNotification),
+      );
 
       // Merge: backend notifications are synced by their api-* id, but locally-detected
       // notifications (poll-detected status changes without a backendId) are preserved.
@@ -167,13 +181,23 @@ export const UserRealTimeProvider = ({ children }) => {
         const localOnly = prev.filter(
           (n) => !n.backendId && !backendIds.has(n.id) && !backendExternal.has(n.id),
         );
-        return [...backendItems, ...localOnly];
+        // Preserve local read states so a "mark all as read" isn't undone by this merge.
+        const localReadById = new Map(prev.map((n) => [n.id, n.read]));
+        const localReadByExternal = new Map();
+        prev.forEach((n) => { if (n.id) localReadByExternal.set(n.id, n.read); });
+        const mergedBackend = backendItems.map((n) => {
+          const wasRead = localReadById.get(n.id) ?? localReadByExternal.get(n.externalId);
+          return wasRead === true ? { ...n, read: true } : n;
+        });
+        return dedupeNotifications([...mergedBackend, ...localOnly]);
       });
 
       // Show toasts for unread notifications that weren't cached locally at mount
       if (initialNotifIdsRef.current) {
-        const unseen = backendItems.filter(
-          (n) => !initialNotifIdsRef.current.has(n.id) && !n.read,
+        const unseen = dedupeNotifications(
+          backendItems.filter(
+            (n) => !initialNotifIdsRef.current.has(n.id) && !n.read,
+          ),
         );
         if (unseen.length > 0) {
           setLatestBatch(unseen.slice(0, 3));
@@ -181,8 +205,6 @@ export const UserRealTimeProvider = ({ children }) => {
         }
       }
     });
-    // Run once on mount only
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Convert flushed real-time events into notification objects — fires ONCE per batch
@@ -201,7 +223,7 @@ export const UserRealTimeProvider = ({ children }) => {
 
     if (newItems.length === 0) return;
 
-    const fresh = newItems.map((event) => {
+    const fresh = dedupeNotifications(newItems.map((event) => {
       if (event.type === "appointment_scheduled") {
         return {
           id: event.id,
@@ -239,14 +261,10 @@ export const UserRealTimeProvider = ({ children }) => {
         read: false,
         data: event.data,
       };
-    });
+    }));
 
     // Update persistent notification list (for bell dropdown)
-    setNotifications((prev) => {
-      const existingIds = new Set(prev.map((n) => n.id));
-      const unique = fresh.filter((n) => !existingIds.has(n.id));
-      return [...unique, ...prev];
-    });
+    setNotifications((prev) => dedupeNotifications([...fresh, ...prev]));
 
     createNotifications(fresh, { scope: "user" });
 
@@ -326,6 +344,7 @@ export const UserRealTimeProvider = ({ children }) => {
 };
 
 // ── Consumer hook — returns safe defaults outside the provider ──────────
+// eslint-disable-next-line react-refresh/only-export-components
 export const useUserRealTime = () => {
   const ctx = useContext(UserRealTimeContext);
   if (!ctx) return SAFE_DEFAULTS;

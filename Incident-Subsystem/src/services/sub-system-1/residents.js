@@ -1,5 +1,9 @@
 import api from './Api';
 import { STORAGE_URL } from '../../config/api';
+import { memCache } from '../shared/cache';
+
+const RESIDENTS_CACHE_KEY = 'residents:list';
+const RESIDENTS_TTL = 5 * 60 * 1000; // 5 minutes
 
 export const calculateAge = (birthdate) => {
     if (!birthdate) return 'N/A';
@@ -206,6 +210,7 @@ export const verificationService = {
                 water_source:  additionalData?.waterSource,
                 tenure_status: additionalData?.tenureStatus,
             });
+            memCache.invalidate(RESIDENTS_CACHE_KEY);
             return response.data;
         } catch (error) {
             return {
@@ -218,9 +223,11 @@ export const verificationService = {
 
 export const residentService = {
     getResidents: async () => {
-        const res = await api.get('/residents');
-        const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
-        return data.map(mapResident);
+        return memCache.remember(RESIDENTS_CACHE_KEY, RESIDENTS_TTL, async () => {
+            const res = await api.get('/residents');
+            const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
+            return data.map(mapResident);
+        });
     },
 
     // Single resident — includes audit trail fields (verified_by_name, updated_by_name, etc.)
@@ -249,6 +256,7 @@ export const residentService = {
     updateResident: async (id, payload) => {
         try {
             const res = await api.put(`/residents/${id}`, payload);
+            memCache.invalidate(RESIDENTS_CACHE_KEY);
             return res.data;
         } catch (err) {
             return {
@@ -261,6 +269,7 @@ export const residentService = {
     deleteResident: async (id) => {
         try {
             const res = await api.delete(`/residents/${id}`);
+            memCache.invalidate(RESIDENTS_CACHE_KEY);
             return res.data;
         } catch (err) {
             return {
@@ -273,6 +282,7 @@ export const residentService = {
     restoreResident: async (id) => {
         try {
             const res = await api.post(`/residents/${id}/restore`);
+            memCache.invalidate(RESIDENTS_CACHE_KEY);
             return res.data;
         } catch (err) {
             return {

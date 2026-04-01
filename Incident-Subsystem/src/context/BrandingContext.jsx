@@ -41,22 +41,6 @@ export const BrandingProvider = ({ children }) => {
   }, [logoDataUrl]);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const syncRemoteLogo = async () => {
-      const remote = await fetchBarangayLogoDataUrlRemote();
-      if (!isMounted || remote === null) return;
-      setBarangayLogoDataUrl(remote);
-      setLogoDataUrl(remote || "");
-    };
-
-    syncRemoteLogo();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
     const iconSrc = logoDataUrl || DEFAULT_FAVICON;
     const favicon = ensureLinkTag("icon", "image/png");
     if (favicon) favicon.href = iconSrc;

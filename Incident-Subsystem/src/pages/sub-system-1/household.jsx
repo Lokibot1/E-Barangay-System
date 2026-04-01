@@ -10,7 +10,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { Printer, Archive, LayoutList, ScrollText } from 'lucide-react';
+import { Printer, Archive, LayoutList, ScrollText, Loader2 } from 'lucide-react';
 
 import HouseholdStats            from '../../components/sub-system-1/household/HouseholdStats';
 import HouseholdFilters          from '../../components/sub-system-1/household/householdfilters';
@@ -74,6 +74,11 @@ const Households = () => {
   const [isDeactivateModalOpen, setIsDeactivateModalOpen]= useState(false);
   const [selectedHousehold,     setSelectedHousehold]    = useState(null);
   const [deactivating,          setDeactivating]         = useState(false);
+  const [openingHousehold,      setOpeningHousehold]     = useState({
+    loading: false,
+    householdId: null,
+    mode: 'view',
+  });
 
   // ── Filter state ───────────────────────────────────────────────────────────
   const [searchTerm,   setSearchTerm]   = useState('');
@@ -135,6 +140,32 @@ const Households = () => {
     } finally {
       setDeactivating(false);
     }
+  };
+
+  const openHouseholdWithLoading = async (household, mode = 'view') => {
+    if (!household || openingHousehold.loading) return;
+
+    setOpeningHousehold({
+      loading: true,
+      householdId: household.db_id ?? household.id ?? null,
+      mode,
+    });
+
+    setSelectedHousehold(household);
+
+    await new Promise((resolve) => setTimeout(resolve, 220));
+
+    if (mode === 'edit') {
+      setIsEditModalOpen(true);
+    } else {
+      setIsModalOpen(true);
+    }
+
+    setOpeningHousehold({
+      loading: false,
+      householdId: null,
+      mode: 'view',
+    });
   };
 
   // ── Derived data ───────────────────────────────────────────────────────────
@@ -262,9 +293,12 @@ const Households = () => {
               households={currentData}
               loading={loading}
               t={t}
-              onView={(h)       => { setSelectedHousehold(h); setIsModalOpen(true);           }}
-              onEdit={(h)       => { setSelectedHousehold(h); setIsEditModalOpen(true);       }}
+              onView={(h)       => { openHouseholdWithLoading(h, 'view');      }}
+              onEdit={(h)       => { openHouseholdWithLoading(h, 'edit');      }}
               onDeactivate={(h) => { setSelectedHousehold(h); setIsDeactivateModalOpen(true); }}
+              actionLoadingId={openingHousehold.householdId}
+              actionLoadingMode={openingHousehold.mode}
+              disableActions={openingHousehold.loading}
               currentTheme={currentTheme}
             />
             {!loading && (
@@ -319,10 +353,52 @@ const Households = () => {
           onClose={() => { setIsModalOpen(false); setSelectedHousehold(null); }}
           onEdit={(h) => {
             setIsModalOpen(false);
-            setSelectedHousehold(h);
-            setIsEditModalOpen(true);
+            openHouseholdWithLoading(h, 'edit');
           }}
         />
+      )}
+
+      {openingHousehold.loading && (
+        <div
+          className={`fixed inset-0 z-[9998] flex items-center justify-center backdrop-blur-[6px] ${
+            isDark ? 'bg-slate-900/55' : 'bg-[rgba(239,246,255,0.72)]'
+          }`}
+        >
+          <div className="flex flex-col items-center gap-4 px-6 py-6 text-center">
+            <div
+              className={`relative h-16 w-16 rounded-full border ${
+                isDark ? 'border-slate-600/80' : 'border-slate-300/90'
+              }`}
+            >
+              <div
+                className={`absolute inset-0 animate-spin rounded-full border-2 border-transparent ${
+                  isDark
+                    ? 'border-t-emerald-300 border-r-emerald-300'
+                    : 'border-t-blue-600 border-r-emerald-500'
+                }`}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <p
+                className={`text-[11px] font-spartan font-bold uppercase tracking-[0.28em] ${
+                  isDark ? 'text-slate-100' : 'text-slate-700'
+                }`}
+              >
+                Please wait
+              </p>
+              <p
+                className={`text-[13px] font-kumbh ${
+                  isDark ? 'text-slate-300' : 'text-slate-500'
+                }`}
+              >
+                {openingHousehold.mode === 'edit'
+                  ? 'Opening edit household form...'
+                  : 'Opening household profile...'}
+              </p>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Deactivate modal ── */}
