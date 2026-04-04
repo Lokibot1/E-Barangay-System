@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Eye, EyeOff, KeyRound, Loader2, X } from "lucide-react";
 import themeTokens from "../../Themetokens";
 import { changePassword } from "../../homepage/services/loginService";
@@ -154,8 +155,10 @@ const ChangePasswordModal = ({ isOpen, onClose, currentTheme, onToast, onLogout 
   const allRulesPassed = RULES.every((r) => r.test(fields.next));
   const canSubmit = fields.current && fields.next && fields.confirm && allRulesPassed && !loading;
 
-  return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[12000] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
       <div className={`w-full max-w-md rounded-[24px] border shadow-2xl ${isDark ? "bg-slate-900 border-slate-700 text-slate-100" : `bg-white border-slate-200 ${t.cardText}`}`}>
 
         {/* Header */}
@@ -249,7 +252,8 @@ const ChangePasswordModal = ({ isOpen, onClose, currentTheme, onToast, onLogout 
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
