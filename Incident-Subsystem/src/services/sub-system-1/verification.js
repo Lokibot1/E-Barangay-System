@@ -1,5 +1,5 @@
 import api from "./Api"; 
-import { STORAGE_URL } from '../../config/api'; 
+import { getResidentDocumentUrl } from '../../config/api'; 
 
 export const calculateAge = (birthdate) => {
   if (!birthdate) return 'N/A';
@@ -72,8 +72,8 @@ export const verificationService = {
             residencyStatus: res.residency_status || 'N/A',
             residencyStartDate: formatDate(res.residency_start_date),
             isVoter: res.is_voter, 
-            idFront: res.id_front_path ? `${STORAGE_URL}/${res.id_front_path}` : null,
-            idBack: res.id_back_path ? `${STORAGE_URL}/${res.id_back_path}` : null,
+            idFront: getResidentDocumentUrl(res.id_front_path),
+            idBack: getResidentDocumentUrl(res.id_back_path),
             idType: res.id_type || 'Resident ID',
             employmentStatus: res.employment_data?.employment_status || 'N/A',
             occupation: res.employment_data?.occupation || 'N/A',

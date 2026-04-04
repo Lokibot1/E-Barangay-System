@@ -1,5 +1,5 @@
 import api from './Api';
-import { STORAGE_URL } from '../../config/api';
+import { getResidentDocumentUrl } from '../../config/api';
 import { memCache } from '../shared/cache';
 
 const RESIDENTS_CACHE_KEY = 'residents:list';
@@ -169,8 +169,8 @@ const mapResident = (res) => {
             residencyStatus:    res.residency_status     || 'N/A',
             residencyStartDate: formatDate(residencyStartSafe),
             isVoter:            res.is_voter,
-            idFront:            res.id_front_path ? `${STORAGE_URL}/${res.id_front_path}` : null,
-            idBack:             res.id_back_path  ? `${STORAGE_URL}/${res.id_back_path}`  : null,
+            idFront:            getResidentDocumentUrl(res.id_front_path),
+            idBack:             getResidentDocumentUrl(res.id_back_path),
             idType:             res.id_type               || 'Resident ID',
             employmentStatus:   res.employment_data?.employment_status   || 'N/A',
             occupation:         res.employment_data?.occupation           || 'N/A',
