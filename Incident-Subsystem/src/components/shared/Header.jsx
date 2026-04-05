@@ -495,7 +495,7 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
   const statusColor = notification.read ? "bg-gray-400" : "bg-amber-500";
   const statusLabel = notification.read ? "Read" : "New";
   const timeAgo = getRelativeTime(notification.timestamp);
-  const absoluteDate = formatNotificationDate(notification.timestamp);
+  const absoluteDateTime = formatNotificationDateTime(notification.timestamp);
   const isIncident = notification.source === "incident";
   const isAppointment = notification.source === "appointment";
   const isRegistration = notification.source === "registration";
@@ -548,58 +548,74 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
     onCloseMenu?.();
   };
 
+  const accentColor = isIncident
+    ? "border-l-red-500"
+    : isRegistration
+      ? "border-l-emerald-500"
+      : isAppointment
+        ? "border-l-sky-500"
+        : isResident
+          ? "border-l-amber-500"
+          : "border-l-violet-500";
+
   return (
     <div
       onClick={handleClick}
-      className={`p-3 sm:p-4 border-b ${isDark ? "border-slate-700 hover:bg-slate-700" : "border-slate-100 hover:bg-slate-50"} transition-colors cursor-pointer group ${
+      className={`border-b border-l-4 ${accentColor} px-3 py-3 sm:px-4 ${
+        isDark ? "border-b-slate-700 hover:bg-slate-700/60" : "border-b-slate-100 hover:bg-slate-50"
+      } transition-colors cursor-pointer ${
         !notification.read
-          ? isDark
-            ? "bg-slate-700/50"
-            : "bg-blue-50/50"
+          ? isDark ? "bg-slate-700/40" : "bg-blue-50/40"
           : ""
       }`}
     >
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center space-x-2 mb-1 flex-wrap">
-            <span
-              className={`text-xs font-bold ${isDark ? "text-slate-300" : "text-slate-600"} font-kumbh uppercase`}
-            >
-              {sourceLabel}
-            </span>
-            <span
-              className={`${statusColor} text-white text-xs font-semibold px-2 py-0.5 rounded-full font-kumbh`}
-            >
-              {statusLabel}
-            </span>
-            {isStatusChange && (
-              <span
-                className={`text-xs font-medium px-2 py-0.5 rounded-full font-kumbh ${isDark ? "bg-slate-600 text-slate-300" : "bg-slate-200 text-slate-600"}`}
-              >
-                {capitalize(notification.oldStatus)} → {capitalize(notification.newStatus)}
-              </span>
-            )}
-          </div>
-          <p
-            className={`font-semibold text-sm ${isDark ? "text-slate-100" : "text-slate-900"} font-kumbh mb-1`}
-          >
-            {displayType}
-          </p>
-          <p
-            className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"} font-kumbh line-clamp-2`}
-          >
-            {descriptionText}
-          </p>
-        </div>
+      {/* Row 1 — source + status + status-change pill */}
+      <div className="flex items-center gap-1.5 flex-wrap mb-1">
+        <span className={`text-[10px] font-bold font-kumbh uppercase tracking-wide ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+          {sourceLabel}
+        </span>
+        <span className={`${statusColor} text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full font-kumbh`}>
+          {statusLabel}
+        </span>
+        {isStatusChange && (
+          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full font-kumbh ${isDark ? "bg-slate-600 text-slate-300" : "bg-slate-200 text-slate-600"}`}>
+            {capitalize(notification.oldStatus)} → {capitalize(notification.newStatus)}
+          </span>
+        )}
       </div>
-      <div className="flex items-center justify-between mt-2">
-        <p className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"} font-kumbh`}>
-          {timeAgo}
-          {(isResident || notification.type === "profile_updated") && absoluteDate ? ` · ${absoluteDate}` : ""}
-          {notification.reportedBy ? ` · ${byLabel} ${notification.reportedBy}` : ""}
-        </p>
+
+      {/* Row 2 — title */}
+      <p className={`text-[13px] font-semibold font-kumbh leading-snug ${isDark ? "text-slate-100" : "text-slate-900"}`}>
+        {displayType}
+      </p>
+
+      {/* Row 3 — description */}
+      <p className={`mt-0.5 text-[11px] font-kumbh leading-relaxed line-clamp-2 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+        {descriptionText}
+      </p>
+
+      {/* Row 4 — timestamp */}
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <div className="min-w-0 space-y-0.5">
+          <p className={`text-[10px] font-kumbh flex items-center gap-1 ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+            <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{timeAgo}</span>
+            {absoluteDateTime && <span className={isDark ? "text-slate-600" : "text-slate-300"}>·</span>}
+            {absoluteDateTime && <span>{absoluteDateTime}</span>}
+          </p>
+          {notification.reportedBy && (
+            <p className={`text-[10px] font-kumbh flex items-center gap-1 ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+              <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span>{byLabel} <span className={`font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>{notification.reportedBy}</span></span>
+            </p>
+          )}
+        </div>
         {(isAppointment || isRegistration) && (
-          <span className={`text-[10px] font-semibold font-kumbh ${isDark ? "text-blue-400" : "text-blue-500"}`}>
+          <span className={`shrink-0 text-[10px] font-semibold font-kumbh ${isDark ? "text-blue-400" : "text-blue-500"}`}>
             {isRegistration ? "View pending list →" : "View details →"}
           </span>
         )}
@@ -612,7 +628,7 @@ const NotificationItem = memo(({ notification, isDark, onMarkAsRead, onViewAppoi
 const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onViewAppointment, onViewRegistration, onViewProfileUpdate, onCloseMenu, onNavigateToAction }) => {
   const unread = !notification.read;
   const timeAgo = getRelativeTime(notification.timestamp);
-  const absoluteDate = formatNotificationDate(notification.timestamp);
+  const absoluteDateTime = formatNotificationDateTime(notification.timestamp);
   const isIncident = notification.source === "incident";
   const isAppointment = notification.source === "appointment";
   const isRegistration = notification.source === "registration";
@@ -709,39 +725,54 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          {isStatusChange && (
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className={`rounded-full px-2 py-1 text-[10px] font-medium font-kumbh ${
+          {/* Row 1 — source label + status-change pill + mark-read */}
+          <div className="flex items-center gap-1.5 flex-wrap mb-1">
+            {isStatusChange && (
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium font-kumbh ${
                 isDark ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-600"
               }`}>
-                {capitalize(notification.oldStatus)} {"->"} {capitalize(notification.newStatus)}
+                {capitalize(notification.oldStatus)} → {capitalize(notification.newStatus)}
               </span>
-            </div>
-          )}
+            )}
+          </div>
 
-          <p className={`${isStatusChange ? "mt-2.5" : ""} text-[13px] font-semibold leading-4.5 font-kumbh ${
+          {/* Row 2 — title */}
+          <p className={`text-[13px] font-semibold leading-snug font-kumbh ${
             isDark ? "text-slate-100" : "text-slate-900"
           }`}>
             {displayType}
           </p>
 
-          <p className={`mt-1 text-[11px] leading-4.5 font-kumbh ${
+          {/* Row 3 — description */}
+          <p className={`mt-0.5 text-[11px] leading-relaxed font-kumbh ${
             isDark ? "text-slate-400" : "text-slate-600"
           }`}>
             {descriptionText}
           </p>
 
-          <div className="mt-2.5 flex items-center justify-between gap-3">
-            <p className={`text-[10px] font-kumbh ${
-              isDark ? "text-slate-500" : "text-slate-500"
-            }`}>
-              {timeAgo}
-              {(isResident || notification.type === "profile_updated") && absoluteDate ? ` · ${absoluteDate}` : ""}
-              {notification.reportedBy ? ` · ${byLabel} ${notification.reportedBy}` : ""}
-            </p>
+          {/* Row 4 — timestamp + reporter + action */}
+          <div className="mt-2 flex items-end justify-between gap-3">
+            <div className="min-w-0 space-y-0.5">
+              <p className={`text-[10px] font-kumbh flex items-center gap-1 ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+                <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{timeAgo}</span>
+                {absoluteDateTime && <span className={isDark ? "text-slate-600" : "text-slate-300"}>·</span>}
+                {absoluteDateTime && <span>{absoluteDateTime}</span>}
+              </p>
+              {notification.reportedBy && (
+                <p className={`text-[10px] font-kumbh flex items-center gap-1 ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+                  <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>{byLabel} <span className={`font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>{notification.reportedBy}</span></span>
+                </p>
+              )}
+            </div>
 
             {actionLabel && (
-              <span className={`inline-flex items-center rounded-lg border px-3 py-1.5 text-[9px] font-semibold font-kumbh shadow-sm transition-colors ${
+              <span className={`shrink-0 inline-flex items-center rounded-lg border px-3 py-1.5 text-[9px] font-semibold font-kumbh shadow-sm transition-colors ${
                 isDark
                   ? "border-violet-400/30 bg-violet-500/20 text-violet-200"
                   : "border-violet-200 bg-violet-100 text-violet-700"
@@ -775,7 +806,7 @@ const NotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onVi
 const ModernNotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead, onViewAppointment, onViewRegistration, onViewProfileUpdate, onCloseMenu, onNavigateToAction }) => {
   const unread = !notification.read;
   const timeAgo = getRelativeTime(notification.timestamp);
-  const absoluteDate = formatNotificationDate(notification.timestamp);
+  const absoluteDateTime = formatNotificationDateTime(notification.timestamp);
   const isIncident = notification.source === "incident";
   const isAppointment = notification.source === "appointment";
   const isRegistration = notification.source === "registration";
@@ -839,12 +870,6 @@ const ModernNotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead
         : isDark
           ? "border-sky-500/20 bg-sky-500/10 text-sky-300"
           : "border-sky-200 bg-sky-50 text-sky-700";
-
-  const metaParts = [
-    timeAgo,
-    (isResident || notification.type === "profile_updated") && absoluteDate ? absoluteDate : "",
-    notification.reportedBy ? `${byLabel} ${notification.reportedBy}` : "",
-  ].filter(Boolean);
 
   const sourceTone = isRegistration
     ? isDark
@@ -941,7 +966,7 @@ const ModernNotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead
                   <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium font-kumbh ${
                     isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-600"
                   }`}>
-                    {capitalize(notification.oldStatus)} {"->"} {capitalize(notification.newStatus)}
+                    {capitalize(notification.oldStatus)} → {capitalize(notification.newStatus)}
                   </span>
                 )}
               </div>
@@ -994,11 +1019,24 @@ const ModernNotificationHistoryItem = memo(({ notification, isDark, onMarkAsRead
               {descriptionText}
             </p>
 
-            <p className={`mt-1.5 text-[10px] leading-3.5 font-kumbh ${
-              isDark ? "text-slate-500" : "text-slate-500"
-            }`}>
-              {metaParts.join(" - ")}
-            </p>
+            <div className="mt-1.5 space-y-0.5">
+              <p className={`text-[10px] font-kumbh flex items-center gap-1 ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+                <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{timeAgo}</span>
+                {absoluteDateTime && <span className={isDark ? "text-slate-600" : "text-slate-300"}>·</span>}
+                {absoluteDateTime && <span>{absoluteDateTime}</span>}
+              </p>
+              {notification.reportedBy && (
+                <p className={`text-[10px] font-kumbh flex items-center gap-1 ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+                  <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>{byLabel} <span className={`font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>{notification.reportedBy}</span></span>
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>
