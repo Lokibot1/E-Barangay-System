@@ -54,8 +54,18 @@ const CaseManagementPage = () => {
   const [apptPage, setApptPage] = useState(1);
   const [viewMode, setViewMode] = useState("cards");
   const [tablePage, setTablePage] = useState(1);
+  const [tableSearchInput, setTableSearchInput] = useState("");
   const [tableSearch, setTableSearch] = useState("");
   const [tableSort, setTableSort] = useState("desc");
+
+  // Debounce search input → tableSearch (300 ms)
+  const searchDebounceRef = useRef(null);
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => setTableSearch(tableSearchInput), 300);
+    return () => clearTimeout(searchDebounceRef.current);
+  }, [tableSearchInput]);
+
   const apptListRef    = useRef(null);
   const apptSentinelRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -868,13 +878,13 @@ const CaseManagementPage = () => {
                           </svg>
                           <input
                             type="text"
-                            value={tableSearch}
-                            onChange={(e) => { setTableSearch(e.target.value); setTablePage(1); }}
+                            value={tableSearchInput}
+                            onChange={(e) => { setTableSearchInput(e.target.value); setTablePage(1); }}
                             placeholder={`Search by type or location…`}
                             className={`w-full pl-9 pr-4 py-2.5 text-sm font-kumbh bg-transparent outline-none ${t.cardText} placeholder:${t.subtleText}`}
                           />
-                          {tableSearch && (
-                            <button onClick={() => { setTableSearch(""); setTablePage(1); }} className={`pr-3 ${t.subtleText} hover:opacity-70`}>
+                          {tableSearchInput && (
+                            <button onClick={() => { setTableSearchInput(""); setTableSearch(""); setTablePage(1); }} className={`pr-3 ${t.subtleText} hover:opacity-70`}>
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                               </svg>
