@@ -105,7 +105,7 @@ const getMyIncidents = async () => {
   }
 
   return memCache.remember(INCIDENTS_LIST_CACHE_KEY, INCIDENTS_LIST_TTL, () =>
-    requestJson(`${API_BASE}/incidents`, {
+    requestJson(`${API_BASE}/incidents?per_page=100`, {
       errorMessage: "Failed to fetch incidents.",
     })
   );
@@ -117,7 +117,7 @@ const getAllIncidents = async () => {
   }
 
   return memCache.remember(INCIDENTS_LIST_CACHE_KEY, INCIDENTS_LIST_TTL, () =>
-    requestJson(`${API_BASE}/incidents`, {
+    requestJson(`${API_BASE}/incidents?per_page=100`, {
       errorMessage: "Failed to fetch all incidents.",
     })
   );
@@ -132,7 +132,7 @@ const pollIncidents = async () => {
   if (!isAuthenticated()) {
     throw new Error("You must be logged in to view incidents.");
   }
-  const fresh = await requestJson(`${API_BASE}/incidents`, {
+  const fresh = await requestJson(`${API_BASE}/incidents?per_page=100`, {
     errorMessage: "Failed to fetch all incidents.",
   });
   memCache.set(INCIDENTS_LIST_CACHE_KEY, fresh, INCIDENTS_LIST_TTL);
