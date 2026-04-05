@@ -10,7 +10,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { Printer, Archive, LayoutList, ScrollText, Loader2 } from 'lucide-react';
+import { Printer, Archive, LayoutList, ScrollText, Loader2, FileText, File } from 'lucide-react';
 
 import HouseholdStats            from '../../components/sub-system-1/household/HouseholdStats';
 import HouseholdFilters          from '../../components/sub-system-1/household/householdfilters';
@@ -28,6 +28,7 @@ import { usePrinter }                 from '../../hooks/sub-system-1/usePrinter'
 import { householdService }           from '../../services/sub-system-1/household';
 import { calculateHouseholdStats }    from '../../utils/sub-system-1/householdUtils';
 import themeTokens                    from '../../Themetokens';
+import { downloadRecordsAsCsv, downloadRecordsAsPdf } from '../../utils/exportRecords';
 
 const TABS = [
   { id: 'registry', label: 'Registry', icon: LayoutList },
@@ -241,13 +242,63 @@ const Households = () => {
           </p>
         </div>
         {activeTab === 'registry' && (
-          <button
-            onClick={handlePrint}
-            disabled={filteredHouseholds.length === 0}
-            className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase hover:opacity-90 shadow-lg transition-all active:scale-95 disabled:opacity-50"
-          >
-            <Printer size={16} /> {tr.sub1.export}
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={handlePrint}
+              disabled={filteredHouseholds.length === 0}
+              className="flex items-center gap-2 bg-slate-800 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase hover:opacity-90 shadow-lg transition-all active:scale-95 disabled:opacity-50"
+            >
+              <Printer size={16} /> Print
+            </button>
+            <button
+              onClick={() => downloadRecordsAsCsv({
+                filename: 'households.csv',
+                columns: [
+                  { header: 'Household ID', key: 'id' },
+                  { header: 'Head of Family', key: 'head' },
+                  { header: 'Purok', key: 'display_purok' },
+                  { header: 'Tenure', key: 'tenure_status' },
+                  { header: 'Status', key: 'display_status' },
+                  { header: 'Members', key: 'members' },
+                ],
+                rows: filteredHouseholds.map((h, i) => ({
+                  ...h,
+                  no: i + 1,
+                  display_purok: h.purok ? `Purok ${h.purok}` : 'N/A',
+                  display_status: Number(h.is_indigent) === 1 ? 'INDIGENT' : 'GENERAL',
+                })),
+              })}
+              disabled={filteredHouseholds.length === 0}
+              className="flex items-center gap-2 bg-green-800 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase hover:opacity-90 shadow-lg transition-all active:scale-95 disabled:opacity-50"
+            >
+              <File size={16} /> CSV
+            </button>
+            <button
+              onClick={() => downloadRecordsAsPdf({
+                filename: 'households.pdf',
+                title: 'Barangay Household Masterlist',
+                columns: [
+                  { header: 'Household ID', key: 'id' },
+                  { header: 'Head of Family', key: 'head' },
+                  { header: 'Purok', key: 'display_purok' },
+                  { header: 'Tenure', key: 'tenure_status' },
+                  { header: 'Status', key: 'display_status' },
+                  { header: 'Members', key: 'members' },
+                ],
+                rows: filteredHouseholds.map((h, i) => ({
+                  ...h,
+                  no: i + 1,
+                  display_purok: h.purok ? `Purok ${h.purok}` : 'N/A',
+                  display_status: Number(h.is_indigent) === 1 ? 'INDIGENT' : 'GENERAL',
+                })),
+                filterInfo: `Purok: ${purokFilter} | Status: ${statusFilter === '1' ? 'Indigent' : statusFilter === '0' ? 'General' : 'All'} | Tenure: ${tenureFilter}`,
+              })}
+              disabled={filteredHouseholds.length === 0}
+              className="flex items-center gap-2 bg-red-800 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase hover:opacity-90 shadow-lg transition-all active:scale-95 disabled:opacity-50"
+            >
+              <FileText size={16} /> PDF
+            </button>
+          </div>
         )}
       </div>
 

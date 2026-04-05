@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
     MapPin, Briefcase, IdCard, Save, Edit3, XCircle,
     User, AlertCircle, History, Loader2, Clock, KeyRound, Eye, EyeOff, CheckCircle,
@@ -183,8 +184,10 @@ const ResetPasswordModal = ({ residentId, residentName, onClose, onSuccess, onEr
         }
     };
 
-    return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+    if (typeof document === 'undefined') return null;
+
+    return createPortal(
+        <div className="fixed inset-0 z-[12010] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
             <div className={`w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
                 {/* Header */}
                 <div className={`flex items-center justify-between px-7 py-5 border-b ${t?.cardBorder || 'border-slate-200'}`}>
@@ -292,7 +295,8 @@ const ResetPasswordModal = ({ residentId, residentName, onClose, onSuccess, onEr
                     </form>
                 )}
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 
@@ -359,15 +363,7 @@ const ResidentDetailsModal = ({
     });
 
     const initModal = useCallback(async (r, m, nextInitialTab = 'basic') => {
-        try {
-            const res = await api.get('/reference-data');
-            if (res.data) setRefs(prev => ({ ...prev, ...res.data }));
-        } catch (err) {
-            console.error('Reference fetch error:', err);
-        }
-        const snap = buildSnapshot(r);
-        snapRef.current = snap;
-        setFormData(snap);
+        setShowResetPass(false);
         setSubmitErr({});
         setEmailBusy(false);
         setEmailErr('');
@@ -377,7 +373,16 @@ const ResidentDetailsModal = ({
         setHistErr(null);
         setIsEdit(canEdit && m === 'edit');
         setActiveTab(nextInitialTab || 'basic');
-        setShowResetPass(false);
+
+        try {
+            const res = await api.get('/reference-data');
+            if (res.data) setRefs(prev => ({ ...prev, ...res.data }));
+        } catch (err) {
+            console.error('Reference fetch error:', err);
+        }
+        const snap = buildSnapshot(r);
+        snapRef.current = snap;
+        setFormData(snap);
     }, [canEdit]);
 
     useEffect(() => {

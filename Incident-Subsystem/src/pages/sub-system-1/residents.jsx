@@ -9,7 +9,7 @@
  */
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { Printer as PrinterIcon, UserPlus, Users, Archive, ScrollText, Loader2 } from 'lucide-react';
+import { Printer as PrinterIcon, UserPlus, Users, Archive, ScrollText, Loader2, FileText, File } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import ResidentTable        from '../../components/sub-system-1/residents/ResidentTable';
@@ -28,6 +28,7 @@ import { getResidencyLabel } from '../../utils/sub-system-1/residency';
 import { householdService }  from '../../services/sub-system-1/household';
 import api                   from '../../services/sub-system-1/Api';
 import themeTokens           from '../../Themetokens';
+import { downloadRecordsAsCsv, downloadRecordsAsPdf } from '../../utils/exportRecords';
 import {
     canDeleteRecords,
     canManageResidents,
@@ -320,11 +321,52 @@ const Residents = () => {
                                         finalFiltered,
                                         `Purok: ${purokFilter} | Sector: ${categoryFilter} | Status: ${residencyFilter}`
                                     )}
+                                    disabled={finalFiltered.length === 0}
                                     className={`inline-flex items-center gap-2 rounded-[20px] px-5 py-3.5 text-sm font-semibold text-white shadow-lg transition-all active:scale-[0.98] ${
-                                        isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-800 hover:bg-slate-900'
-                                    }`}
+                                        isDark ? 'bg-slate-700 hover:bg-slate-600 disabled:bg-slate-500' : 'bg-slate-800 hover:bg-slate-900 disabled:bg-slate-600'
+                                    } ${finalFiltered.length === 0 ? 'cursor-not-allowed opacity-50' : ''}`}
                                 >
-                                    <PrinterIcon size={15} /> {tr.sub1.export}
+                                    <PrinterIcon size={15} /> Print
+                                </button>
+                                <button
+                                    onClick={() => downloadRecordsAsCsv({
+                                        filename: 'residents.csv',
+                                        columns: [
+                                            { header: 'Full Name', key: 'name' },
+                                            { header: 'Age', key: 'age' },
+                                            { header: 'Purok', key: 'resolved_purok' },
+                                            { header: 'Address', key: 'full_address' },
+                                            { header: 'Residency', key: 'residency_status' },
+                                        ],
+                                        rows: finalFiltered,
+                                    })}
+                                    disabled={finalFiltered.length === 0}
+                                    className={`inline-flex items-center gap-2 rounded-[20px] px-5 py-3.5 text-sm font-semibold text-white shadow-lg transition-all active:scale-[0.98] ${
+                                        isDark ? 'bg-green-700 hover:bg-green-600 disabled:bg-green-500' : 'bg-green-800 hover:bg-green-900 disabled:bg-green-600'
+                                    } ${finalFiltered.length === 0 ? 'cursor-not-allowed opacity-50' : ''}`}
+                                >
+                                    <File size={15} /> CSV
+                                </button>
+                                <button
+                                    onClick={() => downloadRecordsAsPdf({
+                                        filename: 'residents.pdf',
+                                        title: 'Resident Masterlist',
+                                        columns: [
+                                            { header: 'Full Name', key: 'name' },
+                                            { header: 'Age', key: 'age' },
+                                            { header: 'Purok', key: 'resolved_purok' },
+                                            { header: 'Address', key: 'full_address' },
+                                            { header: 'Residency', key: 'residency_status' },
+                                        ],
+                                        rows: finalFiltered,
+                                        filterInfo: `Purok: ${purokFilter} | Sector: ${categoryFilter} | Status: ${residencyFilter}`,
+                                    })}
+                                    disabled={finalFiltered.length === 0}
+                                    className={`inline-flex items-center gap-2 rounded-[20px] px-5 py-3.5 text-sm font-semibold text-white shadow-lg transition-all active:scale-[0.98] ${
+                                        isDark ? 'bg-red-700 hover:bg-red-600 disabled:bg-red-500' : 'bg-red-800 hover:bg-red-900 disabled:bg-red-600'
+                                    } ${finalFiltered.length === 0 ? 'cursor-not-allowed opacity-50' : ''}`}
+                                >
+                                    <FileText size={15} /> PDF
                                 </button>
                             </div>
                         )}
