@@ -24,6 +24,7 @@ import {
 } from "../../homepage/services/auditLogService";
 import { residentService } from "../../services/sub-system-1/residents";
 import { householdService } from "../../services/sub-system-1/household";
+import { memCache } from "../../services/shared/cache";
 
 // ─── Parallax CSS ─────────────────────────────────────────────────────────────
 
@@ -783,6 +784,10 @@ const FilterChips = ({ filters, search, userType, onClearFilter, isDark }) => {
 
 const POLL_INTERVAL = 20000;
 
+// Cache resident + household logs for 3 minutes to avoid re-fetching on every filter change
+const EXTRA_LOGS_CACHE_KEY = "activity:extra-logs";
+const EXTRA_LOGS_TTL = 3 * 60 * 1000;
+
 const ActivityLogsView = ({ t, isDark, onBack }) => {
   const navigate = useNavigate();
   const hasBackAction = typeof onBack === "function";
@@ -866,41 +871,47 @@ const ActivityLogsView = ({ t, isDark, onBack }) => {
         if (f.start_date) params.start_date = f.start_date;
         if (f.end_date) params.end_date = f.end_date;
 
-        const auditPromise = fetchAuditLogs(params);
-        const verificationPromise = page === 1
-          ? fetchVerificationAdminLogs(f).catch(() => ({ data: [] }))
-          : Promise.resolve({ data: [] });
+        // Resident + household logs: serve instantly from cache when available,
+        // otherwise fetch. Either way we await them together with audit logs so
+        // the skeleton stays up until ALL data is ready in one render.
         const extraPromise = page === 1
-          ? Promise.allSettled([residentService.getAllLogs(), householdService.getAllLogs()])
+          ? (memCache.get(EXTRA_LOGS_CACHE_KEY)
+              ? Promise.resolve(memCache.get(EXTRA_LOGS_CACHE_KEY))
+              : Promise.allSettled([
+                  residentService.getAllLogs(),
+                  householdService.getAllLogs(),
+                ]).then((results) => {
+                  const [residentResult, householdResult] = results;
+                  const items = [
+                    ...mapResidentLogs(residentResult?.status === "fulfilled" ? residentResult.value : []),
+                    ...mapHouseholdLogs(householdResult?.status === "fulfilled" ? householdResult.value : []),
+                  ];
+                  memCache.set(EXTRA_LOGS_CACHE_KEY, items, EXTRA_LOGS_TTL);
+                  return items;
+                })
+            )
           : Promise.resolve([]);
 
-        const [auditData, verificationData, extraResults] = await Promise.all([
-          auditPromise,
-          verificationPromise,
+        const [auditData, verificationData, extraItems] = await Promise.all([
+          fetchAuditLogs(params),
+          page === 1
+            ? fetchVerificationAdminLogs(f).catch(() => ({ data: [] }))
+            : Promise.resolve({ data: [] }),
           extraPromise,
         ]);
         if (cancelled) return;
 
         const auditItems = auditData.data || [];
         const verificationItems = verificationData?.data || [];
-        let extraItems = [];
 
-        if (page === 1 && Array.isArray(extraResults)) {
-          const [residentResult, householdResult] = extraResults;
-          extraItems = [
-            ...mapResidentLogs(residentResult?.status === "fulfilled" ? residentResult.value : []),
-            ...mapHouseholdLogs(householdResult?.status === "fulfilled" ? householdResult.value : []),
-          ];
-        }
+        // Update knownIdsRef synchronously BEFORE releasing loadingRef in finally.
+        // If we do it inside setLogs (async), polling can fire between
+        // loadingRef.current = false and the updater running — treating all
+        // just-loaded items as "new" and showing the "N new logs arrived" banner.
+        const allNewItems = [...auditItems, ...verificationItems, ...extraItems];
+        allNewItems.forEach((item) => knownIdsRef.current.add(item.id));
 
-        setLogs((prev) => {
-          const combined = mergeLogs(
-            page === 1 ? [] : prev,
-            [...auditItems, ...verificationItems, ...extraItems],
-          );
-          combined.forEach((item) => knownIdsRef.current.add(item.id));
-          return combined;
-        });
+        setLogs((prev) => mergeLogs(page === 1 ? [] : prev, allNewItems));
         setHasMore(page < (auditData.meta?.last_page ?? 1));
       } catch (e) {
         if (!cancelled) setError(e.message);
