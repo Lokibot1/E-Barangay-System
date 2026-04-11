@@ -231,34 +231,28 @@ export const hasRole = (...roles) => {
     .includes(role);
 };
 
+const ADMIN_PANEL_ROLES = ["super_admin", "admin"];
+
 /** Check whether the logged-in user has the admin role. */
 export const isSuperAdmin = () => hasRole("super_admin");
 export const isAdmin = () => hasRole("super_admin", "admin");
 export const isStaff = () => hasRole("staff");
 export const isEncoder = () => hasRole("encoder");
 export const isViewer = () => hasRole("viewer");
-export const canAccessAdminPanel = () =>
-  hasRole("super_admin", "admin", "staff", "encoder", "viewer");
-export const canApproveRecords = () =>
-  hasRole("super_admin", "admin", "staff");
-export const canEditRecords = () =>
-  hasRole("super_admin", "admin", "staff", "encoder");
+export const canAccessAdminPanel = () => hasRole(ADMIN_PANEL_ROLES);
+export const canApproveRecords = () => canAccessAdminPanel();
+export const canEditRecords = () => canAccessAdminPanel();
 export const canDeleteRecords = () => hasRole("super_admin", "admin");
 export const canViewResidents = () => canAccessAdminPanel();
 export const canManageResidents = () => canEditRecords();
-export const canManageHouseholds = () =>
-  hasRole("super_admin", "admin", "staff", "encoder");
-export const canAccessVerificationQueue = () =>
-  hasRole("super_admin", "admin", "staff");
+export const canManageHouseholds = () => canAccessAdminPanel();
+export const canAccessVerificationQueue = () => canAccessAdminPanel();
 export const canViewIncidentCases = () => canAccessAdminPanel();
-export const canManageIncidentCases = () =>
-  hasRole("super_admin", "admin", "staff");
+export const canManageIncidentCases = () => canAccessAdminPanel();
 export const canViewAppointments = () => canAccessAdminPanel();
-export const canManageAppointments = () =>
-  hasRole("super_admin", "admin", "staff");
+export const canManageAppointments = () => canAccessAdminPanel();
 export const canViewDocuments = () => canAccessAdminPanel();
-export const canProcessDocuments = () =>
-  hasRole("super_admin", "admin", "staff");
+export const canProcessDocuments = () => canAccessAdminPanel();
 export const canManageAccounts = () => hasRole("super_admin", "admin");
 export const canManageSystemSettings = () =>
   hasRole("super_admin", "admin");
