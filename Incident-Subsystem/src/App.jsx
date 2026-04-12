@@ -59,6 +59,7 @@ const LoginPage = lazy(() => import("./homepage/login/LoginPage"));
 const SignupPage = lazy(() => import("./homepage/signup/SignUpPage"));
 const ResetPasswordPage = lazy(() => import("./pages/sub-system-3/ResetPasswordPage"));
 const Logout = lazy(() => import("./homepage/logout"));
+const PublicVerify = lazy(() => import("./pages/sub-system-1/id"));
 
 const SubSystem2MainPage = lazy(() => import("./pages/sub-system-2/MainPage"));
 const Req_BIDPage = lazy(() => import("./pages/sub-system-2/Req_BIDPage"));
@@ -218,6 +219,7 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/verify/:id" element={<PublicVerify />} />
               <Route path="/auth" element={<Navigate to="/login" replace />} />
 
               {/* ── USER-ONLY ROUTES ─────────────────────────────────── */}

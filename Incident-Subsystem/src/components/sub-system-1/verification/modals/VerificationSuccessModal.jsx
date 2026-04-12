@@ -12,7 +12,7 @@ import {
   IdCard, AlertTriangle, Download, Minimize2, LogOut,
 } from 'lucide-react';
 import ModalWrapper from '../../common/ModalWrapper';
-import { VERIFY_URL } from '../../../../config/api';
+import { FRONTEND_URL } from '../../../../config/api';
 
 const accentBoxMap = {
   modern: 'bg-blue-600',
@@ -58,10 +58,10 @@ const VerificationSuccessModal = ({
   const accentTextClass   = accentTextMap[currentTheme]   || accentTextMap.modern;
   const subtleIconClass   = subtleIconMap[currentTheme]   || subtleIconMap.modern;
 
-  const hasValidQR = data.user && data.user !== 'N/A' && data.token;
+  const hasValidQR = data.id && data.id !== 'N/A';
   const qrUrl = hasValidQR
-    ? `${VERIFY_URL}/verify/${encodeURIComponent(data.user)}/${data.token}`
-    : `${VERIFY_URL}/verify/pending/no-token`;
+    ? `${FRONTEND_URL}/verify/${encodeURIComponent(data.id)}`
+    : `${FRONTEND_URL}/verify/pending`;
 
   const downloadQR = () => {
     const svg = document.getElementById('resident-qr');

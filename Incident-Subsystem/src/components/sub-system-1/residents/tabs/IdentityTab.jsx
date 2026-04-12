@@ -204,12 +204,12 @@ const IdentityTab = ({
                         <div className={`p-2 rounded-lg text-white ${t?.primarySolid || 'bg-blue-600'}`}><IdCard size={18} /></div>
                         <h3 className={`text-sm font-black ${t?.cardText || 'text-slate-800 dark:text-white'} uppercase tracking-widest`}>Identity Profile</h3>
                     </div>
-                    {!isEdit && formData.id && (
+                    {/* {!isEdit && formData.id && (
                         <button onClick={handleOpenQr}
                             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border ${t?.cardBg || 'bg-white dark:bg-slate-800'} text-emerald-600 border-emerald-200 hover:bg-emerald-50`}>
                             <QrCode size={14} /> ID QR Code
                         </button>
-                    )}
+                    )} */}
                 </div>
 
                 <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
