@@ -33,8 +33,8 @@ export const AdminRoute = () => {
   }
   
   if (!canAccessAdminPanel()) {
-    // If authenticated but NOT an admin, kick them back to the user area
-    return <Navigate to="/dashboard" replace />;
+    // If authenticated but NOT an admin, kick them back to the resident area
+    return <Navigate to="/sub-system-2" replace />;
   }
   
   return <Outlet />;

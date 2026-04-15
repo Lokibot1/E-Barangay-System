@@ -1762,8 +1762,17 @@ const AdminAppointments = () => {
   const [calendarOpen, setCalendarOpen] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState("");
+
+  // Debounce search input → searchQuery (300 ms)
+  const searchDebounceRef = useRef(null);
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => setSearchQuery(searchInput), 300);
+    return () => clearTimeout(searchDebounceRef.current);
+  }, [searchInput]);
   const [endDate, setEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [rescheduleTarget, setRescheduleTarget] = useState(null);
@@ -1865,11 +1874,12 @@ const AdminAppointments = () => {
     setActiveTab("all");
     setSelectedDate(matchedAppointment.date || null);
     setCurrentPage(1);
-    setSearchQuery(
+    const resolvedQuery =
       incomingSearchQuery ||
-        matchedAppointment.complainant_name ||
-        String(matchedAppointment.id),
-    );
+      matchedAppointment.complainant_name ||
+      String(matchedAppointment.id);
+    setSearchInput(resolvedQuery);
+    setSearchQuery(resolvedQuery);
     setDetailsTarget(matchedAppointment);
 
     window.history.replaceState({}, "");
@@ -2297,8 +2307,8 @@ const AdminAppointments = () => {
                   </label>
                   <input
                     type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     placeholder={tr.adminAppointments.searchPlaceholder}
                     className={`w-full px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
                   />
@@ -2342,6 +2352,7 @@ const AdminAppointments = () => {
                         setSelectedDate(null);
                         setStartDate("");
                         setEndDate("");
+                        setSearchInput("");
                         setSearchQuery("");
                       }}
                       className="px-4 py-2.5 text-xs font-kumbh font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors whitespace-nowrap"

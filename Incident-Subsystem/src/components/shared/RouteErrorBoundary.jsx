@@ -154,7 +154,7 @@ export default function RouteErrorBoundary({ children }) {
       ? localStorage.getItem("appTheme") || "modern"
       : "modern";
   const resetKey = `${location.pathname}:${location.key || "route"}`;
-  const homePath = !isAuthenticated() ? "/" : canAccessAdminPanel() ? "/admin" : "/dashboard";
+  const homePath = !isAuthenticated() ? "/" : canAccessAdminPanel() ? "/admin" : "/sub-system-2";
 
   return (
     <RouteErrorBoundaryCore

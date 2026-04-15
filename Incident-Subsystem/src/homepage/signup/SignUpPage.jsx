@@ -248,7 +248,7 @@ const SignupPage = () => {
 
   // Guard: already logged in
   if (isAuthenticated()) {
-    return <Navigate to={isAdmin() ? "/admin" : "/dashboard"} replace />;
+    return <Navigate to={isAdmin() ? "/admin" : "/sub-system-2"} replace />;
   }
 
   const currentTheme = localStorage.getItem("appTheme") || "blue";

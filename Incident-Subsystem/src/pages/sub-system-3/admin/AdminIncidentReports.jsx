@@ -613,9 +613,18 @@ const AdminIncidentReports = () => {
 
   // ── Filter state ───────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState("all");
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  // Debounce search input → searchQuery (300 ms)
+  const searchDebounceRef = useRef(null);
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => setSearchQuery(searchInput), 300);
+    return () => clearTimeout(searchDebounceRef.current);
+  }, [searchInput]);
   const [currentPage, setCurrentPage] = useState(1);
   const ROWS_PER_PAGE = 10;
 
@@ -663,6 +672,7 @@ const AdminIncidentReports = () => {
   // Reset filters when switching page tabs
   useEffect(() => {
     setActiveTab("all");
+    setSearchInput("");
     setSearchQuery("");
     setCurrentPage(1);
     setMapType("All Types");
@@ -1122,8 +1132,8 @@ const AdminIncidentReports = () => {
                   </label>
                   <input
                     type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     placeholder={tr.adminIncidents.searchPlaceholder}
                     className={`w-full px-4 py-2.5 rounded-lg border ${t.cardBorder} ${t.cardBg} ${t.cardText} text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-kumbh`}
                   />

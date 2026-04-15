@@ -82,7 +82,7 @@ export const getMyComplaints = async () => {
   }
 
   return memCache.remember(COMPLAINTS_LIST_CACHE_KEY, COMPLAINTS_LIST_TTL, () =>
-    requestJson(`${API_BASE}/complaints`, {
+    requestJson(`${API_BASE}/complaints?per_page=100`, {
       errorMessage: "Failed to fetch complaints.",
     })
   );
@@ -110,10 +110,26 @@ export const getAllComplaints = async () => {
   }
 
   return memCache.remember(COMPLAINTS_LIST_CACHE_KEY, COMPLAINTS_LIST_TTL, () =>
-    requestJson(`${API_BASE}/complaints`, {
+    requestJson(`${API_BASE}/complaints?per_page=100`, {
       errorMessage: "Failed to fetch all complaints.",
     })
   );
+};
+
+/**
+ * Fetch the latest complaints directly from the backend, bypassing the cache.
+ * Used by the real-time poller so that AdminAppointments' 30-second background
+ * poll (which re-caches complaints) never delays detection of new complaints.
+ */
+export const pollComplaints = async () => {
+  if (!isAuthenticated()) {
+    throw new Error("You must be logged in to view complaints.");
+  }
+  const fresh = await requestJson(`${API_BASE}/complaints?per_page=100`, {
+    errorMessage: "Failed to fetch all complaints.",
+  });
+  memCache.set(COMPLAINTS_LIST_CACHE_KEY, fresh, COMPLAINTS_LIST_TTL);
+  return fresh;
 };
 
 export const getComplaintUpdates = async (id) => {

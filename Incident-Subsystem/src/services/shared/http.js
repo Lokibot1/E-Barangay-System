@@ -39,27 +39,32 @@ export const requestJson = async (
   }
 
   try {
-    const request = () =>
-      fetch(url, {
+    // Wrap fetch + JSON parse together so runDedupedRemoteRequest caches the
+    // parsed result. Without this, concurrent callers (e.g. React StrictMode)
+    // receive the same Response object and the second caller gets {} because
+    // the body stream was already consumed by the first.
+    const fetchAndParse = async () => {
+      const resp = await fetch(url, {
         method,
         headers: requireAuth
           ? { ...buildAuthHeaders({ includeJson }), ...headers }
           : headers,
         body,
       });
+      const data = await parseJsonSafe(resp);
+      return { response: resp, data };
+    };
 
-    const response = shouldDedupeRequest
+    const { response, data } = shouldDedupeRequest
       ? await runDedupedRemoteRequest(
           `${normalizedMethod}:${String(url)}`,
-          request,
+          fetchAndParse,
         )
-      : await request();
+      : await fetchAndParse();
 
     if (requireAuth) {
       handleUnauthorizedResponse(response);
     }
-
-    const data = await parseJsonSafe(response);
 
     if (!response.ok) {
       throw new Error(data.message || errorMessage);

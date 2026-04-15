@@ -59,6 +59,7 @@ const LoginPage = lazy(() => import("./homepage/login/LoginPage"));
 const SignupPage = lazy(() => import("./homepage/signup/SignUpPage"));
 const ResetPasswordPage = lazy(() => import("./pages/sub-system-3/ResetPasswordPage"));
 const Logout = lazy(() => import("./homepage/logout"));
+const PublicVerify = lazy(() => import("./pages/sub-system-1/id"));
 
 const SubSystem2MainPage = lazy(() => import("./pages/sub-system-2/MainPage"));
 const Req_BIDPage = lazy(() => import("./pages/sub-system-2/Req_BIDPage"));
@@ -218,6 +219,7 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/verify/:id" element={<PublicVerify />} />
               <Route path="/auth" element={<Navigate to="/login" replace />} />
 
               {/* ── USER-ONLY ROUTES ─────────────────────────────────── */}
@@ -246,14 +248,8 @@ function App() {
                   <Route path="/incident-complaint/incident-map" element={<IncidentMapPage />} />
                   <Route path="/incident-complaint/case-management" element={<CaseManagementPage />} />
 
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/residents" element={<Residents />} />
-                  <Route path="/verification" element={<Verification />} />
-                  <Route path="/households" element={<Households />} />
-                  <Route path="/certificates" element={<Certificates />} />
                   <Route path="/report-issue" element={<Support />} />
                   <Route path="/support" element={<Support />} />
-                  <Route path="/settings" element={<Settings />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/logout" element={<Logout />} />
                   <Route path="/documents-inquiry" element={<Navigate to="/sub-system-2" replace />} />
@@ -273,11 +269,14 @@ function App() {
                   <Route element={<PermissionRoute allowed={canViewAnalytics} />}>
                     <Route path="/admin" element={<AdminLanding />} />
                     <Route path="/admin/reports" element={<Dashboard />} />
+                    <Route path="/dashboard" element={<Navigate to="/admin/reports" replace />} />
                   </Route>
 
                   <Route element={<PermissionRoute allowed={canViewResidents} />}>
                     <Route path="/admin/residents" element={<Residents />} />
                     <Route path="/admin/households" element={<Households />} />
+                    <Route path="/residents" element={<Navigate to="/admin/residents" replace />} />
+                    <Route path="/households" element={<Navigate to="/admin/households" replace />} />
                   </Route>
 
                   <Route element={<PermissionRoute allowed={canEditRecords} />}>
@@ -287,6 +286,7 @@ function App() {
                   <Route element={<PermissionRoute allowed={canAccessVerificationQueue} />}>
                     <Route path="/admin/user-management" element={<Verification />} />
                     <Route path="/admin/requests" element={<AdminPlaceholder title="Requests" />} />
+                    <Route path="/verification" element={<Navigate to="/admin/user-management" replace />} />
                   </Route>
 
                   <Route element={<PermissionRoute allowed={canViewIncidentCases} />}>
@@ -300,6 +300,7 @@ function App() {
                   <Route element={<PermissionRoute allowed={canViewDocuments} />}>
                     <Route path="/admin/documents-inquiry" element={<DocumentsInquiryPage />} />
                     <Route path="/admin/certificates" element={<Certificates />} />
+                    <Route path="/certificates" element={<Navigate to="/admin/certificates" replace />} />
                   </Route>
 
                   <Route element={<PermissionRoute allowed={canManageAccounts} />}>
@@ -309,6 +310,7 @@ function App() {
 
                   <Route element={<PermissionRoute allowed={canManageSystemSettings} />}>
                     <Route path="/admin/settings" element={<Settings />} />
+                    <Route path="/settings" element={<Navigate to="/admin/settings" replace />} />
                   </Route>
 
                   <Route path="/admin/profile" element={<ProfilePage />} />

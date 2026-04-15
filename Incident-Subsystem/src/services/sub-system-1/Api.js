@@ -7,6 +7,7 @@ import {
 
 const api = axios.create({
     baseURL: API_BASE_URL,
+    withCredentials: true, // Send cookies for authentication
 });
 
 api.interceptors.request.use((config) => {

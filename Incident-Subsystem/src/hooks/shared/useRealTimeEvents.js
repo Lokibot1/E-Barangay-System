@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { incidentService } from "../../services/sub-system-3/incidentService";
-import { getAllComplaints } from "../../services/sub-system-3/complaintService";
+import { pollComplaints } from "../../services/sub-system-3/complaintService";
 import { residentService } from "../../services/sub-system-1/residents";
 import {
   AUTH_UNAUTHORIZED_EVENT,
@@ -75,8 +75,8 @@ const useRealTimeEvents = ({
     setIsPolling(true);
     try {
       const [incData, compData, residentLogs] = await Promise.all([
-        incidentService.getAllIncidents(),
-        getAllComplaints(),
+        incidentService.pollIncidents(),
+        pollComplaints(),
         residentService.getAllLogs().catch(() => []),
       ]);
 
