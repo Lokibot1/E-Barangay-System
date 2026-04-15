@@ -1,10 +1,37 @@
 import { incidentService } from "../../services/sub-system-3/incidentService";
 
-jest.mock("../../homepage/services/loginService", () => ({
-  isAuthenticated: jest.fn(),
-  getToken: jest.fn(),
-  getUser: jest.fn(),
+jest.mock("../../utils/remoteRequestControl", () => ({
+  shouldAttemptRemoteRequest: () => true,
+  rememberRemoteRequestSuccess: () => {},
+  rememberRemoteRequestFailure: () => {},
+  runDedupedRemoteRequest: (_key, fn) => fn(),
+  createServerUnavailableError: () => new Error("The server is currently unavailable."),
 }));
+
+jest.mock("../../services/shared/cache", () => ({
+  memCache: {
+    remember: (_key, _ttl, fetcher) => fetcher(),
+    get: () => null,
+    set: () => {},
+    invalidate: () => {},
+  },
+}));
+
+jest.mock("../../homepage/services/loginService", () => {
+  const getToken = jest.fn();
+  return {
+    isAuthenticated: jest.fn(),
+    getToken,
+    getUser: jest.fn(),
+    buildAuthHeaders: ({ includeJson = false } = {}) => {
+      const tok = getToken();
+      const h = tok ? { Authorization: `Bearer ${tok}` } : {};
+      if (includeJson) h["Content-Type"] = "application/json";
+      return h;
+    },
+    handleUnauthorizedResponse: () => {},
+  };
+});
 
 import {
   isAuthenticated,
@@ -254,7 +281,7 @@ describe("getMyIncidents", () => {
     mockFetch([]);
     await incidentService.getMyIncidents();
     expect(fetch).toHaveBeenCalledWith(
-      `${API_BASE}/incidents`,
+      `${API_BASE}/incidents?per_page=100`,
       expect.objectContaining({
         method: "GET",
         headers: expect.objectContaining({ Authorization: "Bearer test-token" }),
@@ -287,7 +314,7 @@ describe("getAllIncidents", () => {
     mockFetch([]);
     await incidentService.getAllIncidents();
     expect(fetch).toHaveBeenCalledWith(
-      `${API_BASE}/incidents`,
+      `${API_BASE}/incidents?per_page=100`,
       expect.objectContaining({
         method: "GET",
         headers: expect.objectContaining({ Authorization: "Bearer test-token" }),

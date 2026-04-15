@@ -16,10 +16,37 @@ import {
   APPOINTMENT_STATUSES,
 } from "../../services/sub-system-3/appointmentService";
 
-jest.mock("../../homepage/services/loginService", () => ({
-  isAuthenticated: jest.fn(),
-  getToken: jest.fn(),
+jest.mock("../../utils/remoteRequestControl", () => ({
+  shouldAttemptRemoteRequest: () => true,
+  rememberRemoteRequestSuccess: () => {},
+  rememberRemoteRequestFailure: () => {},
+  runDedupedRemoteRequest: (_key, fn) => fn(),
+  createServerUnavailableError: () => new Error("The server is currently unavailable."),
 }));
+
+jest.mock("../../services/shared/cache", () => ({
+  memCache: {
+    remember: (_key, _ttl, fetcher) => fetcher(),
+    get: () => null,
+    set: () => {},
+    invalidate: () => {},
+  },
+}));
+
+jest.mock("../../homepage/services/loginService", () => {
+  const getToken = jest.fn();
+  return {
+    isAuthenticated: jest.fn(),
+    getToken,
+    buildAuthHeaders: ({ includeJson = false } = {}) => {
+      const tok = getToken();
+      const h = tok ? { Authorization: `Bearer ${tok}` } : {};
+      if (includeJson) h["Content-Type"] = "application/json";
+      return h;
+    },
+    handleUnauthorizedResponse: () => {},
+  };
+});
 
 import {
   isAuthenticated,

@@ -4,9 +4,28 @@ import {
   updateCustomField,
 } from "../../services/sub-system-3/customFieldService";
 
-jest.mock("../../homepage/services/loginService", () => ({
-  getToken: jest.fn(),
+jest.mock("../../utils/remoteRequestControl", () => ({
+  shouldAttemptRemoteRequest: () => true,
+  rememberRemoteRequestSuccess: () => {},
+  rememberRemoteRequestFailure: () => {},
+  runDedupedRemoteRequest: (_key, fn) => fn(),
+  createServerUnavailableError: () => new Error("The server is currently unavailable."),
 }));
+
+jest.mock("../../homepage/services/loginService", () => {
+  const getToken = jest.fn();
+  return {
+    isAuthenticated: () => true,
+    getToken,
+    buildAuthHeaders: ({ includeJson = false } = {}) => {
+      const tok = getToken();
+      const h = tok ? { Authorization: `Bearer ${tok}` } : {};
+      if (includeJson) h["Content-Type"] = "application/json";
+      return h;
+    },
+    handleUnauthorizedResponse: () => {},
+  };
+});
 
 import { getToken } from "../../homepage/services/loginService";
 
