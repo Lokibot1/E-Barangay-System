@@ -5,6 +5,15 @@ import { MemoryRouter } from "react-router-dom";
 // ── Mock login service ────────────────────────────────────────────────────
 jest.mock("../../../homepage/services/loginService", () => ({
   isAdmin: jest.fn(() => false),
+  canAccessAdminPanel: jest.fn(() => false),
+  canAccessVerificationQueue: jest.fn(() => false),
+  canManageAccounts: jest.fn(() => false),
+  canManageSystemSettings: jest.fn(() => false),
+  canViewAnalytics: jest.fn(() => false),
+  canViewAppointments: jest.fn(() => false),
+  canViewDocuments: jest.fn(() => false),
+  canViewIncidentCases: jest.fn(() => false),
+  canViewResidents: jest.fn(() => false),
 }));
 
 // ── Mock contexts ─────────────────────────────────────────────────────────
@@ -40,7 +49,18 @@ jest.mock("../../../context/BrandingContext", () => ({
 }));
 
 import Sidebar from "../../../components/shared/Sidebar";
-import { isAdmin } from "../../../homepage/services/loginService";
+import {
+  isAdmin,
+  canAccessAdminPanel,
+  canAccessVerificationQueue,
+  canManageAccounts,
+  canManageSystemSettings,
+  canViewAnalytics,
+  canViewAppointments,
+  canViewDocuments,
+  canViewIncidentCases,
+  canViewResidents,
+} from "../../../homepage/services/loginService";
 
 // JSDOM does not implement matchMedia — provide a minimal stub
 beforeAll(() => {
@@ -77,6 +97,7 @@ describe("Sidebar", () => {
   describe("user nav items", () => {
     beforeEach(() => {
       isAdmin.mockReturnValue(false);
+      canAccessAdminPanel.mockReturnValue(false);
     });
 
     it("renders the logo image", () => {
@@ -103,6 +124,15 @@ describe("Sidebar", () => {
   describe("admin nav items", () => {
     beforeEach(() => {
       isAdmin.mockReturnValue(true);
+      canAccessAdminPanel.mockReturnValue(true);
+      canAccessVerificationQueue.mockReturnValue(true);
+      canManageAccounts.mockReturnValue(true);
+      canManageSystemSettings.mockReturnValue(true);
+      canViewAnalytics.mockReturnValue(true);
+      canViewAppointments.mockReturnValue(true);
+      canViewDocuments.mockReturnValue(true);
+      canViewIncidentCases.mockReturnValue(true);
+      canViewResidents.mockReturnValue(true);
     });
 
     it("shows 'Dashboard' nav item for admin", () => {
@@ -148,6 +178,7 @@ describe("Sidebar", () => {
   describe("active route highlighting", () => {
     it("renders a button for the Main nav item for regular user", () => {
       isAdmin.mockReturnValue(false);
+      canAccessAdminPanel.mockReturnValue(false);
       wrap();
       // Nav items use navigate() via buttons, not anchor tags
       expect(screen.getByText("Main")).toBeInTheDocument();
@@ -155,6 +186,15 @@ describe("Sidebar", () => {
 
     it("renders a button for the Dashboard nav item in admin mode", () => {
       isAdmin.mockReturnValue(true);
+      canAccessAdminPanel.mockReturnValue(true);
+      canViewAnalytics.mockReturnValue(true);
+      canViewIncidentCases.mockReturnValue(true);
+      canViewAppointments.mockReturnValue(true);
+      canViewDocuments.mockReturnValue(true);
+      canViewResidents.mockReturnValue(true);
+      canAccessVerificationQueue.mockReturnValue(true);
+      canManageAccounts.mockReturnValue(true);
+      canManageSystemSettings.mockReturnValue(true);
       wrap();
       expect(screen.getByText("Dashboard")).toBeInTheDocument();
     });
@@ -163,12 +203,14 @@ describe("Sidebar", () => {
   describe("theme support", () => {
     it("renders without error in dark theme", () => {
       isAdmin.mockReturnValue(false);
+      canAccessAdminPanel.mockReturnValue(false);
       wrap({ currentTheme: "dark" });
       expect(screen.getByText("Main")).toBeInTheDocument();
     });
 
     it("renders without error for unknown theme", () => {
       isAdmin.mockReturnValue(false);
+      canAccessAdminPanel.mockReturnValue(false);
       wrap({ currentTheme: "unknown" });
       expect(screen.getByText("Main")).toBeInTheDocument();
     });

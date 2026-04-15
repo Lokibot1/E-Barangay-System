@@ -18,6 +18,9 @@ jest.mock("../../../homepage/services/auditLogService", () => ({
   fetchAuditLogs: jest.fn(),
   fetchVerificationAdminLogs: jest.fn(),
 }));
+jest.mock("../../../services/shared/cache", () => ({
+  memCache: { get: jest.fn(() => null), set: jest.fn() },
+}));
 jest.mock("../../../services/sub-system-1/residents", () => ({
   residentService: { getAllLogs: jest.fn() },
 }));

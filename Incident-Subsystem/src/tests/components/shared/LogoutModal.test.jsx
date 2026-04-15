@@ -26,7 +26,7 @@ describe("LogoutModal", () => {
 
     it("renders the confirmation message", () => {
       render(<LogoutModal {...defaults} />);
-      expect(screen.getByText(/Are you sure you want to sign out/i)).toBeInTheDocument();
+      expect(screen.getByText(/Are you sure you want to log out/i)).toBeInTheDocument();
     });
   });
 
