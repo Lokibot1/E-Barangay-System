@@ -240,6 +240,8 @@ export const isStaff = () => hasRole("staff");
 export const isEncoder = () => hasRole("encoder");
 export const isViewer = () => hasRole("viewer");
 export const canAccessAdminPanel = () => hasRole(ADMIN_PANEL_ROLES);
+export const canViewResidentDigitalId = () =>
+  hasRole("super_admin", "admin", "staff");
 export const canApproveRecords = () => canAccessAdminPanel();
 export const canEditRecords = () => canAccessAdminPanel();
 export const canDeleteRecords = () => hasRole("super_admin", "admin");

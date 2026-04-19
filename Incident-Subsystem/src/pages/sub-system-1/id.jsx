@@ -8,7 +8,7 @@ import { API_BASE_URL, FRONTEND_URL, STORAGE_URL } from '../../config/api';
 import { 
     isAuthenticated, 
     getUser, 
-    canAccessAdminPanel, 
+    canViewResidentDigitalId,
     buildAuthHeaders,
     handleUnauthorizedResponse 
 } from '../../homepage/services/loginService';
@@ -24,6 +24,30 @@ const PublicVerify = () => {
     const [error, setError] = useState(null);
     const [authContext, setAuthContext] = useState(null);
 
+    const normalizeComparableValues = (...values) =>
+        values
+            .flatMap((value) => {
+                if (value === null || value === undefined) return [];
+                const normalized = String(value).trim();
+                if (!normalized) return [];
+                return [normalized, normalized.toLowerCase()];
+            });
+
+    const buildOwnerKeySet = (source = {}) =>
+        new Set(
+            normalizeComparableValues(
+                source?.id,
+                source?.user_id,
+                source?.account_id,
+                source?.resident_id,
+                source?.residentId,
+                source?.barangay_id,
+                source?.barangayId,
+                source?.username,
+                source?.email,
+            ),
+        );
+
     // 1. Initial Authentication Check
     useEffect(() => {
         if (!isAuthenticated()) {
@@ -33,7 +57,7 @@ const PublicVerify = () => {
         }
         setAuthContext({
             currentUser: getUser(),
-            isAdminOrStaff: canAccessAdminPanel()
+            canViewRestrictedId: canViewResidentDigitalId()
         });
     }, []);
 
@@ -54,13 +78,14 @@ const PublicVerify = () => {
                 });
 
                 const residentData = response.data;
-                const { isAdminOrStaff, currentUser } = authContext;
+                const { canViewRestrictedId, currentUser } = authContext;
 
                 // Authorization check
-                const isOwner = currentUser?.id === residentData?.user_id || 
-                               currentUser?.resident_id === residentData?.resident_id;
+                const currentUserKeys = buildOwnerKeySet(currentUser);
+                const residentKeys = buildOwnerKeySet(residentData);
+                const isOwner = [...residentKeys].some((key) => currentUserKeys.has(key));
 
-                if (!isAdminOrStaff && !isOwner) {
+                if (!canViewRestrictedId && !isOwner) {
                     setError("Unauthorized: You can only view your own digital ID");
                     setLoading(false);
                     return;
