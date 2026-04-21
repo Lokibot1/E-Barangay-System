@@ -49,6 +49,23 @@ const PROFILE_FIELD_LABELS = {
   monthly_income: "Monthly Income",
 };
 
+const normalizeRoleValue = (role) =>
+  String(role || "")
+    .trim()
+    .toLowerCase();
+
+const canPollResidentProfileHistory = (user) => {
+  const residentId =
+    user?.resident_id || user?.residentId || user?.id || null;
+
+  if (!residentId) return false;
+
+  // Resident-facing sessions currently do not have access to the
+  // admin /residents/:id/history endpoint, so skip that poll here.
+  const role = normalizeRoleValue(user?.role);
+  return role && !["resident", "user", "member"].includes(role);
+};
+
 const formatFieldLabel = (field) => {
   if (!field) return "";
   return (
@@ -153,15 +170,21 @@ const useUserRealTimeEvents = ({
       const user = getUser();
       const residentId =
         user?.resident_id || user?.residentId || user?.id || null;
+      const shouldPollProfileHistory = canPollResidentProfileHistory(user);
 
-      const historyPromise = residentId
-        ? residentService.getResidentHistory(residentId)
+      const historyPromise = shouldPollProfileHistory
+        ? residentService.getResidentHistory(residentId).catch((error) => {
+            if (error?.response?.status === 403) {
+              return [];
+            }
+            throw error;
+          })
         : Promise.resolve([]);
 
       const [incData, compData, profileLogs] = await Promise.all([
         incidentService.getMyIncidents(),
         getMyComplaints(),
-        historyPromise.catch(() => []),
+        historyPromise,
       ]);
 
       const incArray = Array.isArray(incData) ? incData : incData.data || [];

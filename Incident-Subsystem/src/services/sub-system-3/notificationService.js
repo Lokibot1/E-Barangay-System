@@ -1,4 +1,7 @@
-import { INCIDENT_API_BASE_URL } from "../../config/runtimeApi";
+import {
+  INCIDENT_API_BASE_URL,
+  PHP_API_BASE_URL,
+} from "../../config/runtimeApi";
 import {
   buildAuthHeaders,
   getToken,
@@ -6,7 +9,7 @@ import {
 } from "../../homepage/services/loginService";
 
 const API_BASE = INCIDENT_API_BASE_URL;
-const NOTIF_ENDPOINT = `${API_BASE}/notifications`;
+const NOTIF_ENDPOINT = `${PHP_API_BASE_URL}/notifications/notifications.php`;
 const SUPPORTS_NOTIFICATION_CREATE =
   String(import.meta.env.VITE_NOTIFICATION_CREATE_ENABLED || "").toLowerCase() === "true";
 const SUPPORTS_EXTERNAL_ID_MARK_READ =

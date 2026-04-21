@@ -156,6 +156,14 @@ export const clearAuth = () => {
   localStorage.removeItem("authToken");
   localStorage.removeItem("authUser");
   localStorage.removeItem("userStatusSnapshot");
+
+  if (typeof window !== "undefined") {
+    Object.keys(sessionStorage).forEach((key) => {
+      if (key.startsWith("ebs:security:two-factor:session:")) {
+        sessionStorage.removeItem(key);
+      }
+    });
+  }
 };
 
 export const buildAuthHeaders = ({ includeJson = false, headers = {} } = {}) => {

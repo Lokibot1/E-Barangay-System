@@ -1,5 +1,6 @@
 import { ChevronDown, HelpCircle, Search } from "lucide-react";
 import { useMemo, useState } from "react";
+import ScrollReveal from "./ScrollReveal";
 
 export default function FAQSection({ isDarkMode, faqItems }) {
   const [query, setQuery] = useState("");
@@ -29,7 +30,7 @@ export default function FAQSection({ isDarkMode, faqItems }) {
       }`}
     >
       <div className="mx-auto max-w-4xl">
-        <div className="mb-6 text-center md:mb-8">
+        <ScrollReveal className="mb-6 text-center md:mb-8">
           <p className="mb-2 text-[8px] font-black uppercase tracking-[0.24em] text-emerald-600 md:text-[9px]">
             Help Center
           </p>
@@ -39,9 +40,10 @@ export default function FAQSection({ isDarkMode, faqItems }) {
           <p className="text-[0.9rem] opacity-70 md:text-[0.95rem]">
             Type a keyword like ID, clearance, requirements, or office hours.
           </p>
-        </div>
+        </ScrollReveal>
 
-        <div
+        <ScrollReveal
+          delay={80}
           className={`mb-5 flex items-center gap-3 rounded-[20px] border px-4 py-2.5 md:mb-6 md:px-4.5 md:py-3 ${
             isDarkMode ? "bg-slate-900 border-white/10" : "bg-white border-black/5"
           }`}
@@ -54,24 +56,27 @@ export default function FAQSection({ isDarkMode, faqItems }) {
             placeholder="Search FAQs..."
             className="w-full bg-transparent text-[0.9rem] outline-none md:text-[0.95rem]"
           />
-        </div>
+        </ScrollReveal>
 
         <div className="space-y-3">
           {filteredItems.length === 0 ? (
-            <div
+            <ScrollReveal
               className={`rounded-[20px] border p-7 text-center ${
                 isDarkMode ? "bg-slate-900 border-white/10" : "bg-white border-black/5"
               }`}
             >
               <HelpCircle size={24} className="mx-auto mb-3 text-emerald-600" />
               <p className="font-bold opacity-70">No FAQ matched your search.</p>
-            </div>
+            </ScrollReveal>
           ) : (
-            filteredItems.map((item) => {
+            filteredItems.map((item, index) => {
               const isOpen = openId === item.id;
               return (
-                <article
+                <ScrollReveal
                   key={item.id}
+                  as="article"
+                  delay={110}
+                  staggerIndex={index}
                   className={`overflow-hidden rounded-[20px] border ${
                     isDarkMode ? "bg-slate-900 border-white/10" : "bg-white border-black/5 shadow-sm"
                   }`}
@@ -98,7 +103,7 @@ export default function FAQSection({ isDarkMode, faqItems }) {
                       {item.answer}
                     </div>
                   )}
-                </article>
+                </ScrollReveal>
               );
             })
           )}

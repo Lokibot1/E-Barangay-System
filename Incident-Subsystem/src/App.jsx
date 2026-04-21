@@ -23,7 +23,11 @@ import RouteErrorBoundary from "./components/shared/RouteErrorBoundary";
 import RouteLoadingFallback from "./components/shared/RouteLoadingFallback";
 
 // ── Route guards ─────────────────────────────────────────────────────────────
-import { AdminRoute, UserRoute, PermissionRoute } from "./homepage/ProtectedRoute";
+import ProtectedRoute, {
+  AdminRoute,
+  UserRoute,
+  PermissionRoute,
+} from "./homepage/ProtectedRoute";
 
 // ── Sub-System 2 pages ───────────────────────────────────────────────────────
 
@@ -31,6 +35,7 @@ import { AdminRoute, UserRoute, PermissionRoute } from "./homepage/ProtectedRout
 
 // ── Sub-System 1 (RS) pages ──────────────────────────────────────────────────
 import VerificationNotificationListener from "./components/sub-system-1/common/VerificationNotificationListener";
+import { installGlobalClientErrorLogging } from "./utils/systemDiagnostics";
 
 // ── Homepage / public pages ───────────────────────────────────────────────────
 
@@ -65,9 +70,9 @@ const SubSystem2MainPage = lazy(() => import("./pages/sub-system-2/MainPage"));
 const Req_BIDPage = lazy(() => import("./pages/sub-system-2/Req_BIDPage"));
 const Req_COIPage = lazy(() => import("./pages/sub-system-2/Req_COIPage"));
 const Req_CORPage = lazy(() => import("./pages/sub-system-2/Req_CORPage"));
-const Req_Sub_BID = lazy(() => import("./pages/sub-system-2/Req_Sub_BID"));
-const Req_Sub_COI = lazy(() => import("./pages/sub-system-2/Req_Sub_COI"));
-const Req_Sub_COR = lazy(() => import("./pages/sub-system-2/Req_Sub_COR"));
+const Req_Sub_BID = lazy(() => import("./pages/sub-system-2/Req_Sub_BID_Success"));
+const Req_Sub_COI = lazy(() => import("./pages/sub-system-2/Req_Sub_COI_Success"));
+const Req_Sub_COR = lazy(() => import("./pages/sub-system-2/Req_Sub_COR_Success"));
 const Track_BID = lazy(() => import("./pages/sub-system-2/Track_BID"));
 const Track_COI = lazy(() => import("./pages/sub-system-2/Track_COI"));
 const Track_COR = lazy(() => import("./pages/sub-system-2/Track_COR"));
@@ -93,6 +98,9 @@ const Certificates = lazy(() => import("./pages/sub-system-1/certificates"));
 const Support = lazy(() => import("./pages/sub-system-1/support"));
 const Settings = lazy(() => import("./pages/sub-system-1/settings"));
 const ProfilePage = lazy(() => import("./pages/shared/ProfilePage"));
+const MyRequestsPage = lazy(() => import("./pages/shared/MyRequestsPage"));
+const SecondFactorPage = lazy(() => import("./pages/shared/SecondFactorPage"));
+const VerifyDocumentPage = lazy(() => import("./pages/sub-system-2/VerifyDocumentPage"));
 
 // ── Scroll-to-top on every route change ──────────────────────────────────────
 function ScrollToTop() {
@@ -188,6 +196,10 @@ function App() {
   const [activeSetFormData, setActiveSetFormData] = useState(null);
 
   useEffect(() => {
+    installGlobalClientErrorLogging();
+  }, []);
+
+  useEffect(() => {
     const handleRegisterSetter = (e) => {
  
       if (typeof e.detail === 'function') {
@@ -220,7 +232,12 @@ function App() {
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/verify/:id" element={<PublicVerify />} />
+              <Route path="/sub-system-2/verify-document" element={<VerifyDocumentPage />} />
               <Route path="/auth" element={<Navigate to="/login" replace />} />
+
+              <Route element={<ProtectedRoute />}>
+                <Route path="/second-factor" element={<SecondFactorPage />} />
+              </Route>
 
               {/* ── USER-ONLY ROUTES ─────────────────────────────────── */}
               <Route element={<UserRoute />}>
@@ -253,6 +270,7 @@ function App() {
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/logout" element={<Logout />} />
                   <Route path="/documents-inquiry" element={<Navigate to="/sub-system-2" replace />} />
+                  <Route path="/my-requests" element={<MyRequestsPage />} />
                 </Route>
               </Route>
 

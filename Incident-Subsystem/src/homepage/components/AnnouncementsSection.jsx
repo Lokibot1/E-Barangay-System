@@ -1,5 +1,6 @@
 import { ArrowUp, Bell, Search } from "lucide-react";
 import { useMemo, useState } from "react";
+import ScrollReveal from "./ScrollReveal";
 
 export default function AnnouncementsSection({
   isDarkMode,
@@ -38,7 +39,7 @@ export default function AnnouncementsSection({
   return (
     <section id="news" className="px-6 py-12 scroll-mt-20 md:py-16">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 flex flex-col justify-between gap-4 md:mb-10 md:flex-row md:items-end">
+        <ScrollReveal className="mb-8 flex flex-col justify-between gap-4 md:mb-10 md:flex-row md:items-end">
           <div>
             <h2 className="mb-2 text-[8px] font-black uppercase tracking-[0.32em] text-emerald-600 md:mb-3 md:text-[9px]">
               Live Updates
@@ -51,9 +52,9 @@ export default function AnnouncementsSection({
             <Bell size={12} className="animate-pulse text-red-500" /> Stay updated
             with community news
           </p>
-        </div>
+        </ScrollReveal>
 
-        <div className="mb-6 flex flex-col gap-3 lg:mb-7 lg:flex-row lg:gap-4">
+        <ScrollReveal delay={80} className="mb-6 flex flex-col gap-3 lg:mb-7 lg:flex-row lg:gap-4">
           <div className="flex flex-wrap gap-2">
             {filterOptions.map((option) => (
               <button
@@ -86,11 +87,11 @@ export default function AnnouncementsSection({
               className="w-full bg-transparent text-[0.8rem] outline-none md:w-[210px]"
             />
           </div>
-        </div>
+        </ScrollReveal>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {filteredAnnouncements.length === 0 ? (
-            <div
+            <ScrollReveal
               className={`col-span-full rounded-[24px] border p-8 text-center ${
                 isDarkMode ? "bg-slate-900 border-white/10" : "bg-white border-black/5"
               }`}
@@ -98,14 +99,17 @@ export default function AnnouncementsSection({
               <p className="text-sm font-bold opacity-70">
                 No announcements matched your filter.
               </p>
-            </div>
+            </ScrollReveal>
           ) : (
-            filteredAnnouncements.map((news) => {
+            filteredAnnouncements.map((news, index) => {
               const hasVisualMedia = Boolean(news.media?.url || news.image);
 
               return (
-                <div
+                <ScrollReveal
                   key={news.id}
+                  as="article"
+                  delay={110}
+                  staggerIndex={index}
                   className={`group overflow-hidden rounded-[28px] border transition-all hover:-translate-y-2 md:rounded-[32px] ${
                     isDarkMode
                       ? "bg-slate-900 border-white/5"
@@ -191,7 +195,7 @@ export default function AnnouncementsSection({
                       Read More <ArrowUp size={12} className="rotate-45" />
                     </button>
                   </div>
-                </div>
+                </ScrollReveal>
               );
             })
           )}

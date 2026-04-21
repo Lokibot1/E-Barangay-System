@@ -6,6 +6,8 @@ import DiscardConfirmModal from "../../components/sub-system-3/DiscardConfirmMod
 import themeTokens from "../../Themetokens";
 import { incidentService } from "../../services/sub-system-3/incidentService";
 import { getAllCustomFields } from "../../services/sub-system-3/customFieldService";
+import { saveCaseRequestRecord } from "../../utils/requestCenter";
+import { queueCommunicationEvent } from "../../utils/securityCenter";
 
 const INCIDENT_DRAFT_KEY = "incident_report_draft";
 
@@ -235,7 +237,23 @@ const TwoStepIncidentReportModal = ({ isOpen, onClose, currentTheme }) => {
 
     setIsSubmitting(true);
     try {
-      await incidentService.submitReport(formData);
+      const responseData = await incidentService.submitReport(formData);
+      const savedRecord = saveCaseRequestRecord({
+        kind: "incident",
+        formData,
+        responseData,
+      });
+
+      queueCommunicationEvent({
+        category: "cases",
+        title: "Incident report submitted",
+        message: `Your incident report ${savedRecord.reference} was submitted successfully.`,
+        metadata: {
+          reference: savedRecord.reference,
+          location: formData.location || "",
+        },
+      });
+
       submittedRef.current = true;
       localStorage.removeItem(INCIDENT_DRAFT_KEY);
       addToast({

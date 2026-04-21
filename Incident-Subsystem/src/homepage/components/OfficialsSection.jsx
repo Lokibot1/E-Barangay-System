@@ -1,21 +1,27 @@
 import { Award } from "lucide-react";
+import ScrollReveal from "./ScrollReveal";
 
 export default function OfficialsSection({ officials, isDarkMode, fallbackImage }) {
   return (
     <section id="officials" className="px-6 py-12 scroll-mt-24 md:py-16">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 text-center md:mb-10">
+        <ScrollReveal className="mb-8 text-center md:mb-10">
           <h2 className="mb-3 text-[8px] font-black uppercase tracking-[0.28em] text-emerald-600 md:text-[9px]">
             Serbisyo at Pamumuno
           </h2>
           <h3 className="text-3xl font-black uppercase tracking-tighter md:text-4xl">
             Barangay Officials
           </h3>
-        </div>
+        </ScrollReveal>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-5 lg:grid-cols-5">
-          {officials.map((person) => (
-            <div key={person.id} className="text-center group">
+          {officials.map((person, index) => (
+            <ScrollReveal
+              key={person.id}
+              delay={100}
+              staggerIndex={index}
+              className="text-center group"
+            >
               <div
                 className={`relative aspect-[3/4] overflow-hidden rounded-[20px] border-2 mb-3 transition-all duration-500 group-hover:border-emerald-500 md:mb-4 md:rounded-[24px] ${
                   isDarkMode
@@ -45,7 +51,7 @@ export default function OfficialsSection({ officials, isDarkMode, fallbackImage 
               <p className="text-[6px] font-bold uppercase tracking-tight opacity-40 md:text-[7px]">
                 {person.committee}
               </p>
-            </div>
+            </ScrollReveal>
           ))}
         </div>
       </div>

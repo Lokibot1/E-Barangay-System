@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import themeTokens from "../../Themetokens";
 import { DOCUMENTS_API_BASE_URL } from "../../config/runtimeApi";
 import {
@@ -183,10 +183,18 @@ const formatDateTime = (value) => {
 
 const TrackRequestSimplePage = ({ pageKey }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem("appTheme") || "modern",
   );
-  const [refNumber, setRefNumber] = useState("");
+  const [refNumber, setRefNumber] = useState(
+    () =>
+      normalizeReferenceNumber(
+        location.state?.referenceNumber ||
+          location.state?.requestRecord?.reference ||
+          "",
+      ),
+  );
   const [requestData, setRequestData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -301,6 +309,13 @@ const TrackRequestSimplePage = ({ pageKey }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (refNumber) {
+      handleTrack();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className={`${t.pageBg} h-full flex flex-col overflow-y-auto`}>

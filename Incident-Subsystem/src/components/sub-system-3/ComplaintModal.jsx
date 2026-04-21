@@ -9,6 +9,8 @@ import { getUser } from "../../homepage/services/loginService";
 import { getAllCustomFields } from "../../services/sub-system-3/customFieldService";
 import themeTokens from "../../Themetokens";
 import { useLanguage } from "../../context/LanguageContext";
+import { saveCaseRequestRecord } from "../../utils/requestCenter";
+import { queueCommunicationEvent } from "../../utils/securityCenter";
 
 const COMPLAINT_DRAFT_KEY = "complaint_draft";
 
@@ -262,7 +264,26 @@ const ComplaintModal = ({ isOpen, onClose, currentTheme }) => {
     }
     setIsSubmitting(true);
     try {
-      await fileComplaint(formData);
+      const responseData = await fileComplaint(formData);
+      const savedRecord = saveCaseRequestRecord({
+        kind: "complaint",
+        formData,
+        responseData,
+      });
+
+      queueCommunicationEvent({
+        category: "cases",
+        title: "Complaint submitted",
+        message: `Your complaint ${savedRecord.reference} was submitted successfully.`,
+        metadata: {
+          reference: savedRecord.reference,
+          type: formData.complaintType || "complaint",
+        },
+        recipients: {
+          phone: formData.complainantContact,
+        },
+      });
+
       submittedRef.current = true;
       localStorage.removeItem(COMPLAINT_DRAFT_KEY);
 

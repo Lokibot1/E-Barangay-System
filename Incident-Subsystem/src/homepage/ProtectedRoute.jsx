@@ -6,11 +6,12 @@
  */
 
 import React from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import {
   canAccessAdminPanel,
   isAuthenticated,
 } from "./services/loginService";
+import { requiresSecondFactor } from "../utils/securityCenter";
 
 /**
  * General auth guard — redirects to /login if not logged in.
@@ -28,6 +29,8 @@ const ProtectedRoute = () => {
  * This prevents regular residents from accessing the Admin Panel.
  */
 export const AdminRoute = () => {
+  const location = useLocation();
+
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
@@ -35,6 +38,18 @@ export const AdminRoute = () => {
   if (!canAccessAdminPanel()) {
     // If authenticated but NOT an admin, kick them back to the resident area
     return <Navigate to="/sub-system-2" replace />;
+  }
+
+  if (requiresSecondFactor()) {
+    return (
+      <Navigate
+        to="/second-factor"
+        replace
+        state={{
+          from: `${location.pathname}${location.search}${location.hash}`,
+        }}
+      />
+    );
   }
   
   return <Outlet />;

@@ -16,6 +16,7 @@ import HomeNavbar from "./components/HomeNavbar";
 import NewsModal from "./components/NewsModal";
 import OfficialsSection from "./components/OfficialsSection";
 import ServiceCard from "./components/ServiceCard";
+import ScrollReveal from "./components/ScrollReveal";
 import {
   ANNOUNCEMENTS_UPDATED_EVENT,
   loadPublishedAnnouncements,
@@ -24,7 +25,6 @@ import {
 } from "../services/shared/announcementBoardService";
 import {
   announcements as homepageAnnouncements,
-  feedbackCategories,
   faqItems,
   initialFeedbackEntries,
   officials,
@@ -238,8 +238,15 @@ export default function HomePage() {
       >
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-12 text-center">
-            {services.map((service) => (
-              <ServiceCard key={service.id} service={service} isDarkMode={isDarkMode} />
+            {services.map((service, index) => (
+              <ScrollReveal
+                key={service.id}
+                delay={80}
+                staggerIndex={index}
+                className="h-full"
+              >
+                <ServiceCard service={service} isDarkMode={isDarkMode} />
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -249,7 +256,6 @@ export default function HomePage() {
 
       <FeedbackSection
         isDarkMode={isDarkMode}
-        feedbackCategories={feedbackCategories}
         initialFeedbackEntries={initialFeedbackEntries}
       />
 
@@ -287,17 +293,17 @@ export default function HomePage() {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         @keyframes fade-in {
-          from { opacity: 0; transform: translateY(10px); }
+          from { opacity: 0; transform: translateY(8px); }
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes fade-up {
-          from { opacity: 0; transform: translateY(24px); }
+          from { opacity: 0; transform: translateY(18px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
+        .animate-fade-in { animation: fade-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .animate-fade-up {
           opacity: 0;
-          animation: fade-up 0.82s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          animation: fade-up 0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
       `,
         }}

@@ -10,6 +10,7 @@ import {
 // Default: both flags OFF. Individual tests override via jest.resetModules().
 jest.mock("../../config/runtimeApi", () => ({
   INCIDENT_API_BASE_URL: "http://localhost:8000/api",
+  PHP_API_BASE_URL: "http://localhost/E-Barangay-System/api",
 }));
 
 // Stub import.meta.env before the module loads
@@ -21,7 +22,8 @@ const setEnvFlags = ({ createEnabled = false, externalIdsEnabled = false } = {})
 };
 
 const API_BASE = "http://localhost:8000/api";
-const NOTIF_ENDPOINT = `${API_BASE}/notifications`;
+const PHP_API_BASE = "http://localhost/E-Barangay-System/api";
+const NOTIF_ENDPOINT = `${PHP_API_BASE}/notifications/notifications.php`;
 
 const mockFetch = (data, ok = true) => {
   global.fetch = jest.fn().mockResolvedValue({

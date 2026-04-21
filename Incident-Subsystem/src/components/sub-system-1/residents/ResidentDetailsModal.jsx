@@ -582,33 +582,45 @@ const ResidentDetailsModal = ({
                                     ? `${formData.first_name} ${formData.last_name}`
                                     : (resident?.name || 'Resident Profile')}
                             </h2>
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider font-mono">
+                            <div className="flex items-center gap-3.5 flex-wrap">
+                                <span className="self-center -translate-y-px text-[9px] font-semibold text-slate-400 uppercase tracking-[0.14em] leading-none font-mono">
                                     #{resident?.tracking_number || resident?.id || 'NEW'}
                                 </span>
                                 {(formData.formatted_updated_by || formData.updated_by_name) ? (
-                                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                                        <Clock size={9} className="text-slate-400 shrink-0" />
-                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Last Activity:</span>
+                                    <div className="flex items-center gap-1.5 leading-none">
+                                        <span className="inline-flex items-center gap-1 leading-none">
+                                            <Clock size={11} className="self-center -translate-y-px text-slate-400 shrink-0" />
+                                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.14em] leading-none">Last Activity:</span>
+                                        </span>
                                         {formData.formatted_updated_by && (
-                                            <span className={`text-[10px] font-black ${t?.cardText || 'text-slate-700 dark:text-slate-200'}`}>
+                                            <span className={`text-[10px] font-semibold leading-none ${t?.cardText || 'text-slate-700 dark:text-slate-200'}`}>
                                                 {formData.formatted_updated_by}
                                             </span>
                                         )}
-                                        {formData.updated_by_name && (
+                                        {formData.updated_by_name && false && (
                                             <>
                                                 <span className="text-slate-300 dark:text-slate-600 text-[9px]">·</span>
-                                                <span className="text-[9px] font-medium text-slate-400">By:</span>
-                                                <span className={`text-[10px] font-black ${t?.cardText || 'text-slate-700 dark:text-slate-200'}`}>
-                                                    {formData.updated_by_name}
+                                                <span className="self-center inline-flex min-h-6 items-center gap-1 rounded-full border border-slate-200/90 bg-slate-50/90 px-2.5 py-0.5 leading-none shadow-sm dark:border-slate-700 dark:bg-slate-800/70">
+                                                    <span className="text-[10px] font-medium text-slate-400 leading-none">By:</span>
+                                                    <span className={`text-[10px] font-semibold leading-none ${t?.cardText || 'text-slate-700 dark:text-slate-200'}`}>
+                                                        {formData.updated_by_name}
+                                                    </span>
                                                 </span>
                                             </>
                                         )}
+                                        {formData.updated_by_name && (
+                                            <span className="self-center inline-flex min-h-5 items-center gap-1 rounded-full border border-slate-200/90 bg-slate-50/90 px-2 py-0.5 leading-none shadow-sm dark:border-slate-700 dark:bg-slate-800/70">
+                                                <span className="text-[9px] font-medium text-slate-400 leading-none">By:</span>
+                                                <span className={`text-[9px] font-semibold leading-none ${t?.cardText || 'text-slate-700 dark:text-slate-200'}`}>
+                                                    {formData.updated_by_name}
+                                                </span>
+                                            </span>
+                                        )}
                                     </div>
                                 ) : (
-                                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-700">
-                                        <Clock size={9} className="text-slate-300" />
-                                        <span className="text-[9px] font-medium text-slate-300 dark:text-slate-600">No edits yet</span>
+                                    <div className="flex items-center gap-2 leading-none">
+                                        <Clock size={11} className="text-slate-300 shrink-0" />
+                                        <span className="text-[10px] font-medium text-slate-300 dark:text-slate-600 leading-none">No edits yet</span>
                                     </div>
                                 )}
                             </div>

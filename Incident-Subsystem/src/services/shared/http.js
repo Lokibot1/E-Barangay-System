@@ -10,6 +10,7 @@ import {
   runDedupedRemoteRequest,
   shouldAttemptRemoteRequest,
 } from "../../utils/remoteRequestControl";
+import { logClientError } from "../../utils/systemDiagnostics";
 
 export const parseJsonSafe = async (response) => {
   const data = await response.json().catch(() => ({}));
@@ -67,6 +68,17 @@ export const requestJson = async (
     }
 
     if (!response.ok) {
+      logClientError({
+        source: "http.request",
+        message: data.message || errorMessage,
+        severity: response.status >= 500 ? "error" : "warning",
+        context: {
+          url,
+          method: normalizedMethod,
+          status: response.status,
+          response: data,
+        },
+      });
       throw new Error(data.message || errorMessage);
     }
 
@@ -79,6 +91,15 @@ export const requestJson = async (
 
     if (error instanceof TypeError) {
       rememberRemoteRequestFailure(url, error);
+      logClientError({
+        source: "http.network",
+        message: error.message || "Network request failed",
+        severity: "error",
+        context: {
+          url,
+          method: normalizedMethod,
+        },
+      });
 
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         throw new Error("You appear to be offline. Reconnect and try again.");
@@ -89,6 +110,18 @@ export const requestJson = async (
 
     if (String(error?.message || "") === "The server is currently unavailable.") {
       rememberRemoteRequestFailure(url, error);
+    }
+
+    if (!(error instanceof TypeError)) {
+      logClientError({
+        source: "http.request",
+        message: error?.message || errorMessage,
+        severity: "error",
+        context: {
+          url,
+          method: normalizedMethod,
+        },
+      });
     }
 
     throw error;

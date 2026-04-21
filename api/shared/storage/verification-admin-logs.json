@@ -1,5 +1,62 @@
 [
     {
+        "id": "verification-1775050798163-d29b4c8e",
+        "action": "approved",
+        "auditable_type": "resident",
+        "auditable_id": "BGN900193",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Rejected"
+        },
+        "new_values": {
+            "status": "Verified",
+            "verification_action": "Approved",
+            "rejection_reason": "Duplicate submission",
+            "rejection_remarks": "Demo queue record seeded to populate the review list."
+        },
+        "created_at": "2026-04-01T13:39:58+00:00",
+        "subject_name": "Bea Lopez Flores",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN900193",
+            "resident_id": 193
+        }
+    },
+    {
+        "id": "verification-1775048953468-52a139b8",
+        "action": "visit_set",
+        "auditable_type": "resident",
+        "auditable_id": "BGN04265",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Pending"
+        },
+        "new_values": {
+            "status": "For Verification",
+            "verification_action": "Set for Visit",
+            "visit_set_at": "2026-04-01T13:09:13.458Z"
+        },
+        "created_at": "2026-04-01T13:09:13+00:00",
+        "subject_name": "Ricardo Protacio Pascual",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN04265",
+            "resident_id": 202
+        }
+    },
+    {
         "id": "verification-1774786218794-7b0476fa",
         "action": "approved",
         "auditable_type": "resident",

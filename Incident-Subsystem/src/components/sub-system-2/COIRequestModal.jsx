@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import Toast from "../shared/modals/Toast";
 import themeTokens from "../../Themetokens";
 import { DOCUMENTS_API_BASE_URL } from "../../config/runtimeApi";
+import { saveDocumentRequestRecord } from "../../utils/requestCenter";
+import { queueCommunicationEvent } from "../../utils/securityCenter";
 
 const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
   const navigate = useNavigate();
@@ -10,6 +12,8 @@ const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
   const [step, setStep] = useState(1);
   const [showPreview, setShowPreview] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [successRecord, setSuccessRecord] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -83,6 +87,8 @@ const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
       setStep(1);
       setShowPreview(false);
       setShowSuccess(false);
+      setSuccessRecord(null);
+      setIsSubmitting(false);
       setUploadedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
@@ -91,11 +97,11 @@ const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
 
   useEffect(() => {
     const handleEsc = (e) => {
-      if (e.key === "Escape" && isOpen && !showPreview && !showSuccess) onClose();
+      if (e.key === "Escape" && isOpen && !showPreview && !showSuccess && !isSubmitting) onClose();
     };
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
-  }, [isOpen, onClose, showPreview, showSuccess]);
+  }, [isOpen, onClose, showPreview, showSuccess, isSubmitting]);
 
   if (!isOpen) return null;
 
@@ -147,9 +153,14 @@ const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
     else handleSubmit();
   };
 
-  const handleSubmit = () => setShowPreview(true);
+  const handleSubmit = () => {
+    if (isSubmitting) return;
+    setShowPreview(true);
+  };
 
   const handleConfirmSubmit = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     const data = new FormData();
     Object.keys(formData).forEach((key) => data.append(key, formData[key]));
     if (uploadedFile) data.append("uploaded_file", uploadedFile);
@@ -165,7 +176,31 @@ const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
       try { result = await res.json(); } catch { result = { success: false, message: "Server returned invalid JSON" }; }
 
       if (res.ok && result.success) {
+        const savedRecord = saveDocumentRequestRecord({
+          documentType: "coi",
+          formData: {
+            ...formData,
+            uploadedFileName: uploadedFile?.name || "",
+          },
+          responseData: result,
+        });
+
+        queueCommunicationEvent({
+          category: "documents",
+          title: "Certificate of Indigency request received",
+          message: `Your Certificate of Indigency request ${savedRecord.reference} was submitted successfully.`,
+          metadata: {
+            reference: savedRecord.reference,
+            documentType: savedRecord.documentType,
+          },
+          recipients: {
+            email: formData.emailAddress,
+            phone: formData.contactNumber,
+          },
+        });
+
         setShowPreview(false);
+        setSuccessRecord(savedRecord);
         setShowSuccess(true);
         addToast({ type: "success", title: "Request Submitted", message: result.message || "Your request has been recorded.", duration: 5000 });
       } else {
@@ -175,13 +210,19 @@ const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
     } catch (err) {
       console.error(err);
       addToast({ type: "error", title: "Network Error", message: "Could not connect to the server." });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleSuccessContinue = () => {
     setShowSuccess(false);
     onClose();
-    navigate("/sub-system-2/req-sub-coi");
+    navigate("/sub-system-2/req-sub-coi", {
+      state: {
+        record: successRecord,
+      },
+    });
   };
 
   const renderStepContent = () => {
@@ -284,7 +325,14 @@ const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
               <h2 className={`font-spartan text-xl font-bold ${t.cardText}`}>Request Certificate of Indigency</h2>
               <p className={`font-kumbh text-xs ${t.subtleText} mt-0.5`}>Step {step} of {totalSteps}</p>
             </div>
-            <button onClick={onClose} className={`w-8 h-8 rounded-full flex items-center justify-center ${t.subtleText} hover:bg-gray-200/20 transition-colors`}>
+            <button
+              onClick={() => {
+                if (isSubmitting) return;
+                onClose();
+              }}
+              disabled={isSubmitting}
+              className={`w-8 h-8 rounded-full flex items-center justify-center ${t.subtleText} hover:bg-gray-200/20 transition-colors`}
+            >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -309,10 +357,21 @@ const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
 
           {/* Footer */}
           <div className="flex items-center justify-between p-5 border-t border-gray-200/20 flex-shrink-0">
-            <button onClick={() => (step > 1 ? setStep(step - 1) : onClose())} className={`px-5 py-2.5 rounded-lg font-kumbh text-sm font-medium ${t.inputBg} ${t.cardText} hover:opacity-80 transition-colors`}>
+            <button
+              onClick={() => {
+                if (isSubmitting) return;
+                step > 1 ? setStep(step - 1) : onClose();
+              }}
+              disabled={isSubmitting}
+              className={`px-5 py-2.5 rounded-lg font-kumbh text-sm font-medium ${t.inputBg} ${t.cardText} hover:opacity-80 transition-colors`}
+            >
               {step > 1 ? "Back" : "Cancel"}
             </button>
-            <button onClick={handleNext} className="px-5 py-2.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-kumbh text-sm font-medium transition-colors">
+            <button
+              onClick={handleNext}
+              disabled={isSubmitting}
+              className="px-5 py-2.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-60 text-white font-kumbh text-sm font-medium transition-colors"
+            >
               {step < totalSteps ? "Next" : "Submit Request"}
             </button>
           </div>
@@ -337,8 +396,23 @@ const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
                 {uploadedFile && <PreviewItem label="Uploaded File" value={uploadedFile.name} t={t} />}
               </div>
               <div className="mt-6 flex justify-end gap-3">
-                <button onClick={() => setShowPreview(false)} className={`px-5 py-2.5 rounded-lg ${t.inputBg} ${t.cardText} font-kumbh text-sm font-medium`}>Go Back</button>
-                <button onClick={handleConfirmSubmit} className="px-5 py-2.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-kumbh text-sm font-medium">Confirm & Submit</button>
+                <button
+                  onClick={() => {
+                    if (isSubmitting) return;
+                    setShowPreview(false);
+                  }}
+                  disabled={isSubmitting}
+                  className={`px-5 py-2.5 rounded-lg ${t.inputBg} ${t.cardText} font-kumbh text-sm font-medium`}
+                >
+                  Go Back
+                </button>
+                <button
+                  onClick={handleConfirmSubmit}
+                  disabled={isSubmitting}
+                  className="px-5 py-2.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-60 text-white font-kumbh text-sm font-medium"
+                >
+                  {isSubmitting ? "Submitting..." : "Confirm & Submit"}
+                </button>
               </div>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { Clock, Phone, Send } from "lucide-react";
+import ScrollReveal from "./ScrollReveal";
 
 export default function ContactSection({
   isDarkMode,
@@ -10,18 +11,18 @@ export default function ContactSection({
   return (
     <section id="contact" className="px-6 py-12 scroll-mt-24 md:py-16">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 text-center md:mb-10">
+        <ScrollReveal className="mb-8 text-center md:mb-10">
           <h2 className="mb-3 text-[8px] font-black uppercase tracking-[0.26em] text-emerald-600 md:text-[9px]">
             Official Contact
           </h2>
           <h3 className="text-3xl font-black uppercase tracking-tighter md:text-4xl">
             Barangay Hall
           </h3>
-        </div>
+        </ScrollReveal>
 
         <div className="grid grid-cols-1 gap-6 md:gap-8 lg:grid-cols-2">
           <div className="order-2 space-y-5 md:space-y-6 lg:order-1">
-            <div
+            <ScrollReveal
               className={`rounded-[24px] border p-5 md:rounded-[28px] md:p-6 ${
                 isDarkMode ? "bg-slate-900 border-white/5" : "bg-slate-50 border-black/5"
               }`}
@@ -70,22 +71,31 @@ export default function ContactSection({
                   )}
                 </button>
               </form>
-            </div>
+            </ScrollReveal>
             <div className="grid grid-cols-2 gap-4">
-              <div className={`rounded-2xl p-4 ${isDarkMode ? "bg-slate-900" : "bg-emerald-50"}`}>
+              <ScrollReveal
+                delay={90}
+                className={`rounded-2xl p-4 ${isDarkMode ? "bg-slate-900" : "bg-emerald-50"}`}
+              >
                 <Clock className="mb-2 text-emerald-600" size={15} />
                 <p className="text-[8px] font-black uppercase tracking-[0.14em]">Mon - Fri</p>
                 <p className="text-[8px] font-bold opacity-60">8 AM - 5 PM</p>
-              </div>
-              <div className={`rounded-2xl p-4 ${isDarkMode ? "bg-slate-900" : "bg-emerald-50"}`}>
+              </ScrollReveal>
+              <ScrollReveal
+                delay={150}
+                className={`rounded-2xl p-4 ${isDarkMode ? "bg-slate-900" : "bg-emerald-50"}`}
+              >
                 <Phone className="mb-2 text-emerald-600" size={15} />
                 <p className="text-[8px] font-black uppercase tracking-[0.14em]">Hotline</p>
                 <p className="text-[8px] font-bold opacity-60">8-920-0000</p>
-              </div>
+              </ScrollReveal>
             </div>
           </div>
 
-          <div className="relative order-1 h-[260px] overflow-hidden rounded-[24px] border border-emerald-500/20 md:h-[420px] md:rounded-[28px] lg:order-2">
+          <ScrollReveal
+            delay={120}
+            className="relative order-1 h-[260px] overflow-hidden rounded-[24px] border border-emerald-500/20 md:h-[420px] md:rounded-[28px] lg:order-2"
+          >
             <iframe
               title="Map"
               src="https://www.google.com/maps?q=Villareal%20St.%2C%20Gulod%2C%20Quezon%20City&output=embed"
@@ -103,7 +113,7 @@ export default function ContactSection({
                 Villareal St., Gulod, Quezon City
               </p>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
       </div>
     </section>

@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import Toast from "../shared/modals/Toast";
 import themeTokens from "../../Themetokens";
 import { DOCUMENTS_API_BASE_URL } from "../../config/runtimeApi";
+import { saveDocumentRequestRecord } from "../../utils/requestCenter";
+import { queueCommunicationEvent } from "../../utils/securityCenter";
 
 const CORRequestModal = ({ isOpen, onClose, currentTheme }) => {
   const navigate = useNavigate();
@@ -10,6 +12,8 @@ const CORRequestModal = ({ isOpen, onClose, currentTheme }) => {
   const [step, setStep] = useState(1);
   const [showPreview, setShowPreview] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [successRecord, setSuccessRecord] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -83,6 +87,8 @@ const CORRequestModal = ({ isOpen, onClose, currentTheme }) => {
       setStep(1);
       setShowPreview(false);
       setShowSuccess(false);
+      setSuccessRecord(null);
+      setIsSubmitting(false);
       setUploadedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
@@ -93,11 +99,11 @@ const CORRequestModal = ({ isOpen, onClose, currentTheme }) => {
 
   useEffect(() => {
     const handleEsc = (e) => {
-      if (e.key === "Escape" && isOpen && !showPreview && !showSuccess) onClose();
+      if (e.key === "Escape" && isOpen && !showPreview && !showSuccess && !isSubmitting) onClose();
     };
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
-  }, [isOpen, onClose, showPreview, showSuccess]);
+  }, [isOpen, onClose, showPreview, showSuccess, isSubmitting]);
 
   if (!isOpen) return null;
 
@@ -170,10 +176,12 @@ const CORRequestModal = ({ isOpen, onClose, currentTheme }) => {
   };
 
   const handleSubmit = () => {
+    if (isSubmitting) return;
     setShowPreview(true);
   };
 const handleConfirmSubmit = async () => {
-  setShowPreview(false);
+  if (isSubmitting) return;
+  setIsSubmitting(true);
 
   const data = new FormData();
 
@@ -204,11 +212,33 @@ const handleConfirmSubmit = async () => {
     });
 
     const result = await response.json();
-    console.log(result);
 
     if (!response.ok) {
       throw new Error(result.message || "Validation failed");
     }
+
+    const savedRecord = saveDocumentRequestRecord({
+      documentType: "cor",
+      formData: {
+        ...formData,
+        uploadedFileName: uploadedFile?.name || "",
+      },
+      responseData: result,
+    });
+
+    queueCommunicationEvent({
+      category: "documents",
+      title: "Certificate of Residency request received",
+      message: `Your Certificate of Residency request ${savedRecord.reference} was submitted successfully.`,
+      metadata: {
+        reference: savedRecord.reference,
+        documentType: savedRecord.documentType,
+      },
+      recipients: {
+        email: formData.emailAddress,
+        phone: formData.contactNumber,
+      },
+    });
 
     addToast({
       type: "success",
@@ -217,6 +247,8 @@ const handleConfirmSubmit = async () => {
       duration: 5000,
     });
 
+    setShowPreview(false);
+    setSuccessRecord(savedRecord);
     setShowSuccess(true);
   } catch (error) {
     console.error(error);
@@ -226,13 +258,19 @@ const handleConfirmSubmit = async () => {
       message: error.message,
       duration: 5000,
     });
+  } finally {
+    setIsSubmitting(false);
   }
 };
 
   const handleSuccessContinue = () => {
     setShowSuccess(false);
     onClose();
-    navigate("/sub-system-2/req-sub-cor");
+    navigate("/sub-system-2/req-sub-cor", {
+      state: {
+        record: successRecord,
+      },
+    });
   };
 
   const totalSteps = 3;
@@ -389,7 +427,11 @@ const handleConfirmSubmit = async () => {
               </p>
             </div>
             <button
-              onClick={onClose}
+              onClick={() => {
+                if (isSubmitting) return;
+                onClose();
+              }}
+              disabled={isSubmitting}
               className={`w-8 h-8 rounded-full flex items-center justify-center ${t.subtleText} hover:bg-gray-200/20 transition-colors`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -420,14 +462,19 @@ const handleConfirmSubmit = async () => {
           {/* Footer */}
           <div className="flex items-center justify-between p-5 border-t border-gray-200/20 flex-shrink-0">
             <button
-              onClick={() => (step > 1 ? setStep(step - 1) : onClose())}
+              onClick={() => {
+                if (isSubmitting) return;
+                step > 1 ? setStep(step - 1) : onClose();
+              }}
+              disabled={isSubmitting}
               className={`px-5 py-2.5 rounded-lg font-kumbh text-sm font-medium ${t.inputBg} ${t.cardText} hover:opacity-80 transition-colors`}
             >
               {step > 1 ? "Back" : "Cancel"}
             </button>
             <button
               onClick={handleNext}
-              className="px-5 py-2.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-kumbh text-sm font-medium transition-colors"
+              disabled={isSubmitting}
+              className="px-5 py-2.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-60 text-white font-kumbh text-sm font-medium transition-colors"
             >
               {step < totalSteps ? "Next" : "Submit Request"}
             </button>
@@ -455,16 +502,21 @@ const handleConfirmSubmit = async () => {
               </div>
               <div className="mt-6 flex items-center justify-end gap-3">
                 <button
-                  onClick={() => setShowPreview(false)}
+                  onClick={() => {
+                    if (isSubmitting) return;
+                    setShowPreview(false);
+                  }}
+                  disabled={isSubmitting}
                   className={`px-5 py-2.5 rounded-lg ${t.inputBg} ${t.cardText} font-kumbh text-sm font-medium`}
                 >
                   Go Back
                 </button>
                 <button
                   onClick={handleConfirmSubmit}
-                  className="px-5 py-2.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-kumbh text-sm font-medium"
+                  disabled={isSubmitting}
+                  className="px-5 py-2.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-60 text-white font-kumbh text-sm font-medium"
                 >
-                  Confirm & Submit
+                  {isSubmitting ? "Submitting..." : "Confirm & Submit"}
                 </button>
               </div>
             </div>

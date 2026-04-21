@@ -493,7 +493,12 @@ export default function AdminLanding() {
   const kebabRef = useRef(null);
 
   const addToast = useCallback((toast) => {
-    setToasts((prev) => [...prev, { id: Date.now(), ...toast }]);
+    const id =
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    setToasts((prev) => [...prev, { id, ...toast }]);
   }, []);
 
   const removeToast = useCallback((id) => {
@@ -905,6 +910,7 @@ export default function AdminLanding() {
   }, [announcementForm.publish_at, isEditingAnnouncement]);
 
   const isEventAnnouncement = announcementForm.tag === "Event";
+  const areEventFieldsDisabled = !isEventAnnouncement;
 
   const announcementHistoryItems = useMemo(
     () =>
@@ -2131,113 +2137,117 @@ export default function AdminLanding() {
                         </label>
                       </div>
 
-                      {isEventAnnouncement && (
-                        <div
-                          className={`rounded-2xl border p-4 ${
-                            isDark
-                              ? "border-slate-800 bg-slate-900/70"
-                              : "border-slate-200 bg-white"
-                          }`}
-                        >
-                          <div className="mb-4">
-                            <h4 className={`font-spartan text-sm font-bold ${t.cardText}`}>
-                              Event details
-                            </h4>
-                            <p className={`mt-1 text-xs ${t.subtleText}`}>
-                              These fields control how the event appears in the homepage calendar.
-                            </p>
-                          </div>
-
-                          <div className="grid gap-4 sm:grid-cols-2">
-                            <label className="space-y-2">
-                              <span className={`text-[11px] font-semibold ${t.subtleText}`}>
-                                Event date
-                              </span>
-                              <input
-                                type="date"
-                                value={announcementForm.event_date}
-                                onChange={(event) =>
-                                  handleAnnouncementInputChange(
-                                    "event_date",
-                                    event.target.value,
-                                  )
-                                }
-                                className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none ${
-                                  isDark
-                                    ? "border-slate-700 bg-slate-900 text-slate-100"
-                                    : "border-slate-200 bg-white text-slate-900"
-                                }`}
-                              />
-                            </label>
-
-                            <label className="space-y-2">
-                              <span className={`text-[11px] font-semibold ${t.subtleText}`}>
-                                Location
-                              </span>
-                              <input
-                                type="text"
-                                value={announcementForm.event_location}
-                                onChange={(event) =>
-                                  handleAnnouncementInputChange(
-                                    "event_location",
-                                    event.target.value,
-                                  )
-                                }
-                                placeholder="Barangay Hall, Covered Court, or venue"
-                                className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none ${
-                                  isDark
-                                    ? "border-slate-700 bg-slate-900 text-slate-100 placeholder:text-slate-500"
-                                    : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400"
-                                }`}
-                              />
-                            </label>
-                          </div>
-
-                          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                            <label className="space-y-2">
-                              <span className={`text-[11px] font-semibold ${t.subtleText}`}>
-                                Start time
-                              </span>
-                              <input
-                                type="time"
-                                value={announcementForm.event_start_time}
-                                onChange={(event) =>
-                                  handleAnnouncementInputChange(
-                                    "event_start_time",
-                                    event.target.value,
-                                  )
-                                }
-                                className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none ${
-                                  isDark
-                                    ? "border-slate-700 bg-slate-900 text-slate-100"
-                                    : "border-slate-200 bg-white text-slate-900"
-                                }`}
-                              />
-                            </label>
-
-                            <label className="space-y-2">
-                              <span className={`text-[11px] font-semibold ${t.subtleText}`}>
-                                End time
-                              </span>
-                              <input
-                                type="time"
-                                value={announcementForm.event_end_time}
-                                onChange={(event) =>
-                                  handleAnnouncementInputChange(
-                                    "event_end_time",
-                                    event.target.value,
-                                  )
-                                }
-                                className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none ${
-                                  isDark
-                                    ? "border-slate-700 bg-slate-900 text-slate-100"
-                                    : "border-slate-200 bg-white text-slate-900"
-                                }`}
-                              />
-                            </label>
-                          </div>
+                      <div
+                        className={`rounded-2xl border p-4 transition-opacity ${
+                          isDark
+                            ? "border-slate-800 bg-slate-900/70"
+                            : "border-slate-200 bg-white"
+                        } ${areEventFieldsDisabled ? "opacity-75" : "opacity-100"}`}
+                      >
+                        <div className="mb-4">
+                          <h4 className={`font-spartan text-sm font-bold ${t.cardText}`}>
+                            Event details
+                          </h4>
+                          <p className={`mt-1 text-xs ${t.subtleText}`}>
+                            {isEventAnnouncement
+                              ? "These fields control how the event appears in the homepage calendar."
+                              : "Select the Event tag above to enable the calendar details for this announcement."}
+                          </p>
                         </div>
-                      )}
+
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <label className="space-y-2">
+                            <span className={`text-[11px] font-semibold ${t.subtleText}`}>
+                              Event date
+                            </span>
+                            <input
+                              type="date"
+                              value={announcementForm.event_date}
+                              disabled={areEventFieldsDisabled}
+                              onChange={(event) =>
+                                handleAnnouncementInputChange(
+                                  "event_date",
+                                  event.target.value,
+                                )
+                              }
+                              className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none disabled:cursor-not-allowed ${
+                                isDark
+                                  ? "border-slate-700 bg-slate-900 text-slate-100 disabled:border-slate-800 disabled:bg-slate-950 disabled:text-slate-500"
+                                  : "border-slate-200 bg-white text-slate-900 disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400"
+                              }`}
+                            />
+                          </label>
+
+                          <label className="space-y-2">
+                            <span className={`text-[11px] font-semibold ${t.subtleText}`}>
+                              Location
+                            </span>
+                            <input
+                              type="text"
+                              value={announcementForm.event_location}
+                              disabled={areEventFieldsDisabled}
+                              onChange={(event) =>
+                                handleAnnouncementInputChange(
+                                  "event_location",
+                                  event.target.value,
+                                )
+                              }
+                              placeholder="Barangay Hall, Covered Court, or venue"
+                              className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none disabled:cursor-not-allowed ${
+                                isDark
+                                  ? "border-slate-700 bg-slate-900 text-slate-100 placeholder:text-slate-500 disabled:border-slate-800 disabled:bg-slate-950 disabled:text-slate-500"
+                                  : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400"
+                              }`}
+                            />
+                          </label>
+                        </div>
+
+                        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                          <label className="space-y-2">
+                            <span className={`text-[11px] font-semibold ${t.subtleText}`}>
+                              Start time
+                            </span>
+                            <input
+                              type="time"
+                              value={announcementForm.event_start_time}
+                              disabled={areEventFieldsDisabled}
+                              onChange={(event) =>
+                                handleAnnouncementInputChange(
+                                  "event_start_time",
+                                  event.target.value,
+                                )
+                              }
+                              className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none disabled:cursor-not-allowed ${
+                                isDark
+                                  ? "border-slate-700 bg-slate-900 text-slate-100 disabled:border-slate-800 disabled:bg-slate-950 disabled:text-slate-500"
+                                  : "border-slate-200 bg-white text-slate-900 disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400"
+                              }`}
+                            />
+                          </label>
+
+                          <label className="space-y-2">
+                            <span className={`text-[11px] font-semibold ${t.subtleText}`}>
+                              End time
+                            </span>
+                            <input
+                              type="time"
+                              value={announcementForm.event_end_time}
+                              disabled={areEventFieldsDisabled}
+                              onChange={(event) =>
+                                handleAnnouncementInputChange(
+                                  "event_end_time",
+                                  event.target.value,
+                                )
+                              }
+                              className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none disabled:cursor-not-allowed ${
+                                isDark
+                                  ? "border-slate-700 bg-slate-900 text-slate-100 disabled:border-slate-800 disabled:bg-slate-950 disabled:text-slate-500"
+                                  : "border-slate-200 bg-white text-slate-900 disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400"
+                              }`}
+                            />
+                          </label>
+                        </div>
+                      </div>
 
                       <label className="space-y-2 block">
                         <span className={`text-[11px] font-semibold ${t.subtleText}`}>

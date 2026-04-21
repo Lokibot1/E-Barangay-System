@@ -75,6 +75,12 @@ const getUserNavItems = (s) => [
     path: "/sub-system-2",
   },
   {
+    id: "my-requests",
+    label: s.myRequests || "My Requests",
+    icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9h6m-6 4h6m-6-8h.01M9 16h.01",
+    path: "/my-requests",
+  },
+  {
     id: "incident-complaint",
     label: s.incidentComplaint,
     icon: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z",
@@ -458,6 +464,7 @@ const Sidebar = ({ currentTheme, collapsed, onToggle, mobileOpen = false, onMobi
     dashboard: House,
     "subsystem-1": LayoutGrid,
     "subsystem-2": FileText,
+    "my-requests": ClipboardList,
     "incident-complaint": AlertTriangle,
     "report-system-issue": Bug,
     "file-complaint": FileWarning,

@@ -1,5 +1,6 @@
 import { CalendarDays, ChevronLeft, ChevronRight, Clock3, MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
+import ScrollReveal from "./ScrollReveal";
 
 const WEEK_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -52,7 +53,7 @@ export default function EventsCalendarSection({ isDarkMode, events }) {
       }`}
     >
       <div className="mx-auto max-w-7xl px-6">
-        <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end md:mb-8">
+        <ScrollReveal className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end md:mb-8">
           <div>
             <p className="text-[9px] font-black uppercase tracking-[0.3em] text-emerald-600 mb-3">
               Community Calendar
@@ -94,10 +95,10 @@ export default function EventsCalendarSection({ isDarkMode, events }) {
               <ChevronRight size={16} />
             </button>
           </div>
-        </div>
+        </ScrollReveal>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.78fr]">
-          <div
+          <ScrollReveal
             className={`rounded-[24px] border p-4 md:p-5 ${
               isDarkMode ? "bg-slate-900 border-white/10" : "bg-emerald-50/60 border-black/5"
             }`}
@@ -133,11 +134,11 @@ export default function EventsCalendarSection({ isDarkMode, events }) {
                 );
               })}
             </div>
-          </div>
+          </ScrollReveal>
 
           <div className="space-y-3 self-start xl:max-w-[640px]">
             {monthData.monthEvents.length === 0 ? (
-              <div
+              <ScrollReveal
                 className={`rounded-[24px] border p-7 text-center ${
                   isDarkMode ? "bg-slate-900 border-white/10" : "bg-white border-black/5"
                 }`}
@@ -146,9 +147,9 @@ export default function EventsCalendarSection({ isDarkMode, events }) {
                 <p className="text-sm font-bold opacity-70">
                   No scheduled events for this month.
                 </p>
-              </div>
+              </ScrollReveal>
             ) : (
-              monthData.monthEvents.map((event) => {
+              monthData.monthEvents.map((event, index) => {
                 const eventDate = parseEventDate(event.date);
                 const dateLabel = new Intl.DateTimeFormat("en-US", {
                   month: "short",
@@ -163,8 +164,11 @@ export default function EventsCalendarSection({ isDarkMode, events }) {
                   event.location || "Location to be announced";
 
                 return (
-                  <article
+                  <ScrollReveal
                     key={event.id}
+                    as="article"
+                    delay={120}
+                    staggerIndex={index}
                     className={`rounded-[18px] border px-4 py-3.5 text-left ${
                       isDarkMode ? "bg-slate-900 border-white/10" : "bg-white border-black/5 shadow-sm"
                     }`}
@@ -191,7 +195,7 @@ export default function EventsCalendarSection({ isDarkMode, events }) {
                         <span>{locationLabel}</span>
                       </p>
                     </div>
-                  </article>
+                  </ScrollReveal>
                 );
               })
             )}

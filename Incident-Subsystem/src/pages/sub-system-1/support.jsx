@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { getUser } from '../../homepage/services/loginService';
@@ -466,9 +466,11 @@ export default function Support() {
     return allIssues.filter((item) => (item.status || 'open') === statusFilter);
   }, [allIssues, isAdminView, statusFilter]);
 
-  const showSupportWorkflowExtras = adminSupportTab === 'workflow';
+  const isResidentSupportPage = !isAdminView && !isReportIssuePage;
+  const showSupportWorkflowExtras =
+    isResidentSupportPage || (isAdminView && adminSupportTab === 'workflow');
   const showAdminQueueSidebar = isAdminView && adminSupportTab === 'queue';
-  const showResidentQueuePanel = !isAdminView && adminSupportTab === 'queue';
+  const showResidentQueuePanel = isReportIssuePage && adminSupportTab === 'queue';
 
   const filteredFaqs = faqs.filter((faq) => {
     const keyword = searchTerm.trim().toLowerCase();
@@ -642,39 +644,43 @@ export default function Support() {
 
   return (
     <div className="p-6 sm:p-8 space-y-8 pb-10">
-      <div>
-        <h1 className={`text-2xl font-spartan font-bold ${t.cardText} uppercase tracking-tight`}>
-          {isReportIssuePage
-            ? tr.sidebar.reportSystemIssue || 'Report Issue'
-            : tr.sub1.support}
-        </h1>
-        <p className={`text-[10px] font-kumbh ${t.subtleText} uppercase tracking-[3px] mt-1`}>
-          {isAdminView
-            ? 'Admin Support Queue and Issue Review Center'
-            : isReportIssuePage
-              ? 'Direct System Issue Reporting Form'
-              : 'User Help Desk and Support Center'}
-        </p>
-      </div>
+      {!isResidentSupportPage && (
+        <>
+          <div>
+            <h1 className={`text-2xl font-spartan font-bold ${t.cardText} uppercase tracking-tight`}>
+              {isReportIssuePage
+                ? tr.sidebar.reportSystemIssue || 'Report Issue'
+                : tr.sub1.support}
+            </h1>
+            <p className={`text-[10px] font-kumbh ${t.subtleText} uppercase tracking-[3px] mt-1`}>
+              {isAdminView
+                ? 'Admin Support Queue and Issue Review Center'
+                : isReportIssuePage
+                  ? 'Direct System Issue Reporting Form'
+                  : 'User Help Desk and Support Center'}
+            </p>
+          </div>
 
-      <div className={`flex items-center gap-5 border-b ${t.cardBorder} pt-1`}>
-        {(isAdminView ? ADMIN_SUPPORT_TABS : RESIDENT_SUPPORT_TABS).map(({ key, label, icon: Icon }) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => handleAdminTabChange(key)}
-            className={`relative pb-2 text-[13px] font-semibold font-kumbh transition inline-flex items-center gap-2 ${
-              adminSupportTab === key ? t.primaryText : `${t.subtleText} hover:opacity-80`
-            }`}
-          >
-            <Icon size={14} />
-            {label}
-            {adminSupportTab === key && (
-              <span className={`absolute left-0 right-0 -bottom-px h-0.5 ${t.primarySolid}`} />
-            )}
-          </button>
-        ))}
-      </div>
+          <div className={`flex items-center gap-5 border-b ${t.cardBorder} pt-1`}>
+            {(isAdminView ? ADMIN_SUPPORT_TABS : RESIDENT_SUPPORT_TABS).map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => handleAdminTabChange(key)}
+                className={`relative pb-2 text-[13px] font-semibold font-kumbh transition inline-flex items-center gap-2 ${
+                  adminSupportTab === key ? t.primaryText : `${t.subtleText} hover:opacity-80`
+                }`}
+              >
+                <Icon size={14} />
+                {label}
+                {adminSupportTab === key && (
+                  <span className={`absolute left-0 right-0 -bottom-px h-0.5 ${t.primarySolid}`} />
+                )}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       <div
         className={`grid grid-cols-1 gap-8 ${
@@ -686,7 +692,8 @@ export default function Support() {
             showAdminQueueSidebar ? 'lg:col-span-2' : ''
           } space-y-6`}
         >
-          {((!isAdminView && adminSupportTab === 'workflow') || (isAdminView && adminSupportTab === 'queue')) && (
+          {((isReportIssuePage && adminSupportTab === 'workflow') ||
+            (isAdminView && adminSupportTab === 'queue')) && (
             <div className={`${t.cardBg} border ${t.cardBorder} p-8 shadow-sm rounded-2xl`}>
             <div className="flex items-start gap-4 mb-8">
               <div className={`${t.primaryLight} p-3 rounded-2xl ${t.primaryText}`}>

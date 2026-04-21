@@ -156,6 +156,38 @@ describe("AdminLanding", () => {
       fireEvent.click(kebab);
       expect(screen.getByText("Generate Insights")).toBeInTheDocument();
     });
+
+    it("keeps event details visible and only enables them for event announcements", async () => {
+      render(<AdminLanding />);
+
+      const viewAnnouncementsButton = await screen.findByRole("button", {
+        name: /view announcements/i,
+      });
+      fireEvent.click(viewAnnouncementsButton);
+
+      expect(screen.getByText("Event details")).toBeInTheDocument();
+
+      const tagSelect = screen.getByRole("combobox", { name: /tag/i });
+      const eventDateInput = screen.getByLabelText(/event date/i);
+      const startTimeInput = screen.getByLabelText(/start time/i);
+
+      expect(tagSelect).toHaveValue("Advisory");
+      expect(eventDateInput).toBeDisabled();
+      expect(startTimeInput).toBeDisabled();
+      expect(
+        screen.getByText(
+          /select the event tag above to enable the calendar details/i,
+        ),
+      ).toBeInTheDocument();
+
+      fireEvent.change(tagSelect, { target: { value: "Event" } });
+
+      expect(eventDateInput).not.toBeDisabled();
+      expect(startTimeInput).not.toBeDisabled();
+      expect(
+        screen.getByText(/these fields control how the event appears/i),
+      ).toBeInTheDocument();
+    });
   });
 
   describe("data fetching", () => {

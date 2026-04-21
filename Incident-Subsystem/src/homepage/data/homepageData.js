@@ -187,26 +187,74 @@ export const initialFeedbackEntries = [
   {
     id: "feedback-1",
     name: "Maria Santos",
-    category: "Document Requests",
+    role: "Resident, Purok 3",
+    organization: "Barangay Clearance Request",
     rating: 5,
-    comment: "Clear ang process at mabilis akong na-update noong ready for pickup na ang request ko.",
-    submittedAt: "Mar 18, 2026",
+    comment:
+      "The clearance request was easy to track and I received updates without making multiple trips to the barangay hall.",
   },
   {
     id: "feedback-2",
     name: "Joel Ramirez",
-    category: "Resident Verification",
-    rating: 4,
-    comment: "Maayos ang verification flow. Mas helpful pa kung may mas malinaw na note sa expected waiting time.",
-    submittedAt: "Mar 16, 2026",
+    role: "Small Business Owner",
+    organization: "Resident Verification",
+    rating: 5,
+    comment:
+      "The verification process felt organized and professional. I appreciated how clear the requirements were from the start.",
   },
   {
     id: "feedback-3",
-    name: "Anonymous Resident",
-    category: "Complaint Handling",
+    name: "Ana Villanueva",
+    role: "Senior Citizen Resident",
+    organization: "General Assistance Desk",
     rating: 5,
-    comment: "Madaling sundan ang complaint status at may appointment notice agad pagkatapos ma-review.",
-    submittedAt: "Mar 14, 2026",
+    comment:
+      "Staff were respectful and patient during my visit. The assistance desk helped me complete my request faster than expected.",
+  },
+  {
+    id: "feedback-4",
+    name: "Rico Mendoza",
+    role: "Parent Resident",
+    organization: "Complaint Handling",
+    rating: 4,
+    comment:
+      "The complaint updates were clear and timely. A little more detail in the first notification would make the process even better.",
+  },
+  {
+    id: "feedback-5",
+    name: "Liza Fernandez",
+    role: "Resident, Purok 1",
+    organization: "Incident Response",
+    rating: 5,
+    comment:
+      "I appreciated how quickly the team acknowledged the report and kept the status updates visible in the portal.",
+  },
+  {
+    id: "feedback-6",
+    name: "Mark Dela Cruz",
+    role: "Working Resident",
+    organization: "Document Requests",
+    rating: 5,
+    comment:
+      "The online document request saved me a lot of time. It was convenient to submit and check progress from home.",
+  },
+  {
+    id: "feedback-7",
+    name: "Grace Navarro",
+    role: "Resident Volunteer",
+    organization: "Community Services",
+    rating: 5,
+    comment:
+      "The portal feels more reliable now. Information is easier to find and the service steps are much clearer than before.",
+  },
+  {
+    id: "feedback-8",
+    name: "Paolo Garcia",
+    role: "Young Professional",
+    organization: "Appointments and Follow-ups",
+    rating: 4,
+    comment:
+      "Booking and follow-up notices were smooth overall. The reminders were helpful and the turnaround was still impressive.",
   },
 ];
 

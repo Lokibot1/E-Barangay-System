@@ -1,4 +1,5 @@
 import { Mail, MapPin, Phone } from "lucide-react";
+import ScrollReveal from "./ScrollReveal";
 
 export default function HomeFooter({
   isDarkMode,
@@ -33,17 +34,17 @@ export default function HomeFooter({
     <footer className={`border-t px-6 pb-8 pt-10 md:pb-10 md:pt-12 ${footerShell}`}>
       <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-1 gap-8 text-left md:grid-cols-2 md:gap-10 lg:grid-cols-[minmax(0,1.12fr)_0.78fr_0.88fr_0.95fr] lg:gap-10">
-          <div className="lg:pr-3">
-            <div className="flex items-center gap-3">
+          <ScrollReveal className="lg:pr-3">
+            <div className="flex items-center gap-2.5">
               <img
                 src={logoSrc}
-                className={`h-10 w-10 shrink-0 rounded-full object-cover ${
+                className={`h-8 w-8 shrink-0 rounded-full object-cover md:h-9 md:w-9 ${
                   isDarkMode ? "grayscale opacity-60" : "opacity-90"
                 }`}
                 alt="Barangay Gulod logo"
               />
               <p
-                className={`text-[1.1rem] font-black uppercase italic tracking-tight md:text-[1.45rem] ${
+                className={`text-[0.95rem] font-black uppercase italic tracking-tight md:text-[1.25rem] ${
                   isDarkMode ? "text-white" : "text-slate-900"
                 }`}
               >
@@ -81,9 +82,9 @@ export default function HomeFooter({
                 );
               })}
             </div>
-          </div>
+          </ScrollReveal>
 
-          <div>
+          <ScrollReveal delay={80}>
             <h5 className={headingClass}>Barangay</h5>
             <div className="mt-4 space-y-2.5">
               <button onClick={onAboutClick} className={linkClass}>
@@ -96,15 +97,15 @@ export default function HomeFooter({
                 Local Leaders
               </button>
               <button onClick={onFeedbackClick} className={linkClass}>
-                Feedback
+                Testimonials
               </button>
               <button onClick={onContactClick} className={linkClass}>
                 Contact
               </button>
             </div>
-          </div>
+          </ScrollReveal>
 
-          <div>
+          <ScrollReveal delay={140}>
             <h5 className={headingClass}>Navigation</h5>
             <div className="mt-4 space-y-2.5 text-left">
               <button onClick={onNewsClick} className={linkClass}>
@@ -117,15 +118,15 @@ export default function HomeFooter({
                 Online Services
               </button>
               <button onClick={onFeedbackClick} className={linkClass}>
-                Community Feedback
+                Resident Testimonials
               </button>
               <button onClick={onOfficialsClick} className={linkClass}>
                 Local Leaders
               </button>
             </div>
-          </div>
+          </ScrollReveal>
 
-          <div>
+          <ScrollReveal delay={200}>
             <h5 className={headingClass}>Contact</h5>
             <div className="mt-4 space-y-3.5 text-left">
               <div className="flex items-center justify-start gap-3">
@@ -171,17 +172,17 @@ export default function HomeFooter({
                 </span>
               </div>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
 
         <div
-          className={`mt-8 border-t pt-5 text-center text-[8px] font-bold uppercase tracking-[0.22em] md:mt-10 md:text-[9px] ${
+          className={`mt-8 border-t pt-5 text-center text-[11px] font-semibold tracking-[0.06em] md:mt-10 md:text-[12px] ${
             isDarkMode
-              ? "border-white/10 text-slate-500"
-              : "border-slate-200 text-slate-400"
+              ? "border-white/10 text-slate-400"
+              : "border-slate-200 text-slate-500"
           }`}
         >
-          Copyright 2026 Barangay Gulod Government Office.
+          &copy; 2026 Barangay Gulod Government Office. All rights reserved.
         </div>
       </div>
     </footer>

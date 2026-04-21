@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { CircleDot, Layers3, Map, Table2, X } from 'lucide-react';
 import { EmptyState, ChartCard } from '../AnalyticsInterface';
 import {
@@ -198,8 +200,6 @@ function HeatmapMap({ purokData, metric, metricLabel, mapType, t, onAreaClick, s
 
   useEffect(() => {
     if (!mapRef.current || leafletRef.current || typeof window === 'undefined') return;
-    const L = window.L;
-    if (!L) return;
 
     const map = L.map(mapRef.current, { center: BARANGAY_CENTER, zoom: 15, keyboard: false });
     const container = map.getContainer();
@@ -254,9 +254,8 @@ function HeatmapMap({ purokData, metric, metricLabel, mapType, t, onAreaClick, s
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
 
-    const L = window.L;
     const map = leafletRef.current;
-    if (!L || !map) return undefined;
+    if (!map) return undefined;
 
     const config = getBasemapConfig(mapType);
 
@@ -410,8 +409,7 @@ function HeatmapMap({ purokData, metric, metricLabel, mapType, t, onAreaClick, s
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
 
-    const L = window.L;
-    if (!L || !leafletRef.current) return undefined;
+    if (!leafletRef.current) return undefined;
     const map = leafletRef.current;
 
     layersRef.current.forEach((layer) => map.removeLayer(layer));
@@ -567,7 +565,7 @@ export default function HeatmapTab({ raw, t }) {
   const purokData = raw?.heatmap?.puroks ?? [];
   const [metric, setMetric] = useState('verified');
   const [view, setView] = useState('map');
-  const [leafletReady, setLeafletReady] = useState(typeof window !== 'undefined' && !!window.L);
+  const leafletReady = true;
   const [selectedPurok, setSelectedPurok] = useState(null);
   const [mapType, setMapType] = useState(DEFAULT_BASEMAP_KEY);
   const [isMapTypeMenuOpen, setIsMapTypeMenuOpen] = useState(false);
@@ -576,25 +574,6 @@ export default function HeatmapTab({ raw, t }) {
   const selectedMetric = MAP_METRICS.find((item) => item.key === metric) ?? MAP_METRICS[0];
   const friendlyMetricLabel = getMetricFriendlyLabel(selectedMetric.label);
   const activeBasemap = getBasemapConfig(mapType);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    if (view !== 'map' || window.L) {
-      setLeafletReady(!!window.L);
-      return;
-    }
-
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
-    document.head.appendChild(link);
-
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
-    script.onload = () => setLeafletReady(true);
-    document.head.appendChild(script);
-  }, [view]);
 
   useEffect(() => {
     if (view !== 'map') {
