@@ -3,7 +3,8 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 // ── Mock context and hook ────────────────────────────────────────────────
-let mockRealTime = { latestBatch: [], eventVersion: 0 };
+let mockMarkAsRead = jest.fn();
+let mockRealTime = { latestBatch: [], eventVersion: 0, markAsRead: mockMarkAsRead };
 jest.mock("../../../context/RealTimeContext", () => ({
   useRealTime: () => mockRealTime,
 }));
@@ -17,7 +18,8 @@ import AdminNotificationToast from "../../../components/shared/AdminNotification
 
 beforeEach(() => {
   jest.useFakeTimers();
-  mockRealTime = { latestBatch: [], eventVersion: 0 };
+  mockMarkAsRead = jest.fn();
+  mockRealTime = { latestBatch: [], eventVersion: 0, markAsRead: mockMarkAsRead };
   mockPlayFeedback = jest.fn();
 });
 afterEach(() => {
@@ -48,6 +50,7 @@ describe("AdminNotificationToast", () => {
       mockRealTime = {
         latestBatch: [makeEvent({ source: "incident" })],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<AdminNotificationToast currentTheme="blue" />);
       expect(screen.getByText("New Incident Reported")).toBeInTheDocument();
@@ -57,6 +60,7 @@ describe("AdminNotificationToast", () => {
       mockRealTime = {
         latestBatch: [makeEvent({ source: "complaint", id: "evt-2" })],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<AdminNotificationToast currentTheme="blue" />);
       expect(screen.getByText("New Complaint Reported")).toBeInTheDocument();
@@ -66,6 +70,7 @@ describe("AdminNotificationToast", () => {
       mockRealTime = {
         latestBatch: [makeEvent({ source: "resident", id: "evt-3" })],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<AdminNotificationToast currentTheme="blue" />);
       expect(screen.getByText("Resident Profile Updated")).toBeInTheDocument();
@@ -75,6 +80,7 @@ describe("AdminNotificationToast", () => {
       mockRealTime = {
         latestBatch: [makeEvent()],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<AdminNotificationToast currentTheme="blue" />);
       expect(mockPlayFeedback).toHaveBeenCalledWith("notify");
@@ -84,6 +90,7 @@ describe("AdminNotificationToast", () => {
       mockRealTime = {
         latestBatch: [makeEvent()],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<AdminNotificationToast currentTheme="blue" />);
       expect(screen.getByText("Click to view details")).toBeInTheDocument();
@@ -93,6 +100,7 @@ describe("AdminNotificationToast", () => {
       mockRealTime = {
         latestBatch: [makeEvent({ type: "Fire Hazard" })],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<AdminNotificationToast currentTheme="blue" />);
       expect(screen.getByText(/fire hazard/i)).toBeInTheDocument();
@@ -104,6 +112,7 @@ describe("AdminNotificationToast", () => {
       mockRealTime = {
         latestBatch: [makeEvent()],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<AdminNotificationToast currentTheme="blue" />);
       expect(screen.getByText("New Incident Reported")).toBeInTheDocument();
@@ -118,6 +127,7 @@ describe("AdminNotificationToast", () => {
       mockRealTime = {
         latestBatch: [makeEvent()],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<AdminNotificationToast currentTheme="blue" />);
       expect(screen.getByText("New Incident Reported")).toBeInTheDocument();
@@ -137,6 +147,7 @@ describe("AdminNotificationToast", () => {
           makeEvent({ id: "d", source: "incident" }),
         ],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<AdminNotificationToast currentTheme="blue" />);
       // Only 3 should render even though 4 were in the batch
@@ -150,6 +161,7 @@ describe("AdminNotificationToast", () => {
       mockRealTime = {
         latestBatch: [makeEvent()],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<AdminNotificationToast currentTheme="dark" />);
       expect(screen.getByText("New Incident Reported")).toBeInTheDocument();

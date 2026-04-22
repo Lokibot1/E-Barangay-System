@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import AdminAppointments from "../../../../pages/sub-system-3/admin/AdminAppointments";
 
 const mockTr = {
@@ -96,6 +97,11 @@ jest.mock("../../../../context/LanguageContext", () => ({
   useLanguage: () => ({ language: "en", setLanguage: jest.fn(), tr: mockTr }),
 }));
 
+jest.mock("../../../../homepage/services/loginService", () => ({
+  canViewAppointments: jest.fn(() => true),
+  canManageAppointments: jest.fn(() => true),
+}));
+
 jest.mock("../../../../services/sub-system-3/appointmentService", () => ({
   rescheduleAppointment: jest.fn(),
   createAppointment: jest.fn(),
@@ -157,21 +163,21 @@ beforeEach(() => {
 describe("AdminAppointments", () => {
   describe("rendering", () => {
     it("renders the 'Appointments' heading", async () => {
-      render(<AdminAppointments />);
+      render(<MemoryRouter><AdminAppointments /></MemoryRouter>);
       await waitFor(() =>
         expect(screen.getByText("Appointments")).toBeInTheDocument()
       );
     });
 
     it("renders the subtitle", async () => {
-      render(<AdminAppointments />);
+      render(<MemoryRouter><AdminAppointments /></MemoryRouter>);
       await waitFor(() =>
         expect(screen.getAllByText(/Mon – Fri/i).length).toBeGreaterThan(0)
       );
     });
 
     it("renders status filter tabs", async () => {
-      render(<AdminAppointments />);
+      render(<MemoryRouter><AdminAppointments /></MemoryRouter>);
       // Tab buttons include a count suffix: "All (0)", "Scheduled (0)", etc.
       await waitFor(() =>
         expect(screen.getByRole("button", { name: /^All/i })).toBeInTheDocument()
@@ -182,21 +188,21 @@ describe("AdminAppointments", () => {
     });
 
     it("renders stat cards", async () => {
-      render(<AdminAppointments />);
+      render(<MemoryRouter><AdminAppointments /></MemoryRouter>);
       await waitFor(() => expect(screen.getByText("TOTAL")).toBeInTheDocument());
       expect(screen.getByText("SCHEDULED")).toBeInTheDocument();
       expect(screen.getByText("COMPLETED")).toBeInTheDocument();
     });
 
     it("renders the search input", async () => {
-      render(<AdminAppointments />);
+      render(<MemoryRouter><AdminAppointments /></MemoryRouter>);
       await waitFor(() =>
         expect(screen.getByPlaceholderText(/search appointments/i)).toBeInTheDocument()
       );
     });
 
     it("renders the 'Create New Appointment' button", async () => {
-      render(<AdminAppointments />);
+      render(<MemoryRouter><AdminAppointments /></MemoryRouter>);
       await waitFor(() =>
         expect(screen.getByRole("button", { name: /create new appointment/i })).toBeInTheDocument()
       );
@@ -205,7 +211,7 @@ describe("AdminAppointments", () => {
 
   describe("empty state", () => {
     it("shows 'No appointments found.' when there are none", async () => {
-      render(<AdminAppointments />);
+      render(<MemoryRouter><AdminAppointments /></MemoryRouter>);
       await waitFor(() =>
         expect(screen.getByText("No appointments found.")).toBeInTheDocument()
       );
@@ -214,7 +220,7 @@ describe("AdminAppointments", () => {
 
   describe("data fetching", () => {
     it("fetches complaints on mount", async () => {
-      render(<AdminAppointments />);
+      render(<MemoryRouter><AdminAppointments /></MemoryRouter>);
       await waitFor(() => expect(getAllComplaints).toHaveBeenCalled());
     });
   });
@@ -222,7 +228,7 @@ describe("AdminAppointments", () => {
   describe("error handling", () => {
     it("shows an error toast when appointments fail to load", async () => {
       getAllComplaints.mockRejectedValue(new Error("Network error"));
-      render(<AdminAppointments />);
+      render(<MemoryRouter><AdminAppointments /></MemoryRouter>);
       await waitFor(() =>
         expect(screen.getByText("Error")).toBeInTheDocument()
       );
@@ -231,7 +237,7 @@ describe("AdminAppointments", () => {
 
   describe("status filter tabs", () => {
     it("switches to Scheduled filter when tab is clicked", async () => {
-      render(<AdminAppointments />);
+      render(<MemoryRouter><AdminAppointments /></MemoryRouter>);
       await waitFor(() => screen.getByRole("button", { name: /^Scheduled/i }));
       fireEvent.click(screen.getByRole("button", { name: /^Scheduled/i }));
       // After filtering, the page still renders without crash

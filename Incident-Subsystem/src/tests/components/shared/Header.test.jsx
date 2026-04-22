@@ -21,6 +21,7 @@ jest.mock("../../../homepage/services/loginService", () => ({
   logout: jest.fn(),
   getUser: jest.fn(() => ({ name: "Test User", email: "test@example.com", role: "user" })),
   isAdmin: jest.fn(() => false),
+  canAccessAdminPanel: jest.fn(() => false),
 }));
 
 // ── Mock contexts ─────────────────────────────────────────────────────────
@@ -83,7 +84,7 @@ beforeAll(() => {
 });
 
 import Header from "../../../components/shared/Header";
-import { logout, getUser, isAdmin } from "../../../homepage/services/loginService";
+import { logout, getUser, isAdmin, canAccessAdminPanel } from "../../../homepage/services/loginService";
 
 afterEach(() => jest.clearAllMocks());
 
@@ -113,13 +114,13 @@ describe("Header", () => {
     });
 
     it("shows 'Barangay Gulod' heading for regular user", () => {
-      isAdmin.mockReturnValue(false);
+      canAccessAdminPanel.mockReturnValue(false);
       wrap();
       expect(screen.getByText("Barangay Gulod")).toBeInTheDocument();
     });
 
     it("shows 'Dashboard' heading for admin user", () => {
-      isAdmin.mockReturnValue(true);
+      canAccessAdminPanel.mockReturnValue(true);
       wrap();
       expect(screen.getByText("Dashboard")).toBeInTheDocument();
     });
@@ -147,14 +148,14 @@ describe("Header", () => {
       wrap();
       fireEvent.click(screen.getByTitle("Notifications"));
       // The badge renders "{unreadCount} unread" as adjacent text nodes — match by element content
-      expect(screen.getByText(/unread/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/unread/i).length).toBeGreaterThan(0);
     });
 
     it("closes the notification panel when bell is clicked again", () => {
       wrap();
       const bell = screen.getByTitle("Notifications");
       fireEvent.click(bell);
-      expect(screen.getByText(/unread/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/unread/i).length).toBeGreaterThan(0);
       fireEvent.click(bell);
       expect(screen.queryByText(/unread/i)).not.toBeInTheDocument();
     });

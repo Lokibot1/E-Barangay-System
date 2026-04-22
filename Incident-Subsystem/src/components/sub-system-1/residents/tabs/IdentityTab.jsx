@@ -334,7 +334,7 @@ const IdentityTab = ({
 
                     {/* Calculated Age */}
                     <div className="flex flex-col gap-1.5">
-                        <p className={`text-[11px] font-bold ${t?.subtleText || 'text-slate-400'} uppercase tracking-widest ml-1`}>Calculated Age</p>
+                        <p className={`text-[11px] font-bold ${t?.subtleText || 'text-slate-400'} uppercase tracking-widest ml-1`}>Age</p>
                         <div className={`h-[45px] flex items-center px-5 rounded-xl border ${accentBox}`}>
                             <p className="text-sm font-black uppercase">
                                 {formData.age || '---'} <span className="ml-1 text-[10px] opacity-70">Years Old</span>

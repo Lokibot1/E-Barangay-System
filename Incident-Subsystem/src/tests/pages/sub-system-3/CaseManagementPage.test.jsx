@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import CaseManagementPage from "../../../pages/sub-system-3/CaseManagementPage";
 
 beforeAll(() => {
@@ -122,19 +123,19 @@ beforeEach(() => {
 describe("CaseManagementPage", () => {
   describe("rendering", () => {
     it("renders the CASE TRACKER heading", async () => {
-      render(<CaseManagementPage />);
+      render(<MemoryRouter><CaseManagementPage /></MemoryRouter>);
       await waitFor(() =>
         expect(screen.getByText("CASE TRACKER")).toBeInTheDocument()
       );
     });
 
     it("renders the MainMenuCards component", () => {
-      render(<CaseManagementPage />);
+      render(<MemoryRouter><CaseManagementPage /></MemoryRouter>);
       expect(screen.getByTestId("main-menu-cards")).toBeInTheDocument();
     });
 
     it("renders the tabs component", async () => {
-      render(<CaseManagementPage />);
+      render(<MemoryRouter><CaseManagementPage /></MemoryRouter>);
       await waitFor(() =>
         expect(screen.getByTestId("tabs")).toBeInTheDocument()
       );
@@ -143,14 +144,14 @@ describe("CaseManagementPage", () => {
 
   describe("tabs", () => {
     it("shows complaints tab as default active tab", async () => {
-      render(<CaseManagementPage />);
+      render(<MemoryRouter><CaseManagementPage /></MemoryRouter>);
       await waitFor(() =>
         expect(screen.getAllByText("My Complaints").length).toBeGreaterThan(0)
       );
     });
 
     it("switches to incidents tab when clicked", async () => {
-      render(<CaseManagementPage />);
+      render(<MemoryRouter><CaseManagementPage /></MemoryRouter>);
       await waitFor(() => screen.getByText("My Incidents"));
       fireEvent.click(screen.getByText("My Incidents"));
       // After switching, incidents tab is active — no crash
@@ -161,19 +162,19 @@ describe("CaseManagementPage", () => {
   describe("empty state", () => {
     it("shows empty complaint message when no complaints exist", async () => {
       getMyComplaints.mockResolvedValue([]);
-      render(<CaseManagementPage />);
+      render(<MemoryRouter><CaseManagementPage /></MemoryRouter>);
       await waitFor(() =>
         expect(screen.getAllByText("You have no complaints filed.").length).toBeGreaterThan(0)
       );
     });
 
     it("fetches complaints on mount", async () => {
-      render(<CaseManagementPage />);
+      render(<MemoryRouter><CaseManagementPage /></MemoryRouter>);
       await waitFor(() => expect(getMyComplaints).toHaveBeenCalled());
     });
 
     it("fetches incidents when incidents tab is clicked", async () => {
-      render(<CaseManagementPage />);
+      render(<MemoryRouter><CaseManagementPage /></MemoryRouter>);
       await waitFor(() => screen.getByText("My Incidents"));
       fireEvent.click(screen.getByText("My Incidents"));
       await waitFor(() => expect(incidentService.getMyIncidents).toHaveBeenCalled());
@@ -183,7 +184,7 @@ describe("CaseManagementPage", () => {
   describe("error handling", () => {
     it("shows an error toast when fetching complaints fails", async () => {
       getMyComplaints.mockRejectedValue(new Error("Network error"));
-      render(<CaseManagementPage />);
+      render(<MemoryRouter><CaseManagementPage /></MemoryRouter>);
       await waitFor(() =>
         expect(screen.getByText("Load Failed")).toBeInTheDocument()
       );
@@ -191,7 +192,7 @@ describe("CaseManagementPage", () => {
 
     it("shows an error toast when fetching incidents fails", async () => {
       incidentService.getMyIncidents.mockRejectedValue(new Error("Server error"));
-      render(<CaseManagementPage />);
+      render(<MemoryRouter><CaseManagementPage /></MemoryRouter>);
       await waitFor(() => screen.getByText("My Incidents"));
       fireEvent.click(screen.getByText("My Incidents"));
       await waitFor(() =>
@@ -212,7 +213,7 @@ describe("CaseManagementPage", () => {
 
     it("renders a ReportCard for each complaint", async () => {
       getMyComplaints.mockResolvedValue([makeComplaint(1), makeComplaint(2)]);
-      render(<CaseManagementPage />);
+      render(<MemoryRouter><CaseManagementPage /></MemoryRouter>);
       await waitFor(() =>
         expect(screen.getAllByTestId("report-card").length).toBe(2)
       );

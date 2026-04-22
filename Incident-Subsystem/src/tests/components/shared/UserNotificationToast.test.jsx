@@ -3,7 +3,8 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 // ── Mock context ─────────────────────────────────────────────────────────
-let mockUserRealTime = { latestBatch: [], eventVersion: 0 };
+let mockMarkAsRead = jest.fn();
+let mockUserRealTime = { latestBatch: [], eventVersion: 0, markAsRead: mockMarkAsRead };
 jest.mock("../../../context/UserRealTimeContext", () => ({
   useUserRealTime: () => mockUserRealTime,
 }));
@@ -12,7 +13,8 @@ import UserNotificationToast from "../../../components/shared/UserNotificationTo
 
 beforeEach(() => {
   jest.useFakeTimers();
-  mockUserRealTime = { latestBatch: [], eventVersion: 0 };
+  mockMarkAsRead = jest.fn();
+  mockUserRealTime = { latestBatch: [], eventVersion: 0, markAsRead: mockMarkAsRead };
 });
 afterEach(() => {
   jest.runOnlyPendingTimers();
@@ -44,6 +46,7 @@ describe("UserNotificationToast", () => {
       mockUserRealTime = {
         latestBatch: [makeEvent({ source: "incident" })],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<UserNotificationToast currentTheme="blue" />);
       expect(screen.getByText("Incident Status Updated")).toBeInTheDocument();
@@ -53,6 +56,7 @@ describe("UserNotificationToast", () => {
       mockUserRealTime = {
         latestBatch: [makeEvent({ source: "complaint", id: "evt-2" })],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<UserNotificationToast currentTheme="blue" />);
       expect(screen.getByText("Complaint Status Updated")).toBeInTheDocument();
@@ -62,6 +66,7 @@ describe("UserNotificationToast", () => {
       mockUserRealTime = {
         latestBatch: [makeEvent({ oldStatus: "pending", newStatus: "resolved" })],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<UserNotificationToast currentTheme="blue" />);
       expect(screen.getByText(/pending.*resolved/i)).toBeInTheDocument();
@@ -71,6 +76,7 @@ describe("UserNotificationToast", () => {
       mockUserRealTime = {
         latestBatch: [makeEvent()],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<UserNotificationToast currentTheme="blue" />);
       expect(screen.getByText("Click to view details")).toBeInTheDocument();
@@ -82,6 +88,7 @@ describe("UserNotificationToast", () => {
       mockUserRealTime = {
         latestBatch: [makeEvent({ type: "appointment_scheduled", source: "system" })],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<UserNotificationToast currentTheme="blue" />);
       expect(screen.getByText("Appointment Scheduled")).toBeInTheDocument();
@@ -91,6 +98,7 @@ describe("UserNotificationToast", () => {
       mockUserRealTime = {
         latestBatch: [makeEvent({ type: "appointment_scheduled", source: "system", data: {} })],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<UserNotificationToast currentTheme="blue" />);
       expect(screen.getByText(/Your complaint appointment has been set/i)).toBeInTheDocument();
@@ -102,6 +110,7 @@ describe("UserNotificationToast", () => {
       mockUserRealTime = {
         latestBatch: [makeEvent({ source: "resident", type: "profile_updated" })],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<UserNotificationToast currentTheme="blue" />);
       expect(screen.getByText("Profile Updated")).toBeInTheDocument();
@@ -111,6 +120,7 @@ describe("UserNotificationToast", () => {
       mockUserRealTime = {
         latestBatch: [makeEvent({ source: "resident", type: "profile_updated" })],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<UserNotificationToast currentTheme="blue" />);
       expect(screen.getByText("Click to view profile")).toBeInTheDocument();
@@ -126,6 +136,7 @@ describe("UserNotificationToast", () => {
           }),
         ],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<UserNotificationToast currentTheme="blue" />);
       expect(screen.getByText(/updated by admin user/i)).toBeInTheDocument();
@@ -137,6 +148,7 @@ describe("UserNotificationToast", () => {
       mockUserRealTime = {
         latestBatch: [makeEvent()],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<UserNotificationToast currentTheme="blue" />);
       expect(screen.getByText("Incident Status Updated")).toBeInTheDocument();
@@ -150,6 +162,7 @@ describe("UserNotificationToast", () => {
       mockUserRealTime = {
         latestBatch: [makeEvent()],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<UserNotificationToast currentTheme="blue" />);
       act(() => { jest.advanceTimersByTime(5000); });
@@ -163,6 +176,7 @@ describe("UserNotificationToast", () => {
       mockUserRealTime = {
         latestBatch: [makeEvent()],
         eventVersion: 1,
+        markAsRead: mockMarkAsRead,
       };
       wrap(<UserNotificationToast currentTheme="dark" />);
       expect(screen.getByText("Incident Status Updated")).toBeInTheDocument();

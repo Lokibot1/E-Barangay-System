@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import AdminLanding from "../../../../pages/sub-system-3/admin/AdminLanding";
 
 const mockTr = {
@@ -112,14 +113,14 @@ beforeEach(() => {
 describe("AdminLanding", () => {
   describe("rendering", () => {
     it("renders the 'Welcome back,' greeting", async () => {
-      render(<AdminLanding />);
+      render(<MemoryRouter><AdminLanding /></MemoryRouter>);
       await waitFor(() =>
         expect(screen.getByText(/welcome back/i)).toBeInTheDocument()
       );
     });
 
     it("renders the admin first name from getUser()", async () => {
-      render(<AdminLanding />);
+      render(<MemoryRouter><AdminLanding /></MemoryRouter>);
       // Component splits name and renders only the first word ("Admin")
       await waitFor(() =>
         expect(
@@ -129,14 +130,14 @@ describe("AdminLanding", () => {
     });
 
     it("renders the 'Case Management Analytics Dashboard' heading", async () => {
-      render(<AdminLanding />);
+      render(<MemoryRouter><AdminLanding /></MemoryRouter>);
       await waitFor(() =>
         expect(screen.getByText("Case Management Analytics Dashboard")).toBeInTheDocument()
       );
     });
 
     it("renders the stat cards section", async () => {
-      render(<AdminLanding />);
+      render(<MemoryRouter><AdminLanding /></MemoryRouter>);
       await waitFor(() =>
         expect(screen.getByText("Pending requests")).toBeInTheDocument()
       );
@@ -146,7 +147,7 @@ describe("AdminLanding", () => {
     });
 
     it("shows 'Generate Insights' in kebab dropdown after clicking the toggle", async () => {
-      render(<AdminLanding />);
+      render(<MemoryRouter><AdminLanding /></MemoryRouter>);
       await waitFor(() => screen.getByText("Case Management Analytics Dashboard"));
       // The Generate Insights button is hidden inside a kebab dropdown.
       // Click the first icon-only button (the kebab toggle) to reveal it.
@@ -159,20 +160,27 @@ describe("AdminLanding", () => {
 
   describe("data fetching", () => {
     it("fetches incidents on mount", async () => {
-      render(<AdminLanding />);
+      render(<MemoryRouter><AdminLanding /></MemoryRouter>);
       await waitFor(() => expect(incidentService.getAllIncidents).toHaveBeenCalled());
     });
 
     it("fetches complaints on mount", async () => {
-      render(<AdminLanding />);
+      render(<MemoryRouter><AdminLanding /></MemoryRouter>);
       await waitFor(() => expect(getAllComplaints).toHaveBeenCalled());
     });
   });
 
   describe("error handling", () => {
+    beforeEach(() => {
+      jest.spyOn(console, "error").mockImplementation(() => {});
+    });
+    afterEach(() => {
+      console.error.mockRestore();
+    });
+
     it("shows an error toast when dashboard data fails to load", async () => {
       incidentService.getAllIncidents.mockRejectedValue(new Error("Server error"));
-      render(<AdminLanding />);
+      render(<MemoryRouter><AdminLanding /></MemoryRouter>);
       await waitFor(() =>
         expect(screen.getByText("Load Failed")).toBeInTheDocument()
       );
@@ -186,7 +194,7 @@ describe("AdminLanding", () => {
         { id: 2, status: "pending" },
         { id: 3, status: "resolved" },
       ]);
-      render(<AdminLanding />);
+      render(<MemoryRouter><AdminLanding /></MemoryRouter>);
       // Wait for data to load and display count
       await waitFor(() => expect(incidentService.getAllIncidents).toHaveBeenCalled());
     });

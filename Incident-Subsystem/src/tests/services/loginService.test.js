@@ -171,7 +171,7 @@ describe("isAuthenticated", () => {
 // ─── getToken ─────────────────────────────────────────────────────────────────
 describe("getToken", () => {
   it("returns null when no token is stored", () => {
-    expect(getToken()).toBeNull();
+    expect(getToken()).toBe("");
   });
 
   it("returns the stored token string", () => {

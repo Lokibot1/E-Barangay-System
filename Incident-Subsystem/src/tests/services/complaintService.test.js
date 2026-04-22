@@ -7,10 +7,37 @@ import {
   addComplaintUpdate,
 } from "../../services/sub-system-3/complaintService";
 
-jest.mock("../../homepage/services/loginService", () => ({
-  isAuthenticated: jest.fn(),
-  getToken: jest.fn(),
+jest.mock("../../utils/remoteRequestControl", () => ({
+  shouldAttemptRemoteRequest: () => true,
+  rememberRemoteRequestSuccess: () => {},
+  rememberRemoteRequestFailure: () => {},
+  runDedupedRemoteRequest: (_key, fn) => fn(),
+  createServerUnavailableError: () => new Error("The server is currently unavailable."),
 }));
+
+jest.mock("../../services/shared/cache", () => ({
+  memCache: {
+    remember: (_key, _ttl, fetcher) => fetcher(),
+    get: () => null,
+    set: () => {},
+    invalidate: () => {},
+  },
+}));
+
+jest.mock("../../homepage/services/loginService", () => {
+  const getToken = jest.fn();
+  return {
+    isAuthenticated: jest.fn(),
+    getToken,
+    buildAuthHeaders: ({ includeJson = false } = {}) => {
+      const tok = getToken();
+      const h = tok ? { Authorization: `Bearer ${tok}` } : {};
+      if (includeJson) h["Content-Type"] = "application/json";
+      return h;
+    },
+    handleUnauthorizedResponse: () => {},
+  };
+});
 
 import { isAuthenticated, getToken } from "../../homepage/services/loginService";
 
@@ -205,7 +232,7 @@ describe("getMyComplaints", () => {
     mockFetch([]);
     await getMyComplaints();
     expect(fetch).toHaveBeenCalledWith(
-      `${API_BASE}/complaints`,
+      `${API_BASE}/complaints?per_page=100`,
       expect.objectContaining({
         method: "GET",
         headers: expect.objectContaining({ Authorization: "Bearer test-token" }),
@@ -238,7 +265,7 @@ describe("getAllComplaints", () => {
     mockFetch([]);
     await getAllComplaints();
     expect(fetch).toHaveBeenCalledWith(
-      `${API_BASE}/complaints`,
+      `${API_BASE}/complaints?per_page=100`,
       expect.objectContaining({
         method: "GET",
         headers: expect.objectContaining({ Authorization: "Bearer test-token" }),
