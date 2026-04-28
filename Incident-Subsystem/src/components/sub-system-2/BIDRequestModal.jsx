@@ -5,6 +5,7 @@ import themeTokens from "../../Themetokens";
 import { DOCUMENTS_API_BASE_URL } from "../../config/runtimeApi";
 import { saveDocumentRequestRecord } from "../../utils/requestCenter";
 import { queueCommunicationEvent } from "../../utils/securityCenter";
+import { calculateAgeFromDateInput } from "../../utils/dateAge";
 
 const BIDRequestModal = ({ isOpen, onClose, currentTheme }) => {
 	const navigate = useNavigate();
@@ -118,21 +119,10 @@ const BIDRequestModal = ({ isOpen, onClose, currentTheme }) => {
 			[name]: value.replace(/[^0-9]/g, "").slice(0, 11),
 		}));
 	} else if (name === "dateOfBirth") {
- 
-		const birthDate = new Date(value);
-		const today = new Date();
-
-		let age = today.getFullYear() - birthDate.getFullYear();
-		const m = today.getMonth() - birthDate.getMonth();
-
-		if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-			age--;
-		}
-
 		setFormData((prev) => ({
 			...prev,
 			dateOfBirth: value,
-			age: age >= 0 ? age : "",
+			age: calculateAgeFromDateInput(value),
 		}));
 
 	} else {

@@ -25,6 +25,7 @@ import RouteLoadingFallback from "./components/shared/RouteLoadingFallback";
 // ── Route guards ─────────────────────────────────────────────────────────────
 import ProtectedRoute, {
   AdminRoute,
+  StaffRoute,
   UserRoute,
   PermissionRoute,
 } from "./homepage/ProtectedRoute";
@@ -88,6 +89,7 @@ const AdminLanding = lazy(() => import("./pages/sub-system-3/admin/AdminLanding"
 const AdminIncidentReports = lazy(() => import("./pages/sub-system-3/admin/AdminIncidentReports"));
 const AdminAppointments = lazy(() => import("./pages/sub-system-3/admin/AdminAppointments"));
 const CreateAccounts = lazy(() => import("./pages/sub-system-3/admin/CreateAccounts"));
+const StaffLanding = lazy(() => import("./pages/staff/StaffLanding"));
 
 const Dashboard = lazy(() => import("./pages/sub-system-1/dashboard"));
 const Residents = lazy(() => import("./pages/sub-system-1/residents"));
@@ -100,6 +102,7 @@ const Settings = lazy(() => import("./pages/sub-system-1/settings"));
 const ProfilePage = lazy(() => import("./pages/shared/ProfilePage"));
 const MyRequestsPage = lazy(() => import("./pages/shared/MyRequestsPage"));
 const SecondFactorPage = lazy(() => import("./pages/shared/SecondFactorPage"));
+const NotFoundPage = lazy(() => import("./pages/shared/NotFoundPage"));
 const VerifyDocumentPage = lazy(() => import("./pages/sub-system-2/VerifyDocumentPage"));
 
 // ── Scroll-to-top on every route change ──────────────────────────────────────
@@ -275,6 +278,90 @@ function App() {
               </Route>
 
               {/* ── ADMIN-ONLY ROUTES ────────────────────────────────── */}
+              <Route element={<StaffRoute />}>
+                <Route
+                  element={
+                    <RealTimeProvider>
+                      <VerificationNotificationListener />
+                      <Layout />
+                    </RealTimeProvider>
+                  }
+                >
+                  <Route path="/staff" element={<StaffLanding />} />
+
+                  <Route
+                    element={
+                      <PermissionRoute
+                        allowed={canViewResidents}
+                        redirectTo="/staff"
+                      />
+                    }
+                  >
+                    <Route path="/staff/residents" element={<Residents />} />
+                    <Route path="/staff/households" element={<Households />} />
+                  </Route>
+
+                  <Route
+                    element={
+                      <PermissionRoute
+                        allowed={canEditRecords}
+                        redirectTo="/staff"
+                      />
+                    }
+                  >
+                    <Route path="/staff/residents/add" element={<AddResident />} />
+                  </Route>
+
+                  <Route
+                    element={
+                      <PermissionRoute
+                        allowed={canAccessVerificationQueue}
+                        redirectTo="/staff"
+                      />
+                    }
+                  >
+                    <Route path="/staff/user-management" element={<Verification />} />
+                  </Route>
+
+                  <Route
+                    element={
+                      <PermissionRoute
+                        allowed={canViewIncidentCases}
+                        redirectTo="/staff"
+                      />
+                    }
+                  >
+                    <Route path="/staff/incidents" element={<AdminIncidentReports />} />
+                  </Route>
+
+                  <Route
+                    element={
+                      <PermissionRoute
+                        allowed={canViewAppointments}
+                        redirectTo="/staff"
+                      />
+                    }
+                  >
+                    <Route path="/staff/appointments" element={<AdminAppointments />} />
+                  </Route>
+
+                  <Route
+                    element={
+                      <PermissionRoute
+                        allowed={canViewDocuments}
+                        redirectTo="/staff"
+                      />
+                    }
+                  >
+                    <Route path="/staff/documents-inquiry" element={<DocumentsInquiryPage />} />
+                    <Route path="/staff/certificates" element={<Certificates />} />
+                  </Route>
+
+                  <Route path="/staff/profile" element={<ProfilePage />} />
+                  <Route path="/staff/support" element={<Support />} />
+                </Route>
+              </Route>
+
               <Route element={<AdminRoute />}>
                 <Route
                   element={
@@ -336,7 +423,7 @@ function App() {
                 </Route>
               </Route>
 
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<NotFoundPage />} />
 
                   </Routes>
                 </Suspense>

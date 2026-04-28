@@ -9,6 +9,8 @@ import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import {
   canAccessAdminPanel,
+  canAccessStaffPanel,
+  getDefaultAuthenticatedPath,
   isAuthenticated,
 } from "./services/loginService";
 import { requiresSecondFactor } from "../utils/securityCenter";
@@ -36,8 +38,7 @@ export const AdminRoute = () => {
   }
   
   if (!canAccessAdminPanel()) {
-    // If authenticated but NOT an admin, kick them back to the resident area
-    return <Navigate to="/sub-system-2" replace />;
+    return <Navigate to={getDefaultAuthenticatedPath()} replace />;
   }
 
   if (requiresSecondFactor()) {
@@ -55,6 +56,36 @@ export const AdminRoute = () => {
   return <Outlet />;
 };
 
+export const StaffRoute = () => {
+  const location = useLocation();
+
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (canAccessAdminPanel()) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  if (!canAccessStaffPanel()) {
+    return <Navigate to="/sub-system-2" replace />;
+  }
+
+  if (requiresSecondFactor()) {
+    return (
+      <Navigate
+        to="/second-factor"
+        replace
+        state={{
+          from: `${location.pathname}${location.search}${location.hash}`,
+        }}
+      />
+    );
+  }
+
+  return <Outlet />;
+};
+
 /**
  * User-only guard — redirects admins to /admin.
  * This prevents Admins from seeing the "Resident-only" registration or tracking views.
@@ -64,15 +95,17 @@ export const UserRoute = () => {
     return <Navigate to="/login" replace />;
   }
   
-  if (canAccessAdminPanel()) {
-    // If authenticated and IS an admin, redirect to admin home
-    return <Navigate to="/admin" replace />;
+  if (canAccessStaffPanel()) {
+    return <Navigate to={getDefaultAuthenticatedPath()} replace />;
   }
   
   return <Outlet />;
 };
 
-export const PermissionRoute = ({ allowed, redirectTo = "/admin" }) => {
+export const PermissionRoute = ({
+  allowed,
+  redirectTo = getDefaultAuthenticatedPath(),
+}) => {
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }

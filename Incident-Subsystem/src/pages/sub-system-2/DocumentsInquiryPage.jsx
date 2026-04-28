@@ -14,7 +14,7 @@ import {
 import { useLocation } from "react-router-dom";
 import Swal from "../../utils/swal";
 import themeTokens from "../../Themetokens";
-import { DOCUMENTS_API_BASE_URL } from "../../config/runtimeApi";
+import { DOCUMENTS_API_BASE_URL, PHP_API_BASE_URL } from "../../config/runtimeApi";
 import DatePickerField from "../../components/shared/DatePickerField";
 import RecordTimeline from "../../components/shared/RecordTimeline";
 import {
@@ -201,6 +201,329 @@ const buildDocumentTimeline = (record) => {
   return items.filter(Boolean);
 };
 
+const PREVIEW_TABS = [
+  { key: "overview", label: "Overview" },
+  { key: "applicant", label: "Applicant Info" },
+  { key: "request", label: "Request Details" },
+  { key: "timeline", label: "Timeline" },
+];
+
+const getDocumentUploadLookupUrl = (referenceNumber) =>
+  `${PHP_API_BASE_URL}/documents/request-upload.php?reference=${encodeURIComponent(referenceNumber)}`;
+
+const mergePreviewRecord = (currentRecord, fetchedRecord) => {
+  if (!currentRecord) {
+    return fetchedRecord || null;
+  }
+
+  if (!fetchedRecord) {
+    return currentRecord;
+  }
+
+  const currentDetails =
+    currentRecord.details && typeof currentRecord.details === "object"
+      ? currentRecord.details
+      : {};
+  const fetchedDetails =
+    fetchedRecord.details && typeof fetchedRecord.details === "object"
+      ? fetchedRecord.details
+      : {};
+
+  return {
+    ...currentRecord,
+    ...fetchedRecord,
+    details: {
+      ...currentDetails,
+      ...fetchedDetails,
+    },
+  };
+};
+
+const getRecordValue = (record, paths = [], fallback = "") => {
+  for (const path of paths) {
+    const segments = String(path).split(".");
+    let current = record;
+
+    for (const segment of segments) {
+      current = current?.[segment];
+      if (current === undefined || current === null) break;
+    }
+
+    if (Array.isArray(current)) {
+      const cleanedItems = current
+        .map((item) => (item === undefined || item === null ? "" : String(item).trim()))
+        .filter(Boolean);
+
+      if (cleanedItems.length > 0) {
+        return cleanedItems;
+      }
+    } else if (
+      current !== undefined &&
+      current !== null &&
+      String(current).trim() !== ""
+    ) {
+      return current;
+    }
+  }
+
+  return fallback;
+};
+
+const hasPreviewValue = (value) => {
+  if (Array.isArray(value)) {
+    return value.some((item) => String(item || "").trim() !== "");
+  }
+
+  return value !== undefined && value !== null && String(value).trim() !== "";
+};
+
+const formatPreviewValue = (value) => {
+  if (Array.isArray(value)) {
+    const cleanedItems = value
+      .map((item) => (item === undefined || item === null ? "" : String(item).trim()))
+      .filter(Boolean);
+
+    return cleanedItems.length > 0 ? cleanedItems.join(", ") : "-";
+  }
+
+  if (value === undefined || value === null || String(value).trim() === "") {
+    return "-";
+  }
+
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+
+  return String(value);
+};
+
+const formatPreviewDateTime = (value) => {
+  if (!hasPreviewValue(value)) {
+    return "-";
+  }
+
+  const rawValue = String(value);
+  const normalizedValue = rawValue.includes("T")
+    ? rawValue
+    : rawValue.replace(" ", "T");
+  const parsedDate = new Date(normalizedValue);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return rawValue;
+  }
+
+  return parsedDate.toLocaleString("en-PH", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
+const createPreviewField = (label, value, options = {}) => {
+  const { includeIfEmpty = false, formatter = formatPreviewValue } = options;
+
+  if (!includeIfEmpty && !hasPreviewValue(value)) {
+    return null;
+  }
+
+  return {
+    label,
+    value: hasPreviewValue(value) ? formatter(value) : "-",
+  };
+};
+
+const buildDocumentPreviewSections = (record) => {
+  if (!record) {
+    return {
+      status: "Pending",
+      requesterName: "Resident",
+      documentType: "Document Request",
+      purpose: "",
+      summaryFields: [],
+      applicantFields: [],
+      addressFields: [],
+      requestFields: [],
+      adminFields: [],
+    };
+  }
+
+  const requesterName = getRecordValue(record, [
+    "full_name",
+    "details.fullName",
+    "details.full_name",
+    "requesterName",
+    "name",
+  ], "Resident");
+  const referenceNumber = getRecordValue(record, [
+    "reference_number",
+    "reference",
+    "tracking_number",
+  ], "-");
+  const documentType = getRecordValue(record, [
+    "documentType",
+    "document_type",
+    "details.documentType",
+    "details.document_type",
+    "title",
+  ], "Document Request");
+  const status = getRecordValue(record, ["status"], "Pending");
+  const submittedAt = getRecordValue(record, [
+    "dateSubmitted",
+    "submittedAt",
+    "submitted_at",
+    "created_at",
+  ]);
+  const contactNumber = getRecordValue(record, [
+    "contact_number",
+    "contactNumber",
+    "details.contactNumber",
+    "details.contact_number",
+  ]);
+  const emailAddress = getRecordValue(record, [
+    "email_address",
+    "email",
+    "details.emailAddress",
+    "details.email_address",
+    "details.email",
+  ]);
+  const purokZone = getRecordValue(record, [
+    "purok_zone",
+    "details.purokZone",
+    "details.purok_zone",
+  ]);
+  const streetAddress = getRecordValue(record, [
+    "street_address",
+    "details.streetAddress",
+    "details.street_address",
+  ]);
+  const completeAddress = [purokZone, streetAddress]
+    .filter(hasPreviewValue)
+    .join(", ") || getRecordValue(record, [
+      "address",
+      "details.address",
+      "full_address",
+      "details.full_address",
+    ]);
+  const purpose = getRecordValue(record, [
+    "purpose_of_request",
+    "purpose",
+    "details.purposeOfRequest",
+    "details.purpose_of_request",
+    "details.purpose",
+  ]);
+  const specificPurpose = getRecordValue(record, [
+    "specific_purpose",
+    "details.specificPurpose",
+    "details.specific_purpose",
+  ]);
+  const yearsOfResidency = getRecordValue(record, [
+    "years_of_residency",
+    "details.yearsOfResidency",
+    "details.years_of_residency",
+  ]);
+  const uploadedFileName = getRecordValue(record, [
+    "uploaded_file_name",
+    "file_name",
+    "details.uploadedFileName",
+    "details.uploaded_file_name",
+    "details.fileName",
+  ]);
+  const processedBy = getRecordValue(record, [
+    "processed_by_name",
+    "verified_by",
+    "approved_by",
+  ]);
+  const rejectionReason = getRecordValue(record, [
+    "rejection_reason",
+    "remarks",
+    "reason",
+  ]);
+  const updatedAt = getRecordValue(record, [
+    "updated_at",
+    "verified_at",
+    "rejected_at",
+  ]);
+
+  return {
+    status,
+    requesterName,
+    documentType,
+    purpose,
+    summaryFields: [
+      createPreviewField("Full Name", requesterName, { includeIfEmpty: true }),
+      createPreviewField("Reference #", referenceNumber, { includeIfEmpty: true }),
+      createPreviewField("Document", documentType, { includeIfEmpty: true }),
+      createPreviewField("Contact Number", contactNumber),
+      createPreviewField("Status", status, { includeIfEmpty: true }),
+      createPreviewField("Submitted", submittedAt, {
+        includeIfEmpty: true,
+        formatter: formatPreviewDateTime,
+      }),
+    ].filter(Boolean),
+    applicantFields: [
+      createPreviewField("Full Name", requesterName, { includeIfEmpty: true }),
+      createPreviewField("Age", getRecordValue(record, ["age", "details.age"])),
+      createPreviewField("Gender", getRecordValue(record, ["gender", "details.gender"])),
+      createPreviewField("Date of Birth", getRecordValue(record, [
+        "date_of_birth",
+        "dateOfBirth",
+        "details.dateOfBirth",
+        "details.date_of_birth",
+      ]), {
+        formatter: formatPreviewDateTime,
+      }),
+      createPreviewField("Civil Status", getRecordValue(record, [
+        "civil_status",
+        "details.civilStatus",
+        "details.civil_status",
+      ])),
+      createPreviewField("Contact Number", contactNumber),
+      createPreviewField("Email Address", emailAddress),
+    ].filter(Boolean),
+    addressFields: [
+      createPreviewField("Purok / Zone", purokZone),
+      createPreviewField("Street Address", streetAddress),
+      createPreviewField("Complete Address", completeAddress),
+    ].filter(Boolean),
+    requestFields: [
+      createPreviewField("Document Type", documentType, { includeIfEmpty: true }),
+      createPreviewField("Purpose of Request", purpose),
+      createPreviewField("Specific Purpose", specificPurpose),
+      createPreviewField("Years of Residency", yearsOfResidency),
+      createPreviewField("Blood Type", getRecordValue(record, [
+        "blood_type",
+        "details.bloodType",
+        "details.blood_type",
+      ])),
+      createPreviewField("Emergency Contact Name", getRecordValue(record, [
+        "emergency_contact_name",
+        "details.emergencyContactName",
+        "details.emergency_contact_name",
+      ])),
+      createPreviewField("Emergency Contact Number", getRecordValue(record, [
+        "emergency_contact_number",
+        "details.emergencyContactNumber",
+        "details.emergency_contact_number",
+      ])),
+      createPreviewField("Emergency Contact Address", getRecordValue(record, [
+        "emergency_contact_address",
+        "details.emergencyContactAddress",
+        "details.emergency_contact_address",
+      ])),
+      createPreviewField("Attached File", uploadedFileName),
+    ].filter(Boolean),
+    adminFields: [
+      createPreviewField("Processed By", processedBy),
+      createPreviewField("Last Updated", updatedAt, {
+        formatter: formatPreviewDateTime,
+      }),
+      createPreviewField("Rejection Reason", rejectionReason),
+    ].filter(Boolean),
+  };
+};
+
 // ── Sub-components ────────────────────────────────────────────────
 const StatusBadge = ({ status, isDark = false }) => {
   const styleMap = {
@@ -227,9 +550,211 @@ const StatusBadge = ({ status, isDark = false }) => {
   );
 };
 
+const PreviewFieldGrid = ({ fields, t, isDark }) => {
+  if (!fields.length) {
+    return (
+      <div className={`rounded-[18px] border border-dashed px-4 py-6 text-center text-sm ${
+        isDark
+          ? "border-slate-700 bg-slate-900/70 text-slate-400"
+          : "border-slate-200 bg-slate-50 text-slate-500"
+      }`}>
+        No submitted information is available for this section yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+      {fields.map((field) => (
+        <div
+          key={field.label}
+          className={`rounded-[16px] border px-3 py-3 ${
+            isDark ? "border-slate-700 bg-slate-900/75" : "border-slate-200 bg-slate-50/80"
+          }`}
+        >
+          <p className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${t.subtleText}`}>
+            {field.label}
+          </p>
+          <p className={`mt-1.5 break-words text-[13px] font-medium leading-5 sm:text-sm ${t.cardText}`}>
+            {field.value}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const PreviewUploadPanel = ({
+  upload,
+  loading,
+  error,
+  t,
+  isDark,
+}) => {
+  if (loading) {
+    return (
+      <div className={`rounded-[20px] border px-4 py-4 ${
+        isDark ? "border-slate-700 bg-slate-900/75" : "border-slate-200 bg-slate-50/90"
+      }`}>
+        <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${t.subtleText}`}>
+          Resident Upload
+        </p>
+        <p className={`mt-2 text-sm ${t.subtleText}`}>
+          Loading uploaded file preview...
+        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`rounded-[20px] border px-4 py-4 ${
+        isDark ? "border-rose-500/30 bg-rose-500/10" : "border-rose-200 bg-rose-50"
+      }`}>
+        <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${
+          isDark ? "text-rose-200" : "text-rose-700"
+        }`}>
+          Resident Upload
+        </p>
+        <p className={`mt-2 text-sm ${
+          isDark ? "text-rose-100" : "text-rose-700"
+        }`}>
+          {error}
+        </p>
+      </div>
+    );
+  }
+
+  if (!upload?.assetUrl) {
+    return (
+      <div className={`rounded-[20px] border border-dashed px-4 py-6 text-center text-sm ${
+        isDark
+          ? "border-slate-700 bg-slate-900/70 text-slate-400"
+          : "border-slate-200 bg-slate-50 text-slate-500"
+      }`}>
+        No uploaded resident file is available for preview.
+      </div>
+    );
+  }
+
+  const typeLabel = upload.isImage
+    ? "Image attachment"
+    : upload.isPdf
+      ? "PDF attachment"
+      : `${String(upload.extension || "file").toUpperCase()} attachment`;
+
+  return (
+    <div className={`rounded-[20px] border px-4 py-4 ${
+      isDark ? "border-slate-700 bg-slate-900/75" : "border-slate-200 bg-slate-50/90"
+    }`}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${t.subtleText}`}>
+            Resident Upload
+          </p>
+          <p className={`mt-2 break-words text-sm font-semibold ${t.cardText}`}>
+            {upload.fileName || "Uploaded file"}
+          </p>
+          <p className={`mt-1 text-xs ${t.subtleText}`}>
+            {typeLabel}
+          </p>
+        </div>
+        <a
+          href={upload.assetUrl}
+          target="_blank"
+          rel="noreferrer"
+          className={`inline-flex shrink-0 items-center gap-2 rounded-[14px] px-3 py-2 text-xs font-semibold transition-all ${
+            isDark
+              ? "bg-slate-100 text-slate-900 hover:bg-white"
+              : "bg-slate-900 text-white hover:bg-slate-800"
+          }`}
+        >
+          <Download className="h-3.5 w-3.5" strokeWidth={2.1} />
+          Open File
+        </a>
+      </div>
+
+      {upload.isImage && (
+        <div className={`mt-4 overflow-hidden rounded-[18px] border ${
+          isDark ? "border-slate-700 bg-slate-950/60" : "border-slate-200 bg-white"
+        }`}>
+          <img
+            src={upload.assetUrl}
+            alt={upload.fileName || "Resident upload"}
+            className="max-h-[260px] w-full object-contain sm:max-h-[300px]"
+            loading="lazy"
+          />
+        </div>
+      )}
+
+      {upload.isPdf && (
+        upload.localAvailable ? (
+          <div className={`mt-4 overflow-hidden rounded-[18px] border ${
+            isDark ? "border-slate-700 bg-slate-950/60" : "border-slate-200 bg-white"
+          }`}>
+            <iframe
+              title={upload.fileName || "Resident PDF upload"}
+              src={upload.assetUrl}
+              className="h-[380px] w-full"
+            />
+          </div>
+        ) : (
+          <div className={`mt-4 rounded-[18px] border border-dashed px-4 py-5 text-sm ${
+            isDark
+              ? "border-slate-700 bg-slate-950/50 text-slate-300"
+              : "border-slate-200 bg-white text-slate-600"
+          }`}>
+            PDF preview is not available from the current document server configuration.
+            Use the button above to try opening the file directly.
+          </div>
+        )
+      )}
+    </div>
+  );
+};
+
+const buildStatusUpdatePayload = (documentRecord, nextStatus, referenceNumber) => {
+  const reference = String(
+    documentRecord?.reference_number ||
+    documentRecord?.reference ||
+    referenceNumber ||
+    "",
+  ).trim();
+  const fullName = String(
+    documentRecord?.full_name ||
+    documentRecord?.fullName ||
+    documentRecord?.requesterName ||
+    "",
+  ).trim();
+  const documentType = String(
+    documentRecord?.documentType ||
+    documentRecord?.document_type ||
+    documentRecord?.title ||
+    "Document Request",
+  ).trim();
+  const emailAddress = String(
+    documentRecord?.email_address ||
+    documentRecord?.email ||
+    "",
+  ).trim();
+
+  return {
+    reference,
+    reference_number: reference,
+    fullName,
+    full_name: fullName,
+    documentType,
+    document_type: documentType,
+    status: nextStatus,
+    email: emailAddress,
+    email_address: emailAddress,
+  };
+};
+
 const IconActionButtons = ({
   isDark,
   referenceNumber,
+  documentRecord,
   onPreview,
   onStatusUpdated,
   canProcess,
@@ -254,16 +779,23 @@ const IconActionButtons = ({
     }
 
     const url = `${DOCUMENTS_API_BASE_URL}/documents/${referenceNumber}/${action}`;
+    const newStatus = action === "verify" ? "Verified" : "Rejected";
+    const requestPayload = buildStatusUpdatePayload(
+      documentRecord,
+      newStatus,
+      referenceNumber,
+    );
+
     try {
       const res = await fetch(url, {
         method: "POST",
-        headers: buildDocumentsHeaders(),
+        headers: buildDocumentsHeaders(true),
+        body: JSON.stringify(requestPayload),
       });
       const data = await parseJsonSafe(res);
       handleUnauthorizedResponse(res);
       if (!res.ok) throw new Error(data.message || "Failed to update status");
 
-      const newStatus = action === "verify" ? "Verified" : "Rejected";
       onStatusUpdated(referenceNumber, newStatus);
 
       await Swal.fire({
@@ -339,6 +871,10 @@ const DocumentsInquiryPage = () => {
   const [summaryCounts, setSummaryCounts] = useState({ pending: 0, verified: 0, rejected: 0 });
   const [documentCardsData, setDocumentCardsData] = useState([]);
   const [previewData, setPreviewData] = useState(null);
+  const [previewTab, setPreviewTab] = useState("overview");
+  const [previewUpload, setPreviewUpload] = useState(null);
+  const [previewUploadLoading, setPreviewUploadLoading] = useState(false);
+  const [previewUploadError, setPreviewUploadError] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState("");
@@ -348,12 +884,101 @@ const DocumentsInquiryPage = () => {
   const isDark = currentTheme === "dark";
   const userCanViewDocuments = useMemo(() => canViewDocuments(), []);
   const userCanProcessDocuments = useMemo(() => canProcessDocuments(), []);
+  const previewSections = useMemo(
+    () => buildDocumentPreviewSections(previewData),
+    [previewData],
+  );
+  const previewTimeline = useMemo(
+    () => buildDocumentTimeline(previewData),
+    [previewData],
+  );
+  const previewRequestFields = useMemo(() => {
+    if (!previewUpload?.fileName) {
+      return previewSections.requestFields;
+    }
+
+    const hasAttachedFileField = previewSections.requestFields.some(
+      (field) => field.label === "Attached File",
+    );
+
+    return hasAttachedFileField
+      ? previewSections.requestFields
+      : [
+          ...previewSections.requestFields,
+          { label: "Attached File", value: previewUpload.fileName },
+        ];
+  }, [previewSections.requestFields, previewUpload]);
 
   useEffect(() => {
     const handler = (e) => setCurrentTheme(e.detail);
     window.addEventListener("themeChange", handler);
     return () => window.removeEventListener("themeChange", handler);
   }, []);
+
+  useEffect(() => {
+    if (showPreview) {
+      setPreviewTab("overview");
+    }
+  }, [showPreview, previewData]);
+
+  useEffect(() => {
+    if (!showPreview || !previewData?.reference_number) {
+      setPreviewUpload(null);
+      setPreviewUploadError("");
+      setPreviewUploadLoading(false);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    const referenceNumber = previewData.reference_number;
+
+    const loadPreviewDetails = async () => {
+      setPreviewUploadLoading(true);
+      setPreviewUpload(null);
+      setPreviewUploadError("");
+
+      try {
+        const response = await fetch(
+          getDocumentUploadLookupUrl(referenceNumber),
+          {
+            headers: { Accept: "application/json" },
+            signal: controller.signal,
+          },
+        );
+        const data = await parseJsonSafe(response);
+
+        if (!response.ok) {
+          throw new Error(data.message || "Unable to load the submitted request details.");
+        }
+
+        const lookupData = data?.data || null;
+
+        setPreviewData((prev) => (
+          prev?.reference_number === referenceNumber
+            ? mergePreviewRecord(prev, lookupData?.record)
+            : prev
+        ));
+        setPreviewUpload(lookupData);
+      } catch (error) {
+        if (error.name === "AbortError") {
+          return;
+        }
+
+        setPreviewUpload(null);
+        setPreviewUploadError(
+          error.message || "Unable to load the submitted request details.",
+        );
+      } finally {
+        if (!controller.signal.aborted) {
+          setPreviewUploadLoading(false);
+        }
+      }
+    };
+
+    loadPreviewDetails();
+
+    return () => controller.abort();
+  }, [showPreview, previewData?.reference_number]);
 
   useEffect(() => {
     if (!userCanViewDocuments) {
@@ -507,6 +1132,7 @@ const DocumentsInquiryPage = () => {
     setActiveStatus("All");
     setCurrentPage(1);
     setSearchTerm(incomingSearchQuery || matchedDocument.reference_number || "");
+    setPreviewTab("overview");
     setPreviewData(matchedDocument);
     setShowPreview(true);
 
@@ -823,7 +1449,9 @@ const DocumentsInquiryPage = () => {
                       <IconActionButtons
                         isDark={isDark}
                         referenceNumber={card.reference_number}
+                        documentRecord={card}
                         onPreview={() => {
+                          setPreviewTab("overview");
                           setPreviewData(card);
                           setShowPreview(true);
                         }}
@@ -876,7 +1504,7 @@ const DocumentsInquiryPage = () => {
         {/* Preview Modal */}
         {showPreview && previewData && typeof document !== "undefined" && createPortal(
           <div className="fixed inset-0 z-[1700] flex items-center justify-center bg-slate-950/55 px-4 py-5 backdrop-blur-sm sm:px-6 sm:py-8">
-            <div className={`${softShellClass} flex max-h-[calc(100vh-3rem)] w-[min(90vw,620px)] flex-col overflow-hidden`}>
+            <div className={`${softShellClass} flex max-h-[calc(100vh-3rem)] w-[min(92vw,760px)] flex-col overflow-hidden`}>
               <div className={`shrink-0 border-b px-4 py-3 sm:px-4 sm:py-3.5 ${t.cardBorder} ${isDark ? "bg-slate-950/70" : "bg-slate-50/80"}`}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex min-w-0 items-center gap-2.5">
@@ -908,61 +1536,164 @@ const DocumentsInquiryPage = () => {
                 </div>
               </div>
 
+              <div className={`shrink-0 border-b px-3.5 py-3 sm:px-4 ${t.cardBorder} ${isDark ? "bg-slate-950/60" : "bg-white/80"}`}>
+                <div className="flex flex-wrap gap-2">
+                  {PREVIEW_TABS.map((tab) => {
+                    const isActiveTab = previewTab === tab.key;
+
+                    return (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        onClick={() => setPreviewTab(tab.key)}
+                        className={`rounded-full border px-3.5 py-2 text-xs font-semibold transition-all ${
+                          isActiveTab
+                            ? isDark
+                              ? "border-slate-100 bg-slate-100 text-slate-900"
+                              : "border-slate-900 bg-slate-900 text-white"
+                            : isDark
+                              ? "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800"
+                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="flex-1 overflow-y-auto px-3.5 py-3.5 sm:px-4 sm:py-4">
-                <div className="space-y-3.5">
-                  <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                    <div className={`rounded-[14px] border px-2.5 py-2.5 ${isDark ? "border-slate-700 bg-slate-900/80" : "border-slate-200 bg-slate-50/80"}`}>
-                      <p className={`text-[9px] font-semibold uppercase tracking-[0.11em] ${t.subtleText}`}>Name</p>
-                      <p className={`mt-1 text-[12px] font-semibold sm:text-[13px] ${t.cardText}`}>{previewData.full_name}</p>
-                    </div>
-                    <div className={`rounded-[14px] border px-2.5 py-2.5 ${isDark ? "border-slate-700 bg-slate-900/80" : "border-slate-200 bg-slate-50/80"}`}>
-                      <p className={`text-[9px] font-semibold uppercase tracking-[0.11em] ${t.subtleText}`}>Reference #</p>
-                      <p className={`mt-1 text-[12px] font-semibold sm:text-[13px] ${t.cardText}`}>{previewData.reference_number}</p>
-                    </div>
-                    <div className={`rounded-[14px] border px-2.5 py-2.5 ${isDark ? "border-slate-700 bg-slate-900/80" : "border-slate-200 bg-slate-50/80"}`}>
-                      <p className={`text-[9px] font-semibold uppercase tracking-[0.11em] ${t.subtleText}`}>Document</p>
-                      <p className={`mt-1 text-[12px] font-semibold sm:text-[13px] ${t.cardText}`}>{previewData.documentType}</p>
-                    </div>
-                    <div className={`rounded-[14px] border px-2.5 py-2.5 ${isDark ? "border-slate-700 bg-slate-900/80" : "border-slate-200 bg-slate-50/80"}`}>
-                      <p className={`text-[9px] font-semibold uppercase tracking-[0.11em] ${t.subtleText}`}>Contact</p>
-                      <p className={`mt-1 text-[12px] font-semibold sm:text-[13px] ${t.cardText}`}>{previewData.contact_number}</p>
-                    </div>
-                    <div className={`rounded-[14px] border px-2.5 py-2.5 ${isDark ? "border-slate-700 bg-slate-900/80" : "border-slate-200 bg-slate-50/80"}`}>
-                      <p className={`text-[9px] font-semibold uppercase tracking-[0.11em] ${t.subtleText}`}>Status</p>
-                      <div className="mt-1 origin-left scale-90">
-                        <StatusBadge status={previewData.status} isDark={isDark} />
+                {previewTab === "overview" && (
+                  <div className="space-y-4">
+                    <div className={`rounded-[20px] border px-4 py-4 ${
+                      isDark ? "border-slate-700 bg-slate-900/75" : "border-slate-200 bg-slate-50/90"
+                    }`}>
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${t.subtleText}`}>
+                            Submission Summary
+                          </p>
+                          <p className={`mt-2 text-sm leading-6 sm:text-[15px] ${t.cardText}`}>
+                            {previewSections.requesterName} submitted a {previewSections.documentType}
+                            {previewSections.purpose ? ` request for ${previewSections.purpose}.` : " request for review."}
+                          </p>
+                        </div>
+                        <div className="shrink-0">
+                          <StatusBadge status={previewSections.status} isDark={isDark} />
+                        </div>
                       </div>
                     </div>
-                    <div className={`rounded-[14px] border px-2.5 py-2.5 ${isDark ? "border-slate-700 bg-slate-900/80" : "border-slate-200 bg-slate-50/80"}`}>
-                      <p className={`text-[9px] font-semibold uppercase tracking-[0.11em] ${t.subtleText}`}>Submitted</p>
-                      <p className={`mt-1 text-[12px] font-semibold sm:text-[13px] ${t.cardText}`}>
-                        {new Date(previewData.dateSubmitted).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
 
-                  {previewData.documentType !== "Barangay ID" &&
-                    previewData.documentType !== "Certificate of Residency" && (
-                      <div className={`rounded-[14px] border px-2.5 py-2.5 ${isDark ? "border-slate-700 bg-slate-900/80" : "border-slate-200 bg-slate-50/80"}`}>
-                        <p className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${t.subtleText}`}>
-                          Purpose of Request
-                        </p>
-                        <p className={`mt-1.5 text-[13px] leading-5 sm:text-sm ${t.cardText}`}>
-                          {previewData.purpose_of_request || "No purpose submitted."}
-                        </p>
+                    <PreviewFieldGrid
+                      fields={previewSections.summaryFields}
+                      t={t}
+                      isDark={isDark}
+                    />
+
+                    {previewSections.adminFields.length > 0 && (
+                      <div className="space-y-2.5">
+                        <div>
+                          <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${t.subtleText}`}>
+                            Processing Notes
+                          </p>
+                          <p className={`mt-1 text-xs ${t.subtleText}`}>
+                            Latest admin-side status information for this application.
+                          </p>
+                        </div>
+                        <PreviewFieldGrid
+                          fields={previewSections.adminFields}
+                          t={t}
+                          isDark={isDark}
+                        />
                       </div>
                     )}
-
-                  <div>
-                    <RecordTimeline
-                      items={buildDocumentTimeline(previewData)}
-                      currentTheme={currentTheme}
-                      title="Application Timeline"
-                      emptyMessage="No document activity has been recorded yet."
-                      compact
-                    />
                   </div>
-                </div>
+                )}
+
+                {previewTab === "applicant" && (
+                  <div className="space-y-2.5">
+                    <div>
+                      <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${t.subtleText}`}>
+                        Applicant Information
+                      </p>
+                      <p className={`mt-1 text-xs ${t.subtleText}`}>
+                        Personal details exactly as submitted in the request form.
+                      </p>
+                    </div>
+                    <PreviewFieldGrid
+                      fields={previewSections.applicantFields}
+                      t={t}
+                      isDark={isDark}
+                    />
+
+                    {previewSections.addressFields.length > 0 && (
+                      <div className="space-y-2.5">
+                        <div>
+                          <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${t.subtleText}`}>
+                            Address Information
+                          </p>
+                          <p className={`mt-1 text-xs ${t.subtleText}`}>
+                            Location and residency-related details submitted by the requester.
+                          </p>
+                        </div>
+                        <PreviewFieldGrid
+                          fields={previewSections.addressFields}
+                          t={t}
+                          isDark={isDark}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {previewTab === "request" && (
+                  <div className="space-y-4">
+                    <div className="space-y-2.5">
+                      <div>
+                        <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${t.subtleText}`}>
+                          Request Information
+                        </p>
+                        <p className={`mt-1 text-xs ${t.subtleText}`}>
+                          Document-specific values based on the form the resident completed.
+                        </p>
+                      </div>
+                      <PreviewFieldGrid
+                        fields={previewRequestFields}
+                        t={t}
+                        isDark={isDark}
+                      />
+                    </div>
+
+                    <div className="space-y-2.5">
+                      <div>
+                        <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${t.subtleText}`}>
+                          Uploaded File Preview
+                        </p>
+                        <p className={`mt-1 text-xs ${t.subtleText}`}>
+                          Resident-uploaded supporting file for this request.
+                        </p>
+                      </div>
+                      <PreviewUploadPanel
+                        upload={previewUpload}
+                        loading={previewUploadLoading}
+                        error={previewUploadError}
+                        t={t}
+                        isDark={isDark}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {previewTab === "timeline" && (
+                  <RecordTimeline
+                    items={previewTimeline}
+                    currentTheme={currentTheme}
+                    title="Application Timeline"
+                    emptyMessage="No document activity has been recorded yet."
+                    compact
+                  />
+                )}
               </div>
 
               <div className={`shrink-0 border-t px-3.5 py-3 sm:px-4 ${t.cardBorder} ${isDark ? "bg-slate-950/70" : "bg-white/90"}`}>

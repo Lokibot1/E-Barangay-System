@@ -4,12 +4,16 @@ import ThemeModal from "../../components/sub-system-3/ThemeModal";
 import LogoutModal from "./LogoutModal";
 import {
   canAccessAdminPanel,
+  canAccessStaffPanel,
   canViewAppointments,
   canViewDocuments,
   canViewIncidentCases,
   canViewResidents,
+  getProfilePath,
   logout,
   getUser,
+  mapAdminPathToAccessiblePath,
+  replaceCurrentHistoryPath,
 } from "../../homepage/services/loginService";
 import { useLanguage } from "../../context/LanguageContext";
 import { useRealTime } from "../../context/RealTimeContext";
@@ -1077,15 +1081,17 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
   const isSubSystem2Route = location.pathname.startsWith("/sub-system-2") || location.pathname.startsWith("/incident-complaint");
   const { logoDataUrl } = useBranding();
   const logoSrc = logoDataUrl || logo;
+  const user = getUser();
+  const isAdminUser = canAccessAdminPanel();
+  const isBackOfficeUser = canAccessStaffPanel();
+  const isStaffUser = isBackOfficeUser && !isAdminUser;
 
   // Real-time notifications — merge admin and user contexts
   const adminRT = useRealTime();
   const userRT = useUserRealTime();
-  const isAdminUser = canAccessAdminPanel();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications } =
-    isAdminUser ? adminRT : userRT;
+    isBackOfficeUser ? adminRT : userRT;
 
-  const user = getUser();
   const userName = user?.name || "User";
   const userEmail = user?.email || "";
   const userInitials = userName
@@ -1095,28 +1101,28 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
     .toUpperCase()
     .slice(0, 2);
   const [residentPhoto, setResidentPhoto] = useState(() =>
-    isAdminUser ? "" : getResidentProfilePhoto(user),
+    isBackOfficeUser ? "" : getResidentProfilePhoto(user),
   );
 
   useEffect(() => {
-    if (isAdminUser) return;
+    if (isBackOfficeUser) return;
     setResidentPhoto(getResidentProfilePhoto(user));
     syncResidentProfilePhoto(user)
       .then((remote) => {
         if (remote) setResidentPhoto(remote);
       })
       .catch(() => {});
-  }, [isAdminUser, user]);
+  }, [isBackOfficeUser, user]);
 
   useEffect(() => {
     const handler = () => {
-      if (!isAdminUser) {
+      if (!isBackOfficeUser) {
         setResidentPhoto(getResidentProfilePhoto(user));
       }
     };
     window.addEventListener("residentPhotoUpdated", handler);
     return () => window.removeEventListener("residentPhotoUpdated", handler);
-  }, [isAdminUser, user]);
+  }, [isBackOfficeUser, user]);
 
   const t = themeTokens[currentTheme];
   const isDark = currentTheme === "dark";
@@ -1218,7 +1224,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
             ]
               .filter(Boolean)
               .join(" - "),
-            route: "/admin/residents",
+            route: mapAdminPathToAccessiblePath("/admin/residents"),
             state: {
               openResidentId: String(resident.id),
               openResidentBarangayId: String(
@@ -1258,7 +1264,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
             ]
               .filter(Boolean)
               .join(" - "),
-            route: "/admin/incidents",
+            route: mapAdminPathToAccessiblePath("/admin/incidents"),
             state: {
               openId: String(incident.id),
               openType: "incident",
@@ -1290,7 +1296,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
             ]
               .filter(Boolean)
               .join(" - "),
-            route: "/admin/incidents",
+            route: mapAdminPathToAccessiblePath("/admin/incidents"),
             state: {
               openId: String(complaint.id),
               openType: "complaint",
@@ -1322,7 +1328,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
             ]
               .filter(Boolean)
               .join(" - "),
-            route: "/admin/documents-inquiry",
+            route: mapAdminPathToAccessiblePath("/admin/documents-inquiry"),
             state: {
               openReferenceNumber: String(
                 documentRecord.reference_number || "",
@@ -1358,7 +1364,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
             ]
               .filter(Boolean)
               .join(" - "),
-            route: "/admin/appointments",
+            route: mapAdminPathToAccessiblePath("/admin/appointments"),
             state: {
               openAppointmentId: String(appointment.id),
               searchQuery:
@@ -1400,7 +1406,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
   }, [unreadCount]);
 
   useEffect(() => {
-    if (!isAdminUser) return undefined;
+    if (!isBackOfficeUser) return undefined;
 
     const handleKeyDown = (event) => {
       const key = String(event.key || "").toLowerCase();
@@ -1416,16 +1422,16 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [closeAllMenus, isAdminUser]);
+  }, [closeAllMenus, isBackOfficeUser]);
 
   useEffect(() => {
-    if (!isAdminUser || !isHeaderSearchOpen || hasHeaderSearchLoaded) {
+    if (!isBackOfficeUser || !isHeaderSearchOpen || hasHeaderSearchLoaded) {
       return;
     }
     loadHeaderSearchData();
   }, [
     hasHeaderSearchLoaded,
-    isAdminUser,
+    isBackOfficeUser,
     isHeaderSearchOpen,
     loadHeaderSearchData,
   ]);
@@ -1520,7 +1526,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
 
   const openProfilePage = () => {
     setIsProfileOpen(false);
-    navigate(isAdminUser ? "/admin/profile" : "/profile");
+    navigate(getProfilePath());
   };
 
   const handleLogout = async () => {
@@ -1532,7 +1538,8 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
     } finally {
       setLogoutLoading(false);
       setIsLogoutModalOpen(false);
-      navigate("/login", { replace: true });
+      replaceCurrentHistoryPath("/");
+      navigate("/login", { state: { fromLogout: true } });
     }
   };
 
@@ -1586,7 +1593,9 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
 
   const handleViewRegistration = useCallback(
     (notification) => {
-      const targetPath = notification?.data?.route || "/admin/user-management";
+      const targetPath = mapAdminPathToAccessiblePath(
+        notification?.data?.route || "/admin/user-management",
+      );
       const targetTab = notification?.data?.switchToTab || "Pending";
       const isAlreadyOnPage = location.pathname === targetPath;
 
@@ -1614,9 +1623,9 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
 
   const handleViewProfileUpdate = useCallback(
     (notification) => {
-      if (isAdminUser) {
+      if (isBackOfficeUser) {
         const data = notification?.data || {};
-        navigate("/admin/residents", {
+        navigate(mapAdminPathToAccessiblePath("/admin/residents"), {
           state: {
             openResidentId: data?.resident_id ? String(data.resident_id) : "",
             openResidentBarangayId: data?.barangay_id
@@ -1633,7 +1642,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
 
       setProfileUpdateDetail(notification);
     },
-    [isAdminUser, navigate],
+    [isBackOfficeUser, navigate],
   );
 
   const handleNotificationNavigate = useCallback(
@@ -1652,7 +1661,9 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
           data?.report_id;
 
         navigate(
-          isAdminUser ? "/admin/incidents" : "/incident-complaint/case-management",
+          isBackOfficeUser
+            ? mapAdminPathToAccessiblePath("/admin/incidents")
+            : "/incident-complaint/case-management",
           openId
             ? {
                 state: {
@@ -1666,7 +1677,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
       }
       closeAllMenus();
     },
-    [navigate, isAdminUser, closeAllMenus],
+    [navigate, isBackOfficeUser, closeAllMenus],
   );
 
   return (
@@ -1703,11 +1714,17 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
                 <h1
                   className={`font-spartan text-base sm:text-lg font-bold text-left ${t.cardText}`}
                 >
-                  {isAdminUser ? "Dashboard" : "Barangay Gulod"}
+                  {isAdminUser
+                    ? "Dashboard"
+                    : isStaffUser
+                    ? "Staff Dashboard"
+                    : "Barangay Gulod"}
                 </h1>
                 <p className={`text-[11px] text-left ${t.subtleText} font-kumbh`}>
                   {isAdminUser
                     ? "Operations and analytics workspace"
+                    : isStaffUser
+                    ? "Operations workspace"
                     : isSubSystem2Route
                     ? "Document Services"
                     : tr.header.incidentReporting}
@@ -1717,7 +1734,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
 
             {/* Action Buttons */}
             <div className="flex items-center space-x-2 sm:space-x-3 relative md:mr-4 lg:mr-5">
-              {isAdminUser && (
+              {isBackOfficeUser && (
                 <div ref={headerSearchRef} className="relative hidden sm:block">
                   <div
                     className={`flex w-[15.5rem] items-center gap-2.5 rounded-xl border px-3.5 py-2 transition-all ${
@@ -1904,7 +1921,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
               <div ref={notificationRef} className="relative">
                 <button
                   onClick={toggleNotifications}
-                  className={`relative flex h-10 w-10 items-center justify-center ${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} ${isAdminUser ? `rounded-xl border ${t.cardBorder}` : "rounded-full"} transition-all`}
+                  className={`relative flex h-10 w-10 items-center justify-center ${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} ${isBackOfficeUser ? `rounded-xl border ${t.cardBorder}` : "rounded-full"} transition-all`}
                   title="Notifications"
                 >
                   <BellOutlineIcon className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
@@ -2054,7 +2071,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
               <div ref={settingsRef} className="relative">
                 <button
                   onClick={toggleSettings}
-                  className={`flex h-10 w-10 items-center justify-center ${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} ${isAdminUser ? `rounded-xl border ${t.cardBorder}` : "rounded-full"} transition-all`}
+                  className={`flex h-10 w-10 items-center justify-center ${t.subtleText} ${isDark ? "hover:bg-slate-700" : "hover:text-slate-800 hover:bg-slate-100"} ${isBackOfficeUser ? `rounded-xl border ${t.cardBorder}` : "rounded-full"} transition-all`}
                   title="Settings"
                 >
                   <svg
@@ -2207,7 +2224,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
               <div ref={profileRef} className="relative">
                 <button
                   onClick={toggleProfile}
-                  className={`flex h-10 items-center space-x-1 sm:space-x-1.5 px-1 sm:px-1.5 ${isAdminUser ? "rounded-lg border border-transparent bg-transparent" : "rounded-full"} ${isDark ? "hover:bg-slate-700" : "hover:bg-slate-100"} transition-all`}
+                  className={`flex h-10 items-center space-x-1 sm:space-x-1.5 px-1 sm:px-1.5 ${isBackOfficeUser ? "rounded-lg border border-transparent bg-transparent" : "rounded-full"} ${isDark ? "hover:bg-slate-700" : "hover:bg-slate-100"} transition-all`}
                 >
                   <div
                     className={`w-7 h-7 bg-gradient-to-br ${t.primaryGrad} rounded-full flex items-center justify-center text-white font-bold text-xs`}
@@ -2349,7 +2366,7 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
         />
       )}
 
-      {profileUpdateDetail && !isAdminUser && (
+      {profileUpdateDetail && !isBackOfficeUser && (
         <ProfileUpdateDetailsModal
           notification={profileUpdateDetail}
           onClose={() => setProfileUpdateDetail(null)}

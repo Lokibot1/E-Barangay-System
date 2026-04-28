@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-const ThemeContext = createContext();
+const noop = () => {};
+const DEFAULT_THEME_CONTEXT = {
+  isDark: false,
+  toggleTheme: noop,
+};
+
+const ThemeContext = createContext(DEFAULT_THEME_CONTEXT);
 
 export const ThemeProvider = ({ children }) => {
   const [isDark, setIsDark] = useState(localStorage.getItem('theme') === 'dark');
@@ -25,4 +31,4 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
-export const useTheme = () => useContext(ThemeContext);
+export const useTheme = () => useContext(ThemeContext) || DEFAULT_THEME_CONTEXT;

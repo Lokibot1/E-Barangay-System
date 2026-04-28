@@ -14,6 +14,10 @@ jest.mock("../../../hooks/shared/useSound", () => ({
   useSound: () => ({ playFeedback: mockPlayFeedback }),
 }));
 
+jest.mock("../../../homepage/services/loginService", () => ({
+  mapAdminPathToAccessiblePath: jest.fn((path) => path),
+}));
+
 import AdminNotificationToast from "../../../components/shared/AdminNotificationToast";
 
 beforeEach(() => {

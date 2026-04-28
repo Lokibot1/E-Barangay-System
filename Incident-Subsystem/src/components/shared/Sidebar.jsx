@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   canAccessAdminPanel,
+  canAccessStaffPanel,
   canAccessVerificationQueue,
   canManageAccounts,
   canManageSystemSettings,
@@ -223,6 +224,79 @@ const getAdminNavItems = (s) => [
   },
 ];
 
+const getStaffNavItems = (s) => [
+  {
+    id: "dashboard",
+    label: s.dashboard,
+    icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001-1m-6 0h6",
+    path: "/staff",
+  },
+  {
+    id: "resident-registry",
+    label: s.residentsName || "Resident Records",
+    icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
+    path: "/staff/user-management",
+    children: [
+      {
+        id: "verification",
+        label: s.userManagement,
+        icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
+        path: "/staff/user-management",
+      },
+      {
+        id: "residents",
+        label: s.residents,
+        icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
+        path: "/staff/residents",
+      },
+      {
+        id: "households",
+        label: s.households,
+        icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001-1m-6 0h6",
+        path: "/staff/households",
+      },
+    ],
+  },
+  {
+    id: "incidents",
+    label: s.caseManagement,
+    icon: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z",
+    path: "/staff/incidents",
+  },
+  {
+    id: "appointments",
+    label: s.appointments,
+    icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
+    path: "/staff/appointments",
+  },
+  {
+    id: "documents-inquiry",
+    label: s.documentsInquiry || "Issuance Application",
+    icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+    path: "/staff/documents-inquiry",
+    children: [
+      {
+        id: "certificates",
+        label: s.certificates,
+        icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+        path: "/staff/certificates",
+      },
+      {
+        id: "documents-inquiry-sub",
+        label: s.documentsInquiry || "Issuance App.",
+        icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z",
+        path: "/staff/documents-inquiry",
+      },
+    ],
+  },
+  {
+    id: "support",
+    label: s.supportTickets || s.support,
+    icon: "M8.228 9c.549-1.165 1.918-2 3.522-2 2.209 0 4 1.567 4 3.5 0 1.186-.675 2.234-1.713 2.868-.96.587-1.787 1.12-1.787 2.132V16M12 19h.01",
+    path: "/staff/support",
+  },
+];
+
 const canSeeAdminItem = (itemId) => {
   switch (itemId) {
     case "dashboard":
@@ -252,11 +326,35 @@ const canSeeAdminItem = (itemId) => {
   }
 };
 
-const filterAdminNavItems = (items) =>
+const canSeeStaffItem = (itemId) => {
+  switch (itemId) {
+    case "dashboard":
+    case "support":
+      return true;
+    case "resident-registry":
+    case "residents":
+    case "households":
+      return canViewResidents();
+    case "verification":
+      return canAccessVerificationQueue();
+    case "incidents":
+      return canViewIncidentCases();
+    case "appointments":
+      return canViewAppointments();
+    case "documents-inquiry":
+    case "documents-inquiry-sub":
+    case "certificates":
+      return canViewDocuments();
+    default:
+      return true;
+  }
+};
+
+const filterNavItems = (items, canSeeItem) =>
   items
     .map((item) => {
       const children = Array.isArray(item.children)
-        ? item.children.filter((child) => canSeeAdminItem(child.id))
+        ? item.children.filter((child) => canSeeItem(child.id))
         : item.children;
 
       return {
@@ -266,9 +364,15 @@ const filterAdminNavItems = (items) =>
     })
     .filter(
       (item) =>
-        canSeeAdminItem(item.id) ||
+        canSeeItem(item.id) ||
         (Array.isArray(item.children) && item.children.length > 0),
     );
+
+const filterAdminNavItems = (items) =>
+  filterNavItems(items, canSeeAdminItem);
+
+const filterStaffNavItems = (items) =>
+  filterNavItems(items, canSeeStaffItem);
 
 // ── Sidebar ─────────────────────────────────────────────────────────────────
 const Sidebar = ({ currentTheme, collapsed, onToggle, mobileOpen = false, onMobileToggle }) => {
@@ -290,12 +394,16 @@ const Sidebar = ({ currentTheme, collapsed, onToggle, mobileOpen = false, onMobi
     return window.matchMedia("(min-width: 768px)").matches;
   });
   const adminMode = canAccessAdminPanel();
+  const staffMode = canAccessStaffPanel() && !adminMode;
+  const backOfficeMode = adminMode || staffMode;
   const isSubSystem2Route = location.pathname.startsWith("/sub-system-2");
   const isIncidentRoute = location.pathname.startsWith("/incident-complaint");
   const showDocumentServices = isSubSystem2Route || isIncidentRoute;
   const userNavItems = getUserNavItems(tr.sidebar);
-  const NAV_ITEMS = adminMode
-    ? filterAdminNavItems(getAdminNavItems(tr.sidebar))
+  const NAV_ITEMS = backOfficeMode
+    ? adminMode
+      ? filterAdminNavItems(getAdminNavItems(tr.sidebar))
+      : filterStaffNavItems(getStaffNavItems(tr.sidebar))
     : showDocumentServices
       ? userNavItems.map((item) => {
           if (item.id === "subsystem-2") {
@@ -587,12 +695,16 @@ const Sidebar = ({ currentTheme, collapsed, onToggle, mobileOpen = false, onMobi
                 <p
                   className={`font-spartan text-[14px] font-bold leading-none ${t.sidebarAppName || t.cardText} whitespace-nowrap truncate text-left`}
                 >
-                  {adminMode ? tr.sidebar.adminPanel : "Barangay Gulod"}
+                  {adminMode
+                    ? tr.sidebar.adminPanel
+                    : staffMode
+                      ? tr.sidebar.staffPanel || "Staff Panel"
+                      : "Barangay Gulod"}
                 </p>
                 <p
                   className={`mt-1 font-kumbh text-[11px] leading-none ${t.sidebarText} whitespace-nowrap truncate text-left`}
                 >
-                  {adminMode
+                  {backOfficeMode
                     ? tr.sidebar.eBarangaySystem
                     : showDocumentServices
                       ? "Document Services"

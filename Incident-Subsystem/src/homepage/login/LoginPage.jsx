@@ -20,8 +20,8 @@ import { useBranding } from "../../context/BrandingContext";
 import LoginForm from "./LogInForm";
 import { useAuthLogic } from "../hooks/useAuthLogic";
 import {
-  canAccessAdminPanel,
   DEFAULT_SESSION_EXPIRED_MESSAGE,
+  getDefaultAuthenticatedPath,
   login,
   saveAuth,
   isAuthenticated,
@@ -71,7 +71,7 @@ const LoginPage = () => {
   } = useAuthLogic(navigate);
 
   if (isAuthenticated()) {
-    return <Navigate to={canAccessAdminPanel() ? "/admin" : "/sub-system-2"} replace />;
+    return <Navigate to={getDefaultAuthenticatedPath()} replace />;
   }
 
   const authBannerMessage = useMemo(() => {
@@ -121,7 +121,7 @@ const LoginPage = () => {
         );
       }
 
-      navigate(canAccessAdminPanel() ? "/admin" : "/sub-system-2");
+      navigate(getDefaultAuthenticatedPath());
     } catch (err) {
       setApiError(err.message || "Login failed. Please try again.");
     } finally {
@@ -129,9 +129,16 @@ const LoginPage = () => {
     }
   };
 
+  const goHome = () => {
+    navigate("/", { replace: true });
+  };
+
   const goToSignup = () => {
     setSlidingOut(true);
-    setTimeout(() => navigate("/signup", { state: { from: "login" } }), 280);
+    setTimeout(
+      () => navigate("/signup", { replace: true, state: { from: "login" } }),
+      280,
+    );
   };
 
   const SidebarBrand = () => (
@@ -234,7 +241,7 @@ const LoginPage = () => {
       <main className="relative z-20 pt-3 sm:pt-6 pb-3 sm:pb-6 px-3 sm:px-6">
         {/* Top Navigation Bar */}
         <div className="w-full flex items-center justify-between mb-4">
-          <button onClick={() => navigate(-1)}
+          <button onClick={goHome}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-[11px] font-black uppercase tracking-widest transition-colors font-kumbh ${
               isDarkMode ? "border-white/10 hover:bg-white/5 text-white" : "border-black/10 hover:bg-black/5 text-slate-900"
             }`}>

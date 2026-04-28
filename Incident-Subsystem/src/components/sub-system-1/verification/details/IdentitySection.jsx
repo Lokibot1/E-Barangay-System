@@ -23,8 +23,8 @@ const IdentitySection = ({ details, onZoom, t, currentTheme = 'modern' }) => {
       </p>
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <IDCard label="Front ID Photo" src={details?.idFront} onClick={() => onZoom(details?.idFront)} />
-      <IDCard label="Back ID Photo" src={details?.idBack} onClick={() => onZoom(details?.idBack)} />
+      <IDCard label="Front ID Photo" src={details?.idFront} onClick={onZoom} />
+      <IDCard label="Back ID Photo" src={details?.idBack} onClick={onZoom} />
     </div>
   </div>
 );

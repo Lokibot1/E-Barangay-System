@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, X, LogIn, LayoutDashboard, Sun, Moon, UserPlus } from "lucide-react";
-import { canAccessAdminPanel, isAuthenticated } from "../services/loginService";
+import {
+  getDefaultAuthenticatedPath,
+  isAuthenticated,
+} from "../services/loginService";
 import { useBranding } from "../../context/BrandingContext";
 import logoPic from "../../assets/images/bgylogo.png";
 
@@ -37,8 +40,7 @@ export default function HomeNavbar({ isDarkMode, onScrollTo }) {
   }, []);
 
   const handlePortalClick = () => {
-    if (canAccessAdminPanel()) navigate("/admin");
-    else navigate("/sub-system-2");
+    navigate(getDefaultAuthenticatedPath());
   };
 
   const handleThemeToggle = () => {

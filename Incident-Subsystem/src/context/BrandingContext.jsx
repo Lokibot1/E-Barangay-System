@@ -16,8 +16,15 @@ import {
   setBarangayLogoDataUrl,
 } from "../utils/branding";
 
-const BrandingContext = createContext();
 const DEFAULT_FAVICON = "/gulodlogo-circle.png";
+const noopAsync = async () => {};
+const DEFAULT_BRANDING_CONTEXT = {
+  logoDataUrl: "",
+  updateLogo: noopAsync,
+  resetLogo: noopAsync,
+  hasCustomLogo: false,
+};
+const BrandingContext = createContext(DEFAULT_BRANDING_CONTEXT);
 
 const ensureLinkTag = (rel, type) => {
   if (typeof document === "undefined") return null;
@@ -107,4 +114,4 @@ export const BrandingProvider = ({ children }) => {
   );
 };
 
-export const useBranding = () => useContext(BrandingContext);
+export const useBranding = () => useContext(BrandingContext) || DEFAULT_BRANDING_CONTEXT;

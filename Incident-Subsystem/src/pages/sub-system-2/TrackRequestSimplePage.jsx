@@ -65,7 +65,12 @@ const STATUS_META = {
 };
 
 const SearchIcon = ({ className = "" }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -76,7 +81,12 @@ const SearchIcon = ({ className = "" }) => (
 );
 
 const StatusIcon = ({ className = "" }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -87,7 +97,12 @@ const StatusIcon = ({ className = "" }) => (
 );
 
 const BackIcon = ({ className = "" }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -98,7 +113,12 @@ const BackIcon = ({ className = "" }) => (
 );
 
 const CopyIcon = ({ className = "" }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -109,7 +129,12 @@ const CopyIcon = ({ className = "" }) => (
 );
 
 const CheckIcon = ({ className = "" }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -124,7 +149,7 @@ const StatusBadge = ({ status }) => {
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[7px] sm:text-[8px] font-semibold uppercase tracking-wide ${meta.badgeClass}`}
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.18em] ${meta.badgeClass}`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${meta.dotClass}`} />
       {status}
@@ -132,7 +157,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-const DetailCard = ({
+const SummaryCard = ({
   label,
   value,
   t,
@@ -140,10 +165,15 @@ const DetailCard = ({
   onAction,
   actionTitle,
   actionClassName = "",
+  children,
 }) => (
-  <div className={`relative rounded-xl border ${t.cardBorder} ${t.inputBg} px-3 py-2.5 text-left shadow-sm`}>
-    <div className="flex items-start">
-      <p className={`pr-6 text-[11px] font-medium ${t.subtleText} font-kumbh`}>
+  <div
+    className={`relative flex min-h-[144px] flex-col justify-center rounded-[28px] border ${t.cardBorder} ${t.cardBg} px-5 py-6 text-center shadow-[0_14px_34px_rgba(15,23,42,0.06)]`}
+  >
+    <div className="flex items-start justify-center">
+      <p
+        className={`pr-6 text-[11px] font-semibold uppercase tracking-[0.24em] ${t.subtleText} font-kumbh`}
+      >
         {label}
       </p>
       {onAction && (
@@ -158,9 +188,15 @@ const DetailCard = ({
         </button>
       )}
     </div>
-    <p className={`mt-1 text-[10px] sm:text-[11px] font-semibold ${t.cardText} font-kumbh break-words leading-snug`}>
-      {value || "-"}
-    </p>
+    {children ? (
+      <div className="mt-5 flex items-center justify-center">{children}</div>
+    ) : (
+      <p
+        className={`mt-5 text-base sm:text-[1.05rem] font-spartan font-bold ${t.cardText} break-words leading-snug`}
+      >
+        {value || "-"}
+      </p>
+    )}
   </div>
 );
 
@@ -181,19 +217,92 @@ const formatDateTime = (value) => {
   });
 };
 
+const getDisplayValue = (value) => {
+  if (value === undefined || value === null) return "";
+
+  const normalizedValue = String(value).trim();
+  if (!normalizedValue) return "";
+
+  const loweredValue = normalizedValue.toLowerCase();
+  if (loweredValue === "null" || loweredValue === "undefined") return "";
+
+  return normalizedValue;
+};
+
+const pickRequestValue = (requestData, keys = []) => {
+  for (const key of keys) {
+    const resolvedValue = getDisplayValue(requestData?.[key]);
+    if (resolvedValue) return resolvedValue;
+  }
+
+  return "";
+};
+
+const formatStatusLabel = (value) => {
+  const normalizedValue = getDisplayValue(value);
+  if (!normalizedValue) return "Pending";
+
+  return normalizedValue
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+};
+
+const resolveRequestTitle = (requestData, fallbackLabel) => {
+  const documentLabel =
+    pickRequestValue(requestData, ["document_type", "documentType"]) ||
+    fallbackLabel;
+
+  return /request/i.test(documentLabel)
+    ? documentLabel
+    : `${documentLabel} Request`;
+};
+
+const resolveRequestPurpose = (requestData) =>
+  pickRequestValue(requestData, [
+    "specific_purpose",
+    "specificPurpose",
+    "purpose_of_request",
+    "purpose",
+  ]) || "General request";
+
+const resolveRequestLocation = (requestData) => {
+  const fullLocation = pickRequestValue(requestData, [
+    "location",
+    "address",
+    "full_address",
+    "fullAddress",
+  ]);
+
+  if (fullLocation) return fullLocation;
+
+  const locationParts = [
+    pickRequestValue(requestData, ["purok_zone", "purokZone"]),
+    pickRequestValue(requestData, ["street_address", "streetAddress"]),
+  ].filter(Boolean);
+
+  return locationParts.join(", ") || "Location not provided";
+};
+
+const resolveSubmittedAt = (requestData) =>
+  pickRequestValue(requestData, [
+    "date_submitted",
+    "submitted_at",
+    "created_at",
+    "updated_at",
+  ]);
+
 const TrackRequestSimplePage = ({ pageKey }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem("appTheme") || "modern",
   );
-  const [refNumber, setRefNumber] = useState(
-    () =>
-      normalizeReferenceNumber(
-        location.state?.referenceNumber ||
-          location.state?.requestRecord?.reference ||
-          "",
-      ),
+  const [refNumber, setRefNumber] = useState(() =>
+    normalizeReferenceNumber(
+      location.state?.referenceNumber ||
+        location.state?.requestRecord?.reference ||
+        "",
+    ),
   );
   const [requestData, setRequestData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -219,15 +328,25 @@ const TrackRequestSimplePage = ({ pageKey }) => {
     };
   }, []);
 
-  useEffect(() => () => {
-    if (copyTimeoutRef.current) {
-      window.clearTimeout(copyTimeoutRef.current);
-    }
-  }, []);
+  useEffect(
+    () => () => {
+      if (copyTimeoutRef.current) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
+    },
+    [],
+  );
 
   const t = themeTokens[currentTheme] || themeTokens.modern;
   const activeConfig = TRACK_PAGE_CONFIG[pageKey] || TRACK_PAGE_CONFIG.bid;
-  const activeStatusMeta = STATUS_META[requestData?.status] || STATUS_META.Pending;
+  const requestStatus = formatStatusLabel(requestData?.status);
+  const activeStatusMeta = STATUS_META[requestStatus] || STATUS_META.Pending;
+  const requestTitle = resolveRequestTitle(requestData, activeConfig.label);
+  const requestPurpose = resolveRequestPurpose(requestData);
+  const requestLocation = resolveRequestLocation(requestData);
+  const requestSubmittedAt = resolveSubmittedAt(requestData);
+  const requesterName =
+    pickRequestValue(requestData, ["full_name", "fullName"]) || "Resident";
 
   const handleCopyReference = async () => {
     const referenceNumber = requestData?.reference_number;
@@ -282,8 +401,12 @@ const TrackRequestSimplePage = ({ pageKey }) => {
     setRequestData(null);
 
     try {
-      const fallbackPath = pageKey === "bid" ? "track-request" : `track-${pageKey}`;
-      const trackingPath = resolveTrackingPath(normalizedReference, fallbackPath);
+      const fallbackPath =
+        pageKey === "bid" ? "track-request" : `track-${pageKey}`;
+      const trackingPath = resolveTrackingPath(
+        normalizedReference,
+        fallbackPath,
+      );
       const response = await fetch(
         `${DOCUMENTS_API_BASE_URL}/${trackingPath}/${normalizedReference}`,
       );
@@ -325,7 +448,9 @@ const TrackRequestSimplePage = ({ pageKey }) => {
             onClick={() => navigate("/sub-system-2")}
             className={`inline-flex items-center justify-center gap-1.5 rounded-lg border ${t.cardBorder} bg-white px-2.5 py-1.5 text-[11px] font-medium ${t.cardText} shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md`}
           >
-            <BackIcon className={`h-3.5 w-3.5 ${activeConfig.accentIconText}`} />
+            <BackIcon
+              className={`h-3.5 w-3.5 ${activeConfig.accentIconText}`}
+            />
             Back
           </button>
         </div>
@@ -342,26 +467,33 @@ const TrackRequestSimplePage = ({ pageKey }) => {
       <div className="flex-1">
         <div className="container mx-auto max-w-3xl px-3 py-3 sm:px-4 sm:py-4">
           <div className="space-y-3">
-            <div className={`${t.cardBg} border ${t.cardBorder} rounded-[20px] p-3.5 sm:p-4 shadow-lg`}>
-              <div className="flex items-start gap-3">
-                <div
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${activeConfig.accentIconSoft} ${activeConfig.accentIconText}`}
+            <div
+              className={`${t.cardBg} border ${t.cardBorder} rounded-[28px] p-4 sm:p-6 shadow-[0_18px_42px_rgba(15,23,42,0.06)]`}
+            >
+              <div className="text-center">
+                <p
+                  className={`text-[11px] font-semibold uppercase tracking-[0.24em] ${activeConfig.accentText} font-kumbh`}
                 >
-                  <SearchIcon className="h-4 w-4" />
-                </div>
-                <div className="flex-1 text-left">
-                  <h3 className={`text-left font-spartan text-[14px] sm:text-[15px] font-bold ${t.cardText}`}>
-                    Search Reference Number
-                  </h3>
-                  <p className={`mt-0 text-left text-[10px] sm:text-[11px] leading-tight ${t.subtleText} font-kumbh`}>
-                    Enter your request number to view the latest status, applicant details, and next update.
-                  </p>
-                </div>
+                  Request Tracking
+                </p>
+                <h3
+                  className={`mt-3 font-spartan text-xl sm:text-2xl font-bold ${t.cardText}`}
+                >
+                  Track your document request
+                </h3>
+                <p
+                  className={`mt-2 text-sm leading-relaxed ${t.subtleText} font-kumbh`}
+                >
+                  Enter your reference number to view the latest request details
+                  and processing status.
+                </p>
               </div>
 
-              <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <div className="relative flex-1">
-                  <SearchIcon className={`pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${t.subtleText}`} />
+                  <SearchIcon
+                    className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${t.subtleText}`}
+                  />
                   <input
                     placeholder="Enter reference number"
                     value={refNumber}
@@ -369,18 +501,20 @@ const TrackRequestSimplePage = ({ pageKey }) => {
                       setRefNumber(event.target.value.toUpperCase());
                       setError("");
                     }}
-                    onKeyDown={(event) => event.key === "Enter" && handleTrack()}
-                    className={`h-10 w-full rounded-xl border ${t.cardBorder} ${t.inputBg} ${t.inputText} pl-9 pr-3.5 text-[11px] sm:text-[12px] font-medium tracking-normal outline-none ring-0 transition-all placeholder:font-normal ${activeConfig.inputFocus}`}
+                    onKeyDown={(event) =>
+                      event.key === "Enter" && handleTrack()
+                    }
+                    className={`h-12 w-full rounded-2xl border ${t.cardBorder} ${t.inputBg} ${t.inputText} pl-10 pr-4 text-sm font-medium tracking-normal outline-none ring-0 transition-all placeholder:font-normal ${activeConfig.inputFocus}`}
                   />
                 </div>
 
                 <button
                   onClick={handleTrack}
-                  className={`inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r ${activeConfig.gradient} px-3.5 sm:px-4 font-spartan text-[11px] sm:text-[12px] font-semibold tracking-normal leading-none text-white shadow-lg transition-transform duration-300 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-70`}
+                  className={`inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r ${activeConfig.gradient} px-4 sm:px-5 font-spartan text-sm font-semibold tracking-normal leading-none text-white shadow-lg transition-transform duration-300 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-70`}
                   disabled={loading}
                 >
-                  <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center -translate-y-px">
-                    <StatusIcon className="h-3.5 w-3.5" />
+                  <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center">
+                    <StatusIcon className="h-4 w-4" />
                   </span>
                   <span className="inline-flex items-center leading-none">
                     {loading ? "Searching..." : "Track Request"}
@@ -396,65 +530,61 @@ const TrackRequestSimplePage = ({ pageKey }) => {
             </div>
 
             {!requestData ? (
-              <div className={`${t.cardBg} border ${t.cardBorder} rounded-[20px] p-4 sm:p-5 shadow-lg`}>
+              <div
+                className={`${t.cardBg} border ${t.cardBorder} rounded-[28px] p-5 sm:p-6 shadow-[0_18px_42px_rgba(15,23,42,0.06)]`}
+              >
                 <div className="flex flex-col items-center text-center py-3 sm:py-4">
                   <div
                     className={`flex h-14 w-14 items-center justify-center rounded-full ${activeConfig.accentIconSoft} ${activeConfig.accentText}`}
                   >
                     <StatusIcon className="h-7 w-7" />
                   </div>
-                  <h3 className={`mt-3 font-spartan text-[18px] sm:text-[20px] font-bold ${t.cardText}`}>
+                  <h3
+                    className={`mt-3 font-spartan text-[18px] sm:text-[20px] font-bold ${t.cardText}`}
+                  >
                     No request loaded yet
                   </h3>
-                  <p className={`mt-2 max-w-xl text-[12px] sm:text-[13px] ${t.subtleText} font-kumbh leading-relaxed`}>
-                    Search using your reference number and we will display your applicant details, current status, and the most relevant next-step guidance here.
+                  <p
+                    className={`mt-2 max-w-xl text-[12px] sm:text-[13px] ${t.subtleText} font-kumbh leading-relaxed`}
+                  >
+                    Search using your reference number and we will display your
+                    applicant details, current status, and the most relevant
+                    next-step guidance here.
                   </p>
                 </div>
               </div>
             ) : (
-              <div className={`${t.cardBg} border ${t.cardBorder} rounded-[20px] p-4 sm:p-5 shadow-lg`}>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="text-left">
-                    <p className={`text-[7px] font-semibold uppercase tracking-[0.12em] ${activeConfig.accentText} font-kumbh`}>
-                      Request Status
-                    </p>
-                    <h3 className={`mt-2 font-spartan text-[14px] sm:text-[15px] font-bold leading-none ${t.cardText}`}>
-                      {requestData.full_name}
-                    </h3>
-                    <p className={`mt-1.5 text-[10px] sm:text-[11px] leading-none ${t.subtleText} font-kumbh`}>
-                      {requestData.reference_number} | {requestData.document_type}
-                    </p>
-                  </div>
-
-                  <StatusBadge status={requestData.status} />
-                </div>
-
-                <div className={`mt-6 rounded-xl border px-3.5 py-3 text-center sm:px-4 ${activeStatusMeta.panelClass}`}>
-                  <p className="font-spartan text-[12px] sm:text-[13px] font-bold leading-none text-slate-800">
-                    {activeStatusMeta.title}
-                  </p>
-                  <p className="mt-1 text-[10px] sm:text-[11px] leading-snug text-slate-700 font-kumbh">
-                    {activeStatusMeta.description}
-                  </p>
-                </div>
-
-                <div className="mt-6">
-                  <h4 className={`text-[11px] font-semibold uppercase tracking-[0.12em] ${activeConfig.accentText} font-kumbh`}>
+              <div
+                className={`${t.cardBg} border ${t.cardBorder} rounded-[32px] p-5 sm:p-8 shadow-[0_22px_54px_rgba(15,23,42,0.08)]`}
+              >
+                <div className="text-center">
+                  <p
+                    className={`text-[11px] font-semibold uppercase tracking-[0.26em] ${activeConfig.accentText} font-kumbh`}
+                  >
                     Request Details
-                  </h4>
+                  </p>
+                  <h3
+                    className={`mt-3 font-spartan text-2xl sm:text-[2.3rem] font-bold ${t.cardText}`}
+                  >
+                    {requestTitle}
+                  </h3>
+                  <p
+                    className={`mt-2 text-sm sm:text-base ${t.subtleText} font-kumbh`}
+                  >
+                    {requestPurpose}
+                  </p>
                 </div>
 
-                <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-                  <DetailCard label="Applicant Name" value={requestData.full_name} t={t} />
-                  <DetailCard
-                    label="Reference Number"
+                <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <SummaryCard
+                    label="Reference"
                     value={requestData.reference_number}
                     t={t}
                     actionLabel={
                       copyLabel === "Copied" ? (
-                        <CheckIcon className="h-2.5 w-2.5" />
+                        <CheckIcon className="h-3 w-3" />
                       ) : (
-                        <CopyIcon className="h-2.5 w-2.5" />
+                        <CopyIcon className="h-3 w-3" />
                       )
                     }
                     onAction={handleCopyReference}
@@ -469,15 +599,33 @@ const TrackRequestSimplePage = ({ pageKey }) => {
                         : `${activeConfig.accentText}`
                     }
                   />
-                  <DetailCard label="Document Type" value={requestData.document_type} t={t} />
-                  <DetailCard label="Date Submitted" value={formatDateTime(requestData.date_submitted)} t={t} />
+                  <SummaryCard
+                    label="Submitted"
+                    value={formatDateTime(requestSubmittedAt)}
+                    t={t}
+                  />
+                  <SummaryCard label="Location" value={requestLocation} t={t} />
+                  <SummaryCard label="Current Status" t={t}>
+                    <StatusBadge status={requestStatus} />
+                  </SummaryCard>
                 </div>
 
-                <div className={`mt-4 border-t ${t.cardBorder} pt-3`}>
-                  <p className={`mx-auto max-w-xl text-center text-[9px] sm:text-[10px] ${t.subtleText} font-kumbh`}>
-                    Keep your reference number ready when following up with the barangay office.
+                <div
+                  className={`mt-5 rounded-[24px] border px-4 py-4 text-center ${activeStatusMeta.panelClass}`}
+                >
+                  <p className="font-spartan text-sm sm:text-base font-bold text-slate-800">
+                    {activeStatusMeta.title}
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-700 font-kumbh">
+                    {activeStatusMeta.description}
                   </p>
                 </div>
+
+                <p
+                  className={`mt-5 text-center text-sm ${t.subtleText} font-kumbh`}
+                >
+                  Requested by {requesterName}
+                </p>
               </div>
             )}
           </div>

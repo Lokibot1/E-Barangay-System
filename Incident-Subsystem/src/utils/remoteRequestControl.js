@@ -23,7 +23,7 @@ const getScopeKey = (url) => {
 
   try {
     const parsed = new URL(normalizedUrl);
-    return parsed.origin;
+    return `${parsed.origin}${parsed.pathname}`;
   } catch {
     return normalizedUrl;
   }

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useRealTime } from "../../context/RealTimeContext";
 import themeTokens from "../../Themetokens";
 import { useSound } from "../../hooks/shared/useSound";
+import { mapAdminPathToAccessiblePath } from "../../homepage/services/loginService";
 
 const TOAST_DURATION = 5000;
 
@@ -29,9 +30,9 @@ const SingleToast = memo(({ event, onDismiss, currentTheme }) => {
 
   const handleClick = useCallback(() => {
     if (isResident) {
-      navigate("/admin/residents");
+      navigate(mapAdminPathToAccessiblePath("/admin/residents"));
     } else {
-      navigate("/admin/incidents");
+      navigate(mapAdminPathToAccessiblePath("/admin/incidents"));
     }
     onDismiss(event.id);
   }, [navigate, event.id, onDismiss, isResident]);

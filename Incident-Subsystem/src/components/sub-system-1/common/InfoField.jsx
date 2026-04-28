@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Maximize2 } from 'lucide-react';
 import api from '../../../services/sub-system-1/Api';
+import {
+  loadResidentDocumentSource,
+  markResidentDocumentSourceAsMissing,
+} from '../../../utils/residentDocuments';
 
 export const InfoField = ({ label, val, t }) => (
   <div className="flex flex-col items-start gap-1">
@@ -33,37 +37,56 @@ export const IDCard = ({ label, src, onClick }) => {
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    let active = true;
+    let revoke = null;
+
     if (!src) {
       setImageSrc(null);
-      return;
+      setLoading(false);
+      setError(false);
+      return () => {};
     }
 
-    // If src includes 'resident-documents', it's the secured endpoint, fetch with auth
-    if (src.includes('resident-documents')) {
+    const loadImage = async () => {
       setLoading(true);
       setError(false);
-      api.get(src, { responseType: 'blob' })
-        .then(response => {
-          const blobUrl = URL.createObjectURL(response.data);
-          setImageSrc(blobUrl);
-        })
-        .catch(err => {
-          console.error('Failed to load image:', err);
-          setError(true);
-        })
-        .finally(() => setLoading(false));
-    } else {
-      // Direct URL, use as is
-      setImageSrc(src);
-    }
 
-    // Cleanup blob URL on unmount or src change
-    return () => {
-      if (imageSrc && imageSrc.startsWith('blob:')) {
-        URL.revokeObjectURL(imageSrc);
+      const result = await loadResidentDocumentSource(src, api);
+      if (!active) {
+        result.revoke?.();
+        return;
       }
+
+      revoke = result.revoke;
+
+      if (result.kind === 'ready') {
+        setImageSrc(result.src);
+        setError(false);
+      } else {
+        setImageSrc(null);
+        setError(true);
+      }
+
+      setLoading(false);
+    };
+
+    loadImage();
+
+    return () => {
+      active = false;
+      revoke?.();
     };
   }, [src]);
+
+  const handleImageError = () => {
+    if (imageSrc && !imageSrc.startsWith('blob:')) {
+      markResidentDocumentSourceAsMissing(imageSrc);
+    }
+
+    setImageSrc(null);
+    setLoading(false);
+    setError(true);
+  };
 
   const handleClick = () => {
     if (!imageSrc || loading || error) return;
@@ -84,7 +107,12 @@ export const IDCard = ({ label, src, onClick }) => {
         ) : error ? (
           <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs italic">Failed to load</div>
         ) : imageSrc ? (
-          <img src={imageSrc} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500" alt={label} />
+          <img
+            src={imageSrc}
+            className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
+            alt={label}
+            onError={handleImageError}
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs italic">No Image</div>
         )}

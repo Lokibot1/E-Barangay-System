@@ -2,10 +2,15 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
+  ArrowUpRight,
   CalendarClock,
+  Clock3,
+  Download,
   FileText,
+  MapPin,
   ScanSearch,
   Search,
+  ShieldCheck,
 } from "lucide-react";
 import themeTokens from "../../Themetokens";
 import Toast from "../../components/shared/modals/Toast";
@@ -79,7 +84,9 @@ const isWeekend = (dateValue) => {
 };
 
 const getStatusBadgeClass = (category, status) => {
-  const normalized = String(status || "").toLowerCase().replace(/[_-]+/g, " ");
+  const normalized = String(status || "")
+    .toLowerCase()
+    .replace(/[_-]+/g, " ");
 
   if (
     normalized.includes("resolved") ||
@@ -136,22 +143,226 @@ const buildIncidentReceipt = (incident) => ({
 });
 
 const SummaryCard = ({ label, value, accentClass, icon: Icon, t }) => (
-  <div className={`rounded-[24px] border ${t.cardBorder} ${t.cardBg} px-5 py-5 shadow-sm`}>
+  <div
+    className={`rounded-[24px] border ${t.cardBorder} ${t.cardBg} px-5 py-5 shadow-sm`}
+  >
     <div className="flex items-center justify-between">
       <div>
-        <p className={`text-[10px] font-kumbh font-semibold uppercase tracking-[0.18em] ${t.subtleText}`}>
+        <p
+          className={`text-[10px] font-kumbh font-semibold uppercase tracking-[0.18em] ${t.subtleText}`}
+        >
           {label}
         </p>
         <p className={`mt-3 text-3xl font-bold font-spartan ${t.cardText}`}>
           {value}
         </p>
       </div>
-      <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${accentClass}`}>
+      <div
+        className={`flex h-12 w-12 items-center justify-center rounded-2xl ${accentClass}`}
+      >
         <Icon className="h-5 w-5" />
       </div>
     </div>
   </div>
 );
+
+const getCategoryMeta = (kind, isDark = false) => {
+  switch (kind) {
+    case "document":
+      return {
+        label: "Document",
+        Icon: FileText,
+        surfaceClass: isDark
+          ? "from-emerald-950/60 via-slate-900 to-slate-900"
+          : "from-emerald-50 via-white to-sky-50",
+        glowClass: isDark ? "bg-emerald-500/20" : "bg-emerald-200/80",
+        iconClass: isDark
+          ? "bg-emerald-500/15 text-emerald-300"
+          : "bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20",
+        eyebrowClass: isDark
+          ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-200"
+          : "border-emerald-200 bg-emerald-50 text-emerald-700",
+        accentTextClass: isDark ? "text-emerald-300" : "text-emerald-700",
+      };
+    case "complaint":
+      return {
+        label: "Complaint",
+        Icon: AlertTriangle,
+        surfaceClass: isDark
+          ? "from-amber-950/50 via-slate-900 to-slate-900"
+          : "from-amber-50 via-white to-rose-50",
+        glowClass: isDark ? "bg-amber-500/20" : "bg-amber-200/80",
+        iconClass: isDark
+          ? "bg-amber-500/15 text-amber-300"
+          : "bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20",
+        eyebrowClass: isDark
+          ? "border-amber-500/25 bg-amber-500/10 text-amber-200"
+          : "border-amber-200 bg-amber-50 text-amber-700",
+        accentTextClass: isDark ? "text-amber-300" : "text-amber-700",
+      };
+    case "incident":
+      return {
+        label: "Incident",
+        Icon: ShieldCheck,
+        surfaceClass: isDark
+          ? "from-sky-950/50 via-slate-900 to-slate-900"
+          : "from-sky-50 via-white to-blue-50",
+        glowClass: isDark ? "bg-sky-500/20" : "bg-sky-200/80",
+        iconClass: isDark
+          ? "bg-sky-500/15 text-sky-300"
+          : "bg-gradient-to-br from-sky-500 to-blue-500 text-white shadow-lg shadow-sky-500/20",
+        eyebrowClass: isDark
+          ? "border-sky-500/25 bg-sky-500/10 text-sky-200"
+          : "border-sky-200 bg-sky-50 text-sky-700",
+        accentTextClass: isDark ? "text-sky-300" : "text-sky-700",
+      };
+    case "appointment":
+      return {
+        label: "Appointment",
+        Icon: CalendarClock,
+        surfaceClass: isDark
+          ? "from-violet-950/50 via-slate-900 to-slate-900"
+          : "from-violet-50 via-white to-fuchsia-50",
+        glowClass: isDark ? "bg-violet-500/20" : "bg-violet-200/80",
+        iconClass: isDark
+          ? "bg-violet-500/15 text-violet-300"
+          : "bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/20",
+        eyebrowClass: isDark
+          ? "border-violet-500/25 bg-violet-500/10 text-violet-200"
+          : "border-violet-200 bg-violet-50 text-violet-700",
+        accentTextClass: isDark ? "text-violet-300" : "text-violet-700",
+      };
+    default:
+      return {
+        label: "Request",
+        Icon: Search,
+        surfaceClass: isDark
+          ? "from-slate-900 via-slate-900 to-slate-900"
+          : "from-slate-50 via-white to-slate-100",
+        glowClass: isDark ? "bg-slate-500/20" : "bg-slate-200/80",
+        iconClass: isDark
+          ? "bg-slate-500/15 text-slate-300"
+          : "bg-gradient-to-br from-slate-500 to-slate-700 text-white shadow-lg shadow-slate-500/20",
+        eyebrowClass: isDark
+          ? "border-slate-500/25 bg-slate-500/10 text-slate-200"
+          : "border-slate-200 bg-slate-50 text-slate-700",
+        accentTextClass: isDark ? "text-slate-300" : "text-slate-700",
+      };
+  }
+};
+
+const getRequestInsight = (item) => {
+  if (item.kind === "document") {
+    return "Save the receipt, verify the QR anytime, and use the live tracker for the latest updates.";
+  }
+
+  if (item.kind === "appointment") {
+    return "Review the current hearing schedule here before making any reschedule or cancellation changes.";
+  }
+
+  if (item.kind === "incident") {
+    return "Keep this reference ready when checking follow-up actions or reviewing progress in case management.";
+  }
+
+  return "Use your reference number when coordinating follow-ups and checking the latest case handling updates.";
+};
+
+const RequestDetailCard = ({
+  label,
+  value,
+  icon: Icon,
+  iconClass,
+  isDark,
+  t,
+}) => (
+  <div
+    className={`rounded-[24px] border px-4 py-4 shadow-[0_18px_35px_-30px_rgba(15,23,42,0.38)] ${
+      isDark
+        ? `border-slate-700/80 bg-slate-900/70`
+        : "border-white/80 bg-white/90 backdrop-blur"
+    }`}
+  >
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <p
+          className={`text-[10px] font-kumbh font-semibold uppercase tracking-[0.18em] ${t.subtleText}`}
+        >
+          {label}
+        </p>
+        <p
+          className={`mt-3 break-words text-sm font-spartan font-semibold leading-6 ${t.cardText}`}
+        >
+          {value}
+        </p>
+      </div>
+      {Icon && (
+        <div
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${iconClass}`}
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+const RequestActionButton = ({
+  label,
+  icon: Icon,
+  onClick,
+  variant = "secondary",
+  disabled = false,
+  t,
+}) => {
+  const variantClassMap = {
+    primary:
+      "border-transparent bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-lg shadow-emerald-500/20 hover:from-teal-500 hover:to-emerald-500",
+    secondary: `${t.cardBorder} ${t.cardBg} ${t.cardText} hover:-translate-y-0.5 hover:shadow-md`,
+    warning:
+      "border-amber-200 bg-amber-50 text-amber-700 hover:-translate-y-0.5 hover:shadow-md",
+    danger:
+      "border-rose-200 bg-rose-50 text-rose-700 hover:-translate-y-0.5 hover:shadow-md",
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`group inline-flex w-full items-center justify-between rounded-[22px] border px-4 py-3.5 text-left text-sm font-kumbh font-semibold transition-all duration-200 ${
+        disabled
+          ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 shadow-none"
+          : variantClassMap[variant]
+      }`}
+    >
+      <span className="inline-flex min-w-0 items-center gap-3">
+        <span
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${
+            disabled
+              ? "bg-slate-200 text-slate-400"
+              : variant === "primary"
+                ? "bg-white/15 text-white"
+                : variant === "warning"
+                  ? "bg-amber-100 text-amber-600"
+                  : variant === "danger"
+                    ? "bg-rose-100 text-rose-600"
+                    : "bg-slate-100 text-slate-600"
+          }`}
+        >
+          <Icon className="h-4 w-4" />
+        </span>
+        <span className="truncate">{label}</span>
+      </span>
+      <ArrowUpRight
+        className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+          disabled
+            ? ""
+            : "group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+        }`}
+      />
+    </button>
+  );
+};
 
 const MyRequestsPage = () => {
   const navigate = useNavigate();
@@ -176,6 +387,7 @@ const MyRequestsPage = () => {
   const [savingAction, setSavingAction] = useState(false);
 
   const t = themeTokens[currentTheme] || themeTokens.modern;
+  const isDark = currentTheme === "dark";
   const timeSlots = getTimeSlots();
 
   const addToast = useCallback((toast) => {
@@ -231,7 +443,9 @@ const MyRequestsPage = () => {
               complaint_id: appointment.complaint_id || complaint.id,
               complaint_type: complaint.type || "",
               complainant_name:
-                appointment.complainant_name || complaint.complainant_name || "",
+                appointment.complainant_name ||
+                complaint.complainant_name ||
+                "",
               complainant_contact:
                 appointment.complainant_contact ||
                 complaint.complainant_contact ||
@@ -291,7 +505,10 @@ const MyRequestsPage = () => {
         setAvailabilityByDate((previous) => ({ ...previous, ...map }));
       } catch (availabilityError) {
         if (!active) return;
-        console.error("Failed to fetch appointment availability:", availabilityError);
+        console.error(
+          "Failed to fetch appointment availability:",
+          availabilityError,
+        );
       }
     };
 
@@ -322,11 +539,15 @@ const MyRequestsPage = () => {
       kind: "complaint",
       title: `Complaint: ${complaint.type || "General Concern"}`,
       description:
-        complaint.description || complaint.desired_resolution || "No description provided.",
+        complaint.description ||
+        complaint.desired_resolution ||
+        "No description provided.",
       reference: createReference("CMP", complaint.id),
       status: formatStatusLabel(complaint.status, "Ongoing"),
       submittedAt:
-        complaint.created_at || complaint.incident_date || new Date().toISOString(),
+        complaint.created_at ||
+        complaint.incident_date ||
+        new Date().toISOString(),
       location: complaint.location || complaint.respondent_address || "",
       raw: complaint,
     }));
@@ -336,7 +557,9 @@ const MyRequestsPage = () => {
       kind: "incident",
       title: `Incident Report: ${incident.type || "Incident"}`,
       description:
-        incident.description || incident.additional_notes || "No description provided.",
+        incident.description ||
+        incident.additional_notes ||
+        "No description provided.",
       reference: createReference("INC", incident.id),
       status: formatStatusLabel(incident.status, "Pending"),
       submittedAt: incident.created_at || new Date().toISOString(),
@@ -394,7 +617,9 @@ const MyRequestsPage = () => {
         item.location,
       ]
         .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(normalizedSearch));
+        .some((value) =>
+          String(value).toLowerCase().includes(normalizedSearch),
+        );
     });
   }, [allItems, filter, search]);
 
@@ -408,7 +633,8 @@ const MyRequestsPage = () => {
           !String(item.status).toLowerCase().includes("resolved") &&
           !String(item.status).toLowerCase().includes("completed"),
       ).length,
-      appointments: allItems.filter((item) => item.kind === "appointment").length,
+      appointments: allItems.filter((item) => item.kind === "appointment")
+        .length,
     }),
     [allItems],
   );
@@ -443,7 +669,8 @@ const MyRequestsPage = () => {
 
   const openDocumentTracker = useCallback(
     (item) => {
-      const trackPath = item.trackPath || item.raw?.trackPath || "/sub-system-2";
+      const trackPath =
+        item.trackPath || item.raw?.trackPath || "/sub-system-2";
       navigate(trackPath, {
         state: {
           referenceNumber: item.reference,
@@ -610,11 +837,16 @@ const MyRequestsPage = () => {
       <div className={`${t.pageBg} min-h-full p-4 sm:p-5 lg:p-6`}>
         <div className="mx-auto max-w-7xl space-y-6">
           <section className="w-full text-left">
-            <h1 className={`text-left text-3xl font-bold font-spartan leading-tight sm:text-4xl ${t.pageTitle}`}>
+            <h1
+              className={`text-left text-3xl font-bold font-spartan leading-tight sm:text-4xl ${t.pageTitle}`}
+            >
               My Requests
             </h1>
-            <p className={`mt-2 text-left text-sm font-kumbh leading-6 sm:text-base ${t.subtleText}`}>
-              Track your requests and follow their latest status updates in one place.
+            <p
+              className={`mt-2 text-left text-sm font-kumbh leading-6 sm:text-base ${t.subtleText}`}
+            >
+              Track your requests and follow their latest status updates in one
+              place.
             </p>
           </section>
 
@@ -649,7 +881,9 @@ const MyRequestsPage = () => {
             />
           </section>
 
-          <section className={`rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-5 shadow-[0_18px_40px_-32px_rgba(15,23,42,0.35)]`}>
+          <section
+            className={`rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-5 shadow-[0_18px_40px_-32px_rgba(15,23,42,0.35)]`}
+          >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-wrap gap-2">
                 {FILTERS.map((filterOption) => {
@@ -671,7 +905,9 @@ const MyRequestsPage = () => {
                 })}
               </div>
 
-              <div className={`flex h-12 w-full items-center gap-3 rounded-2xl border ${t.cardBorder} ${t.inputBg} px-4 lg:max-w-md`}>
+              <div
+                className={`flex h-12 w-full items-center gap-3 rounded-2xl border ${t.cardBorder} ${t.inputBg} px-4 lg:max-w-md`}
+              >
                 <Search className={`h-4 w-4 ${t.subtleText}`} />
                 <input
                   type="text"
@@ -691,158 +927,284 @@ const MyRequestsPage = () => {
           )}
 
           {loading ? (
-            <section className={`rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-10 text-center shadow-sm`}>
+            <section
+              className={`rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-10 text-center shadow-sm`}
+            >
               <p className={`text-lg font-kumbh font-medium ${t.cardText}`}>
                 Loading your request center...
               </p>
-              <p className={`mt-2 text-sm font-kumbh font-normal ${t.subtleText}`}>
-                We are gathering your latest document, case, and appointment records.
+              <p
+                className={`mt-2 text-sm font-kumbh font-normal ${t.subtleText}`}
+              >
+                We are gathering your latest document, case, and appointment
+                records.
               </p>
             </section>
           ) : filteredItems.length === 0 ? (
-            <section className={`rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-10 text-center shadow-sm`}>
+            <section
+              className={`rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-10 text-center shadow-sm`}
+            >
               <p className={`text-lg font-kumbh font-medium ${t.cardText}`}>
                 No matching requests yet
               </p>
-              <p className={`mt-2 text-sm font-kumbh font-normal ${t.subtleText}`}>
-                Try another filter or start a new request from the resident services pages.
+              <p
+                className={`mt-2 text-sm font-kumbh font-normal ${t.subtleText}`}
+              >
+                Try another filter or start a new request from the resident
+                services pages.
               </p>
             </section>
           ) : (
             <section className="grid gap-4">
               {filteredItems.map((item) => {
                 const statusClass = getStatusBadgeClass(item.kind, item.status);
+                const categoryMeta = getCategoryMeta(item.kind, isDark);
                 const canManageAppointment =
                   item.kind === "appointment" &&
                   !["cancelled", "completed", "no-show", "no show"].includes(
                     String(item.status || "").toLowerCase(),
                   );
+                const detailItems = [
+                  {
+                    label: "Reference",
+                    value: item.reference,
+                    icon: FileText,
+                  },
+                  {
+                    label: "Submitted",
+                    value: formatDateTime(item.submittedAt),
+                    icon: Clock3,
+                  },
+                  {
+                    label:
+                      item.kind === "appointment" ? "Schedule" : "Location",
+                    value:
+                      item.kind === "appointment"
+                        ? formatDateTime(item.scheduledAt || item.submittedAt)
+                        : item.location || "Not provided",
+                    icon: item.kind === "appointment" ? CalendarClock : MapPin,
+                  },
+                  {
+                    label: "Current Status",
+                    value: item.status,
+                    icon: ShieldCheck,
+                  },
+                ];
 
                 return (
                   <article
                     key={item.id}
-                    className={`rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-5 shadow-[0_18px_35px_-30px_rgba(15,23,42,0.28)]`}
+                    className={`relative overflow-hidden rounded-[32px] border ${t.cardBorder} ${t.cardBg} shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)]`}
                   >
-                    <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                      <div className="space-y-3">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-kumbh font-semibold uppercase tracking-[0.16em] ${statusClass}`}>
-                            {item.status}
-                          </span>
-                          <span className={`text-[10px] font-kumbh font-semibold uppercase tracking-[0.18em] ${t.subtleText}`}>
-                            {item.kind}
-                          </span>
-                        </div>
+                    <div
+                      className={`pointer-events-none absolute -right-10 top-8 h-40 w-40 rounded-full blur-3xl ${categoryMeta.glowClass}`}
+                    />
 
-                        <div>
-                          <h2 className={`text-2xl font-bold font-spartan ${t.cardText}`}>
-                            {item.title}
-                          </h2>
-                          <p className={`mt-2 text-sm font-kumbh ${t.subtleText}`}>
-                            {item.description}
-                          </p>
-                        </div>
+                    <div className="grid xl:grid-cols-[minmax(0,1.55fr)_300px]">
+                      <div
+                        className={`relative bg-gradient-to-br ${categoryMeta.surfaceClass} p-5 sm:p-6`}
+                      >
+                        <div className="relative">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span
+                                className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-kumbh font-semibold uppercase tracking-[0.16em] ${statusClass}`}
+                              >
+                                {item.status}
+                              </span>
+                              <span
+                                className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-kumbh font-semibold uppercase tracking-[0.16em] ${categoryMeta.eyebrowClass}`}
+                              >
+                                {categoryMeta.label}
+                              </span>
+                            </div>
 
-                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                          {[
-                            ["Reference", item.reference],
-                            ["Submitted", formatDateTime(item.submittedAt)],
-                            [
-                              item.kind === "appointment" ? "Schedule" : "Location",
-                              item.kind === "appointment"
-                                ? formatDateTime(item.scheduledAt || item.submittedAt)
-                                : item.location || "Not provided",
-                            ],
-                            ["Current Status", item.status],
-                          ].map(([label, value]) => (
-                            <div key={`${item.id}-${label}`} className={`rounded-2xl border ${t.cardBorder} ${t.inlineBg} px-4 py-4`}>
-                              <p className={`text-[10px] font-kumbh font-semibold uppercase tracking-[0.16em] ${t.subtleText}`}>
-                                {label}
+                            <span
+                              className={`text-[11px] font-kumbh font-medium ${t.subtleText}`}
+                            >
+                              {formatDateTime(item.submittedAt)}
+                            </span>
+                          </div>
+
+                          <div className="mt-5 flex items-start gap-4">
+                            <div
+                              className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-[24px] ${categoryMeta.iconClass}`}
+                            >
+                              <categoryMeta.Icon className="h-7 w-7" />
+                            </div>
+
+                            <div className="min-w-0">
+                              <p
+                                className={`text-[11px] font-kumbh font-semibold uppercase tracking-[0.18em] ${categoryMeta.accentTextClass}`}
+                              >
+                                Request Overview
                               </p>
-                              <p className={`mt-2 text-sm font-spartan font-semibold ${t.cardText}`}>
-                                {value}
+                              <h2
+                                className={`mt-2 text-2xl font-bold font-spartan leading-tight ${t.cardText}`}
+                              >
+                                {item.title}
+                              </h2>
+                              <p
+                                className={`mt-3 max-w-3xl text-sm font-kumbh leading-6 ${t.subtleText}`}
+                              >
+                                {item.description}
                               </p>
                             </div>
-                          ))}
+                          </div>
+
+                          <div
+                            className={`mt-5 rounded-[26px] border p-4 ${
+                              isDark
+                                ? "border-slate-700/80 bg-slate-900/70"
+                                : "border-white/80 bg-white/80 backdrop-blur"
+                            }`}
+                          >
+                            <p
+                              className={`text-[10px] font-kumbh font-semibold uppercase tracking-[0.18em] ${categoryMeta.accentTextClass}`}
+                            >
+                              Smart Follow-Up
+                            </p>
+                            <p
+                              className={`mt-2 text-sm font-kumbh leading-6 ${t.cardText}`}
+                            >
+                              {getRequestInsight(item)}
+                            </p>
+                          </div>
+
+                          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                            {detailItems.map((detail) => (
+                              <RequestDetailCard
+                                key={`${item.id}-${detail.label}`}
+                                label={detail.label}
+                                value={detail.value}
+                                icon={detail.icon}
+                                iconClass={categoryMeta.eyebrowClass}
+                                isDark={isDark}
+                                t={t}
+                              />
+                            ))}
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex min-w-[220px] flex-col gap-3 xl:max-w-[240px]">
-                        <button
-                          type="button"
-                          onClick={() => handleDownloadReceipt(item)}
-                          className="rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 px-4 py-3 text-sm font-kumbh font-semibold text-white shadow-sm"
-                        >
-                          Download Receipt
-                        </button>
-
-                        {item.kind === "document" && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => openDocumentTracker(item)}
-                              className={`rounded-2xl border ${t.cardBorder} ${t.inputBg} ${t.cardText} px-4 py-3 text-sm font-kumbh font-semibold`}
+                      <div
+                        className={`border-t p-5 sm:p-6 xl:border-l xl:border-t-0 ${t.cardBorder} ${
+                          isDark ? "bg-slate-900/60" : "bg-slate-50/85"
+                        }`}
+                      >
+                        <div className="space-y-4">
+                          <div>
+                            <p
+                              className={`text-[11px] font-kumbh font-semibold uppercase tracking-[0.18em] ${t.subtleText}`}
                             >
-                              Open Tracker
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => openDocumentVerification(item)}
-                              className={`inline-flex items-center justify-center gap-2 rounded-2xl border ${t.cardBorder} ${t.inputBg} ${t.cardText} px-4 py-3 text-sm font-kumbh font-semibold`}
+                              Quick Actions
+                            </p>
+                            <h3
+                              className={`mt-2 text-xl font-bold font-spartan ${t.cardText}`}
                             >
-                              <ScanSearch className="h-4 w-4" />
-                              Verify QR
-                            </button>
-                          </>
-                        )}
+                              Manage this request
+                            </h3>
+                            <p
+                              className={`mt-2 text-sm font-kumbh leading-6 ${t.subtleText}`}
+                            >
+                              Open the next step you need without searching
+                              through other pages.
+                            </p>
+                          </div>
 
-                        {(item.kind === "complaint" || item.kind === "incident") && (
-                          <button
-                            type="button"
-                            onClick={() => openCaseManagement(item)}
-                            className={`rounded-2xl border ${t.cardBorder} ${t.inputBg} ${t.cardText} px-4 py-3 text-sm font-kumbh font-semibold`}
+                          <div className="space-y-3">
+                            <RequestActionButton
+                              label="Download Receipt"
+                              icon={Download}
+                              onClick={() => handleDownloadReceipt(item)}
+                              variant="primary"
+                              t={t}
+                            />
+
+                            {item.kind === "document" && (
+                              <>
+                                <RequestActionButton
+                                  label="Open Tracker"
+                                  icon={Search}
+                                  onClick={() => openDocumentTracker(item)}
+                                  variant="secondary"
+                                  t={t}
+                                />
+                                <RequestActionButton
+                                  label="Verify QR"
+                                  icon={ScanSearch}
+                                  onClick={() => openDocumentVerification(item)}
+                                  variant="secondary"
+                                  t={t}
+                                />
+                              </>
+                            )}
+
+                            {(item.kind === "complaint" ||
+                              item.kind === "incident") && (
+                              <RequestActionButton
+                                label="Open Case Management"
+                                icon={ArrowUpRight}
+                                onClick={() => openCaseManagement(item)}
+                                variant="secondary"
+                                t={t}
+                              />
+                            )}
+
+                            {item.kind === "appointment" && (
+                              <>
+                                <RequestActionButton
+                                  label="Open Case Management"
+                                  icon={ArrowUpRight}
+                                  onClick={() => openCaseManagement(item)}
+                                  variant="secondary"
+                                  t={t}
+                                />
+                                <RequestActionButton
+                                  label="Reschedule"
+                                  icon={CalendarClock}
+                                  onClick={() => openRescheduleModal(item)}
+                                  variant="warning"
+                                  disabled={!canManageAppointment}
+                                  t={t}
+                                />
+                                <RequestActionButton
+                                  label="Cancel Appointment"
+                                  icon={AlertTriangle}
+                                  onClick={() => setCancelTarget(item)}
+                                  variant="danger"
+                                  disabled={!canManageAppointment}
+                                  t={t}
+                                />
+                              </>
+                            )}
+                          </div>
+
+                          <div
+                            className={`rounded-[24px] border p-4 ${
+                              isDark
+                                ? "border-slate-700/80 bg-slate-950/60"
+                                : "border-white/80 bg-white/80"
+                            }`}
                           >
-                            Open Case Management
-                          </button>
-                        )}
-
-                        {item.kind === "appointment" && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => openCaseManagement(item)}
-                              className={`rounded-2xl border ${t.cardBorder} ${t.inputBg} ${t.cardText} px-4 py-3 text-sm font-kumbh font-semibold`}
+                            <p
+                              className={`text-[10px] font-kumbh font-semibold uppercase tracking-[0.18em] ${t.subtleText}`}
                             >
-                              Open Case Management
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => openRescheduleModal(item)}
-                              disabled={!canManageAppointment}
-                              className={`rounded-2xl border px-4 py-3 text-sm font-kumbh font-semibold transition ${
-                                canManageAppointment
-                                  ? "border-amber-200 bg-amber-50 text-amber-700"
-                                  : "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
-                              }`}
+                              Request Reference
+                            </p>
+                            <p
+                              className={`mt-2 text-lg font-bold font-spartan ${t.cardText}`}
                             >
-                              Reschedule
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => setCancelTarget(item)}
-                              disabled={!canManageAppointment}
-                              className={`rounded-2xl border px-4 py-3 text-sm font-kumbh font-semibold transition ${
-                                canManageAppointment
-                                  ? "border-rose-200 bg-rose-50 text-rose-700"
-                                  : "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
-                              }`}
+                              {item.reference}
+                            </p>
+                            <p
+                              className={`mt-2 text-sm font-kumbh leading-6 ${t.subtleText}`}
                             >
-                              Cancel Appointment
-                            </button>
-                          </>
-                        )}
+                              Keep this number ready when you follow up with the
+                              barangay office.
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </article>
@@ -855,21 +1217,27 @@ const MyRequestsPage = () => {
 
       {rescheduleTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm">
-          <div className={`w-full max-w-xl rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-6 shadow-2xl`}>
+          <div
+            className={`w-full max-w-xl rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-6 shadow-2xl`}
+          >
             <p className="text-[11px] font-kumbh font-semibold uppercase tracking-[0.18em] text-amber-600">
               Appointment Update
             </p>
-            <h2 className={`mt-2 text-2xl font-bold font-spartan ${t.cardText}`}>
+            <h2
+              className={`mt-2 text-2xl font-bold font-spartan ${t.cardText}`}
+            >
               Reschedule {rescheduleTarget.title}
             </h2>
             <p className={`mt-2 text-sm font-kumbh ${t.subtleText}`}>
-              Pick a new weekday schedule for this hearing. Available slots update
-              based on the current appointment queue.
+              Pick a new weekday schedule for this hearing. Available slots
+              update based on the current appointment queue.
             </p>
 
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <label className="space-y-2">
-                <span className={`text-[11px] font-kumbh font-semibold uppercase tracking-[0.16em] ${t.subtleText}`}>
+                <span
+                  className={`text-[11px] font-kumbh font-semibold uppercase tracking-[0.16em] ${t.subtleText}`}
+                >
                   New Date
                 </span>
                 <input
@@ -882,7 +1250,9 @@ const MyRequestsPage = () => {
               </label>
 
               <label className="space-y-2">
-                <span className={`text-[11px] font-kumbh font-semibold uppercase tracking-[0.16em] ${t.subtleText}`}>
+                <span
+                  className={`text-[11px] font-kumbh font-semibold uppercase tracking-[0.16em] ${t.subtleText}`}
+                >
                   New Time
                 </span>
                 <select
@@ -895,7 +1265,9 @@ const MyRequestsPage = () => {
                     <option
                       key={slot.value}
                       value={slot.value}
-                      disabled={!slot.available && slot.value !== rescheduleTime}
+                      disabled={
+                        !slot.available && slot.value !== rescheduleTime
+                      }
                     >
                       {slot.label}
                       {!slot.available && slot.value !== rescheduleTime
@@ -909,7 +1281,8 @@ const MyRequestsPage = () => {
 
             {rescheduleDate && isWeekend(rescheduleDate) && (
               <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-kumbh text-amber-700">
-                Weekend schedules are unavailable. Please choose a Monday to Friday date.
+                Weekend schedules are unavailable. Please choose a Monday to
+                Friday date.
               </div>
             )}
 
@@ -940,16 +1313,20 @@ const MyRequestsPage = () => {
 
       {cancelTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm">
-          <div className={`w-full max-w-lg rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-6 shadow-2xl`}>
+          <div
+            className={`w-full max-w-lg rounded-[28px] border ${t.cardBorder} ${t.cardBg} p-6 shadow-2xl`}
+          >
             <p className="text-[11px] font-kumbh font-semibold uppercase tracking-[0.18em] text-rose-600">
               Cancel Appointment
             </p>
-            <h2 className={`mt-2 text-2xl font-bold font-spartan ${t.cardText}`}>
+            <h2
+              className={`mt-2 text-2xl font-bold font-spartan ${t.cardText}`}
+            >
               Cancel {cancelTarget.title}?
             </h2>
             <p className={`mt-3 text-sm font-kumbh ${t.subtleText}`}>
-              This will mark the appointment as cancelled and keep the change in your
-              request history for follow-up reference.
+              This will mark the appointment as cancelled and keep the change in
+              your request history for follow-up reference.
             </p>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
@@ -973,7 +1350,11 @@ const MyRequestsPage = () => {
         </div>
       )}
 
-      <Toast toasts={toasts} onRemove={removeToast} currentTheme={currentTheme} />
+      <Toast
+        toasts={toasts}
+        onRemove={removeToast}
+        currentTheme={currentTheme}
+      />
     </>
   );
 };

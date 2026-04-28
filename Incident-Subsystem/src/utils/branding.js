@@ -47,17 +47,23 @@ export const fetchBarangayLogoDataUrlRemote = async () => {
   }
 
   try {
-    const res = await runDedupedRemoteRequest(
+    const result = await runDedupedRemoteRequest(
       `GET:${BRANDING_API_URL}`,
-      () =>
-        fetch(BRANDING_API_URL, {
+      async () => {
+        const response = await fetch(BRANDING_API_URL, {
           headers: { Accept: "application/json" },
-        }),
+        });
+        const data = await response.json().catch(() => ({}));
+
+        return {
+          ok: response.ok,
+          data,
+        };
+      },
     );
-    if (!res.ok) return null;
-    const data = await res.json().catch(() => ({}));
+    if (!result.ok) return null;
     rememberRemoteRequestSuccess(BRANDING_API_URL);
-    return data?.dataUrl || data?.imageUrl || "";
+    return result.data?.dataUrl || result.data?.imageUrl || "";
   } catch (error) {
     rememberRemoteRequestFailure(BRANDING_API_URL, error);
     return null;

@@ -1,5 +1,62 @@
 [
     {
+        "id": "verification-1776834068940-7a4b2089",
+        "action": "rejected",
+        "auditable_type": "resident",
+        "auditable_id": "BGN900112",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Pending"
+        },
+        "new_values": {
+            "status": "Rejected",
+            "verification_action": "Rejected",
+            "rejection_reason": "Incorrect Information",
+            "rejection_remarks": "kupal"
+        },
+        "created_at": "2026-04-22T05:01:08+00:00",
+        "subject_name": "Quinn Cruz Navarro Sr.",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN900112",
+            "resident_id": 112
+        }
+    },
+    {
+        "id": "verification-1776736210582-3b045728",
+        "action": "visit_set",
+        "auditable_type": "resident",
+        "auditable_id": "BGN900105",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Pending"
+        },
+        "new_values": {
+            "status": "For Verification",
+            "verification_action": "Set for Visit",
+            "visit_set_at": "2026-04-21T01:50:10.565Z"
+        },
+        "created_at": "2026-04-21T01:50:10+00:00",
+        "subject_name": "Jessa Lopez Rivera",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN900105",
+            "resident_id": 105
+        }
+    },
+    {
         "id": "verification-1775050798163-d29b4c8e",
         "action": "approved",
         "auditable_type": "resident",

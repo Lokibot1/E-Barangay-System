@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../services/sub-system-1/Api';
+import {
+  loadResidentDocumentSource,
+  markResidentDocumentSourceAsMissing,
+} from '../../../utils/residentDocuments';
 
 const ImageZoomOverlay = ({ isOpen, imgSrc, onClose }) => {
   const [displaySrc, setDisplaySrc] = useState(null);
@@ -8,7 +12,7 @@ const ImageZoomOverlay = ({ isOpen, imgSrc, onClose }) => {
 
   useEffect(() => {
     let active = true;
-    let objectUrl = null;
+    let revoke = null;
 
     if (!isOpen || !imgSrc) {
       setDisplaySrc(null);
@@ -18,39 +22,45 @@ const ImageZoomOverlay = ({ isOpen, imgSrc, onClose }) => {
     }
 
     const loadImage = async () => {
-      if (imgSrc.startsWith('blob:') || !imgSrc.includes('resident-documents')) {
-        setDisplaySrc(imgSrc);
-        setError(false);
-        setLoading(false);
-        return;
-      }
-
       setLoading(true);
       setError(false);
 
-      try {
-        const response = await api.get(imgSrc, { responseType: 'blob' });
-        objectUrl = URL.createObjectURL(response.data);
-        if (active) {
-          setDisplaySrc(objectUrl);
-        }
-      } catch (err) {
-        console.error('ImageZoomOverlay failed to load image:', err);
-        if (active) setError(true);
-      } finally {
-        if (active) setLoading(false);
+      const result = await loadResidentDocumentSource(imgSrc, api);
+      if (!active) {
+        result.revoke?.();
+        return;
       }
+
+      revoke = result.revoke;
+
+      if (result.kind === 'ready') {
+        setDisplaySrc(result.src);
+        setError(false);
+      } else {
+        setDisplaySrc(null);
+        setError(true);
+      }
+
+      setLoading(false);
     };
 
     loadImage();
 
     return () => {
       active = false;
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
+      revoke?.();
     };
   }, [isOpen, imgSrc]);
+
+  const handleImageError = () => {
+    if (displaySrc && !displaySrc.startsWith('blob:')) {
+      markResidentDocumentSourceAsMissing(displaySrc);
+    }
+
+    setDisplaySrc(null);
+    setLoading(false);
+    setError(true);
+  };
 
   if (!isOpen) return null;
 
@@ -67,7 +77,8 @@ const ImageZoomOverlay = ({ isOpen, imgSrc, onClose }) => {
         <img 
           src={displaySrc || imgSrc} 
           className="max-w-full max-h-full object-contain animate-in zoom-in duration-300" 
-          alt="Zoomed" 
+          alt="Zoomed"
+          onError={handleImageError}
         />
       )}
     </div>

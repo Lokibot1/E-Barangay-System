@@ -1,5 +1,14 @@
 import React from "react";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent, act, within } from "@testing-library/react";
+
+const mockLeafletMap = {
+  setMaxBounds: jest.fn(),
+  setMinZoom: jest.fn(),
+  setView: jest.fn(),
+  latLngToContainerPoint: jest.fn(() => ({ x: 120, y: 140 })),
+  on: jest.fn(),
+  off: jest.fn(),
+};
 
 // ── Mock leaflet before importing the component ──────────────────────────
 jest.mock("leaflet", () => {
@@ -21,7 +30,7 @@ jest.mock("react-leaflet", () => {
   const MapContainer = ({ children }) => (
     <div data-testid="map-container">{children}</div>
   );
-  const TileLayer = () => null;
+  const TileLayer = ({ url }) => <div data-testid="tile-layer" data-url={url} />;
   const Polygon = ({ positions }) => (
     <div data-testid="polygon" data-positions={JSON.stringify(positions)} />
   );
@@ -38,11 +47,7 @@ jest.mock("react-leaflet", () => {
     return null;
   };
 
-  const useMap = () => ({
-    setMaxBounds: jest.fn(),
-    setMinZoom: jest.fn(),
-    setView: jest.fn(),
-  });
+  const useMap = () => mockLeafletMap;
 
   return { MapContainer, TileLayer, Polygon, Marker, Popup, useMapEvents, useMap };
 });
@@ -98,6 +103,98 @@ describe("MapComponent", () => {
       render(<MapComponent markers={[makeMarker({ title: "Theft Report" })]} mode="view" />);
       expect(screen.getByText("Theft Report")).toBeInTheDocument();
     });
+
+    it("renders clickable purok points and overlays when the purok map is enabled", () => {
+      render(<MapComponent mode="view" showPurokDividers />);
+      expect(screen.getAllByTestId("marker").length).toBeGreaterThanOrEqual(7);
+      expect(screen.queryByTestId("purok-side-panel")).not.toBeInTheDocument();
+    });
+
+    it("does not show the side panel from map focus alone", () => {
+      render(
+        <MapComponent
+          mode="view"
+          showPurokDividers
+          activePurok="Purok 1"
+        />,
+      );
+
+      expect(screen.queryByTestId("purok-side-panel")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("purok-connector")).not.toBeInTheDocument();
+    });
+
+    it("shows a fixed right-side panel for a marker-selected purok", () => {
+      render(
+        <MapComponent
+          mode="view"
+          showPurokDividers
+          activePurok="Purok 1"
+          activePurokPanel="Purok 1"
+        />,
+      );
+
+      const purokPanel = screen.getByTestId("purok-side-panel");
+      const mapsLink = within(purokPanel).getByRole("link", {
+        name: "Open in Google Maps",
+      });
+
+      expect(within(purokPanel).getByText("Purok Focus")).toBeInTheDocument();
+      expect(within(purokPanel).getByText("Purok 1")).toBeInTheDocument();
+      expect(
+        within(purokPanel).getByText(/Covers the upper residential edge of Gulod/i),
+      ).toBeInTheDocument();
+      expect(mapsLink).toHaveAttribute(
+        "href",
+        "https://www.google.com/maps/search/?api=1&query=14.7161,121.0412",
+      );
+      expect(
+        within(purokPanel).getAllByAltText("Purok 1 aerial preview"),
+      ).toHaveLength(4);
+    });
+
+    it("keeps the simplified panel content without extra purok actions", () => {
+      render(
+        <MapComponent
+          mode="view"
+          showPurokDividers
+          activePurok="Purok 1"
+          activePurokPanel="Purok 1"
+        />,
+      );
+
+      const purokPanel = screen.getByTestId("purok-side-panel");
+
+      expect(within(purokPanel).queryByText("Show all puroks")).not.toBeInTheDocument();
+      expect(within(purokPanel).queryByText("Focus this purok")).not.toBeInTheDocument();
+      expect(within(purokPanel).queryByText("Selected on map")).not.toBeInTheDocument();
+    });
+
+    it("renders a map type control and switches base map layers", () => {
+      render(<MapComponent mode="view" tileStyle="light" showMapTypeControl />);
+
+      expect(
+        screen.getByRole("button", { name: "Change map type" }),
+      ).toBeInTheDocument();
+      expect(screen.getByText("Light")).toBeInTheDocument();
+      expect(screen.getByTestId("tile-layer")).toHaveAttribute(
+        "data-url",
+        "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "Change map type" }));
+
+      expect(screen.getByText("Clean analytics view")).toBeInTheDocument();
+      fireEvent.click(
+        screen.getByRole("button", { name: /Satellite Aerial imagery view/i }),
+      );
+
+      expect(screen.getByTestId("tile-layer")).toHaveAttribute(
+        "data-url",
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      );
+      expect(screen.queryByText("Clean analytics view")).not.toBeInTheDocument();
+      expect(screen.getByText("Satellite")).toBeInTheDocument();
+    });
   });
 
   describe("pin mode", () => {
@@ -124,6 +221,37 @@ describe("MapComponent", () => {
       // The map container wrapper uses inline style for height
       const wrapper = container.querySelector('[style*="500px"]');
       expect(wrapper).not.toBeNull();
+    });
+  });
+
+  describe("view centering", () => {
+    it("uses the provided initialCenter in view mode", () => {
+      render(
+        <MapComponent
+          mode="view"
+          initialCenter={{ lat: 14.7111, lng: 121.0404 }}
+        />,
+      );
+
+      expect(mockLeafletMap.setView).toHaveBeenCalledWith(
+        [14.7111, 121.0404],
+        15,
+      );
+    });
+
+    it("uses the provided viewZoom in view mode", () => {
+      render(
+        <MapComponent
+          mode="view"
+          initialCenter={{ lat: 14.7111, lng: 121.0404 }}
+          viewZoom={16}
+        />,
+      );
+
+      expect(mockLeafletMap.setView).toHaveBeenCalledWith(
+        [14.7111, 121.0404],
+        16,
+      );
     });
   });
 

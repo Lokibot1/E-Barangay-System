@@ -62,8 +62,9 @@ export default function HomePage() {
 
     const syncAnnouncements = async () => {
       try {
-        const nextAnnouncements =
-          await loadPublishedAnnouncements(homepageAnnouncements);
+        const nextAnnouncements = await loadPublishedAnnouncements(
+          homepageAnnouncements,
+        );
 
         if (isDisposed) {
           revokeAnnouncementMediaUrls(nextAnnouncements);
@@ -86,7 +87,10 @@ export default function HomePage() {
     return () => {
       isDisposed = true;
       unsubscribeAutoPublish();
-      window.removeEventListener(ANNOUNCEMENTS_UPDATED_EVENT, syncAnnouncements);
+      window.removeEventListener(
+        ANNOUNCEMENTS_UPDATED_EVENT,
+        syncAnnouncements,
+      );
       mediaUrlsRegistry.forEach((url) => {
         URL.revokeObjectURL(url);
       });
@@ -96,10 +100,8 @@ export default function HomePage() {
 
   // ── UI state ─────────────────────────────────────────────────────────
   const [selectedNews, setSelectedNews] = useState(null);
-  const [contactData, setContactData] = useState({ name: "", email: "", message: "" });
-  const [formStatus, setFormStatus] = useState("idle");
-  const [announcementBoard, setAnnouncementBoard] = useState(() =>
-    homepageAnnouncements,
+  const [announcementBoard, setAnnouncementBoard] = useState(
+    () => homepageAnnouncements,
   );
   const { logoDataUrl } = useBranding();
   const logoSrc = logoDataUrl || logoPic;
@@ -146,12 +148,15 @@ export default function HomePage() {
     const announcementEvents = (announcementBoard || [])
       .filter((item) => String(item?.tag || "").toLowerCase() === "event")
       .map((item) => {
-        const eventDate = item?.event_date || item?.publish_at || item?.created_at || "";
+        const eventDate =
+          item?.event_date || item?.publish_at || item?.created_at || "";
 
         return {
           id: `announcement-event-${item.id}`,
           date: formatDateKey(eventDate),
-          startTime: formatTimeLabel(item?.event_start_time || item?.publish_at),
+          startTime: formatTimeLabel(
+            item?.event_start_time || item?.publish_at,
+          ),
           endTime: item?.event_end_time
             ? formatTimeLabel(item.event_end_time)
             : "",
@@ -182,20 +187,6 @@ export default function HomePage() {
   };
 
   // ── Contact form ──────────────────────────────────────────────────────
-  const handleContactChange = (field, value) => {
-    setContactData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleContactSubmit = (e) => {
-    e.preventDefault();
-    setFormStatus("submitting");
-    setTimeout(() => {
-      setFormStatus("success");
-      setContactData({ name: "", email: "", message: "" });
-      setTimeout(() => setFormStatus("idle"), 3000);
-    }, 1500);
-  };
-
   return (
     <div
       id="main-content"
@@ -265,13 +256,7 @@ export default function HomePage() {
         fallbackImage={officialFallback}
       />
 
-      <ContactSection
-        isDarkMode={isDarkMode}
-        contactData={contactData}
-        formStatus={formStatus}
-        onContactSubmit={handleContactSubmit}
-        onContactChange={handleContactChange}
-      />
+      <ContactSection isDarkMode={isDarkMode} />
 
       <HomeFooter
         isDarkMode={isDarkMode}

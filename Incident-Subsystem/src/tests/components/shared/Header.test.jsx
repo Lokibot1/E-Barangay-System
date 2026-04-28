@@ -22,6 +22,10 @@ jest.mock("../../../homepage/services/loginService", () => ({
   getUser: jest.fn(() => ({ name: "Test User", email: "test@example.com", role: "user" })),
   isAdmin: jest.fn(() => false),
   canAccessAdminPanel: jest.fn(() => false),
+  canAccessStaffPanel: jest.fn(() => false),
+  getProfilePath: jest.fn(() => "/profile"),
+  mapAdminPathToAccessiblePath: jest.fn((path) => path),
+  replaceCurrentHistoryPath: jest.fn(),
 }));
 
 // ── Mock contexts ─────────────────────────────────────────────────────────

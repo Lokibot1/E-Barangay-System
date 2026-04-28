@@ -10,7 +10,7 @@ import {
   canViewDocuments,
   canViewIncidentCases,
   canViewResidents,
-  getUser,
+  mapAdminPathToAccessiblePath,
 } from "../../homepage/services/loginService";
 import { DOCUMENTS_API_BASE_URL } from "../../config/runtimeApi";
 import { requestJson } from "../../services/shared/http";
@@ -188,7 +188,7 @@ export default function GlobalSearchModal({
         ]
           .filter(Boolean)
           .join(" · "),
-        route: "/admin/residents",
+        route: mapAdminPathToAccessiblePath("/admin/residents"),
         state: {
           openResidentId: String(resident.id),
           openResidentBarangayId: String(
@@ -226,7 +226,7 @@ export default function GlobalSearchModal({
         ]
           .filter(Boolean)
           .join(" · "),
-        route: "/admin/incidents",
+        route: mapAdminPathToAccessiblePath("/admin/incidents"),
         state: {
           openId: String(incident.id),
           openType: "incident",
@@ -259,7 +259,7 @@ export default function GlobalSearchModal({
         ]
           .filter(Boolean)
           .join(" · "),
-        route: "/admin/incidents",
+        route: mapAdminPathToAccessiblePath("/admin/incidents"),
         state: {
           openId: String(complaint.id),
           openType: "complaint",
@@ -291,7 +291,7 @@ export default function GlobalSearchModal({
         ]
           .filter(Boolean)
           .join(" · "),
-        route: "/admin/documents-inquiry",
+        route: mapAdminPathToAccessiblePath("/admin/documents-inquiry"),
         state: {
           openReferenceNumber: String(documentRecord.reference_number || ""),
           searchQuery:
@@ -324,7 +324,7 @@ export default function GlobalSearchModal({
         ]
           .filter(Boolean)
           .join(" · "),
-        route: "/admin/appointments",
+        route: mapAdminPathToAccessiblePath("/admin/appointments"),
         state: {
           openAppointmentId: String(appointment.id),
           searchQuery:

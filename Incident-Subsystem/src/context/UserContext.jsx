@@ -7,7 +7,22 @@ const COMPLAINT_DRAFT_KEY = "complaint_draft";
 const INCIDENT_DRAFT_KEY = "incident_report_draft";
 const SIGNUP_DRAFT_KEY = "signup_draft";
 
-const UserContext = createContext();
+const noop = () => {};
+const safeLogoutFallback = () => {
+  clearAuth();
+  localStorage.removeItem(ADMIN_NOTIFICATIONS_KEY);
+  localStorage.removeItem(COMPLAINT_DRAFT_KEY);
+  localStorage.removeItem(INCIDENT_DRAFT_KEY);
+  localStorage.removeItem(SIGNUP_DRAFT_KEY);
+  localStorage.removeItem(USER_NOTIFICATIONS_KEY);
+};
+const DEFAULT_USER_CONTEXT = {
+  user: null,
+  updateUser: noop,
+  logout: safeLogoutFallback,
+};
+
+const UserContext = createContext(DEFAULT_USER_CONTEXT);
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState({
@@ -42,4 +57,4 @@ export const UserProvider = ({ children }) => {
   );
 };
 
-export const useUser = () => useContext(UserContext);
+export const useUser = () => useContext(UserContext) || DEFAULT_USER_CONTEXT;

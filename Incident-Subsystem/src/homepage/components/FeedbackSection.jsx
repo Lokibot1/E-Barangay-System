@@ -1,19 +1,27 @@
 import { Star } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import ScrollReveal from "./ScrollReveal";
 
-const CARDS_PER_PAGE = 4;
-const AUTO_SLIDE_INTERVAL = 5200;
+const MARQUEE_ROW_DURATIONS = ["34s", "38s"];
 
-const chunkEntries = (items = [], size = CARDS_PER_PAGE) => {
-  const chunks = [];
-
-  for (let index = 0; index < items.length; index += size) {
-    chunks.push(items.slice(index, index + size));
-  }
-
-  return chunks;
-};
+const AVATAR_THEMES = [
+  {
+    background: "linear-gradient(135deg, #fde68a 0%, #fb7185 100%)",
+    color: "#312e81",
+  },
+  {
+    background: "linear-gradient(135deg, #bfdbfe 0%, #a7f3d0 100%)",
+    color: "#0f172a",
+  },
+  {
+    background: "linear-gradient(135deg, #86efac 0%, #0f766e 100%)",
+    color: "#ffffff",
+  },
+  {
+    background: "linear-gradient(135deg, #c4b5fd 0%, #f9a8d4 100%)",
+    color: "#312e81",
+  },
+];
 
 const getResidentMeta = (entry = {}) => {
   const role = String(entry.role || "Resident")
@@ -21,8 +29,104 @@ const getResidentMeta = (entry = {}) => {
     .trim();
   const organization = String(entry.organization || entry.category || "").trim();
 
-  return organization ? `${role} • ${organization}` : role;
+  return organization ? `${role} - ${organization}` : role;
 };
+
+const getInitials = (name = "Resident") => {
+  const initials = String(name)
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0] || "")
+    .join("")
+    .toUpperCase();
+
+  return initials || "R";
+};
+
+const getAvatarTheme = (name = "") => {
+  const hash = Array.from(String(name)).reduce(
+    (sum, char) => sum + char.charCodeAt(0),
+    0,
+  );
+
+  return AVATAR_THEMES[hash % AVATAR_THEMES.length];
+};
+
+const buildFeedbackRows = (items = []) => {
+  if (items.length <= 1) {
+    return [items, items];
+  }
+
+  const firstRow = [];
+  const secondRow = [];
+
+  items.forEach((item, index) => {
+    if (index % 2 === 0) {
+      firstRow.push(item);
+      return;
+    }
+
+    secondRow.push(item);
+  });
+
+  return [firstRow, secondRow.length ? secondRow : firstRow];
+};
+
+function FeedbackCard({ entry, isDarkMode }) {
+  const avatarTheme = getAvatarTheme(entry.name);
+
+  return (
+    <article
+      className={`flex min-h-[192px] w-[min(78vw,280px)] shrink-0 flex-col rounded-[24px] border px-5 py-4 md:w-[280px] ${
+        isDarkMode
+          ? "border-white/10 bg-slate-900/92 shadow-[0_22px_44px_-30px_rgba(2,6,23,0.72)]"
+          : "border-slate-200/85 bg-white/94 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.2)]"
+      }`}
+    >
+      <span className="text-[2.2rem] font-black leading-none text-blue-600">
+        "
+      </span>
+
+      <p
+        className={`mt-2 text-[0.82rem] font-normal leading-6 tracking-tight md:text-[0.86rem] ${
+          isDarkMode ? "text-white" : "text-slate-900"
+        }`}
+      >
+        {entry.comment}
+      </p>
+
+      <div className="mt-auto pt-4">
+        <div className="flex items-center gap-2">
+          <div
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[0.66rem] font-black uppercase shadow-[0_12px_24px_-18px_rgba(15,23,42,0.32)]"
+            style={avatarTheme}
+          >
+            {getInitials(entry.name)}
+          </div>
+
+          <div className="min-w-0 text-left">
+            <p
+              className={`truncate text-[0.86rem] font-black tracking-tight ${
+                isDarkMode ? "text-white" : "text-slate-900"
+              }`}
+            >
+              {entry.name}
+            </p>
+            <p
+              title={getResidentMeta(entry)}
+              className={`truncate text-[0.68rem] leading-4 ${
+                isDarkMode ? "text-slate-400" : "text-slate-500"
+              }`}
+            >
+              {getResidentMeta(entry)}
+            </p>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
 
 export default function FeedbackSection({
   isDarkMode,
@@ -33,8 +137,6 @@ export default function FeedbackSection({
       Array.isArray(initialFeedbackEntries) ? initialFeedbackEntries : [],
     [initialFeedbackEntries],
   );
-  const [activePage, setActivePage] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
 
   const totalFeedback = entries.length;
   const averageRating = useMemo(
@@ -45,34 +147,8 @@ export default function FeedbackSection({
         : 0,
     [entries, totalFeedback],
   );
-  const testimonialPages = useMemo(
-    () => chunkEntries(entries, CARDS_PER_PAGE),
-    [entries],
-  );
-  const visibleEntries = testimonialPages[activePage] || [];
 
-  useEffect(() => {
-    if (testimonialPages.length === 0) {
-      setActivePage(0);
-      return;
-    }
-
-    if (activePage > testimonialPages.length - 1) {
-      setActivePage(testimonialPages.length - 1);
-    }
-  }, [activePage, testimonialPages.length]);
-
-  useEffect(() => {
-    if (testimonialPages.length <= 1 || isPaused) {
-      return undefined;
-    }
-
-    const intervalId = window.setInterval(() => {
-      setActivePage((prev) => (prev + 1) % testimonialPages.length);
-    }, AUTO_SLIDE_INTERVAL);
-
-    return () => window.clearInterval(intervalId);
-  }, [isPaused, testimonialPages.length]);
+  const feedbackRows = useMemo(() => buildFeedbackRows(entries), [entries]);
 
   return (
     <section
@@ -122,133 +198,143 @@ export default function FeedbackSection({
           </div>
         </ScrollReveal>
 
-        <div className="space-y-6">
-          {visibleEntries.length > 0 ? (
-            <ScrollReveal delay={90}>
-              <div
-                className="overflow-hidden"
-                onMouseEnter={() => setIsPaused(true)}
-                onMouseLeave={() => setIsPaused(false)}
-                onFocusCapture={() => setIsPaused(true)}
-                onBlurCapture={() => setIsPaused(false)}
-              >
+        {entries.length > 0 ? (
+          <ScrollReveal delay={90}>
+            <div className="space-y-5">
+              {feedbackRows.map((rowEntries, rowIndex) => (
                 <div
-                  className="flex transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
-                  style={{
-                    width: `${testimonialPages.length * 100}%`,
-                    transform: `translateX(-${activePage * (100 / testimonialPages.length)}%)`,
-                  }}
+                  key={`feedback-row-${rowIndex}`}
+                  className="feedback-marquee-row relative overflow-hidden py-1"
                 >
-                  {testimonialPages.map((pageEntries, pageIndex) => (
-                    <div
-                      key={`testimonial-page-${pageIndex}`}
-                      className="w-full shrink-0"
-                      style={{ width: `${100 / testimonialPages.length}%` }}
-                    >
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                        {pageEntries.map((entry) => (
-                          <article
-                            key={entry.id}
-                            className={`flex h-full min-h-[220px] flex-col rounded-[24px] border p-4 md:p-5 ${
-                              isDarkMode
-                                ? "border-white/10 bg-slate-900/95 shadow-[0_16px_36px_-28px_rgba(15,23,42,0.45)]"
-                                : "border-black/5 bg-white/95 shadow-[0_16px_32px_-28px_rgba(15,23,42,0.2)]"
-                            }`}
-                          >
-                            <div className="min-w-0">
-                              <p className="text-[0.95rem] font-black tracking-tight">
-                                {entry.name}
-                              </p>
-                              <p
-                                title={getResidentMeta(entry)}
-                                className={`mt-1 truncate text-[0.74rem] font-medium leading-5 ${
-                                  isDarkMode
-                                    ? "text-slate-400"
-                                    : "text-slate-500"
-                                }`}
-                              >
-                                {getResidentMeta(entry)}
-                              </p>
-                            </div>
-
-                            <div className="mt-4 flex items-center gap-1 text-amber-400">
-                              {Array.from({ length: 5 }).map((_, starIndex) => (
-                                <Star
-                                  key={starIndex}
-                                  size={13}
-                                  className={
-                                    starIndex < entry.rating
-                                      ? "fill-current"
-                                      : isDarkMode
-                                        ? "text-slate-700"
-                                        : "text-slate-300"
-                                  }
-                                />
-                              ))}
-                            </div>
-
-                            <p
-                              className={`mt-5 line-clamp-4 text-[0.8rem] leading-6 md:text-[0.84rem] ${
-                                isDarkMode ? "text-slate-200" : "text-slate-700"
-                              }`}
-                            >
-                              "{entry.comment}"
-                            </p>
-                          </article>
+                  <div
+                    className={`feedback-marquee-track ${
+                      rowIndex === 0
+                        ? "feedback-marquee-track--ltr"
+                        : "feedback-marquee-track--rtl"
+                    }`}
+                    style={{
+                      animationDuration:
+                        MARQUEE_ROW_DURATIONS[rowIndex] || "34s",
+                    }}
+                  >
+                    {[0, 1].map((copyIndex) => (
+                      <div
+                        key={`feedback-row-${rowIndex}-copy-${copyIndex}`}
+                        className="feedback-marquee-group"
+                        aria-hidden={copyIndex === 1 ? "true" : undefined}
+                      >
+                        {rowEntries.map((entry) => (
+                          <FeedbackCard
+                            key={`${entry.id}-${copyIndex}`}
+                            entry={entry}
+                            isDarkMode={isDarkMode}
+                          />
                         ))}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </ScrollReveal>
-          ) : (
-            <ScrollReveal
-              className={`rounded-[28px] border p-8 text-center ${
-                isDarkMode
-                  ? "border-white/10 bg-slate-900/95"
-                  : "border-slate-200 bg-white"
-              }`}
-            >
-              <p
-                className={`text-[0.95rem] font-medium ${
-                  isDarkMode ? "text-slate-300" : "text-slate-600"
-                }`}
-              >
-                No testimonials available yet.
-              </p>
-            </ScrollReveal>
-          )}
+                    ))}
+                  </div>
 
-          {testimonialPages.length > 1 && (
-            <ScrollReveal
-              delay={120}
-              className="flex items-center justify-center gap-2"
-            >
-              {testimonialPages.map((_, index) => {
-                const active = index === activePage;
-
-                return (
-                  <button
-                    key={`testimonial-page-dot-${index}`}
-                    type="button"
-                    onClick={() => setActivePage(index)}
-                    aria-label={`Show testimonial page ${index + 1}`}
-                    aria-pressed={active}
-                    className={`h-2.5 rounded-full transition-all ${
-                      active
-                        ? "w-7 bg-emerald-500"
-                        : isDarkMode
-                          ? "w-2.5 bg-white/15 hover:bg-white/25"
-                          : "w-2.5 bg-slate-300 hover:bg-slate-400"
+                  <div
+                    className={`pointer-events-none absolute inset-y-0 left-0 w-16 md:w-24 ${
+                      isDarkMode
+                        ? "bg-gradient-to-r from-slate-950 via-slate-950/90 to-transparent"
+                        : "bg-gradient-to-r from-[#eef6f1] via-[#eef6f1]/88 to-transparent"
                     }`}
                   />
-                );
-              })}
-            </ScrollReveal>
-          )}
-        </div>
+                  <div
+                    className={`pointer-events-none absolute inset-y-0 right-0 w-16 md:w-24 ${
+                      isDarkMode
+                        ? "bg-gradient-to-l from-slate-950 via-slate-950/90 to-transparent"
+                        : "bg-gradient-to-l from-[#eef6f1] via-[#eef6f1]/88 to-transparent"
+                    }`}
+                  />
+                </div>
+              ))}
+            </div>
+          </ScrollReveal>
+        ) : (
+          <ScrollReveal
+            className={`rounded-[28px] border p-8 text-center ${
+              isDarkMode
+                ? "border-white/10 bg-slate-900/95"
+                : "border-slate-200 bg-white"
+            }`}
+          >
+            <p
+              className={`text-[0.95rem] font-medium ${
+                isDarkMode ? "text-slate-300" : "text-slate-600"
+              }`}
+            >
+              No testimonials available yet.
+            </p>
+          </ScrollReveal>
+        )}
       </div>
+
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            #feedback .feedback-marquee-track {
+              display: flex;
+              width: max-content;
+              will-change: transform;
+              animation-timing-function: linear;
+              animation-iteration-count: infinite;
+            }
+
+            #feedback .feedback-marquee-track--ltr {
+              animation-name: feedback-marquee-ltr;
+            }
+
+            #feedback .feedback-marquee-track--rtl {
+              animation-name: feedback-marquee-rtl;
+            }
+
+            #feedback .feedback-marquee-group {
+              display: flex;
+              flex-shrink: 0;
+              gap: 1rem;
+              padding-right: 1rem;
+            }
+
+            #feedback .feedback-marquee-row:hover .feedback-marquee-track,
+            #feedback .feedback-marquee-row:focus-within .feedback-marquee-track {
+              animation-play-state: paused;
+            }
+
+            @keyframes feedback-marquee-rtl {
+              from {
+                transform: translateX(0);
+              }
+
+              to {
+                transform: translateX(-50%);
+              }
+            }
+
+            @keyframes feedback-marquee-ltr {
+              from {
+                transform: translateX(-50%);
+              }
+
+              to {
+                transform: translateX(0);
+              }
+            }
+
+            @media (max-width: 767px) {
+              #feedback .feedback-marquee-group {
+                gap: 0.85rem;
+                padding-right: 0.85rem;
+              }
+
+              #feedback .feedback-marquee-track {
+                animation-duration: 28s !important;
+              }
+            }
+          `,
+        }}
+      />
     </section>
   );
 }

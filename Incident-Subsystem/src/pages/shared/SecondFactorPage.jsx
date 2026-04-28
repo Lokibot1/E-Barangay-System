@@ -3,6 +3,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import themeTokens from "../../Themetokens";
 import {
   canAccessAdminPanel,
+  canAccessStaffPanel,
+  canManageSystemSettings,
+  getDefaultAuthenticatedPath,
   getUser,
   isAuthenticated,
 } from "../../homepage/services/loginService";
@@ -24,11 +27,13 @@ const SecondFactorPage = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const user = getUser();
+  const adminAccess = canAccessAdminPanel();
+  const backOfficeAccess = canAccessStaffPanel();
   const t = themeTokens[currentTheme] || themeTokens.modern;
   const config = getTwoFactorConfig(
     user?.id ?? user?.resident_id ?? user?.residentId ?? user?.email,
   );
-  const fromPath = location.state?.from || "/admin";
+  const fromPath = location.state?.from || getDefaultAuthenticatedPath();
 
   useEffect(() => {
     const handleThemeChange = (event) => {
@@ -45,15 +50,15 @@ const SecondFactorPage = () => {
       return;
     }
 
-    if (!canAccessAdminPanel()) {
-      navigate("/dashboard", { replace: true });
+    if (!backOfficeAccess) {
+      navigate(getDefaultAuthenticatedPath(), { replace: true });
       return;
     }
 
     if (!requiresSecondFactor(user)) {
       navigate(fromPath, { replace: true });
     }
-  }, [fromPath, navigate, user]);
+  }, [backOfficeAccess, fromPath, navigate, user]);
 
   const handleVerify = async (event) => {
     event.preventDefault();
@@ -79,10 +84,10 @@ const SecondFactorPage = () => {
 
       queueCommunicationEvent({
         category: "security",
-        title: "Admin access verified",
+        title: adminAccess ? "Admin access verified" : "Staff access verified",
         message: result.backupUsed
-          ? "An admin session was verified using a backup security code."
-          : "An admin session passed second-step verification.",
+          ? "A back-office session was verified using a backup security code."
+          : "A back-office session passed second-step verification.",
         metadata: {
           route: fromPath,
           backupUsed: result.backupUsed,
@@ -100,13 +105,13 @@ const SecondFactorPage = () => {
       <div className={`w-full max-w-lg rounded-[28px] border ${t.cardBorder} ${t.cardBg} shadow-2xl overflow-hidden`}>
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-8 py-7 text-white">
           <p className="text-[11px] font-kumbh font-semibold uppercase tracking-[0.24em] text-white/75">
-            Admin Security
+            Portal Security
           </p>
           <h1 className="mt-2 text-3xl font-bold font-spartan leading-none">
             Second-Step Verification
           </h1>
           <p className="mt-3 text-sm font-kumbh text-white/85">
-            Enter your admin access code before opening the control panel.
+            Enter your back-office access code before opening the control panel.
           </p>
         </div>
 
@@ -156,13 +161,15 @@ const SecondFactorPage = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              type="button"
-              onClick={() => navigate("/admin/settings?tab=security", { replace: true })}
-              className={`flex-1 rounded-2xl border ${t.cardBorder} ${t.inputBg} ${t.cardText} px-5 py-3 text-sm font-kumbh font-semibold`}
-            >
-              Open Security Settings
-            </button>
+            {canManageSystemSettings() && (
+              <button
+                type="button"
+                onClick={() => navigate("/admin/settings?tab=security", { replace: true })}
+                className={`flex-1 rounded-2xl border ${t.cardBorder} ${t.inputBg} ${t.cardText} px-5 py-3 text-sm font-kumbh font-semibold`}
+              >
+                Open Security Settings
+              </button>
+            )}
             <button
               type="submit"
               disabled={submitting}

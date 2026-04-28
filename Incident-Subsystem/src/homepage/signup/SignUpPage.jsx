@@ -30,7 +30,10 @@ import themeTokens from "../../Themetokens";
 import SignupForm from "./SignUpForm";
 import Toast from "../../components/shared/modals/Toast";
 import { useAuthLogic } from "../hooks/useAuthLogic";
-import { isAuthenticated, isAdmin } from "../services/loginService";
+import {
+  getDefaultAuthenticatedPath,
+  isAuthenticated,
+} from "../services/loginService";
 import { handleDownloadSlip } from "../../utils/sub-system-1/documentGenerator";
 import { useBranding } from "../../context/BrandingContext";
 
@@ -248,7 +251,7 @@ const SignupPage = () => {
 
   // Guard: already logged in
   if (isAuthenticated()) {
-    return <Navigate to={isAdmin() ? "/admin" : "/sub-system-2"} replace />;
+    return <Navigate to={getDefaultAuthenticatedPath()} replace />;
   }
 
   const currentTheme = localStorage.getItem("appTheme") || "blue";
@@ -265,9 +268,16 @@ const SignupPage = () => {
     ? `${t.inlineBg} border-white/10`
     : "bg-slate-100/95 border-black/10";
 
+  const goHome = () => {
+    navigate("/", { replace: true });
+  };
+
   const goToLogin = () => {
     setSlidingOut(true);
-    setTimeout(() => navigate("/login", { state: { from: "signup" } }), 280);
+    setTimeout(
+      () => navigate("/login", { replace: true, state: { from: "signup" } }),
+      280,
+    );
   };
 
   const handleDownloadTrackingSlip = () => {
@@ -429,7 +439,7 @@ const SignupPage = () => {
       <main className="relative z-20 pt-3 sm:pt-6 pb-3 sm:pb-6 px-3 sm:px-6">
         <div className="w-full flex items-center justify-between mb-4">
           <button
-            onClick={() => navigate("/")}
+            onClick={goHome}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-[11px] font-black uppercase tracking-widest transition-colors font-kumbh ${
               isDarkMode
                 ? "border-white/10 hover:bg-white/5 text-white"

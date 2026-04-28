@@ -55,10 +55,14 @@ jest.mock("react-router-dom", () => {
 // ── Mock login service ────────────────────────────────────────────────────
 jest.mock("../../../homepage/services/loginService", () => ({
   canAccessAdminPanel: jest.fn(() => false),
+  canAccessStaffPanel: jest.fn(() => false),
 }));
 
 import Layout from "../../../components/shared/Layout";
-import { canAccessAdminPanel } from "../../../homepage/services/loginService";
+import {
+  canAccessAdminPanel,
+  canAccessStaffPanel,
+} from "../../../homepage/services/loginService";
 
 afterEach(() => jest.clearAllMocks());
 
@@ -99,7 +103,7 @@ describe("Layout", () => {
 
   describe("notification toast selection", () => {
     it("renders AdminNotificationToast when user is admin", () => {
-      canAccessAdminPanel.mockReturnValue(true);
+      canAccessStaffPanel.mockReturnValue(true);
       wrap();
       expect(screen.getByTestId("admin-toast")).toBeInTheDocument();
       expect(screen.queryByTestId("user-toast")).not.toBeInTheDocument();
@@ -107,6 +111,7 @@ describe("Layout", () => {
 
     it("renders UserNotificationToast when user is not admin", () => {
       canAccessAdminPanel.mockReturnValue(false);
+      canAccessStaffPanel.mockReturnValue(false);
       wrap();
       expect(screen.getByTestId("user-toast")).toBeInTheDocument();
       expect(screen.queryByTestId("admin-toast")).not.toBeInTheDocument();

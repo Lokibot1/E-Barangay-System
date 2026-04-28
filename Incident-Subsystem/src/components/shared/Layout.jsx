@@ -8,7 +8,7 @@ import AdminNotificationToast from "./AdminNotificationToast";
 import UserNotificationToast from "./UserNotificationToast";
 import NetworkStatusBanner from "./NetworkStatusBanner";
 import themeTokens from "../../Themetokens";
-import { canAccessAdminPanel } from "../../homepage/services/loginService";
+import { canAccessStaffPanel } from "../../homepage/services/loginService";
 
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
@@ -88,8 +88,8 @@ const Layout = () => {
       <FAQChatbot currentTheme={currentTheme} />
 
       {/* Real-time notification toasts */}
-      {canAccessAdminPanel() && <AdminNotificationToast currentTheme={currentTheme} />}
-      {!canAccessAdminPanel() && <UserNotificationToast currentTheme={currentTheme} />}
+      {canAccessStaffPanel() && <AdminNotificationToast currentTheme={currentTheme} />}
+      {!canAccessStaffPanel() && <UserNotificationToast currentTheme={currentTheme} />}
     </div>
   );
 };

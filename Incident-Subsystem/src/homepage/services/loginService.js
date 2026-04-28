@@ -166,6 +166,16 @@ export const clearAuth = () => {
   }
 };
 
+export const replaceCurrentHistoryPath = (path = "/") => {
+  if (typeof window === "undefined" || !path) return;
+
+  try {
+    window.history.replaceState(window.history.state, "", path);
+  } catch {
+    // Ignore history edge cases and fall back to the normal redirect flow.
+  }
+};
+
 export const buildAuthHeaders = ({ includeJson = false, headers = {} } = {}) => {
   const builtHeaders = {
     Accept: "application/json",
@@ -240,6 +250,7 @@ export const hasRole = (...roles) => {
 };
 
 const ADMIN_PANEL_ROLES = ["super_admin", "admin"];
+const STAFF_PANEL_ROLES = ["super_admin", "admin", "staff"];
 
 /** Check whether the logged-in user has the admin role. */
 export const isSuperAdmin = () => hasRole("super_admin");
@@ -248,21 +259,37 @@ export const isStaff = () => hasRole("staff");
 export const isEncoder = () => hasRole("encoder");
 export const isViewer = () => hasRole("viewer");
 export const canAccessAdminPanel = () => hasRole(ADMIN_PANEL_ROLES);
+export const canAccessStaffPanel = () => hasRole(STAFF_PANEL_ROLES);
+export const getDefaultAuthenticatedPath = () => {
+  if (canAccessAdminPanel()) return "/admin";
+  if (canAccessStaffPanel()) return "/staff";
+  return "/sub-system-2";
+};
+export const getProfilePath = () => {
+  if (canAccessAdminPanel()) return "/admin/profile";
+  if (canAccessStaffPanel()) return "/staff/profile";
+  return "/profile";
+};
+export const mapAdminPathToAccessiblePath = (path = "") => {
+  if (!path) return getDefaultAuthenticatedPath();
+  if (canAccessAdminPanel() || !canAccessStaffPanel()) return path;
+  return path.replace(/^\/admin(?=\/|$)/, "/staff");
+};
 export const canViewResidentDigitalId = () =>
   hasRole("super_admin", "admin", "staff");
-export const canApproveRecords = () => canAccessAdminPanel();
-export const canEditRecords = () => canAccessAdminPanel();
+export const canApproveRecords = () => canAccessStaffPanel();
+export const canEditRecords = () => canAccessStaffPanel();
 export const canDeleteRecords = () => hasRole("super_admin", "admin");
-export const canViewResidents = () => canAccessAdminPanel();
+export const canViewResidents = () => canAccessStaffPanel();
 export const canManageResidents = () => canEditRecords();
-export const canManageHouseholds = () => canAccessAdminPanel();
-export const canAccessVerificationQueue = () => canAccessAdminPanel();
-export const canViewIncidentCases = () => canAccessAdminPanel();
-export const canManageIncidentCases = () => canAccessAdminPanel();
-export const canViewAppointments = () => canAccessAdminPanel();
-export const canManageAppointments = () => canAccessAdminPanel();
-export const canViewDocuments = () => canAccessAdminPanel();
-export const canProcessDocuments = () => canAccessAdminPanel();
+export const canManageHouseholds = () => canAccessStaffPanel();
+export const canAccessVerificationQueue = () => canAccessStaffPanel();
+export const canViewIncidentCases = () => canAccessStaffPanel();
+export const canManageIncidentCases = () => canAccessStaffPanel();
+export const canViewAppointments = () => canAccessStaffPanel();
+export const canManageAppointments = () => canAccessStaffPanel();
+export const canViewDocuments = () => canAccessStaffPanel();
+export const canProcessDocuments = () => canAccessStaffPanel();
 export const canManageAccounts = () => hasRole("super_admin", "admin");
 export const canManageSystemSettings = () =>
   hasRole("super_admin", "admin");

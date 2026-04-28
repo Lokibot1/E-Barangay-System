@@ -5,6 +5,7 @@ import themeTokens from "../../Themetokens";
 import { DOCUMENTS_API_BASE_URL } from "../../config/runtimeApi";
 import { saveDocumentRequestRecord } from "../../utils/requestCenter";
 import { queueCommunicationEvent } from "../../utils/securityCenter";
+import { calculateAgeFromDateInput } from "../../utils/dateAge";
 
 const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
   const navigate = useNavigate();
@@ -110,6 +111,12 @@ const COIRequestModal = ({ isOpen, onClose, currentTheme }) => {
     const phoneFields = ["contactNumber", "emergencyContactNumber"];
     if (phoneFields.includes(name)) {
       setFormData((prev) => ({ ...prev, [name]: value.replace(/[^0-9]/g, "").slice(0, 11) }));
+    } else if (name === "dateOfBirth") {
+      setFormData((prev) => ({
+        ...prev,
+        dateOfBirth: value,
+        age: calculateAgeFromDateInput(value),
+      }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }

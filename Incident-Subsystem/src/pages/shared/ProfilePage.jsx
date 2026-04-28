@@ -23,7 +23,11 @@ import {
 import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 import themeTokens from "../../Themetokens";
 import { authService } from "../../homepage/services/authService";
-import { getUser, logout } from "../../homepage/services/loginService";
+import {
+  getUser,
+  logout,
+  replaceCurrentHistoryPath,
+} from "../../homepage/services/loginService";
 import { residentService } from "../../services/sub-system-1/residents";
 import api from "../../services/sub-system-1/Api";
 import { getInitials } from "../../utils/avatar";
@@ -214,9 +218,17 @@ const buildRegisteredAddress = (user, puroks, streets) => {
     : "Barangay Gulod, Novaliches, Quezon City";
 };
 
-const normalizeRoleLabel = (role, adminAccount) => {
-  if (!role) return adminAccount ? "Barangay Administrator" : "Resident User";
-  if (role === "admin") return "Barangay Administrator";
+const normalizeRoleLabel = (role, backOfficeAccount) => {
+  const normalizedRole = String(role || "").toLowerCase();
+
+  if (!normalizedRole) {
+    return backOfficeAccount ? "Barangay Staff" : "Resident User";
+  }
+
+  if (normalizedRole === "super_admin") return "Super Administrator";
+  if (normalizedRole === "admin") return "Barangay Administrator";
+  if (normalizedRole === "staff") return "Barangay Staff";
+
   return String(role)
     .replace(/_/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
@@ -448,7 +460,8 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     await logout();
-    navigate("/login");
+    replaceCurrentHistoryPath("/");
+    navigate("/login", { state: { fromLogout: true } });
   };
 
   useEffect(() => {
@@ -486,8 +499,12 @@ export default function ProfilePage() {
 
   const t = themeTokens[currentTheme] || themeTokens.modern;
   const isDark = currentTheme === "dark";
-  const adminAccount = user?.role === "admin";
-  const isResident = !adminAccount;
+  const normalizedRole = String(user?.role || "").toLowerCase();
+  const adminAccount =
+    normalizedRole === "admin" || normalizedRole === "super_admin";
+  const staffAccount = normalizedRole === "staff";
+  const backOfficeAccount = adminAccount || staffAccount;
+  const isResident = !backOfficeAccount;
   const parsedName = useMemo(() => splitNameParts(user?.name), [user?.name]);
 
   useEffect(() => {
@@ -573,11 +590,11 @@ export default function ProfilePage() {
   const userName = buildFullName(user);
   const userEmail = formatText(user.email, "No email on file");
   const userPhone = formatText(user.contact_number || user.contact || user.phone || user.mobile);
-  const roleLabel = normalizeRoleLabel(user.role, adminAccount);
+  const roleLabel = normalizeRoleLabel(user.role, backOfficeAccount);
   const statusValue = user.status_label || user.status;
   const accountStatus = statusValue
     ? normalizeRoleLabel(statusValue, false)
-    : adminAccount ? "Active Staff Account" : "Active User Account";
+    : backOfficeAccount ? "Active Staff Account" : "Active User Account";
   const trackingNumber = formatText(user.tracking_number || user.trackingNumber);
   const accountId = formatText(user.staff_id || user.employee_id || user.account_id || user.barangay_id || user.id);
   const accountUsername = formatText(
@@ -843,8 +860,13 @@ export default function ProfilePage() {
   };
 
   // ── Additional computed values ─────────────────────────────────────────────
-  const goToBranding = () => navigate(adminAccount ? "/admin/settings?tab=branding" : "/settings?tab=branding");
-  const workspaceLabel = adminAccount ? "Admin Operations Workspace" : "Resident Services Workspace";
+  const goToBranding = () =>
+    navigate(adminAccount ? "/admin/settings?tab=branding" : "/settings?tab=branding");
+  const workspaceLabel = adminAccount
+    ? "Admin Operations Workspace"
+    : staffAccount
+    ? "Staff Operations Workspace"
+    : "Resident Services Workspace";
   const memberSince = formatDisplayDate(user.created_at || user.registered_at || user.member_since || user.updated_at);
   const firstName = formatText(user.first_name || user.firstName || parsedName.firstName);
   const middleName = formatText(user.middle_name || user.middleName || parsedName.middleName);
@@ -871,9 +893,17 @@ export default function ProfilePage() {
   const hasPurokMatch = Boolean(purokDraft && locationRefs.puroks.some((item) => String(item.id) === String(purokDraft)));
   const hasStreetMatch = Boolean(streetDraft && locationRefs.streets.some((item) => String(item.id) === String(streetDraft)));
   const infoAccent = isDark ? "text-slate-300" : "text-emerald-500";
-  const idLabel = adminAccount ? "Staff ID" : trackingNumber !== "Not provided" ? "Tracking Number" : "Account ID";
+  const idLabel = backOfficeAccount
+    ? "Staff ID"
+    : trackingNumber !== "Not provided"
+    ? "Tracking Number"
+    : "Account ID";
   const idValue = trackingNumber !== "Not provided" ? trackingNumber : accountId;
-  const protectionLabel = adminAccount ? "Protected administrator account" : "Protected resident account";
+  const protectionLabel = adminAccount
+    ? "Protected administrator account"
+    : staffAccount
+    ? "Protected staff account"
+    : "Protected resident account";
   const headerIdentity = userEmail !== "No email on file" ? userEmail : `${idLabel}: ${idValue}`;
   const themePreferenceLabel =
     currentTheme === "dark" ? "Dark Mode" : currentTheme === "blue" ? "Blue Mode" : "Modern Theme";

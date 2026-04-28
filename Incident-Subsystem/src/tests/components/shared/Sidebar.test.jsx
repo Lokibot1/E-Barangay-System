@@ -6,6 +6,7 @@ import { MemoryRouter } from "react-router-dom";
 jest.mock("../../../homepage/services/loginService", () => ({
   isAdmin: jest.fn(() => false),
   canAccessAdminPanel: jest.fn(() => false),
+  canAccessStaffPanel: jest.fn(() => false),
   canAccessVerificationQueue: jest.fn(() => false),
   canManageAccounts: jest.fn(() => false),
   canManageSystemSettings: jest.fn(() => false),
@@ -52,6 +53,7 @@ import Sidebar from "../../../components/shared/Sidebar";
 import {
   isAdmin,
   canAccessAdminPanel,
+  canAccessStaffPanel,
   canAccessVerificationQueue,
   canManageAccounts,
   canManageSystemSettings,
@@ -98,6 +100,7 @@ describe("Sidebar", () => {
     beforeEach(() => {
       isAdmin.mockReturnValue(false);
       canAccessAdminPanel.mockReturnValue(false);
+      canAccessStaffPanel.mockReturnValue(false);
     });
 
     it("renders the logo image", () => {
@@ -156,6 +159,25 @@ describe("Sidebar", () => {
     });
   });
 
+  describe("staff nav items", () => {
+    beforeEach(() => {
+      isAdmin.mockReturnValue(false);
+      canAccessAdminPanel.mockReturnValue(false);
+      canAccessStaffPanel.mockReturnValue(true);
+      canAccessVerificationQueue.mockReturnValue(true);
+      canViewAnalytics.mockReturnValue(false);
+      canViewAppointments.mockReturnValue(true);
+      canViewDocuments.mockReturnValue(true);
+      canViewIncidentCases.mockReturnValue(true);
+      canViewResidents.mockReturnValue(true);
+    });
+
+    it("shows 'Dashboard' nav item for staff even without analytics access", () => {
+      wrap();
+      expect(screen.getByText("Dashboard")).toBeInTheDocument();
+    });
+  });
+
   describe("collapse toggle", () => {
     it("calls onToggle when the collapse button is clicked", () => {
       const onToggle = jest.fn();
@@ -179,6 +201,7 @@ describe("Sidebar", () => {
     it("renders a button for the Main nav item for regular user", () => {
       isAdmin.mockReturnValue(false);
       canAccessAdminPanel.mockReturnValue(false);
+      canAccessStaffPanel.mockReturnValue(false);
       wrap();
       // Nav items use navigate() via buttons, not anchor tags
       expect(screen.getByText("Main")).toBeInTheDocument();
@@ -204,6 +227,7 @@ describe("Sidebar", () => {
     it("renders without error in dark theme", () => {
       isAdmin.mockReturnValue(false);
       canAccessAdminPanel.mockReturnValue(false);
+      canAccessStaffPanel.mockReturnValue(false);
       wrap({ currentTheme: "dark" });
       expect(screen.getByText("Main")).toBeInTheDocument();
     });
@@ -211,6 +235,7 @@ describe("Sidebar", () => {
     it("renders without error for unknown theme", () => {
       isAdmin.mockReturnValue(false);
       canAccessAdminPanel.mockReturnValue(false);
+      canAccessStaffPanel.mockReturnValue(false);
       wrap({ currentTheme: "unknown" });
       expect(screen.getByText("Main")).toBeInTheDocument();
     });

@@ -158,7 +158,7 @@ describe("AdminLanding", () => {
     });
 
     it("keeps event details visible and only enables them for event announcements", async () => {
-      render(<AdminLanding />);
+      render(<MemoryRouter><AdminLanding /></MemoryRouter>);
 
       const viewAnnouncementsButton = await screen.findByRole("button", {
         name: /view announcements/i,
