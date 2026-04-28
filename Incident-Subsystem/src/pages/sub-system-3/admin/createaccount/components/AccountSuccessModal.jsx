@@ -1,5 +1,6 @@
 import React from 'react';
 import { CheckCircle } from 'lucide-react';
+import { getRoleLabel } from '../../../../../utils/roles';
 
 const AccountSuccessModal = ({ successData, isDark, t, onClose }) => {
   if (!successData) return null;
@@ -13,7 +14,7 @@ const AccountSuccessModal = ({ successData, isDark, t, onClose }) => {
         <h2 className={`text-xl font-semibold font-spartan ${t.cardText}`}>Account Created</h2>
         <p className={`text-xs font-bold font-kumbh mt-1 mb-6 ${t.subtleText}`}>Successfully provisioned</p>
         <div className={`rounded-2xl p-4 text-left space-y-2 mb-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
-          {[['Name', successData.name], ['Username', `@${successData.username}`], ['Email', successData.email], ['Role', successData.role]].map(([label, value]) => (
+          {[['Name', successData.name], ['Username', `@${successData.username}`], ['Email', successData.email], ['Role', getRoleLabel(successData.role)]].map(([label, value]) => (
             <div key={label} className="flex justify-between items-center">
               <span className={`text-[9px] font-semibold font-kumbh ${t.subtleText}`}>{label}</span>
               <span className={`text-xs font-bold font-kumbh ${t.cardText}`}>{value}</span>

@@ -11,8 +11,12 @@ import {
   canViewAppointments,
   canViewDocuments,
   canViewIncidentCases,
+  canViewPayments,
+  canViewRequests,
   canViewResidents,
+  getUserRole,
 } from "../../homepage/services/loginService";
+import { normalizeRole } from "../../utils/roles";
 import { useLanguage } from "../../context/LanguageContext";
 import { useBranding } from "../../context/BrandingContext";
 import themeTokens from "../../Themetokens";
@@ -191,6 +195,12 @@ const getAdminNavItems = (s) => [
     path: "/admin/payments",
   },
   {
+    id: "accounts",
+    label: s.accountManagement || "Account Management",
+    icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
+    path: "/admin/accounts",
+  },
+  {
     id: "support",
     label: s.supportTickets || s.support,
     icon: "M8.228 9c.549-1.165 1.918-2 3.522-2 2.209 0 4 1.567 4 3.5 0 1.186-.675 2.234-1.713 2.868-.96.587-1.787 1.12-1.787 2.132V16M12 19h.01",
@@ -298,8 +308,45 @@ const getStaffNavItems = (s) => [
 ];
 
 const canSeeAdminItem = (itemId) => {
+  const role = normalizeRole(getUserRole());
+  const isAdmin = role === "admin" || role === "super_admin";
+
+  // Strict role-based filtering first.
+  if (!isAdmin) {
+    if (role === "staff1") {
+      return (
+        itemId === "dashboard" ||
+        itemId === "resident-registry" ||
+        itemId === "reports" ||
+        itemId === "verification" ||
+        itemId === "residents" ||
+        itemId === "households"
+      );
+    }
+
+    if (role === "staff2") {
+      return (
+        itemId === "dashboard" ||
+        itemId === "incidents" ||
+        itemId === "requests" ||
+        itemId === "appointments"
+      );
+    }
+
+    if (role === "staff3") {
+      return (
+        itemId === "dashboard" ||
+        itemId === "payments" ||
+        itemId === "documents-inquiry" ||
+        itemId === "documents-inquiry-sub" ||
+        itemId === "certificates"
+      );
+    }
+  }
+
   switch (itemId) {
     case "dashboard":
+      return true;
     case "reports":
       return canViewAnalytics();
     case "resident-registry":
@@ -307,47 +354,32 @@ const canSeeAdminItem = (itemId) => {
     case "households":
       return canViewResidents();
     case "verification":
-    case "requests":
       return canAccessVerificationQueue();
+    case "requests":
+      return canViewRequests();
     case "incidents":
       return canViewIncidentCases();
     case "appointments":
       return canViewAppointments();
     case "payments":
-      return canManageAccounts();
+      return canViewPayments();
     case "documents-inquiry":
     case "documents-inquiry-sub":
     case "certificates":
       return canViewDocuments();
     case "settings":
       return canManageSystemSettings();
+    case "accounts":
+      return canManageAccounts();
     default:
       return true;
   }
 };
 
 const canSeeStaffItem = (itemId) => {
-  switch (itemId) {
-    case "dashboard":
-    case "support":
-      return true;
-    case "resident-registry":
-    case "residents":
-    case "households":
-      return canViewResidents();
-    case "verification":
-      return canAccessVerificationQueue();
-    case "incidents":
-      return canViewIncidentCases();
-    case "appointments":
-      return canViewAppointments();
-    case "documents-inquiry":
-    case "documents-inquiry-sub":
-    case "certificates":
-      return canViewDocuments();
-    default:
-      return true;
-  }
+  // Staff are now routed through /admin and filtered via admin items.
+  // Keep Staff nav permissive but unused.
+  return canSeeAdminItem(itemId);
 };
 
 const filterNavItems = (items, canSeeItem) =>

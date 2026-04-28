@@ -7,9 +7,11 @@
  */
 
 import { INCIDENT_API_BASE_URL } from "../../config/runtimeApi";
+import { normalizeRole as normalizeRoleValue } from "../../utils/roles";
 
 const API_BASE = INCIDENT_API_BASE_URL;
 export const AUTH_UNAUTHORIZED_EVENT = "auth:unauthorized";
+export const AUTH_FORBIDDEN_EVENT = "auth:forbidden";
 export const DEFAULT_SESSION_EXPIRED_MESSAGE =
   "Your session has expired. Please sign in again.";
 
@@ -72,8 +74,8 @@ export const extractToken = (data) =>
       data?.data?.token ||
       data?.data?.access_token ||
       data?.data?.accessToken ||
-      data?.data?.plainTextToken ||
       data?.data?.plain_text_token ||
+      data?.data?.plainTextToken ||
       data?.meta?.token ||
       data?.meta?.access_token ||
       data?.authorization?.token ||
@@ -88,11 +90,6 @@ export const extractUser = (data) =>
   data?.profile ||
   data?.data?.profile ||
   null;
-
-const normalizeRoleValue = (role) =>
-  String(role || "")
-    .trim()
-    .toLowerCase();
 
 /**
  * Authenticate a user with email and password.
@@ -153,17 +150,17 @@ export const logout = async () => {
  * Remove all auth data from localStorage.
  */
 export const clearAuth = () => {
+  if (typeof window === "undefined") return;
+
   localStorage.removeItem("authToken");
   localStorage.removeItem("authUser");
   localStorage.removeItem("userStatusSnapshot");
 
-  if (typeof window !== "undefined") {
-    Object.keys(sessionStorage).forEach((key) => {
-      if (key.startsWith("ebs:security:two-factor:session:")) {
-        sessionStorage.removeItem(key);
-      }
-    });
-  }
+  Object.keys(sessionStorage).forEach((key) => {
+    if (key.startsWith("ebs:security:two-factor:session:")) {
+      sessionStorage.removeItem(key);
+    }
+  });
 };
 
 export const replaceCurrentHistoryPath = (path = "/") => {
@@ -172,7 +169,7 @@ export const replaceCurrentHistoryPath = (path = "/") => {
   try {
     window.history.replaceState(window.history.state, "", path);
   } catch {
-    // Ignore history edge cases and fall back to the normal redirect flow.
+    // Ignore history edge cases
   }
 };
 
@@ -208,6 +205,19 @@ export const notifyAuthExpired = (
   }
 };
 
+export const notifyAuthForbidden = ({
+  message = "403 Forbidden",
+  url,
+} = {}) => {
+  if (typeof window === "undefined") return;
+
+  window.dispatchEvent(
+    new CustomEvent(AUTH_FORBIDDEN_EVENT, {
+      detail: { message, url },
+    }),
+  );
+};
+
 export const handleUnauthorizedResponse = (
   response,
   message = DEFAULT_SESSION_EXPIRED_MESSAGE,
@@ -223,10 +233,14 @@ export const handleUnauthorizedResponse = (
 export const isAuthenticated = () => !!getToken();
 
 /** Retrieve the stored bearer token. */
-export const getToken = () => normalizeToken(localStorage.getItem("authToken"));
+export const getToken = () => {
+  if (typeof window === "undefined") return "";
+  return normalizeToken(localStorage.getItem("authToken"));
+};
 
 /** Retrieve the stored user object. */
 export const getUser = () => {
+  if (typeof window === "undefined") return null;
   const raw = localStorage.getItem("authUser");
   if (!raw) return null;
 
@@ -249,51 +263,56 @@ export const hasRole = (...roles) => {
     .includes(role);
 };
 
-const ADMIN_PANEL_ROLES = ["super_admin", "admin"];
-const STAFF_PANEL_ROLES = ["super_admin", "admin", "staff"];
+const ADMIN_PANEL_ROLES = ["admin", "staff1", "staff2", "staff3", "super_admin"];
 
-/** Check whether the logged-in user has the admin role. */
+/** RBAC Exports */
 export const isSuperAdmin = () => hasRole("super_admin");
 export const isAdmin = () => hasRole("super_admin", "admin");
-export const isStaff = () => hasRole("staff");
-export const isEncoder = () => hasRole("encoder");
-export const isViewer = () => hasRole("viewer");
+export const isStaff1 = () => hasRole("staff1");
+export const isStaff2 = () => hasRole("staff2");
+export const isStaff3 = () => hasRole("staff3");
+
 export const canAccessAdminPanel = () => hasRole(ADMIN_PANEL_ROLES);
-export const canAccessStaffPanel = () => hasRole(STAFF_PANEL_ROLES);
+export const canAccessStaffPanel = () => hasRole("staff1", "staff2", "staff3");
+
 export const getDefaultAuthenticatedPath = () => {
   if (canAccessAdminPanel()) return "/admin";
-  if (canAccessStaffPanel()) return "/staff";
   return "/sub-system-2";
 };
+
 export const getProfilePath = () => {
   if (canAccessAdminPanel()) return "/admin/profile";
-  if (canAccessStaffPanel()) return "/staff/profile";
   return "/profile";
 };
+
 export const mapAdminPathToAccessiblePath = (path = "") => {
   if (!path) return getDefaultAuthenticatedPath();
-  if (canAccessAdminPanel() || !canAccessStaffPanel()) return path;
-  return path.replace(/^\/admin(?=\/|$)/, "/staff");
+  return path;
 };
-export const canViewResidentDigitalId = () =>
-  hasRole("super_admin", "admin", "staff");
-export const canApproveRecords = () => canAccessStaffPanel();
-export const canEditRecords = () => canAccessStaffPanel();
-export const canDeleteRecords = () => hasRole("super_admin", "admin");
-export const canViewResidents = () => canAccessStaffPanel();
+
+/** Permissions */
+export const canViewResidentDigitalId = () => hasRole("super_admin", "admin", "staff1");
+export const canApproveRecords = () => canAccessAdminPanel();
+export const canEditRecords = () => canAccessAdminPanel();
+export const canDeleteRecords = () => hasRole("super_admin", "admin", "staff1");
+export const canViewResidents = () => hasRole("super_admin", "admin", "staff1");
 export const canManageResidents = () => canEditRecords();
-export const canManageHouseholds = () => canAccessStaffPanel();
-export const canAccessVerificationQueue = () => canAccessStaffPanel();
-export const canViewIncidentCases = () => canAccessStaffPanel();
-export const canManageIncidentCases = () => canAccessStaffPanel();
-export const canViewAppointments = () => canAccessStaffPanel();
-export const canManageAppointments = () => canAccessStaffPanel();
-export const canViewDocuments = () => canAccessStaffPanel();
-export const canProcessDocuments = () => canAccessStaffPanel();
+export const canManageHouseholds = () => hasRole("super_admin", "admin", "staff1");
+export const canAccessVerificationQueue = () => hasRole("super_admin", "admin", "staff1");
+export const canViewIncidentCases = () => hasRole("super_admin", "admin", "staff2");
+export const canManageIncidentCases = () => canAccessAdminPanel();
+
+// This is the function the error was complaining about:
+export const canViewAppointments = () => hasRole("super_admin", "admin", "staff2");
+
+export const canManageAppointments = () => canAccessAdminPanel();
+export const canViewDocuments = () => hasRole("super_admin", "admin", "staff3");
+export const canProcessDocuments = () => hasRole("super_admin", "admin", "staff3");
 export const canManageAccounts = () => hasRole("super_admin", "admin");
-export const canManageSystemSettings = () =>
-  hasRole("super_admin", "admin");
-export const canViewAnalytics = () => canAccessAdminPanel();
+export const canManageSystemSettings = () => hasRole("super_admin", "admin");
+export const canViewAnalytics = () => hasRole("super_admin", "admin", "staff1");
+export const canViewPayments = () => hasRole("super_admin", "admin", "staff3");
+export const canViewRequests = () => hasRole("super_admin", "admin", "staff2");
 
 /** Request a password-reset email. */
 export const forgotPassword = async (email) => {

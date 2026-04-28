@@ -1,5 +1,6 @@
 import {
   buildAuthHeaders,
+  notifyAuthForbidden,
   handleUnauthorizedResponse,
   isAuthenticated,
 } from "../../homepage/services/loginService";
@@ -65,6 +66,13 @@ export const requestJson = async (
 
     if (requireAuth) {
       handleUnauthorizedResponse(response);
+    }
+
+    if (requireAuth && response?.status === 403) {
+      notifyAuthForbidden({
+        message: data.message || "403 Forbidden",
+        url: String(url),
+      });
     }
 
     if (!response.ok) {

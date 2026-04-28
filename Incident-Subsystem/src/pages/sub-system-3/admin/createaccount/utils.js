@@ -1,6 +1,8 @@
 export const getRoleStyle = (role) => {
   if (role === 'admin') return 'bg-violet-100 text-violet-700 border-violet-200';
-  if (role === 'staff') return 'bg-sky-100 text-sky-700 border-sky-200';
+  if (role === 'staff1') return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+  if (role === 'staff2') return 'bg-amber-100 text-amber-700 border-amber-200';
+  if (role === 'staff3') return 'bg-sky-100 text-sky-700 border-sky-200';
   return 'bg-slate-100 text-slate-600 border-slate-200';
 };
 

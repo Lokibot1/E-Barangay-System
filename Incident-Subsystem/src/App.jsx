@@ -39,13 +39,13 @@ import VerificationNotificationListener from "./components/sub-system-1/common/V
 import { installGlobalClientErrorLogging } from "./utils/systemDiagnostics";
 
 // ── Homepage / public pages ───────────────────────────────────────────────────
-
 import { DebugAutofill } from "./homepage/utils/DevAutoFill";
 
 import "./App.css";
 import "leaflet/dist/leaflet.css";
 import {
   AUTH_UNAUTHORIZED_EVENT,
+  AUTH_FORBIDDEN_EVENT,
   canAccessVerificationQueue,
   canEditRecords,
   canManageAccounts,
@@ -54,9 +54,13 @@ import {
   canViewAppointments,
   canViewDocuments,
   canViewIncidentCases,
+  canViewPayments,
+  canViewRequests,
   canViewResidents,
   DEFAULT_SESSION_EXPIRED_MESSAGE,
+  getUserRole,
 } from "./homepage/services/loginService";
+import { getRoleHomePath } from "./utils/roles";
 
 const DEBUG_AUTOFILL_VISIBILITY_EVENT = "DEBUG_AUTOFILL_VISIBILITY";
 
@@ -66,6 +70,7 @@ const SignupPage = lazy(() => import("./homepage/signup/SignUpPage"));
 const ResetPasswordPage = lazy(() => import("./pages/sub-system-3/ResetPasswordPage"));
 const Logout = lazy(() => import("./homepage/logout"));
 const PublicVerify = lazy(() => import("./pages/sub-system-1/id"));
+// const RoleDashboard = lazy(() => import("./pages/sub-system-3/admin/RoleDashboard"));
 
 const SubSystem2MainPage = lazy(() => import("./pages/sub-system-2/MainPage"));
 const Req_BIDPage = lazy(() => import("./pages/sub-system-2/Req_BIDPage"));
@@ -100,6 +105,7 @@ const Certificates = lazy(() => import("./pages/sub-system-1/certificates"));
 const Support = lazy(() => import("./pages/sub-system-1/support"));
 const Settings = lazy(() => import("./pages/sub-system-1/settings"));
 const ProfilePage = lazy(() => import("./pages/shared/ProfilePage"));
+const UnauthorizedPage = lazy(() => import("./pages/shared/UnauthorizedPage"));
 const MyRequestsPage = lazy(() => import("./pages/shared/MyRequestsPage"));
 const SecondFactorPage = lazy(() => import("./pages/shared/SecondFactorPage"));
 const NotFoundPage = lazy(() => import("./pages/shared/NotFoundPage"));
@@ -165,6 +171,37 @@ function AuthSessionWatcher() {
   return null;
 }
 
+function AuthForbiddenWatcher() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const handleForbidden = (event) => {
+      const message = event?.detail?.message || "403 Forbidden";
+
+      // Avoid redirect loops if we're already going home.
+      const home = getRoleHomePath(getUserRole());
+      if (location.pathname === home) {
+        navigate(home, {
+          replace: true,
+          state: { forbidden: true, message },
+        });
+        return;
+      }
+
+      navigate(home, {
+        replace: true,
+        state: { forbidden: true, message, from: location.pathname },
+      });
+    };
+
+    window.addEventListener(AUTH_FORBIDDEN_EVENT, handleForbidden);
+    return () => window.removeEventListener(AUTH_FORBIDDEN_EVENT, handleForbidden);
+  }, [location.pathname, navigate]);
+
+  return null;
+}
+
 function DebugAutofillGate({ setFormData }) {
   const { pathname } = useLocation();
   const [isHidden, setIsHidden] = useState(false);
@@ -204,14 +241,13 @@ function App() {
 
   useEffect(() => {
     const handleRegisterSetter = (e) => {
- 
       if (typeof e.detail === 'function') {
         setActiveSetFormData(() => e.detail);
       }
     };
-    
+
     window.addEventListener('REGISTER_SETTER', handleRegisterSetter);
- 
+
     window.dispatchEvent(new CustomEvent('REQUEST_SETTER_REFRESH'));
 
     return () => window.removeEventListener('REGISTER_SETTER', handleRegisterSetter);
@@ -224,213 +260,223 @@ function App() {
           <Router>
             <ScrollToTop />
             <AuthSessionWatcher />
+            <AuthForbiddenWatcher />
             <div className="App">
               <RouteErrorBoundary>
                 <Suspense fallback={<RouteLoadingFallback />}>
                   <Routes>
 
-              {/* ── PUBLIC ROUTES ───────────────────────────────────── */}
-              <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/verify/:id" element={<PublicVerify />} />
-              <Route path="/sub-system-2/verify-document" element={<VerifyDocumentPage />} />
-              <Route path="/auth" element={<Navigate to="/login" replace />} />
+                    {/* ── PUBLIC ROUTES ───────────────────────────────────── */}
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/signup" element={<SignupPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route path="/verify/:id" element={<PublicVerify />} />
+                    <Route path="/sub-system-2/verify-document" element={<VerifyDocumentPage />} />
+                    <Route path="/auth" element={<Navigate to="/login" replace />} />
 
-              <Route element={<ProtectedRoute />}>
-                <Route path="/second-factor" element={<SecondFactorPage />} />
-              </Route>
+                    <Route element={<ProtectedRoute />}>
+                      <Route path="/second-factor" element={<SecondFactorPage />} />
+                    </Route>
 
-              {/* ── USER-ONLY ROUTES ─────────────────────────────────── */}
-              <Route element={<UserRoute />}>
-                <Route
-                  element={
-                    <UserRealTimeProvider>
-                      <Layout />
-                    </UserRealTimeProvider>
-                  }
-                >
-                  <Route path="/sub-system-2" element={<SubSystem2MainPage />} />
-                  <Route path="/sub-system-2/req-bid" element={<Req_BIDPage />} />
-                  <Route path="/sub-system-2/req-coi" element={<Req_COIPage />} />
-                  <Route path="/sub-system-2/req-cor" element={<Req_CORPage />} />
-                  <Route path="/sub-system-2/req-sub-bid" element={<Req_Sub_BID />} />
-                  <Route path="/sub-system-2/req-sub-coi" element={<Req_Sub_COI />} />
-                  <Route path="/sub-system-2/req-sub-cor" element={<Req_Sub_COR />} />
-                  <Route path="/sub-system-2/track-bid" element={<Track_BID />} />
-                  <Route path="/sub-system-2/track-coi" element={<Track_COI />} />
-                  <Route path="/sub-system-2/track-cor" element={<Track_COR />} />
+                    {/* ── USER-ONLY ROUTES ─────────────────────────────────── */}
+                    <Route element={<UserRoute />}>
+                      <Route
+                        element={
+                          <UserRealTimeProvider>
+                            <Layout />
+                          </UserRealTimeProvider>
+                        }
+                      >
+                        <Route path="/sub-system-2" element={<SubSystem2MainPage />} />
+                        <Route path="/sub-system-2/req-bid" element={<Req_BIDPage />} />
+                        <Route path="/sub-system-2/req-coi" element={<Req_COIPage />} />
+                        <Route path="/sub-system-2/req-cor" element={<Req_CORPage />} />
+                        <Route path="/sub-system-2/req-sub-bid" element={<Req_Sub_BID />} />
+                        <Route path="/sub-system-2/req-sub-coi" element={<Req_Sub_COI />} />
+                        <Route path="/sub-system-2/req-sub-cor" element={<Req_Sub_COR />} />
+                        <Route path="/sub-system-2/track-bid" element={<Track_BID />} />
+                        <Route path="/sub-system-2/track-coi" element={<Track_COI />} />
+                        <Route path="/sub-system-2/track-cor" element={<Track_COR />} />
 
-                  <Route path="/incident-complaint" element={<MainPage />} />
-                  <Route path="/incident-complaint/file-complaint" element={<FileComplaintPage />} />
-                  <Route path="/incident-complaint/incident-report" element={<IncidentReportPage />} />
-                  <Route path="/incident-complaint/incident-map" element={<IncidentMapPage />} />
-                  <Route path="/incident-complaint/case-management" element={<CaseManagementPage />} />
+                        <Route path="/incident-complaint" element={<MainPage />} />
+                        <Route path="/incident-complaint/file-complaint" element={<FileComplaintPage />} />
+                        <Route path="/incident-complaint/incident-report" element={<IncidentReportPage />} />
+                        <Route path="/incident-complaint/incident-map" element={<IncidentMapPage />} />
+                        <Route path="/incident-complaint/case-management" element={<CaseManagementPage />} />
 
-                  <Route path="/report-issue" element={<Support />} />
-                  <Route path="/support" element={<Support />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/logout" element={<Logout />} />
-                  <Route path="/documents-inquiry" element={<Navigate to="/sub-system-2" replace />} />
-                  <Route path="/my-requests" element={<MyRequestsPage />} />
-                </Route>
-              </Route>
+                        <Route path="/report-issue" element={<Support />} />
+                        <Route path="/support" element={<Support />} />
+                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/logout" element={<Logout />} />
+                        <Route path="/documents-inquiry" element={<Navigate to="/sub-system-2" replace />} />
+                        <Route path="/my-requests" element={<MyRequestsPage />} />
+                      </Route>
+                    </Route>
 
-              {/* ── ADMIN-ONLY ROUTES ────────────────────────────────── */}
-              <Route element={<StaffRoute />}>
-                <Route
-                  element={
-                    <RealTimeProvider>
-                      <VerificationNotificationListener />
-                      <Layout />
-                    </RealTimeProvider>
-                  }
-                >
-                  <Route path="/staff" element={<StaffLanding />} />
+                    {/* ── STAFF-ONLY ROUTES ────────────────────────────────── */}
+                    <Route element={<StaffRoute />}>
+                      <Route
+                        element={
+                          <RealTimeProvider>
+                            <VerificationNotificationListener />
+                            <Layout />
+                          </RealTimeProvider>
+                        }
+                      >
+                        <Route path="/staff" element={<StaffLanding />} />
 
-                  <Route
-                    element={
-                      <PermissionRoute
-                        allowed={canViewResidents}
-                        redirectTo="/staff"
-                      />
-                    }
-                  >
-                    <Route path="/staff/residents" element={<Residents />} />
-                    <Route path="/staff/households" element={<Households />} />
-                  </Route>
+                        <Route
+                          element={
+                            <PermissionRoute
+                              allowed={canViewResidents}
+                              redirectTo="/staff"
+                            />
+                          }
+                        >
+                          <Route path="/staff/residents" element={<Residents />} />
+                          <Route path="/staff/households" element={<Households />} />
+                        </Route>
 
-                  <Route
-                    element={
-                      <PermissionRoute
-                        allowed={canEditRecords}
-                        redirectTo="/staff"
-                      />
-                    }
-                  >
-                    <Route path="/staff/residents/add" element={<AddResident />} />
-                  </Route>
+                        <Route
+                          element={
+                            <PermissionRoute
+                              allowed={canEditRecords}
+                              redirectTo="/staff"
+                            />
+                          }
+                        >
+                          <Route path="/staff/residents/add" element={<AddResident />} />
+                        </Route>
 
-                  <Route
-                    element={
-                      <PermissionRoute
-                        allowed={canAccessVerificationQueue}
-                        redirectTo="/staff"
-                      />
-                    }
-                  >
-                    <Route path="/staff/user-management" element={<Verification />} />
-                  </Route>
+                        <Route
+                          element={
+                            <PermissionRoute
+                              allowed={canAccessVerificationQueue}
+                              redirectTo="/staff"
+                            />
+                          }
+                        >
+                          <Route path="/staff/user-management" element={<Verification />} />
+                        </Route>
 
-                  <Route
-                    element={
-                      <PermissionRoute
-                        allowed={canViewIncidentCases}
-                        redirectTo="/staff"
-                      />
-                    }
-                  >
-                    <Route path="/staff/incidents" element={<AdminIncidentReports />} />
-                  </Route>
+                        <Route
+                          element={
+                            <PermissionRoute
+                              allowed={canViewIncidentCases}
+                              redirectTo="/staff"
+                            />
+                          }
+                        >
+                          <Route path="/staff/incidents" element={<AdminIncidentReports />} />
+                        </Route>
 
-                  <Route
-                    element={
-                      <PermissionRoute
-                        allowed={canViewAppointments}
-                        redirectTo="/staff"
-                      />
-                    }
-                  >
-                    <Route path="/staff/appointments" element={<AdminAppointments />} />
-                  </Route>
+                        <Route
+                          element={
+                            <PermissionRoute
+                              allowed={canViewAppointments}
+                              redirectTo="/staff"
+                            />
+                          }
+                        >
+                          <Route path="/staff/appointments" element={<AdminAppointments />} />
+                        </Route>
 
-                  <Route
-                    element={
-                      <PermissionRoute
-                        allowed={canViewDocuments}
-                        redirectTo="/staff"
-                      />
-                    }
-                  >
-                    <Route path="/staff/documents-inquiry" element={<DocumentsInquiryPage />} />
-                    <Route path="/staff/certificates" element={<Certificates />} />
-                  </Route>
+                        <Route
+                          element={
+                            <PermissionRoute
+                              allowed={canViewDocuments}
+                              redirectTo="/staff"
+                            />
+                          }
+                        >
+                          <Route path="/staff/documents-inquiry" element={<DocumentsInquiryPage />} />
+                          <Route path="/staff/certificates" element={<Certificates />} />
+                        </Route>
 
-                  <Route path="/staff/profile" element={<ProfilePage />} />
-                  <Route path="/staff/support" element={<Support />} />
-                </Route>
-              </Route>
+                        <Route path="/staff/profile" element={<ProfilePage />} />
+                        <Route path="/staff/support" element={<Support />} />
+                      </Route>
+                    </Route>
 
-              <Route element={<AdminRoute />}>
-                <Route
-                  element={
-                    <RealTimeProvider>
-                      <VerificationNotificationListener />
-                      <Layout />
-                    </RealTimeProvider>
-                  }
-                >
+                    {/* ── ADMIN-ONLY ROUTES ────────────────────────────────── */}
+                    <Route element={<AdminRoute />}>
+                      <Route
+                        element={
+                          <RealTimeProvider>
+                            <VerificationNotificationListener />
+                            <Layout />
+                          </RealTimeProvider>
+                        }
+                      >
+                  <Route path="/admin" element={<AdminLanding />} />
+                  <Route path="/dashboard" element={<Navigate to="/admin" replace />} />
+                  <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
                   <Route element={<PermissionRoute allowed={canViewAnalytics} />}>
-                    <Route path="/admin" element={<AdminLanding />} />
                     <Route path="/admin/reports" element={<Dashboard />} />
-                    <Route path="/dashboard" element={<Navigate to="/admin/reports" replace />} />
                   </Route>
 
-                  <Route element={<PermissionRoute allowed={canViewResidents} />}>
-                    <Route path="/admin/residents" element={<Residents />} />
-                    <Route path="/admin/households" element={<Households />} />
-                    <Route path="/residents" element={<Navigate to="/admin/residents" replace />} />
-                    <Route path="/households" element={<Navigate to="/admin/households" replace />} />
-                  </Route>
+                        <Route element={<PermissionRoute allowed={canViewResidents} />}>
+                          <Route path="/admin/residents" element={<Residents />} />
+                          <Route path="/admin/households" element={<Households />} />
+                          <Route path="/residents" element={<Navigate to="/admin/residents" replace />} />
+                          <Route path="/households" element={<Navigate to="/admin/households" replace />} />
+                        </Route>
 
-                  <Route element={<PermissionRoute allowed={canEditRecords} />}>
-                    <Route path="/admin/residents/add" element={<AddResident />} />
-                  </Route>
+                        <Route element={<PermissionRoute allowed={canEditRecords} />}>
+                          <Route path="/admin/residents/add" element={<AddResident />} />
+                        </Route>
 
                   <Route element={<PermissionRoute allowed={canAccessVerificationQueue} />}>
                     <Route path="/admin/user-management" element={<Verification />} />
-                    <Route path="/admin/requests" element={<AdminPlaceholder title="Requests" />} />
                     <Route path="/verification" element={<Navigate to="/admin/user-management" replace />} />
                   </Route>
 
-                  <Route element={<PermissionRoute allowed={canViewIncidentCases} />}>
-                    <Route path="/admin/incidents" element={<AdminIncidentReports />} />
+                  <Route element={<PermissionRoute allowed={canViewRequests} />}>
+                    <Route path="/admin/requests" element={<AdminPlaceholder title="Requests" />} />
                   </Route>
+
+                        <Route element={<PermissionRoute allowed={canViewIncidentCases} />}>
+                          <Route path="/admin/incidents" element={<AdminIncidentReports />} />
+                        </Route>
 
                   <Route element={<PermissionRoute allowed={canViewAppointments} />}>
                     <Route path="/admin/appointments" element={<AdminAppointments />} />
                   </Route>
 
-                  <Route element={<PermissionRoute allowed={canViewDocuments} />}>
-                    <Route path="/admin/documents-inquiry" element={<DocumentsInquiryPage />} />
-                    <Route path="/admin/certificates" element={<Certificates />} />
-                    <Route path="/certificates" element={<Navigate to="/admin/certificates" replace />} />
+                        <Route element={<PermissionRoute allowed={canViewDocuments} />}>
+                          <Route path="/admin/documents-inquiry" element={<DocumentsInquiryPage />} />
+                          <Route path="/admin/certificates" element={<Certificates />} />
+                          <Route path="/certificates" element={<Navigate to="/admin/certificates" replace />} />
+                        </Route>
+
+                  <Route element={<PermissionRoute allowed={canViewPayments} />}>
+                    <Route path="/admin/payments" element={<AccountsSection />} />
                   </Route>
 
                   <Route element={<PermissionRoute allowed={canManageAccounts} />}>
-                    <Route path="/admin/payments" element={<AccountsSection />} />
                     <Route path="/admin/accounts" element={<CreateAccounts />} />
                   </Route>
 
-                  <Route element={<PermissionRoute allowed={canManageSystemSettings} />}>
-                    <Route path="/admin/settings" element={<Settings />} />
-                    <Route path="/settings" element={<Navigate to="/admin/settings" replace />} />
-                  </Route>
+                        <Route element={<PermissionRoute allowed={canManageSystemSettings} />}>
+                          <Route path="/admin/settings" element={<Settings />} />
+                          <Route path="/settings" element={<Navigate to="/admin/settings" replace />} />
+                        </Route>
 
-                  <Route path="/admin/profile" element={<ProfilePage />} />
-                  <Route path="/admin/support" element={<Support />} />
-                </Route>
-              </Route>
+                        <Route path="/admin/profile" element={<ProfilePage />} />
+                        <Route path="/admin/support" element={<Support />} />
+                      </Route>
+                    </Route>
 
-              <Route path="*" element={<NotFoundPage />} />
+                    <Route path="*" element={<NotFoundPage />} />
 
                   </Routes>
                 </Suspense>
               </RouteErrorBoundary>
-              
+
               <DebugAutofillGate setFormData={activeSetFormData} />
-              
+
             </div>
           </Router>
         </BrandingProvider>

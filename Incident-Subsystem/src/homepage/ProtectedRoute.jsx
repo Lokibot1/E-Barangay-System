@@ -106,6 +106,8 @@ export const PermissionRoute = ({
   allowed,
   redirectTo = getDefaultAuthenticatedPath(),
 }) => {
+  const location = useLocation();
+
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
@@ -114,7 +116,16 @@ export const PermissionRoute = ({
     typeof allowed === "function" ? allowed() : Boolean(allowed);
 
   if (!isAllowed) {
-    return <Navigate to={redirectTo} replace />;
+    return (
+      <Navigate
+        to="/unauthorized"
+        replace
+        state={{
+          from: `${location.pathname}${location.search}${location.hash}`,
+          redirectTo,
+        }}
+      />
+    );
   }
 
   return <Outlet />;

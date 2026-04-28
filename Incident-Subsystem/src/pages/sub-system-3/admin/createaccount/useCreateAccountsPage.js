@@ -10,7 +10,7 @@ const initialForm = {
   username: '',
   password: '',
   confirmPassword: '',
-  role: 'staff',
+  role: 'staff1',
 };
 
 const initialResetForm = { pass: '', confirm: '' };

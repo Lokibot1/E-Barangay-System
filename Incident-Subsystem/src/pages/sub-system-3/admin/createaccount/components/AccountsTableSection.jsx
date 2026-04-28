@@ -3,6 +3,7 @@ import { AlertCircle, Crown, RefreshCw, User } from 'lucide-react';
 import Table from '../../../../../components/sub-system-1/common/table';
 import Pagination from '../../../../../components/sub-system-1/common/pagination';
 import { getInitials, getRoleStyle, normaliseActive } from '../utils';
+import { getRoleLabel } from '../../../../../utils/roles';
 
 const AccountsTableSection = ({
   t,
@@ -68,7 +69,7 @@ const AccountsTableSection = ({
                   <div className="flex items-center">
                     <span className={`inline-flex min-w-[92px] items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold border ${getRoleStyle(user.role)}`}>
                       {user.role === 'admin' ? <Crown size={10} /> : <User size={10} />}
-                      {user.role === 'admin' ? 'Admin' : user.role === 'staff' ? 'Staff' : user.role}
+                      {getRoleLabel(user.role)}
                     </span>
                   </div>
                 </td>
