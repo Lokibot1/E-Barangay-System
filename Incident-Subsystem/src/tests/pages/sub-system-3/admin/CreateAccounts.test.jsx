@@ -68,7 +68,7 @@ describe("CreateAccounts", () => {
       api.get.mockResolvedValue({
         data: [
           { id: 1, name: "Alice Admin", email: "alice@test.com", role: "admin", is_active: 1 },
-          { id: 2, name: "Bob Staff",  email: "bob@test.com",   role: "staff", is_active: 1 },
+          { id: 2, name: "Bob Staff 1",  email: "bob@test.com",   role: "staff1", is_active: 1 },
         ],
       });
       render(<CreateAccounts />);
@@ -76,7 +76,7 @@ describe("CreateAccounts", () => {
       await waitFor(() =>
         expect(screen.getByText("Alice Admin")).toBeInTheDocument()
       );
-      expect(screen.getByText("Bob Staff")).toBeInTheDocument();
+      expect(screen.getByText("Bob Staff 1")).toBeInTheDocument();
     });
 
     it("renders the search input", async () => {
@@ -92,10 +92,12 @@ describe("CreateAccounts", () => {
     it("renders admin and staff role options inside the add-account modal", async () => {
       render(<CreateAccounts />);
       await waitFor(() => expect(api.get).toHaveBeenCalled());
-      // Role cards (Admin / Staff) live inside the add-account modal
+      // Role cards live inside the add-account modal
       fireEvent.click(screen.getByRole("button", { name: /new account/i }));
       await waitFor(() => expect(screen.getByText("Admin")).toBeInTheDocument());
-      expect(screen.getByText("Staff")).toBeInTheDocument();
+      expect(screen.getByText("Staff 1")).toBeInTheDocument();
+      expect(screen.getByText("Staff 2")).toBeInTheDocument();
+      expect(screen.getByText("Staff 3")).toBeInTheDocument();
     });
   });
 

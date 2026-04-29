@@ -8,6 +8,7 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import api from '../../../../services/sub-system-1/Api';
 import DetailField from './DetailField';
+import { canViewResidentDigitalId } from '../../../../homepage/services/loginService';
 
 const accentBoxMap = {
     modern: 'bg-blue-50 border-blue-100 text-blue-700',
@@ -111,11 +112,21 @@ const IdentityTab = ({
 
     const handleOpenQr = () => {
         setIsQrOpen(true);
+        if (!canViewResidentDigitalId()) {
+            setQrError('Only Admin / Staff 1 can view this resident QR.');
+            return;
+        }
         if (qrData || !formData.id) return;
         setQrLoading(true); setQrError(null);
         api.get(`/residents/${formData.id}/qr`)
             .then(r => r.data.success ? setQrData(r.data) : setQrError(r.data.message || 'Failed.'))
-            .catch(err => setQrError(err.response?.data?.message || 'Network error.'))
+            .catch(err => {
+                if (err.response?.status === 403) {
+                    setQrError(err.response?.data?.message || 'Only Admin / Staff 1 can view this resident QR.');
+                    return;
+                }
+                setQrError(err.response?.data?.message || 'Network error.');
+            })
             .finally(() => setQrLoading(false));
     };
 

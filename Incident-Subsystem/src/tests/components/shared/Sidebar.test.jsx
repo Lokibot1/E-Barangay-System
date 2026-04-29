@@ -7,6 +7,7 @@ jest.mock("../../../homepage/services/loginService", () => ({
   isAdmin: jest.fn(() => false),
   canAccessAdminPanel: jest.fn(() => false),
   canAccessStaffPanel: jest.fn(() => false),
+  getUserRole: jest.fn(() => "admin"),
   canAccessVerificationQueue: jest.fn(() => false),
   canManageAccounts: jest.fn(() => false),
   canManageSystemSettings: jest.fn(() => false),
@@ -14,6 +15,8 @@ jest.mock("../../../homepage/services/loginService", () => ({
   canViewAppointments: jest.fn(() => false),
   canViewDocuments: jest.fn(() => false),
   canViewIncidentCases: jest.fn(() => false),
+  canViewPayments: jest.fn(() => false),
+  canViewRequests: jest.fn(() => false),
   canViewResidents: jest.fn(() => false),
 }));
 

@@ -30,6 +30,9 @@ const DocumentSubmissionSuccessPage = ({
   validityLabel,
   supportPhone = "8-3663-198",
   supportEmail = "teamtolentino@gmail.com",
+  sideQrImageSrc = "",
+  sideQrTitle = "Verification QR",
+  sideQrCaption = "",
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -67,6 +70,28 @@ const DocumentSubmissionSuccessPage = ({
     `${window.location.origin}/sub-system-2/verify-document?reference=${encodeURIComponent(
       record?.reference || "",
     )}&document=${encodeURIComponent(documentMeta.label)}`;
+  const trackStatusUrl = useMemo(() => {
+    if (!record?.reference) {
+      return documentMeta.trackPath;
+    }
+
+    const params = new URLSearchParams({
+      reference: record.reference,
+    });
+
+    return `${documentMeta.trackPath}?${params.toString()}`;
+  }, [documentMeta.trackPath, record?.reference]);
+  const qrLinkHref = sideQrImageSrc || verificationUrl;
+  const qrLinkTitle = sideQrImageSrc
+    ? "Open the GCash QR in a new tab"
+    : "Open the document verification page";
+  const qrHelperText = sideQrImageSrc
+    ? ""
+    : "Click the QR to open the verification page.";
+
+  const nextStepMessage = sideQrImageSrc
+    ? "Save your receipt and reference number for follow-up. You can track the request status anytime and use the GCash QR below for payment."
+    : "Save your receipt and reference number for follow-up. You can track the request status anytime, and the QR code on this page stays available for quick verification.";
 
   return (
     <div className={`${t.pageBg} min-h-full p-4 sm:p-6 lg:p-8`}>
@@ -119,35 +144,25 @@ const DocumentSubmissionSuccessPage = ({
                     Next Step
                   </p>
                   <p className={`mt-2 text-sm font-kumbh leading-6 ${t.cardText}`}>
-                    Save your receipt and reference number for follow-up. You can track
-                    the request status anytime, or verify the QR code printed on your
-                    acknowledgment slip.
+                    {nextStepMessage}
                   </p>
                 </div>
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => downloadRequestReceipt(receiptPayload)}
-                    className="rounded-full bg-emerald-600 px-5 py-3 text-sm font-kumbh font-semibold text-white hover:bg-emerald-700"
-                  >
-                    Download Receipt
-                  </button>
+                 
                   <button
                     type="button"
                     onClick={() =>
-                      navigate(`/sub-system-2/verify-document?reference=${encodeURIComponent(record?.reference || "")}&document=${encodeURIComponent(documentMeta.label)}`)
+                      navigate(trackStatusUrl, {
+                        state: {
+                          referenceNumber: record?.reference || "",
+                          requestRecord: record || null,
+                        },
+                      })
                     }
                     className={`rounded-full border ${t.cardBorder} ${t.inputBg} ${t.cardText} px-5 py-3 text-sm font-kumbh font-semibold`}
                   >
-                    Verify QR
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate(documentMeta.trackPath)}
-                    className={`rounded-full border ${t.cardBorder} ${t.inputBg} ${t.cardText} px-5 py-3 text-sm font-kumbh font-semibold`}
-                  >
-                    Track Request Status
+                    Track Status
                   </button>
                   <button
                     type="button"
@@ -161,15 +176,34 @@ const DocumentSubmissionSuccessPage = ({
 
               <div className={`rounded-[24px] border ${t.cardBorder} ${t.inputBg} px-5 py-5 text-center`}>
                 <p className={`text-[10px] font-kumbh font-semibold uppercase tracking-[0.16em] ${t.subtleText}`}>
-                  Verification QR
+                  {sideQrTitle}
                 </p>
-                <div className="mt-4 flex justify-center">
-                  <div className="rounded-[24px] bg-white p-4 shadow-sm">
-                    <QRCodeCanvas value={verificationUrl} size={176} includeMargin />
+                <a
+                  href={qrLinkHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={qrLinkTitle}
+                  className="mt-4 flex justify-center"
+                >
+                  <div className="rounded-[24px] bg-white p-4 shadow-sm transition-transform duration-200 hover:scale-[1.02]">
+                    {sideQrImageSrc ? (
+                      <img
+                        src={sideQrImageSrc}
+                        alt={sideQrTitle}
+                        className="h-44 w-44 rounded-[20px] object-contain"
+                      />
+                    ) : (
+                      <QRCodeCanvas value={verificationUrl} size={176} includeMargin />
+                    )}
                   </div>
-                </div>
+                </a>
                 <p className={`mt-4 break-all text-xs font-kumbh ${t.subtleText}`}>
-                  {record?.reference || "Reference pending"}
+                  {sideQrImageSrc
+                    ? sideQrCaption || "Scan to pay via GCash / InstaPay"
+                    : record?.reference || "Reference pending"}
+                </p>
+                <p className={`mt-2 text-[11px] font-kumbh ${t.subtleText}`}>
+                  {qrHelperText}
                 </p>
               </div>
             </div>

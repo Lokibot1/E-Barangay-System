@@ -3,6 +3,7 @@ import { API_BASE_URL } from '../../config/api';
 import {
     getToken,
     notifyAuthExpired,
+    notifyAuthForbidden,
 } from '../../homepage/services/loginService';
 
 const api = axios.create({
@@ -23,6 +24,12 @@ api.interceptors.response.use(
     (error) => {
         if (error?.response?.status === 401) {
             notifyAuthExpired();
+        }
+        if (error?.response?.status === 403) {
+            notifyAuthForbidden({
+                message: error?.response?.data?.message || '403 Forbidden',
+                url: error?.config?.url,
+            });
         }
         return Promise.reject(error);
     },
