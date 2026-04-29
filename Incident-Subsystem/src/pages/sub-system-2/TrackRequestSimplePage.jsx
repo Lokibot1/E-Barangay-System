@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import themeTokens from "../../Themetokens";
 import { DOCUMENTS_API_BASE_URL } from "../../config/runtimeApi";
 import {
@@ -291,18 +291,26 @@ const resolveSubmittedAt = (requestData) =>
     "updated_at",
   ]);
 
+const resolveIncomingReference = (searchParams, locationState) =>
+  normalizeReferenceNumber(
+    searchParams.get("reference") ||
+      locationState?.referenceNumber ||
+      locationState?.reference ||
+      locationState?.requestRecord?.reference ||
+      "",
+  );
+
 const TrackRequestSimplePage = ({ pageKey }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem("appTheme") || "modern",
   );
+  const incomingReference = resolveIncomingReference(searchParams, location.state);
+  const activeConfig = TRACK_PAGE_CONFIG[pageKey] || TRACK_PAGE_CONFIG.bid;
   const [refNumber, setRefNumber] = useState(() =>
-    normalizeReferenceNumber(
-      location.state?.referenceNumber ||
-        location.state?.requestRecord?.reference ||
-        "",
-    ),
+    incomingReference,
   );
   const [requestData, setRequestData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -338,7 +346,6 @@ const TrackRequestSimplePage = ({ pageKey }) => {
   );
 
   const t = themeTokens[currentTheme] || themeTokens.modern;
-  const activeConfig = TRACK_PAGE_CONFIG[pageKey] || TRACK_PAGE_CONFIG.bid;
   const requestStatus = formatStatusLabel(requestData?.status);
   const activeStatusMeta = STATUS_META[requestStatus] || STATUS_META.Pending;
   const requestTitle = resolveRequestTitle(requestData, activeConfig.label);
@@ -382,63 +389,87 @@ const TrackRequestSimplePage = ({ pageKey }) => {
     }, 1800);
   };
 
-  const handleTrack = async () => {
-    const normalizedReference = normalizeReferenceNumber(refNumber);
+  const fetchRequestByReference = useCallback(
+    async (referenceValue) => {
+      const normalizedReference = normalizeReferenceNumber(referenceValue);
 
-    if (!normalizedReference) {
-      setError("Please enter a reference number.");
-      return;
-    }
-
-    if (!isReferenceNumberFormatValid(normalizedReference)) {
-      setError(getReferenceNumberFormatHint());
-      return;
-    }
-
-    setCopyLabel("Copy");
-    setLoading(true);
-    setError("");
-    setRequestData(null);
-
-    try {
-      const fallbackPath =
-        pageKey === "bid" ? "track-request" : `track-${pageKey}`;
-      const trackingPath = resolveTrackingPath(
-        normalizedReference,
-        fallbackPath,
-      );
-      const response = await fetch(
-        `${DOCUMENTS_API_BASE_URL}/${trackingPath}/${normalizedReference}`,
-      );
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Reference number not found");
+      if (!normalizedReference) {
+        setError("Please enter a reference number.");
+        return;
       }
 
-      setRefNumber(normalizedReference);
-      setRequestData({
-        ...data,
-        reference_number: data.reference_number || normalizedReference,
-        document_type: resolveDocumentType(
+      if (!isReferenceNumberFormatValid(normalizedReference)) {
+        setError(getReferenceNumberFormatHint());
+        return;
+      }
+
+      setCopyLabel("Copy");
+      setLoading(true);
+      setError("");
+      setRequestData(null);
+
+      try {
+        const fallbackPath =
+          pageKey === "bid" ? "track-request" : `track-${pageKey}`;
+        const trackingPath = resolveTrackingPath(
           normalizedReference,
-          data.document_type,
-          activeConfig.label,
-        ),
-      });
-    } catch (err) {
-      setError(err.message || "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
+          fallbackPath,
+        );
+        const response = await fetch(
+          `${DOCUMENTS_API_BASE_URL}/${trackingPath}/${normalizedReference}`,
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Reference number not found");
+        }
+
+        setRefNumber(normalizedReference);
+        setRequestData({
+          ...data,
+          reference_number: data.reference_number || normalizedReference,
+          document_type: resolveDocumentType(
+            normalizedReference,
+            data.document_type,
+            activeConfig.label,
+          ),
+        });
+      } catch (err) {
+        setError(err.message || "Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [activeConfig.label, pageKey],
+  );
+
+  const handleTrack = () => {
+    fetchRequestByReference(refNumber);
   };
 
   useEffect(() => {
-    if (refNumber) {
-      handleTrack();
+    if (!incomingReference) {
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
+    setRefNumber((currentValue) =>
+      currentValue === incomingReference ? currentValue : incomingReference,
+    );
+    setError("");
+
+    if (
+      normalizeReferenceNumber(requestData?.reference_number || "") ===
+      incomingReference
+    ) {
+      return;
+    }
+
+    fetchRequestByReference(incomingReference);
+  }, [
+    fetchRequestByReference,
+    incomingReference,
+    requestData?.reference_number,
+  ]);
 
   return (
     <div className={`${t.pageBg} h-full flex flex-col overflow-y-auto`}>
