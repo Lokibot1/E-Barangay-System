@@ -28,7 +28,7 @@ jest.mock("react-leaflet", () => {
     TileLayer: () => null,
     Polygon: () => null,
     CircleMarker: () => null,
-    Popup: ({ children }) => <div>{children}</div>,
+    Popup: ({ children }) => <div>{children}</div>,hat 
   };
 });
 
