@@ -10,6 +10,7 @@ import {
   canViewIncidentCases,
   canViewResidents,
   getProfilePath,
+  isAdmin,
   logout,
   getUser,
   mapAdminPathToAccessiblePath,
@@ -1082,9 +1083,9 @@ const Header = ({ currentTheme, onThemeChange, onMobileSidebarToggle, mobileSide
   const { logoDataUrl } = useBranding();
   const logoSrc = logoDataUrl || logo;
   const user = getUser();
-  const isAdminUser = canAccessAdminPanel();
-  const isBackOfficeUser = canAccessStaffPanel();
-  const isStaffUser = isBackOfficeUser && !isAdminUser;
+  const isAdminUser = isAdmin();
+  const isBackOfficeUser = canAccessAdminPanel();
+  const isStaffUser = canAccessStaffPanel();
 
   // Real-time notifications — merge admin and user contexts
   const adminRT = useRealTime();

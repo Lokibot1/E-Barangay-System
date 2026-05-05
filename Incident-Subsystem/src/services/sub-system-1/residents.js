@@ -75,6 +75,7 @@ const mapResident = (res) => {
         trackingNumber:   res.tracking_number,
         tracking_number:  res.tracking_number,
         barangay_id:      res.barangay_id,
+        created_at:       res.created_at || null,
         qrToken:          res.user?.qr_token    || null,
         username:         res.user?.username    || res.barangay_id,
         name:             fullName              || 'N/A',

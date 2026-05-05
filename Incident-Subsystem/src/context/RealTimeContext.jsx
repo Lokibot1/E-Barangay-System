@@ -43,6 +43,17 @@ const dedupeNotifications = (items = []) => {
   });
 };
 
+const inferNotificationSource = (notification = {}) => {
+  if (notification?.source) return notification.source;
+
+  const type = String(notification?.type || "").toLowerCase();
+  if (type.includes("registration")) return "registration";
+  if (type.includes("appointment")) return "appointment";
+  if (type.includes("profile") || type.includes("resident")) return "resident";
+  if (type.includes("complaint")) return "complaint";
+  return "incident";
+};
+
 /**
  * Convert a backend notification (from /api/notifications) into the
  * local notification shape used by this context.
@@ -51,13 +62,8 @@ const mapBackendNotification = (n) => ({
   id: `api-${n.id}`,
   backendId: n.id,
   externalId: n.external_id || null,
-  source: n.type?.includes("complaint") ? "complaint" : "incident",
-  type:
-    n.type === "incident_created"
-      ? "New Incident Report"
-      : n.type === "complaint_created"
-        ? "New Complaint"
-        : n.type || "Notification",
+  source: inferNotificationSource(n),
+  type: n.type || "notification",
   description: n.message || "No description",
   reportedBy:
     n.data?.submitted_by ||
@@ -66,6 +72,8 @@ const mapBackendNotification = (n) => ({
     (n.data?.user
       ? `${n.data.user.last_name || ""}, ${n.data.user.first_name || ""}`
       : ""),
+  oldStatus: n.data?.old_status || n.data?.previous_status || "",
+  newStatus: n.data?.new_status || n.data?.status || "",
   timestamp: n.created_at,
   read: n.is_read,
   data: n.data,
@@ -126,14 +134,21 @@ export const RealTimeProvider = ({ children }) => {
         // a "mark all as read" action isn't undone by the backend hydration merge.
         const localReadByExternalId = new Map();
         prev.forEach((n) => {
-          if (backendExternal.has(n.id)) localReadByExternalId.set(n.id, n.read);
+          const localExternalKey = n.externalId || n.id;
+          if (backendExternal.has(localExternalKey)) {
+            localReadByExternalId.set(localExternalKey, n.read);
+          }
         });
-        const prunedPrev = prev.filter((n) => !backendExternal.has(n.id));
+        const prunedPrev = prev.filter(
+          (n) => !backendExternal.has(n.externalId || n.id),
+        );
         const existingIds = new Set(prunedPrev.map((n) => n.id));
         const newOnes = backendItems
           .filter((n) => !existingIds.has(n.id))
           .map((n) => {
-            const wasReadLocally = localReadByExternalId.get(n.externalId);
+            const wasReadLocally = localReadByExternalId.get(
+              n.externalId || n.id,
+            );
             return wasReadLocally === true ? { ...n, read: true } : n;
           });
         return dedupeNotifications([...newOnes, ...prunedPrev]);
@@ -245,6 +260,7 @@ export const RealTimeProvider = ({ children }) => {
     if (!notification?.id) return;
 
     setNotifications((prev) => dedupeNotifications([notification, ...prev]));
+    createNotifications([notification], { scope: "admin" });
   }, []);
 
   const clearNotifications = useCallback(() => {

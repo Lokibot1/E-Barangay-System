@@ -71,7 +71,6 @@ const FIELD_META = {
 };
 
 const DEFAULT_META = { Icon: Pencil, color: 'text-slate-500' };
-
 // ── Action config ─────────────────────────────────────────────────────────────
 const ACTION_CONFIG = {
   update:  { label: 'Updated',  Icon: Pencil,    badge: 'bg-blue-50 border-blue-200 text-blue-700'              },

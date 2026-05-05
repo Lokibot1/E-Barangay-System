@@ -28,6 +28,7 @@ import ImageZoomOverlay          from '../../components/sub-system-1/common/Imag
 import MinimizedSuccessCard      from '../../components/sub-system-1/verification/MinimizedSuccessCard';
 import ScreenLoader              from '../../components/shared/ScreenLoader';
 import Toast                     from '../../components/shared/modals/Toast';
+import RegistryPageLoadingShell  from '../../components/shared/RegistryPageLoadingShell';
 import { getUser }               from '../../homepage/services/loginService';
 import { createVerificationAdminLog } from '../../homepage/services/auditLogService';
 
@@ -221,6 +222,10 @@ const Verification = () => {
     setSelectedRes(null);
     setActiveTab('Pending');
   };
+
+  if (view === 'list' && loading && submissions.length === 0) {
+    return <RegistryPageLoadingShell t={t} isDark={isDark} tableCols={7} />;
+  }
 
   return (
     <div className={`font-sans min-h-screen py-4 pb-24 px-3 sm:px-4 lg:px-5 relative ${t.pageBg}`}>
