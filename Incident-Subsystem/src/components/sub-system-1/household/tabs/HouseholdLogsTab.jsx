@@ -47,7 +47,6 @@ const FIELD_META = {
 };
 
 const DEFAULT_META = { Icon: Pencil, color: 'text-slate-500' };
-
 const fmtVal = (v) => {
   if (v === null || v === undefined || v === '')
     return <span className="italic text-slate-400 font-normal">empty</span>;

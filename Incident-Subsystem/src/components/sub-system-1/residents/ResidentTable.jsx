@@ -6,6 +6,21 @@ import { residentService } from '../../../services/sub-system-1/residents';
 import SkeletonLoader from '../common/SkeletonLoader';
 import { AlertTriangle, Loader2, UserMinus } from 'lucide-react';
 
+// Keep fetched resident details in memory for the current SPA session only.
+// This resets on a full browser refresh, which matches the desired loader behavior.
+const residentDetailsCache = new Map();
+
+const getResidentCacheKey = (resident) => {
+    if (!resident?.id && resident?.id !== 0) return '';
+    return String(resident.id);
+};
+
+const setCachedResidentDetails = (resident) => {
+    const cacheKey = getResidentCacheKey(resident);
+    if (!cacheKey || !resident) return;
+    residentDetailsCache.set(cacheKey, resident);
+};
+
 const ResidentTable = ({
     residents,
     loading = false,
@@ -40,18 +55,41 @@ const ResidentTable = ({
     const openModal = useCallback(async (r, mode, initialTab = 'basic') => {
         if (openingResident.loading) return;
 
+        const cacheKey = getResidentCacheKey(r);
+        const cachedResident = cacheKey ? residentDetailsCache.get(cacheKey) : null;
+
         setOpeningResident({
-            loading: true,
-            residentId: r?.id ?? null,
+            loading: !cachedResident,
+            residentId: !cachedResident ? (r?.id ?? null) : null,
             mode,
         });
         setModalMode(mode);
         setModalInitialTab(initialTab);
+
+        if (cachedResident) {
+            setSelectedResident(cachedResident);
+            setIsModalOpen(true);
+
+            residentService.getResident(r.id)
+                .then((fresh) => {
+                    if (!fresh) return;
+                    setCachedResidentDetails(fresh);
+                    setSelectedResident((current) =>
+                        String(current?.id) === String(r.id) ? fresh : current,
+                    );
+                })
+                .catch(() => {});
+
+            return;
+        }
+
         try {
             const fresh = await residentService.getResident(r.id);
             setSelectedResident(fresh);
+            setCachedResidentDetails(fresh);
         } catch {
             setSelectedResident(r);
+            setCachedResidentDetails(r);
         } finally {
             setOpeningResident({
                 loading: false,
@@ -98,8 +136,11 @@ const ResidentTable = ({
             try {
                 const fresh = await residentService.getResident(updatedData.id);
                 setSelectedResident(fresh);
+                setCachedResidentDetails(fresh);
             } catch {
-                setSelectedResident(prev => ({ ...prev, ...updatedData }));
+                const mergedResident = { ...(selectedResident || {}), ...updatedData };
+                setSelectedResident(mergedResident);
+                setCachedResidentDetails(mergedResident);
             }
             return true;
         }

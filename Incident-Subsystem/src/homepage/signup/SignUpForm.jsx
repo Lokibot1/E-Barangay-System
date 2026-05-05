@@ -16,12 +16,13 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Briefcase, Check, MapPin, Upload, User } from 'lucide-react';
+import { Briefcase, Check, MapPin, Search, Upload, User } from 'lucide-react';
 import Step1PersonalInfo from './Step1PersonalInfo';
 import Step2Address from './Step2Address';
 import Step3WorkEducation from './Step3WorkEducation';
 import Step4Upload from './Step4Upload';
 import ScreenLoader from '../../components/shared/ScreenLoader';
+import ImageZoomOverlay from '../../components/sub-system-1/common/ImageZoomOverlay';
 
 const SignupForm = ({
   formData,
@@ -46,6 +47,7 @@ const SignupForm = ({
   const [step,         setStep]         = useState(1);
   const [previews,     setPreviews]     = useState({ front: null, back: null });
   const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [zoomedReviewImage, setZoomedReviewImage] = useState(null);
 
   useEffect(() => {
     if (!onReviewOpenChange) return;
@@ -354,6 +356,11 @@ const SignupForm = ({
           ? "Creating the resident profile. Please wait."
           : "Sending your registration details. Please wait."}
       />
+      <ImageZoomOverlay
+        isOpen={!!zoomedReviewImage}
+        imgSrc={zoomedReviewImage}
+        onClose={() => setZoomedReviewImage(null)}
+      />
 
       {isStaffMode && (
         <div className="px-1 py-1">
@@ -538,8 +545,29 @@ const SignupForm = ({
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
                     {['front','back'].map((side) => previews[side] ? (
-                      <div key={side} className={`rounded-2xl overflow-hidden border ${isDarkMode ? 'border-white/10' : 'border-black/5'}`}>
-                        <img src={previews[side]} alt={`ID ${side}`} className="w-full h-36 object-cover" loading="lazy" />
+                      <div key={side} className={`group relative rounded-2xl overflow-hidden border ${isDarkMode ? 'border-white/10' : 'border-black/5'}`}>
+                        <button
+                          type="button"
+                          onClick={() => setZoomedReviewImage(previews[side])}
+                          className={`relative block w-full h-36 overflow-hidden ${isDarkMode ? 'bg-slate-950/70' : 'bg-white'}`}
+                          title={`Zoom ${side} image`}
+                        >
+                          <img
+                            src={previews[side]}
+                            alt={`ID ${side}`}
+                            className="w-full h-full object-contain object-center"
+                            loading="lazy"
+                          />
+                          <span className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-slate-950/70 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-white shadow-lg">
+                            <Search size={10} />
+                            Zoom
+                          </span>
+                          <span className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+                            <span className="rounded-xl bg-sky-600 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-lg">
+                              View Full
+                            </span>
+                          </span>
+                        </button>
                         <p className={`text-center text-[9px] font-black uppercase tracking-widest py-2 ${
                           isDarkMode ? 'bg-white/5 text-slate-400' : 'bg-slate-50 text-slate-400'
                         }`}>{side === 'front' ? 'Front' : 'Back'} Side</p>

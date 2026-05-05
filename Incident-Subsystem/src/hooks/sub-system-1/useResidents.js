@@ -1,6 +1,27 @@
 import { useState, useEffect, useMemo } from 'react';
 import { residentService } from '../../services/sub-system-1/residents';
 
+const parseResidentTimestamp = (resident) => {
+    const rawDate = resident?.created_at || resident?.formatted_created_at || resident?.date;
+    const ts = rawDate ? new Date(rawDate).getTime() : 0;
+    return Number.isFinite(ts) ? ts : 0;
+};
+
+const parseResidentSequence = (resident) => {
+    const numericId = Number(resident?.id);
+    if (Number.isFinite(numericId) && numericId > 0) return numericId;
+
+    const match = String(resident?.barangay_id || '').match(/(\d+)(?!.*\d)/);
+    return match ? Number(match[1]) : 0;
+};
+
+const compareResidentsNewestFirst = (a, b) => {
+    const timeDiff = parseResidentTimestamp(b) - parseResidentTimestamp(a);
+    if (timeDiff !== 0) return timeDiff;
+
+    return parseResidentSequence(b) - parseResidentSequence(a);
+};
+
 export const useResidents = () => {
     const [allResidents,   setAllResidents]   = useState([]);
     const [searchTerm,     setSearchTerm]     = useState('');
@@ -26,22 +47,24 @@ export const useResidents = () => {
 
     // ── Filtered list ─────────────────────────────────────────────────────────
     const filteredResidents = useMemo(() => {
-        return allResidents.filter(r => {
-            const sectorName  = (r.sectorLabel || 'General Population').toLowerCase();
-            const searchLower = searchTerm.toLowerCase();
+        return allResidents
+            .filter(r => {
+                const sectorName  = (r.sectorLabel || 'General Population').toLowerCase();
+                const searchLower = searchTerm.toLowerCase();
 
-            const matchesSearch =
-                r.name?.toLowerCase().includes(searchLower) ||
-                r.full_address?.toLowerCase().includes(searchLower) ||
-                r.barangay_id?.toLowerCase().includes(searchLower);
+                const matchesSearch =
+                    r.name?.toLowerCase().includes(searchLower) ||
+                    r.full_address?.toLowerCase().includes(searchLower) ||
+                    r.barangay_id?.toLowerCase().includes(searchLower);
 
-            const normalizedCategory = (categoryFilter || '').toLowerCase();
-            const matchesCategory =
-                normalizedCategory === 'all' ||
-                sectorName.includes(normalizedCategory);
+                const normalizedCategory = (categoryFilter || '').toLowerCase();
+                const matchesCategory =
+                    normalizedCategory === 'all' ||
+                    sectorName.includes(normalizedCategory);
 
-            return matchesSearch && matchesCategory;
-        });
+                return matchesSearch && matchesCategory;
+            })
+            .sort(compareResidentsNewestFirst);
     }, [allResidents, searchTerm, categoryFilter]);
 
     // ── Update ────────────────────────────────────────────────────────────────

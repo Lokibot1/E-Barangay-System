@@ -10,10 +10,17 @@ import {
 
 const API_BASE = INCIDENT_API_BASE_URL;
 const NOTIF_ENDPOINT = `${PHP_API_BASE_URL}/notifications/notifications.php`;
-const SUPPORTS_NOTIFICATION_CREATE =
-  String(import.meta.env.VITE_NOTIFICATION_CREATE_ENABLED || "").toLowerCase() === "true";
-const SUPPORTS_EXTERNAL_ID_MARK_READ =
-  String(import.meta.env.VITE_NOTIFICATION_EXTERNAL_IDS_ENABLED || "").toLowerCase() === "true";
+const envFlagEnabledByDefault = (value) => {
+  if (value === undefined || value === null || value === "") return true;
+  return String(value).toLowerCase() === "true";
+};
+
+const SUPPORTS_NOTIFICATION_CREATE = envFlagEnabledByDefault(
+  import.meta.env.VITE_NOTIFICATION_CREATE_ENABLED,
+);
+const SUPPORTS_EXTERNAL_ID_MARK_READ = envFlagEnabledByDefault(
+  import.meta.env.VITE_NOTIFICATION_EXTERNAL_IDS_ENABLED,
+);
 
 const getAuthUser = () => {
   try {

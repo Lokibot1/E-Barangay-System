@@ -1,5 +1,341 @@
 [
     {
+        "id": "verification-1777979635184-62d0dfc3",
+        "action": "approved",
+        "auditable_type": "resident",
+        "auditable_id": "BGN09678",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "For Verification"
+        },
+        "new_values": {
+            "status": "Verified",
+            "verification_action": "Approved",
+            "rejection_reason": "Incomplete documents."
+        },
+        "created_at": "2026-05-05T11:13:55+00:00",
+        "subject_name": "Alex asis Garcia",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN09678",
+            "resident_id": 211
+        }
+    },
+    {
+        "id": "verification-1777979610980-3d3a3592",
+        "action": "visit_set",
+        "auditable_type": "resident",
+        "auditable_id": "BGN09678",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Pending"
+        },
+        "new_values": {
+            "status": "For Verification",
+            "verification_action": "Set for Visit",
+            "visit_set_at": "2026-05-05T11:13:30.962Z"
+        },
+        "created_at": "2026-05-05T11:13:30+00:00",
+        "subject_name": "Alex asis Garcia",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN09678",
+            "resident_id": 211
+        }
+    },
+    {
+        "id": "verification-1777976441866-3a080ad9",
+        "action": "approved",
+        "auditable_type": "resident",
+        "auditable_id": "BGN03213",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Pending"
+        },
+        "new_values": {
+            "status": "Verified",
+            "verification_action": "Approved",
+            "rejection_reason": "Incomplete documents."
+        },
+        "created_at": "2026-05-05T10:20:41+00:00",
+        "subject_name": "Maria Reyes Torres",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN03213",
+            "resident_id": 210
+        }
+    },
+    {
+        "id": "verification-1777975081789-094e1b48",
+        "action": "approved",
+        "auditable_type": "resident",
+        "auditable_id": "BGN06030",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Pending"
+        },
+        "new_values": {
+            "status": "Verified",
+            "verification_action": "Approved",
+            "rejection_reason": "Incomplete documents."
+        },
+        "created_at": "2026-05-05T09:58:01+00:00",
+        "subject_name": "Pedro Mabini Reyes Jr.",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN06030",
+            "resident_id": 207
+        }
+    },
+    {
+        "id": "verification-1777880640731-3e285801",
+        "action": "approved",
+        "auditable_type": "resident",
+        "auditable_id": "BGN00192",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "For Verification"
+        },
+        "new_values": {
+            "status": "Verified",
+            "verification_action": "Approved",
+            "rejection_reason": "Incomplete documents."
+        },
+        "created_at": "2026-05-04T07:44:00+00:00",
+        "subject_name": "Dexter Mark Beren Binongcal",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN00192",
+            "resident_id": 209
+        }
+    },
+    {
+        "id": "verification-1777880570569-9026520d",
+        "action": "visit_set",
+        "auditable_type": "resident",
+        "auditable_id": "BGN00192",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Pending"
+        },
+        "new_values": {
+            "status": "For Verification",
+            "verification_action": "Set for Visit",
+            "visit_set_at": "2026-05-04T07:42:50.560Z"
+        },
+        "created_at": "2026-05-04T07:42:50+00:00",
+        "subject_name": "Dexter Mark Beren Binongcal",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN00192",
+            "resident_id": 209
+        }
+    },
+    {
+        "id": "verification-1777879509542-813aa38b",
+        "action": "approved",
+        "auditable_type": "resident",
+        "auditable_id": "BGN04643",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Rejected"
+        },
+        "new_values": {
+            "status": "Verified",
+            "verification_action": "Approved",
+            "rejection_reason": "Incorrect Information"
+        },
+        "created_at": "2026-05-04T07:25:09+00:00",
+        "subject_name": "Maria Garcia Dela Cruz",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN04643",
+            "resident_id": 208
+        }
+    },
+    {
+        "id": "verification-1777879492735-3e0984a1",
+        "action": "rejected",
+        "auditable_type": "resident",
+        "auditable_id": "BGN04643",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "For Verification"
+        },
+        "new_values": {
+            "status": "Rejected",
+            "verification_action": "Rejected",
+            "rejection_reason": "Incorrect Information"
+        },
+        "created_at": "2026-05-04T07:24:52+00:00",
+        "subject_name": "Maria Garcia Dela Cruz",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN04643",
+            "resident_id": 208
+        }
+    },
+    {
+        "id": "verification-1777879461499-e62cb1a1",
+        "action": "visit_set",
+        "auditable_type": "resident",
+        "auditable_id": "BGN04643",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Pending"
+        },
+        "new_values": {
+            "status": "For Verification",
+            "verification_action": "Set for Visit",
+            "visit_set_at": "2026-05-04T07:24:21.484Z"
+        },
+        "created_at": "2026-05-04T07:24:21+00:00",
+        "subject_name": "Maria Garcia Dela Cruz",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN04643",
+            "resident_id": 208
+        }
+    },
+    {
+        "id": "verification-1777862210073-f272eb7a",
+        "action": "approved",
+        "auditable_type": "resident",
+        "auditable_id": "BGN02190",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "For Verification"
+        },
+        "new_values": {
+            "status": "Verified",
+            "verification_action": "Approved",
+            "rejection_reason": "Incomplete documents."
+        },
+        "created_at": "2026-05-04T02:36:50+00:00",
+        "subject_name": "Sonia Silang Dela Cruz",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN02190",
+            "resident_id": 206
+        }
+    },
+    {
+        "id": "verification-1777862187273-6d7ecd9a",
+        "action": "visit_set",
+        "auditable_type": "resident",
+        "auditable_id": "BGN02190",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Pending"
+        },
+        "new_values": {
+            "status": "For Verification",
+            "verification_action": "Set for Visit",
+            "visit_set_at": "2026-05-04T02:36:27.255Z"
+        },
+        "created_at": "2026-05-04T02:36:27+00:00",
+        "subject_name": "Sonia Silang Dela Cruz",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN02190",
+            "resident_id": 206
+        }
+    },
+    {
+        "id": "verification-1777861596719-36057dd3",
+        "action": "visit_set",
+        "auditable_type": "resident",
+        "auditable_id": "BGN900119",
+        "user": {
+            "id": 3,
+            "name": "Admin User",
+            "role": "admin",
+            "email": "admin@gmail.com"
+        },
+        "old_values": {
+            "status": "Pending"
+        },
+        "new_values": {
+            "status": "For Verification",
+            "verification_action": "Set for Visit",
+            "visit_set_at": "2026-05-04T02:26:36.579Z"
+        },
+        "created_at": "2026-05-04T02:26:36+00:00",
+        "subject_name": "Xian Reyes Lopez",
+        "ip_address": null,
+        "source": "verification",
+        "metadata": {
+            "tracking_number": "BGN900119",
+            "resident_id": 119
+        }
+    },
+    {
         "id": "verification-1776834068940-7a4b2089",
         "action": "rejected",
         "auditable_type": "resident",
