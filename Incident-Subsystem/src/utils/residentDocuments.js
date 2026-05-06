@@ -5,6 +5,7 @@ import {
 
 const missingResidentDocumentUrls = new Set();
 const loggedResidentDocumentErrors = new Set();
+let residentDocumentsProxyUnavailable = false;
 
 const normalizeUrl = (value) => (typeof value === "string" ? value.trim() : "");
 const isDirectBrowserSafeUrl = (value) => /^(blob:|data:)/i.test(normalizeUrl(value));
@@ -31,7 +32,15 @@ export const resolveResidentDocumentFallbackUrl = (value) => {
 export const resolveResidentDocumentDisplayUrl = (value) => {
   const normalizedValue = normalizeUrl(value);
   if (!normalizedValue) return null;
-  if (isDirectBrowserSafeUrl(normalizedValue) || isResidentDocumentProxyUrl(normalizedValue)) {
+  if (isDirectBrowserSafeUrl(normalizedValue)) {
+    return normalizedValue;
+  }
+
+  if (isResidentDocumentProxyUrl(normalizedValue)) {
+    if (residentDocumentsProxyUnavailable) {
+      return resolveResidentDocumentFallbackUrl(normalizedValue);
+    }
+
     return normalizedValue;
   }
 
@@ -75,6 +84,14 @@ export const loadResidentDocumentSource = async (value, apiClient) => {
     ? missingResidentDocumentUrls.has(fallbackUrl)
     : false;
 
+  if (residentDocumentsProxyUnavailable) {
+    if (fallbackUrl && !fallbackKnownMissing) {
+      return { kind: "ready", src: fallbackUrl, revoke: null };
+    }
+
+    return { kind: "missing", src: null, revoke: null };
+  }
+
   if (proxyKnownMissing) {
     if (fallbackUrl && !fallbackKnownMissing) {
       return { kind: "ready", src: fallbackUrl, revoke: null };
@@ -94,6 +111,7 @@ export const loadResidentDocumentSource = async (value, apiClient) => {
     };
   } catch (error) {
     if (error?.response?.status === 404) {
+      residentDocumentsProxyUnavailable = true;
       markResidentDocumentSourceAsMissing(normalizedValue);
     } else {
       logResidentDocumentErrorOnce(normalizedValue, error);
