@@ -1,0 +1,18 @@
+[
+    {
+        "email": "w041x2097@gmail.com",
+        "name": "Ana Luna Lopez Jr.",
+        "barangay_id": "26-00150",
+        "username": "bgn00150",
+        "sent": false,
+        "created_at": "2026-05-06T08:19:35+02:00"
+    },
+    {
+        "email": "eykjz1104@gmail.com",
+        "name": "Ricardo Luna Torres",
+        "barangay_id": "26-00151",
+        "username": "bgn00151",
+        "sent": false,
+        "created_at": "2026-05-06T08:22:20+02:00"
+    }
+]
