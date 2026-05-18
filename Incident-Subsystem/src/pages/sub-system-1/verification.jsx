@@ -28,8 +28,11 @@ import ImageZoomOverlay          from '../../components/sub-system-1/common/Imag
 import MinimizedSuccessCard      from '../../components/sub-system-1/verification/MinimizedSuccessCard';
 import ScreenLoader              from '../../components/shared/ScreenLoader';
 import Toast                     from '../../components/shared/modals/Toast';
+import RegistryPageLoadingShell  from '../../components/shared/RegistryPageLoadingShell';
 import { getUser }               from '../../homepage/services/loginService';
 import { createVerificationAdminLog } from '../../homepage/services/auditLogService';
+import { FRONTEND_URL } from '../../config/api';
+import { sendVerificationApprovedEmail } from '../../homepage/services/verificationEmailService';
 
 const VERIFICATION_LOG_ACTIONS = {
   Verified: 'approved',
@@ -153,15 +156,45 @@ const Verification = () => {
 
         setPendingAction(null);
         if (status === 'Verified' || status === 'Approved') {
+          let approvalEmailSent = false;
+
+          try {
+            const approvalEmail = selectedRes?.details?.email;
+            const residentCredentials = result?.residentData || {};
+
+            if (
+              approvalEmail &&
+              approvalEmail !== 'N/A' &&
+              residentCredentials?.user &&
+              residentCredentials?.pass
+            ) {
+              await sendVerificationApprovedEmail({
+                email: approvalEmail,
+                name: selectedRes?.name || residentCredentials?.name || 'Resident',
+                barangayId: residentCredentials?.id || selectedRes?.barangayId || selectedRes?.barangay_id,
+                username: residentCredentials?.user,
+                temporaryPassword: residentCredentials?.pass,
+                verificationUrl: residentCredentials?.id
+                  ? `${FRONTEND_URL}/verify/${encodeURIComponent(residentCredentials.id)}`
+                  : '',
+              });
+              approvalEmailSent = true;
+            }
+          } catch (approvalEmailError) {
+            console.warn('Failed to send verification approval email:', approvalEmailError);
+          }
+
           playFeedback('success');
           setAccountDetails({ name: selectedRes?.name, ...result.residentData });
           setShowSuccess(true);
           setIsMinimized(false);
           addToast({
-            type: 'success',
+            type: approvalEmailSent ? 'success' : 'error',
             title: 'Resident Approved',
-            message: `${selectedRes?.name || 'Resident'} has been successfully verified.`,
-            duration: 4000,
+            message: approvalEmailSent
+              ? `${selectedRes?.name || 'Resident'} has been successfully verified and the approval email was sent.`
+              : `${selectedRes?.name || 'Resident'} has been successfully verified, but the approval email could not be sent.`,
+            duration: approvalEmailSent ? 4000 : 6500,
           });
         } else if (status === 'For Verification') {
           playFeedback('success');
@@ -221,6 +254,10 @@ const Verification = () => {
     setSelectedRes(null);
     setActiveTab('Pending');
   };
+
+  if (view === 'list' && loading && submissions.length === 0) {
+    return <RegistryPageLoadingShell t={t} isDark={isDark} tableCols={7} />;
+  }
 
   return (
     <div className={`font-sans min-h-screen py-4 pb-24 px-3 sm:px-4 lg:px-5 relative ${t.pageBg}`}>

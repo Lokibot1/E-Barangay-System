@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../../../services/sub-system-1/Api';
 import {
   loadResidentDocumentSource,
@@ -64,7 +65,7 @@ const ImageZoomOverlay = ({ isOpen, imgSrc, onClose }) => {
 
   if (!isOpen) return null;
 
-  return (
+  const overlay = (
     <div 
       className="fixed inset-0 z-[9999] bg-slate-950/95 flex items-center justify-center p-4 cursor-zoom-out" 
       onClick={onClose}
@@ -83,6 +84,8 @@ const ImageZoomOverlay = ({ isOpen, imgSrc, onClose }) => {
       )}
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(overlay, document.body) : overlay;
 };
 
 export default ImageZoomOverlay;

@@ -2,6 +2,26 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
+const mockUseRealTime = jest.fn(() => ({
+  latestBatch: [],
+  eventVersion: 0,
+  notifications: [],
+  unreadCount: 0,
+  markAsRead: jest.fn(),
+  markAllAsRead: jest.fn(),
+  clearNotifications: jest.fn(),
+}));
+
+const mockUseUserRealTime = jest.fn(() => ({
+  latestBatch: [],
+  eventVersion: 0,
+  notifications: [],
+  unreadCount: 0,
+  markAsRead: jest.fn(),
+  markAllAsRead: jest.fn(),
+  clearNotifications: jest.fn(),
+}));
+
 // ── Mock child modal components ──────────────────────────────────────────
 jest.mock("../../../components/sub-system-3/ThemeModal", () => () => null);
 jest.mock("../../../components/shared/LogoutModal", () =>
@@ -50,11 +70,11 @@ jest.mock("../../../context/LanguageContext", () => ({
 }));
 
 jest.mock("../../../context/RealTimeContext", () => ({
-  useRealTime: () => ({ latestBatch: [], eventVersion: 0, notifications: [] }),
+  useRealTime: () => mockUseRealTime(),
 }));
 
 jest.mock("../../../context/UserRealTimeContext", () => ({
-  useUserRealTime: () => ({ latestBatch: [], eventVersion: 0, notifications: [] }),
+  useUserRealTime: () => mockUseUserRealTime(),
 }));
 
 jest.mock("../../../context/BrandingContext", () => ({
@@ -88,9 +108,35 @@ beforeAll(() => {
 });
 
 import Header from "../../../components/shared/Header";
-import { logout, getUser, isAdmin, canAccessAdminPanel } from "../../../homepage/services/loginService";
+import {
+  logout,
+  getUser,
+  isAdmin,
+  canAccessAdminPanel,
+  canAccessStaffPanel,
+} from "../../../homepage/services/loginService";
 
-afterEach(() => jest.clearAllMocks());
+afterEach(() => {
+  jest.clearAllMocks();
+  mockUseRealTime.mockReturnValue({
+    latestBatch: [],
+    eventVersion: 0,
+    notifications: [],
+    unreadCount: 0,
+    markAsRead: jest.fn(),
+    markAllAsRead: jest.fn(),
+    clearNotifications: jest.fn(),
+  });
+  mockUseUserRealTime.mockReturnValue({
+    latestBatch: [],
+    eventVersion: 0,
+    notifications: [],
+    unreadCount: 0,
+    markAsRead: jest.fn(),
+    markAllAsRead: jest.fn(),
+    clearNotifications: jest.fn(),
+  });
+});
 
 const wrap = (props = {}) =>
   render(
@@ -125,6 +171,7 @@ describe("Header", () => {
 
     it("shows 'Dashboard' heading for admin user", () => {
       canAccessAdminPanel.mockReturnValue(true);
+      isAdmin.mockReturnValue(true);
       wrap();
       expect(screen.getByText("Dashboard")).toBeInTheDocument();
     });
@@ -162,6 +209,51 @@ describe("Header", () => {
       expect(screen.getAllByText(/unread/i).length).toBeGreaterThan(0);
       fireEvent.click(bell);
       expect(screen.queryByText(/unread/i)).not.toBeInTheDocument();
+    });
+
+    it("uses admin notifications for admin users", () => {
+      canAccessAdminPanel.mockReturnValue(true);
+      canAccessStaffPanel.mockReturnValue(false);
+      isAdmin.mockReturnValue(true);
+
+      mockUseRealTime.mockReturnValue({
+        latestBatch: [],
+        eventVersion: 0,
+        notifications: [
+          {
+            id: "registration-1",
+            source: "registration",
+            type: "registration_pending",
+            description: "1 new registration submitted for review.",
+            timestamp: "2026-05-05T12:00:00Z",
+            read: false,
+            data: {
+              route: "/admin/user-management",
+              switchToTab: "Pending",
+            },
+          },
+        ],
+        unreadCount: 1,
+        markAsRead: jest.fn(),
+        markAllAsRead: jest.fn(),
+        clearNotifications: jest.fn(),
+      });
+
+      mockUseUserRealTime.mockReturnValue({
+        latestBatch: [],
+        eventVersion: 0,
+        notifications: [],
+        unreadCount: 0,
+        markAsRead: jest.fn(),
+        markAllAsRead: jest.fn(),
+        clearNotifications: jest.fn(),
+      });
+
+      wrap();
+      fireEvent.click(screen.getByTitle("Notifications"));
+
+      expect(screen.getByText("Resident Registration")).toBeInTheDocument();
+      expect(screen.getByText("1 unread")).toBeInTheDocument();
     });
   });
 

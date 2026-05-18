@@ -306,6 +306,11 @@ const SignupPage = () => {
   };
 
   const handleReturnToLoginReminder = () => {
+    if (hasDownloadedSlip) {
+      goToLogin();
+      return;
+    }
+
     setShowSlipReminder(true);
   };
 
@@ -396,20 +401,16 @@ const SignupPage = () => {
                   Download Reminder
                 </h3>
                 <p className={`mt-3 text-center text-sm font-kumbh ${strongMutedClass}`}>
-                  {hasDownloadedSlip
-                    ? "You have already downloaded the slip. Please make sure it is saved before returning to login."
-                    : "Have you downloaded the slip already? It is best to download it first so you have a copy of your tracking number."}
+                  Have you downloaded the slip already? It is best to download it first so you have a copy of your tracking number.
                 </p>
                 <div className="mt-6 flex flex-col gap-3">
-                  {!hasDownloadedSlip && (
-                    <button
-                      type="button"
-                      onClick={handleDownloadTrackingSlip}
-                      className="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl font-black uppercase text-[11px] tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 font-kumbh"
-                    >
-                      <Download size={15} /> Download Slip First
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={handleDownloadTrackingSlip}
+                    className="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl font-black uppercase text-[11px] tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 font-kumbh"
+                  >
+                    <Download size={15} /> Download Slip First
+                  </button>
                   <button
                     type="button"
                     onClick={goToLogin}

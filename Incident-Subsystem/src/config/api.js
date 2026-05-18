@@ -19,8 +19,33 @@ const safeDecode = (value) => {
 const normalizeResidentDocumentPath = (value) =>
   String(value || "")
     .trim()
+    .replace(/\\/g, "/")
     .replace(/^\/+/, "")
-    .replace(/^storage\//, "");
+    .replace(/^public\/storage\//i, "")
+    .replace(/^storage\//i, "");
+
+const extractResidentDocumentPathFromStorageUrl = (value) => {
+  const normalizedValue = String(value || "").replace(/\\/g, "/");
+  const comparableValue = normalizedValue.toLowerCase();
+  const publicStorageMarker = "/public/storage/";
+  const storageMarker = "/storage/";
+
+  const publicStorageIndex = comparableValue.lastIndexOf(publicStorageMarker);
+  if (publicStorageIndex !== -1) {
+    return normalizeResidentDocumentPath(
+      normalizedValue.slice(publicStorageIndex + 1),
+    );
+  }
+
+  const storageIndex = comparableValue.lastIndexOf(storageMarker);
+  if (storageIndex !== -1) {
+    return normalizeResidentDocumentPath(
+      normalizedValue.slice(storageIndex + 1),
+    );
+  }
+
+  return null;
+};
 
 /**
  * Use a backend document proxy endpoint instead of exposing raw storage URLs.
@@ -32,13 +57,8 @@ export const USE_RESIDENT_DOCUMENTS_PROXY =
 export const FORCE_RESIDENT_DOCUMENTS_PROXY =
   import.meta.env.VITE_FORCE_RESIDENT_DOCUMENTS_PROXY === 'true';
 
-const isLocalResidentApiHost = ["localhost", "127.0.0.1"].includes(
-  String(API_HOST || "").toLowerCase(),
-);
-
 export const SHOULD_USE_RESIDENT_DOCUMENTS_PROXY =
-  USE_RESIDENT_DOCUMENTS_PROXY &&
-  (FORCE_RESIDENT_DOCUMENTS_PROXY || !isLocalResidentApiHost);
+  FORCE_RESIDENT_DOCUMENTS_PROXY || USE_RESIDENT_DOCUMENTS_PROXY;
 
 export const getResidentDocumentStorageUrl = (relativePath) => {
   const normalizedPath = normalizeResidentDocumentPath(relativePath);
@@ -51,13 +71,15 @@ export const extractResidentDocumentRelativePath = (value) => {
   if (!rawValue) return null;
 
   if (!/^https?:\/\//i.test(rawValue)) {
-    return normalizeResidentDocumentPath(safeDecode(rawValue));
+    return (
+      extractResidentDocumentPathFromStorageUrl(safeDecode(rawValue)) ||
+      normalizeResidentDocumentPath(safeDecode(rawValue))
+    );
   }
 
   try {
     const parsed = new URL(rawValue);
     const proxyUrl = new URL(RESIDENT_DOCUMENTS_PROXY_URL);
-    const storageUrl = new URL(STORAGE_URL);
 
     if (
       parsed.origin === proxyUrl.origin &&
@@ -68,21 +90,15 @@ export const extractResidentDocumentRelativePath = (value) => {
       );
     }
 
-    if (parsed.pathname.startsWith("/storage/")) {
-      return normalizeResidentDocumentPath(safeDecode(parsed.pathname));
-    }
-
-    const storagePrefix = `${storageUrl.origin}${storageUrl.pathname.replace(/\/+$/, "")}/`;
-    if (rawValue.startsWith(storagePrefix)) {
-      return normalizeResidentDocumentPath(
-        safeDecode(rawValue.slice(storagePrefix.length)),
-      );
-    }
+    return extractResidentDocumentPathFromStorageUrl(
+      safeDecode(parsed.pathname),
+    );
   } catch {
-    return normalizeResidentDocumentPath(rawValue);
+    return (
+      extractResidentDocumentPathFromStorageUrl(safeDecode(rawValue)) ||
+      normalizeResidentDocumentPath(rawValue)
+    );
   }
-
-  return null;
 };
 
 export const getResidentDocumentUrl = (relativePath) => {

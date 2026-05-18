@@ -1,5 +1,6 @@
 import React from "react";
 import themeTokens from "../../Themetokens";
+import RegistryPageLoadingShell from "./RegistryPageLoadingShell";
 
 export default function RouteLoadingFallback({
   message = "Loading page...",
@@ -9,6 +10,33 @@ export default function RouteLoadingFallback({
       ? localStorage.getItem("appTheme") || "modern"
       : "modern";
   const t = themeTokens[currentTheme] || themeTokens.modern;
+  const isDark = currentTheme === "dark";
+  const pathname =
+    typeof window !== "undefined" ? window.location.pathname : "";
+
+  const isResidentsRoute =
+    pathname === "/residents" ||
+    pathname === "/admin/residents" ||
+    pathname === "/staff/residents";
+  const isHouseholdsRoute =
+    pathname === "/households" ||
+    pathname === "/admin/households" ||
+    pathname === "/staff/households";
+  const isVerificationRoute =
+    pathname === "/verification" ||
+    pathname === "/admin/user-management" ||
+    pathname === "/staff/user-management";
+
+  if (isResidentsRoute || isHouseholdsRoute || isVerificationRoute) {
+    const tableCols = isHouseholdsRoute ? 5 : isResidentsRoute ? 6 : 7;
+    return (
+      <RegistryPageLoadingShell
+        t={t}
+        isDark={isDark}
+        tableCols={tableCols}
+      />
+    );
+  }
 
   return (
     <div className={`min-h-screen ${t.pageBg} flex items-center justify-center px-4 py-8`}>

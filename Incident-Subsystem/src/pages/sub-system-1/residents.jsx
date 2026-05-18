@@ -21,6 +21,7 @@ import Pagination           from '../../components/sub-system-1/common/paginatio
 import HouseholdModal       from '../../components/sub-system-1/household/modals/householdmodal';
 import EditHouseholdModal   from '../../components/sub-system-1/household/modals/EditHouseholdModal';
 import Toast                from '../../components/shared/modals/Toast';
+import RegistryPageLoadingShell from '../../components/shared/RegistryPageLoadingShell';
 
 import { useResidents }      from '../../hooks/sub-system-1/useResidents';
 import { usePrinter }        from '../../hooks/sub-system-1/usePrinter';
@@ -276,6 +277,10 @@ const Residents = () => {
 
         window.history.replaceState({}, '');
     }, [location.state, setSearchTerm]);
+
+    if (activeTab === 'registry' && loading && residents.length === 0) {
+        return <RegistryPageLoadingShell t={t} isDark={isDark} tableCols={6} />;
+    }
 
     return (
         <div className={`font-sans min-h-screen py-4 pb-24 px-3 sm:px-4 lg:px-5 relative ${t.pageBg}`}>

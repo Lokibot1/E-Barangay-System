@@ -45,9 +45,6 @@ export default function Settings() {
     "accounts",
     "branding",
     "logs",
-    "security",
-    "backup",
-    "diagnostics",
   ];
   const [activeTab, setActiveTab] = useState("accounts");
   const [logoError, setLogoError] = useState("");
@@ -241,9 +238,6 @@ export default function Settings() {
     { key: "accounts", label: "Account Management", icon: <Users size={14} /> },
     { key: "branding", label: "Barangay Logo", icon: <Image size={14} /> },
     { key: "logs", label: "Activity Logs", icon: <ClipboardList size={14} /> },
-    { key: "security", label: "Security", icon: <ShieldCheck size={14} /> },
-    { key: "backup", label: "Backup", icon: <HardDriveDownload size={14} /> },
-    { key: "diagnostics", label: "Diagnostics", icon: <Activity size={14} /> },
   ];
 
   return (

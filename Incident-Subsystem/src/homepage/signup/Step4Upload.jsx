@@ -558,9 +558,15 @@ const Step4Upload = ({
                 }`}>
                   {previews[side] ? (
                     <>
-                      <img src={previews[side]} className="w-full h-full object-cover" alt={`${side} view`} />
+                      <div className="absolute inset-0 bg-white/90 dark:bg-slate-950/70 px-2 py-0">
+                        <img
+                          src={previews[side]}
+                          className="w-full h-full object-contain object-center"
+                          alt={`${side} view`}
+                        />
+                      </div>
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 px-3">
-                        <button type="button" onClick={() => openPicker(fieldName, "upload")} className="w-full max-w-[150px] text-white text-[10px] font-black uppercase tracking-widest font-kumbh bg-emerald-600 px-3 py-2 rounded-xl shadow-lg hover:bg-emerald-700">Upload Photo</button>
+                        <button type="button" onClick={() => openPicker(fieldName, "upload")} className="w-full max-w-[150px] text-white text-[10px] font-black uppercase tracking-widest font-kumbh bg-emerald-600 px-3 py-2 rounded-xl shadow-lg hover:bg-emerald-700">Replace Photo</button>
                         <button type="button" onClick={() => openPicker(fieldName, "camera")} className="w-full max-w-[150px] text-white text-[10px] font-black uppercase tracking-widest font-kumbh bg-slate-700 px-3 py-2 rounded-xl shadow-lg hover:bg-slate-800">Use Camera</button>
                       </div>
                     </>

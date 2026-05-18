@@ -22,6 +22,7 @@ import HouseholdArchivesTab      from '../../components/sub-system-1/household/t
 import HouseholdLogsTab          from '../../components/sub-system-1/household/tabs/HouseholdLogsTab';
 import Pagination                from '../../components/sub-system-1/common/pagination';
 import Toast                     from '../../components/shared/modals/Toast';
+import RegistryPageLoadingShell  from '../../components/shared/RegistryPageLoadingShell';
 
 import { useHouseholds }              from '../../hooks/sub-system-1/useHousehold';
 import { usePrinter }                 from '../../hooks/sub-system-1/usePrinter';
@@ -224,6 +225,10 @@ const Households = () => {
     archives: isDark ? 'border-slate-300 text-slate-100 bg-slate-700 shadow-sm' : 'border-rose-500 text-rose-600 bg-white shadow-sm',
     logs:     isDark ? 'border-slate-300 text-slate-100 bg-slate-700 shadow-sm' : 'border-amber-500 text-amber-600 bg-white shadow-sm',
   };
+
+  if (activeTab === 'registry' && loading && households.length === 0) {
+    return <RegistryPageLoadingShell t={t} isDark={isDark} tableCols={5} />;
+  }
 
   return (
     <div className="p-6 sm:p-8 space-y-6 pb-20">
